@@ -97,7 +97,7 @@ namespace Forays{
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){ //if the map draws too slowly for some people, i know how to fix it. i'll have to
 					colorchar ch; //go over the map and build colorstrings - strings that are the same color. then print them.
-					ch.bgcolor = ConsoleColor.Black;
+					ch.bgcolor = ConsoleColor.Black; //let's do that.
 					if(player.CanSee(i,j)){
 						tile[i,j].seen = true;
 						if(actor[i,j] != null && player.CanSee(actor[i,j])){
