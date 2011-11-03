@@ -428,7 +428,14 @@ ring of resistance
 			Console.SetCursorPosition(1,8);
 			Console.Write("{0} ",Q.turn / 100);
 			//end temporary turn display
-			M.Draw();
+			if(Screen.MapChar(0,0).c == '-'){ //kinda hacky. there won't be an open door in the corner, so this looks for
+				M.RedrawWithStrings(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely)
+			}
+			else{
+				M.Draw();
+			}
+//			Screen.DrawCheckerboard2();
+//			Screen.WriteMapChar(row,col,new colorchar{color = this.color,bgcolor = ConsoleColor.Black,c = this.symbol});
 			B.Print(false);
 			Cursor();
 			if(HasAttr(AttrType.PARALYZED)){
@@ -3347,7 +3354,6 @@ ring of resistance
 		}
 		public int Select(string message,List<string> strings){ return Select(message,"".PadLeft(COLS,'-'),strings,false,false); }
 		public int Select(string message,string top_border,List<string> strings,bool no_ask,bool no_cancel){
-			colorchar[,] mem = Screen.GetCurrentMap();
 			Screen.WriteMapString(0,0,top_border);
 			char letter = 'a';
 			int i=1;
@@ -3359,8 +3365,6 @@ ring of resistance
 			}
 			Screen.WriteMapString(i,0,"".PadRight(COLS,'-'));
 			Screen.WriteMapString(i+1,0,"".PadRight(COLS));
-			//for now, I don't mess with the rest of the map. looks pretty good this way.
-			//todo: restore map from mem
 			if(no_ask){
 				return -1;
 			}

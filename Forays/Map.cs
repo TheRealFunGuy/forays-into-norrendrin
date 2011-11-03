@@ -95,9 +95,9 @@ namespace Forays{
 		public void Draw(){
 			Console.CursorVisible = false;
 			for(int i=0;i<ROWS;++i){
-				for(int j=0;j<COLS;++j){ //if the map draws too slowly for some people, i know how to fix it. i'll have to
-					colorchar ch; //go over the map and build colorstrings - strings that are the same color. then print them.
-					ch.bgcolor = ConsoleColor.Black; //let's do that.
+				for(int j=0;j<COLS;++j){
+					colorchar ch;
+					ch.bgcolor = ConsoleColor.Black;
 					if(player.CanSee(i,j)){
 						tile[i,j].seen = true;
 						if(actor[i,j] != null && player.CanSee(actor[i,j])){
@@ -142,9 +142,94 @@ namespace Forays{
 							}
 						}
 					}
+					//if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; }
+					//^--top secret, mostly because it doesn't work well - redrawing leaves gaps for some reason.
 					Screen.WriteMapChar(i,j,ch);
 				}
 			}
+			Console.ResetColor();
+			Console.CursorVisible = true;
+		}
+		public void RedrawWithStrings(){
+			Console.CursorVisible = false;
+			colorstring s;
+			s.s = "";
+			s.bgcolor = ConsoleColor.Black;
+			s.color = ConsoleColor.Black;
+			int r = 0;
+			int c = 0;
+			for(int i=0;i<ROWS;++i){
+				s.s = "";
+				r = i;
+				c = 0;
+				for(int j=0;j<COLS;++j){
+					colorchar ch;
+					ch.bgcolor = ConsoleColor.Black;
+					if(player.CanSee(i,j)){
+						tile[i,j].seen = true;
+						if(actor[i,j] != null && player.CanSee(actor[i,j])){
+							ch.c = actor[i,j].symbol;
+							ch.color = actor[i,j].color;
+						}
+						else{
+							if(tile[i,j].inv != null){
+								ch.c = tile[i,j].inv.symbol;
+								ch.color = tile[i,j].inv.color;
+							}
+							else{
+								ch.c = tile[i,j].symbol;
+								ch.color = tile[i,j].color;
+								if(ch.c=='.' || ch.c=='#'){
+									if(tile[i,j].IsLit()){
+										ch.color = ConsoleColor.Yellow;
+									}
+									else{
+										ch.color = ConsoleColor.DarkCyan;
+									}
+								}
+							}
+						}
+					}
+					else{
+						if(actor[i,j] != null && player.CanSee(actor[i,j])){
+							ch.c = actor[i,j].symbol;
+							ch.color = actor[i,j].color;
+						}
+						else{
+							if(tile[i,j].seen){
+								ch.c = tile[i,j].symbol;
+								ch.color = tile[i,j].color;
+								if(ch.c=='.' || ch.c=='#'){
+									ch.color = ConsoleColor.White;
+								}
+							}
+							else{
+								ch.c = ' ';
+								ch.color = ConsoleColor.Black;
+							}
+						}
+					}
+					if(ch.color != s.color){
+						if(s.s.Length > 0){
+							Screen.WriteMapString(r,c,s);
+							s.s = "";
+							s.s += ch.c;
+							s.color = ch.color;
+							r = i;
+							c = j;
+						}
+						else{
+							s.s += ch.c;
+							s.color = ch.color;
+						}
+					}
+					else{
+						s.s += ch.c;
+					}
+				}
+				Screen.WriteMapString(r,c,s);
+			}
+			Console.ResetColor();
 			Console.CursorVisible = true;
 		}
 		public void RemoveTargets(Actor a){ //cleanup of references to dead monsters

@@ -1,10 +1,15 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Generic;using System.Text;//temp
 namespace Forays{
 	public struct colorchar{
 		public ConsoleColor color;
 		public ConsoleColor bgcolor;
 		public char c;
+	}
+	public struct colorstring{
+		public ConsoleColor color;
+		public ConsoleColor bgcolor;
+		public string s;
 	}
 	public static class Screen{
 		private static colorchar[,] memory;
@@ -37,39 +42,24 @@ namespace Forays{
 			c += Global.MAP_OFFSET_COLS;
 			if(!memory[r,c].Equals(ch)){
 				memory[r,c] = ch;
+				if(ch.color != Console.ForegroundColor){
+					Console.ForegroundColor = ch.color;
+				}
+				if(ch.bgcolor != Console.BackgroundColor){
+					Console.BackgroundColor = ch.bgcolor;
+				}
 				Console.SetCursorPosition(c,r);
-				if(ch.color == Console.ForegroundColor && ch.bgcolor == Console.BackgroundColor){
-					Console.Write(ch.c);
-				}
-				else{
-					if(ch.bgcolor == Console.BackgroundColor){
-						ConsoleColor oldcolor = Console.ForegroundColor;
-						Console.ForegroundColor = ch.color;
-						Console.Write(ch.c);
-						Console.ForegroundColor = oldcolor;
-					}
-					else{
-						if(ch.color == Console.ForegroundColor){
-							ConsoleColor oldcolor = Console.BackgroundColor;
-							Console.BackgroundColor = ch.bgcolor;
-							Console.Write(ch.c);
-							Console.BackgroundColor = oldcolor;
-						}
-						else{
-							ConsoleColor oldcolor = Console.ForegroundColor;
-							ConsoleColor oldbgcolor = Console.BackgroundColor;
-							Console.ForegroundColor = ch.color;
-							Console.BackgroundColor = ch.bgcolor;
-							Console.Write(ch.c);
-							Console.ForegroundColor = oldcolor;
-							Console.BackgroundColor = oldbgcolor;
-						}
-					}
-				}
+				Console.Write(ch.c);
 			}
 		}
 		public static void WriteMapString(int r,int c,string s){
-			if(Global.COLS - c > s.Length){
+			colorstring cs;
+			cs.color = ConsoleColor.Gray;
+			cs.bgcolor = ConsoleColor.Black;
+			cs.s = s;
+			WriteMapString(r,c,cs);
+		}
+/*			if(Global.COLS - c > s.Length){
 				s = s.Substring(0); //don't move down to the next line
 			}
 			else{
@@ -100,6 +90,116 @@ namespace Forays{
 				Console.ForegroundColor = oldcolor;
 				Console.BackgroundColor = oldbgcolor;
 			}
+		}*/
+		public static void WriteMapString(int r,int c,colorstring s){
+			if(Global.COLS - c > s.s.Length){
+				s.s = s.s.Substring(0); //don't move down to the next line
+			}
+			else{
+				s.s = s.s.Substring(0,Global.COLS - c);
+			}
+			if(s.s.Length > 0){
+				r += Global.MAP_OFFSET_ROWS;
+				c += Global.MAP_OFFSET_COLS;
+				colorchar cch;
+				cch.color = s.color;
+				cch.bgcolor = s.bgcolor;
+				if(Console.ForegroundColor != s.color){
+					Console.ForegroundColor = s.color;
+				}
+				if(Console.BackgroundColor != s.bgcolor){
+					Console.BackgroundColor = s.bgcolor;
+				}
+				int i = 0;
+				foreach(char ch in s.s){
+					cch.c = ch;
+					if(!memory[r,c+i].Equals(cch)){
+						memory[r,c+i] = cch;
+					}
+					++i;
+				}
+				Console.SetCursorPosition(c,r);
+				Console.Write(s.s);
+			}
+		}
+		public static void DrawCheckerboard1(){
+			Console.CursorVisible = false;
+			colorstring s;
+			s.s = "";
+			s.bgcolor = ConsoleColor.Black;
+			s.color = ConsoleColor.Black;
+			int r = 0;
+			int c = 0;
+			colorchar[,] array = GetCheckerboard();
+			for(int i=0;i<Global.ROWS;++i){
+				s.s = "";
+				r = i;
+				c = 0;
+				for(int j=0;j<Global.COLS;++j){
+					colorchar ch = array[i,j];
+					if(ch.color != s.color){
+						if(s.s.Length > 0){
+							Screen.WriteMapString(r,c,s);
+							s.s = "";
+							s.s += ch.c;
+							s.color = ch.color;
+							r = i;
+							c = j;
+						}
+						else{
+							s.s += ch.c;
+							s.color = ch.color;
+						}
+					}
+					else{
+						s.s += ch.c;
+					}
+				}
+				Screen.WriteMapString(r,c,s);
+			}
+			Console.CursorVisible = true;
+		}
+		public static void DrawCheckerboard2(){
+			Console.CursorVisible = false;
+			colorchar[,] array = GetCheckerboard();
+			List<ConsoleColor> colors = new List<ConsoleColor>();
+			for(int i=0;i<Global.ROWS;++i){
+				for(int j=0;j<Global.COLS;++j){
+					if(!colors.Contains(array[i,j].color)){
+						colors.Add(array[i,j].color);
+					}
+				}
+			}
+			foreach(ConsoleColor color in colors){
+				for(int i=0;i<Global.ROWS;++i){
+					for(int j=0;j<Global.COLS;++j){
+						if(color == array[i,j].color){
+							Screen.WriteMapChar(i,j,array[i,j]);
+						}
+					}
+				}
+			}
+			Console.CursorVisible = true;
+		}
+		public static void DrawCheckerboard3(){
+			//in this one, each colorstring will get a position, and then i'll draw them all at once.
+			//if it doesn't seem different, i'll try making strings and THEN drawing them by color  o.O
+		}
+		public static colorchar[,] GetCheckerboard(){
+			colorchar[,] result = new colorchar[Global.ROWS,Global.COLS];
+			for(int i=0;i<Global.ROWS;++i){
+				for(int j=0;j<Global.COLS;++j){
+					if((i+j/9)%2 == 0){
+						result[i,j].color = ConsoleColor.DarkCyan;
+					}
+					else{
+						result[i,j].color = ConsoleColor.White;
+					}
+					result[i,j].bgcolor = ConsoleColor.Black;
+					result[i,j].c = '#';
+				}
+			}
+			return result;
 		}
 /*		public static void WriteChar(string s){ WriteChar(s[0]); }
 		public static void WriteChar(char ch){
