@@ -31,15 +31,6 @@ namespace Forays{
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
 			//stun trap. much less nasty than paralysis or even confusion.
 		}
-		/*public Tile(){ //is this constructor necessary?
-			type=TileType.FLOOR;
-			passable = true;
-			opaque = false;
-			seen = false;
-			lit = 0;
-			toggles_into = null;
-			inv = null;
-		}*/
 		public Tile(Tile t,int r,int c){
 			type = t.type;
 			name = t.name;
@@ -157,7 +148,7 @@ namespace Forays{
 				light_value = 0;
 			}
 		}
-		public void Destroy(){ //levels a tile, leaving only floor.
+		public void TurnToFloor(){
 			bool lighting_update = false;
 			List<Actor> actors = new List<Actor>();
 			if(opaque){

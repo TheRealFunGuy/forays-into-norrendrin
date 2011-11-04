@@ -15,28 +15,42 @@ namespace Forays{
 	}
 	/*keen eyes -half check. still needs trap detection bonus.
 tough(?)
-blessed
-war shouted
+	-as if
 combat skill
-all skills
+	-matters in Attack, FireArrow.
+defense skill
+	-matters in ArmorClass. finished?
+magic skill
+	-matters in castspell. finished?
+spirit skill
+	-matters in lots of places, i guess.
+stealth skill
+	-matters in AI methods, at least.
 
-tumble(on)
+
+tumbling
+	-tumble is active now. TUMBLING is now used to dodge a single arrow, therefore it only matters in firearrow.
 danger sense(on)
-
+	 -matters in map.draw...eesh.
 quick draw	...
+	-matters in Wield command
 silent chain	...
-armored mage	...
+	-matters in Stealth() method
 neck snap ...
+	-matters in Attack.
 full defense
-master's edge
-student's luck
+	-checked when attacked.
 
-staff of magic
-elven leather
-chainmail of arcana
-fp of resistance
+staff of magic (bonus to magic skill)
+elven leather (bonus to stealth skill)
+chainmail of arcana (no penalty to casting. bonus to magic skill. if that's too good, it will reduce global fail rate only)
+fp of resistance (resist fire/cold/elec)
+	the armor part is already calculated.
+	the bonus will be added during the Wield/Wear command, and during chest opening if you're wearing it already.
 ring of resistance
+	added during chest opening
 
+-when displaying skill level, the format should be base + bonus, with bonus colored differently, just so it's perfectly clear.
 */
 	public class Actor : PhysicalObject{
 		public ActorType type{get; private set;}
@@ -55,10 +69,7 @@ ring of resistance
 		public Dict<SpellType,int> spells = new Dict<SpellType,int>();
 		private int time_of_last_action;
 		private int recover_time;
-		public Tile player_seen; //(then add a linked list for magic items, which starts empty)
-//		public WeaponType weapon; //perhaps change this to a linked list. the first one will be your active weapon. you'll actually
-//		public ArmorType armor; //rotate the linked list to change weapon, and upgrades will simply replace the original.
-		//yeah, why not? here goes:
+		public Tile player_seen;
 		public LinkedList<WeaponType> weapons = new LinkedList<WeaponType>();
 		public LinkedList<ArmorType> armors = new LinkedList<ArmorType>();
 		public LinkedList<MagicItemType> magic_items = new LinkedList<MagicItemType>();
@@ -77,18 +88,6 @@ ring of resistance
 			proto[ActorType.GOBLIN] = new Actor(ActorType.GOBLIN,"goblin",'g',ConsoleColor.Green,20,100,5,1,0);
 			//
 		}
-		/*public Actor(){ //is this constructor necessary? version 2.0
-			type=ActorType.PLAYER;
-			maxhp=1;
-			curhp=maxhp;
-			speed=100;
-			xp=0;
-			level=1;
-			light_radius=0;
-			target=null;
-			symbol='@';
-			F = new SpellType[9];
-		}*/
 		public Actor(Actor a,int r,int c){
 			type = a.type;
 			name = a.name;
@@ -108,6 +107,8 @@ ring of resistance
 			player_seen = null;
 			time_of_last_action = 0;
 			recover_time = 0;
+			weapons = new LinkedList<WeaponType>(a.weapons);
+			armors = new LinkedList<ArmorType>(a.armors);
 		}
 		public Actor(ActorType type_,string name_,char symbol_,ConsoleColor color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_){
 			type = type_;
@@ -130,6 +131,8 @@ ring of resistance
 			player_seen = null;
 			time_of_last_action = 0;
 			recover_time = 0;
+			weapons.AddFirst(WeaponType.NO_WEAPON);
+			armors.AddFirst(ArmorType.NO_ARMOR);
 		}
 		public static Actor Create(ActorType type,int r,int c){
 			Actor a = null;
@@ -193,16 +196,36 @@ ring of resistance
 		public bool HasSpell(SpellType spell){ return spells[spell] > 0; }
 		public int LightRadius(){ return Math.Max(light_radius,attrs[AttrType.ON_FIRE]); }
 		public int ArmorClass(){
-			int total = 0;
-			total += skills[SkillType.DEFENSE];
+			int total = TotalSkill(SkillType.DEFENSE);
 			if(weapons.First.Value == WeaponType.STAFF || weapons.First.Value == WeaponType.STAFF_OF_MAGIC){
 				total++;
 			}
 			if(magic_items.Contains(MagicItemType.RING_OF_PROTECTION)){
 				total++;
 			}
-			//todo: maybe full defense here?
+			total += Armor.Protection(armors.First.Value);
 			return total;
+		}
+		public int TotalSkill(SkillType skill){
+			int result = skills[skill];
+			switch(skill){
+			case SkillType.COMBAT:
+				result += attrs[AttrType.BONUS_COMBAT];
+				break;
+			case SkillType.DEFENSE:
+				result += attrs[AttrType.BONUS_DEFENSE];
+				break;
+			case SkillType.MAGIC:
+				result += attrs[AttrType.BONUS_MAGIC];
+				break;
+			case SkillType.SPIRIT:
+				result += attrs[AttrType.BONUS_SPIRIT];
+				break;
+			case SkillType.STEALTH:
+				result += attrs[AttrType.BONUS_STEALTH];
+				break;
+			}
+			return result;
 		}
 		public void UpdateRadius(int from,int to){ UpdateRadius(from,to,false); }
 		public void UpdateRadius(int from,int to,bool change){
@@ -284,6 +307,9 @@ ring of resistance
 		}
 		public void Input(){
 			bool return_after_recovery = false;
+			if(HasAttr(AttrType.DEFENSIVE_STANCE)){
+				attrs[AttrType.DEFENSIVE_STANCE] = 0;
+			}
 			if(HasAttr(AttrType.PARALYZED)){
 				attrs[AttrType.PARALYZED]--;
 				B.Add(the_name + " can't move! ");
@@ -542,6 +568,12 @@ ring of resistance
 				break;
 			case '5':
 			case '.':
+				if(HasFeat(FeatType.FULL_DEFENSE) && EnemiesAdjacent() > 0){
+					if(!HasAttr(AttrType.IMMOBILIZED) && !HasAttr(AttrType.CATCHING_FIRE) && !HasAttr(AttrType.ON_FIRE)){
+						attrs[AttrType.DEFENSIVE_STANCE]++;
+						B.Add("You ready yourself. ");
+					}
+				}
 				//todo: immob here.
 				if(HasAttr(AttrType.CATCHING_FIRE)){
 					attrs[AttrType.CATCHING_FIRE] = 0;
@@ -1712,7 +1744,12 @@ ring of resistance
 				return false;
 			}
 			AttackInfo info = AttackList.Attack(type,attack_idx);
-			bool hit = a.IsHit(0); //todo: update this to reflect combat skill and Blessed/Warshouted status
+			int plus_to_hit = TotalSkill(SkillType.COMBAT);
+			if(HasAttr(AttrType.BLESSED)){
+				plus_to_hit += 10;
+			}
+			bool hit = a.IsHit(plus_to_hit);
+			//todo: should full defense modify plus_to_hit, or be a flat chance on top of it?
 			if(attack_idx==0 && (type==ActorType.FROSTLING || type==ActorType.FIRE_DRAKE)){
 				hit = true; //hack! these are the 2 'area' attacks that always hit
 			}
@@ -2159,19 +2196,29 @@ ring of resistance
 			if(obj != null){
 				t = M.tile[obj.row,obj.col];
 			}
-			int failrate = Spell.Level(spell) - skills[SkillType.MAGIC]*5; //todo: add 'global' failrate from feats here.
-			failrate *= spells[spell];
-			if(failrate > 0){
-				if(Global.Roll(1,100) - failrate <= 0){
-					if(name == "you"){
-						B.Add("Sparks fly from your fingers. ");
+			int bonus = 0; //used for bonus damage on spells - currently, only Master's Edge adds bonus damage.
+			if(FailRate(spell) > 0){
+				if(Global.Roll(1,100) - FailRate(spell) <= 0){
+					if(HasFeat(FeatType.STUDENTS_LUCK) && !HasAttr(AttrType.STUDENTS_LUCK_USED)){
+						attrs[AttrType.STUDENTS_LUCK_USED]++;
+						if(Global.Roll(1,100) - FailRate(spell) <= 0){
+							B.Add("Sparks fly from " + Your() + " fingers. ");
+							Q1();
+							return true;
+						}
+						else{
+							B.Add("Your luck pays off. ");
+						}
 					}
 					else{
-						B.Add("Sparks fly from " + the_name + "'s fingers. ");
-					} //or 'you fail to concentrate hard enough'
-					Q1(); //with 'the shaman's mouth and fingers move, but nothing happens'
-					return true; //or 'the shaman seems to concentrate hard, but nothing happens'
+						B.Add("Sparks fly from " + Your() + " fingers. "); //or 'you fail to concentrate hard enough'
+						Q1(); //or 'the shaman's mouth and fingers move, but nothing happens'
+						return true; //or 'the shaman seems to concentrate hard, but nothing happens'
+					}
 				}
+			}
+			else{
+				bonus = 1;
 			}
 			switch(spell){
 			case SpellType.SHINE:
@@ -2202,7 +2249,7 @@ ring of resistance
 						else{
 							B.Add(the_name + " casts Magic Missile at you. "); //todo: add animations, remove "at you"
 						}
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(1,6),this); //i think that will flow properly.
+						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this); //i think that will flow properly.
 					}
 					else{
 						if(t.IsLit()){
@@ -2245,7 +2292,7 @@ ring of resistance
 						List<Tile> line = GetExtendedBresenhamLine(a.row,a.col);
 						int idx = line.IndexOf(M.tile[a.row,a.col]);
 						Tile next = line[idx+1];
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(1,6),this);
+						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
 						if(Global.Roll(1,10) <= 6){
 							if(M.actor[t.row,t.col] != null){
 								a.GetKnockedBack(this);
@@ -2347,7 +2394,7 @@ ring of resistance
 						else{
 							B.Add(the_name + " casts Icy Blast at you. ");
 						}
-						a.TakeDamage(DamageType.COLD,Global.Roll(2,6),this);
+						a.TakeDamage(DamageType.COLD,Global.Roll(2+bonus,6),this);
 					}
 					else{
 						B.Add("The icy blast hits " + t.the_name + ". ");
@@ -2370,7 +2417,7 @@ ring of resistance
 						else{
 							B.Add(the_name + " casts Burning Hands. You are seared. ");
 						}
-						a.TakeDamage(DamageType.FIRE,Global.Roll(3,6),this);
+						a.TakeDamage(DamageType.FIRE,Global.Roll(3+bonus,6),this);
 						if(M.actor[t.row,t.col] != null && Global.Roll(1,10) <= 2){
 							B.Add(You("start") + " to catch fire! ");
 							a.attrs[AttrType.CATCHING_FIRE]++;
@@ -2399,7 +2446,7 @@ ring of resistance
 						}
 						int r = a.row;
 						int c = a.col;
-						a.TakeDamage(DamageType.COLD,Global.Roll(1,6),this);
+						a.TakeDamage(DamageType.COLD,Global.Roll(1+bonus,6),this);
 						if(M.actor[r,c] != null && !a.HasAttr(AttrType.IMMOBILIZED) && Global.Roll(1,10) <= 6){
 							B.Add(a.the_name + " is immobilized. ");
 							a.attrs[AttrType.IMMOBILIZED]++;
@@ -2430,7 +2477,7 @@ ring of resistance
 						}
 						int r = a.row;
 						int c = a.col;
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(2,6),this);
+						a.TakeDamage(DamageType.MAGIC,Global.Roll(2+bonus,6),this);
 						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
 							B.Add(a.the_name + " is stunned. ");
 							a.attrs[AttrType.STUNNED]++;
@@ -2462,7 +2509,7 @@ ring of resistance
 					Actor a = targets[idx];
 					targets.Remove(a);
 					B.Add("Electricity hits " + a.the_name + ". ");
-					a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3,6),this);
+					a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
 				}
 				break;
 				}
@@ -2480,7 +2527,7 @@ ring of resistance
 							B.Add(the_name + " casts Shock. ");
 						}
 						B.Add("Electricity arcs to " + a.the_name + ". ");
-						a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3,6),this);
+						a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
 					}
 					else{
 						B.Add("Electricity arcs between your fingers. ");
@@ -2540,7 +2587,7 @@ ring of resistance
 						Actor ac = targets[idx];
 						targets.Remove(ac);
 						B.Add("The explosion hits " + ac.the_name + ". ");
-						ac.TakeDamage(DamageType.FIRE,Global.Roll(3,6),this);
+						ac.TakeDamage(DamageType.FIRE,Global.Roll(3+bonus,6),this);
 					}
 				}
 				else{
@@ -2613,7 +2660,7 @@ ring of resistance
 						}
 						if(firstactor != null){
 							string s = firstactor.the_name;
-							firstactor.TakeDamage(DamageType.MAGIC,Global.Roll(1,6),this);
+							firstactor.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
 							if(Global.Roll(1,10) <= 9){
 								if(M.actor[firsttile.row,firsttile.col] != null){
 									firstactor.GetKnockedBack(line);
@@ -2650,12 +2697,12 @@ ring of resistance
 						else{
 							B.Add(the_name + " casts Disintegrate. " + the_name + " directs destructive energies toward you. ");
 						}
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(8,6),this);
+						a.TakeDamage(DamageType.MAGIC,Global.Roll(8+bonus,6),this);
 					}
 					else{
 						if(t.type == TileType.WALL || t.type == TileType.DOOR_C || t.type == TileType.DOOR_O || t.type == TileType.CHEST){
 							B.Add(t.the_name + " turns to dust. ");
-							t.Destroy();
+							t.TurnToFloor();
 						}
 					}
 				}
@@ -2681,7 +2728,7 @@ ring of resistance
 					B.Add("The blizzard hits " + a.the_name + ". ");
 					int r = a.row;
 					int c = a.col;
-					a.TakeDamage(DamageType.COLD,Global.Roll(5,6),this);
+					a.TakeDamage(DamageType.COLD,Global.Roll(5+bonus,6),this);
 					if(M.actor[r,c] != null && Global.Roll(1,10) <= 8){
 						B.Add(a.the_name + " is immobilized. ");
 						a.attrs[AttrType.IMMOBILIZED]++;
@@ -2715,7 +2762,7 @@ ring of resistance
 					Q.Add(new Event(this,duration,AttrType.HOLY_SHIELDED,the_name + "'s halo fades. "));
 				}
 				else{
-					B.Add("Your holy shield is already active. ");
+					B.Add(Your() + " holy shield is already active. ");
 					return false;
 				}
 				break;
@@ -2729,6 +2776,18 @@ ring of resistance
 				return false;
 			}
 			return CastSpell(spells[Global.Roll(1,spells.Length)-1],obj);
+		}
+		public int FailRate(SpellType spell){
+			int failrate = Spell.Level(spell) - TotalSkill(SkillType.MAGIC)*5;
+			if(failrate < 0){
+				failrate = 0;
+			}
+			failrate *= spells[spell];
+			failrate += attrs[AttrType.GLOBAL_FAIL_RATE]*25;
+			if(!HasFeat(FeatType.ARMORED_MAGE)){
+				failrate += Armor.AddedFailRate(armors.First.Value);
+			}
+			return failrate;
 		}
 		public void ResetSpells(){
 			foreach(SpellType s in Enum.GetValues(typeof(SpellType))){
@@ -2759,7 +2818,7 @@ ring of resistance
 						hit = true;
 						Actor a = t.Actor();
 						B.Add("You hit " + a.the_name + ". "); //todo: message check
-						a.TakeDamage(DamageType.MAGIC,skills[SkillType.MAGIC],this);
+						a.TakeDamage(DamageType.MAGIC,TotalSkill(SkillType.MAGIC),this);
 					}
 				}
 				if(!hit){
@@ -2781,9 +2840,9 @@ ring of resistance
 							Move(neighbor.row,neighbor.col);
 							moved = true;
 							B.Add("You lunge! ");
-							skills[SkillType.COMBAT] += 3;
+							attrs[AttrType.BONUS_COMBAT] += 3;
 							Attack(0,t.Actor());
-							skills[SkillType.COMBAT] -= 3;
+							attrs[AttrType.BONUS_COMBAT] -= 3;
 							break;
 						}
 					}
@@ -2806,19 +2865,20 @@ ring of resistance
 				}
 				break;
 			case FeatType.TUMBLE:
-				if(HasAttr(AttrType.TUMBLE_ON)){
-					attrs[AttrType.TUMBLE_ON] = 0;
-				}
-				else{
-					attrs[AttrType.TUMBLE_ON] = 1;
-				}
+				//todo:
+/*Tumble - (A, 200 energy) - You pick a tile within distance 2. If there is at least one passable tile between 
+you and it(you CAN tumble past actors), you move to that tile. Additional effects: If you move past an actor, 
+they lose sight of you and their turns_player_seen is set to X - rand_function_of(stealth skill). (there's a good chance
+they'll find you, then attack, but you will have still moved past them) ; You will automatically dodge the first arrow
+that would hit you before your next turn.(it's still possible they'll roll 2 successes and hit you) ; Has the same
+effect as standing still, if you're on fire or catching fire. */
 				break;
 			case FeatType.ARCANE_HEALING: //okay, 25% fail rate for these.
 				if(attrs[AttrType.GLOBAL_FAIL_RATE] < 4){
 					if(curhp < maxhp){
 						attrs[AttrType.GLOBAL_FAIL_RATE]++;
 						B.Add("You drain your magic reserves. ");
-						int amount = Global.Roll(skills[SkillType.MAGIC]/2,6) + 25;
+						int amount = Global.Roll(TotalSkill(SkillType.MAGIC)/2,6) + 25;
 						TakeDamage(DamageType.HEAL,amount,null);
 						if(curhp == maxhp){
 							B.Add("Your wounds close. ");
@@ -2850,9 +2910,13 @@ ring of resistance
 				if(!HasAttr(AttrType.WAR_SHOUTED)){
 					B.Add("You bellow a challenge! ");
 					attrs[AttrType.WAR_SHOUTED]++;
+					attrs[AttrType.BONUS_COMBAT] += 5;
+					attrs[AttrType.BONUS_SPIRIT] += 5;
 					int duration = (Global.Roll(1,4)+6) * 100;
+					Q.Add(new Event(this,duration,AttrType.BONUS_COMBAT,5));
+					Q.Add(new Event(this,duration,AttrType.BONUS_SPIRIT,5));
 					Q.Add(new Event(this,duration,AttrType.WAR_SHOUTED,"Your morale returns to normal. "));
-					foreach(Actor a in M.AllActors()){
+					foreach(Actor a in M.AllActors()){ //or ActorsWithinDistance?
 					}
 				}
 				else{

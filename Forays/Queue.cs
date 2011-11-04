@@ -78,6 +78,16 @@ namespace Forays{
 			time_created=Q.turn;
 			dead=false;
 		}
+		public Event(PhysicalObject target_,int delay_,AttrType attr_,int value_){
+			target=target_;
+			delay=delay_;
+			type=EventType.REMOVE_ATTR;
+			attr=attr_;
+			value=value_;
+			msg="";
+			time_created=Q.turn;
+			dead=false;
+		}
 		public Event(PhysicalObject target_,int delay_,AttrType attr_,string msg_){
 			target=target_;
 			delay=delay_;

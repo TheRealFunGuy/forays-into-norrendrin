@@ -57,6 +57,17 @@ namespace Forays{
 				return 0;
 			}
 		}
+		public static int AddedFailRate(ArmorType type){
+			switch(type){
+			case ArmorType.CHAINMAIL: //chainmail of arcana has no penalty
+				return 5;
+			case ArmorType.FULL_PLATE:
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				return 15;
+			default:
+				return 0;
+			}
+		}
 	}
 	public static class MagicItem{
 	}
