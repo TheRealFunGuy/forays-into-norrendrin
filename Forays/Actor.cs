@@ -16,20 +16,12 @@ namespace Forays{
 	/*keen eyes -half check. still needs trap detection bonus.
 tough(?)
 	-as if
-combat skill
-	-matters in Attack, FireArrow.
-defense skill
-	-matters in ArmorClass. finished?
-magic skill
-	-matters in castspell. finished?
 spirit skill
 	-matters in lots of places, i guess.
 stealth skill
 	-matters in AI methods, at least.
 
 
-tumbling
-	-tumble is active now. TUMBLING is now used to dodge a single arrow, therefore it only matters in firearrow.
 danger sense(on)
 	 -matters in map.draw...eesh.
 quick draw	...
@@ -38,17 +30,7 @@ silent chain	...
 	-matters in Stealth() method
 neck snap ...
 	-matters in Attack.
-full defense
-	-checked when attacked.
 
-staff of magic (bonus to magic skill)
-elven leather (bonus to stealth skill)
-chainmail of arcana (no penalty to casting. bonus to magic skill. if that's too good, it will reduce global fail rate only)
-fp of resistance (resist fire/cold/elec)
-	the armor part is already calculated.
-	the bonus will be added during the Wield/Wear command, and during chest opening if you're wearing it already.
-ring of resistance
-	added during chest opening
 
 -when displaying skill level, the format should be base + bonus, with bonus colored differently, just so it's perfectly clear.
 */
@@ -450,8 +432,9 @@ ring of resistance
 			}
 		}
 		public void InputHuman(){
+			DisplayStats();
 			//temporary turn display:
-			Console.SetCursorPosition(1,8);
+			Console.SetCursorPosition(1,2);
 			Console.Write("{0} ",Q.turn / 100);
 			//end temporary turn display
 			if(Screen.MapChar(0,0).c == '-'){ //kinda hacky. there won't be an open door in the corner, so this looks for
@@ -460,8 +443,6 @@ ring of resistance
 			else{
 				M.Draw();
 			}
-//			Screen.DrawCheckerboard2();
-//			Screen.WriteMapChar(row,col,new colorchar{color = this.color,bgcolor = ConsoleColor.Black,c = this.symbol});
 			B.Print(false);
 			Cursor();
 			if(HasAttr(AttrType.PARALYZED)){
@@ -797,6 +778,36 @@ ring of resistance
 				}
 				Q0();
 				break;
+			case 'W':
+				{
+				if(StunnedThisTurn()){
+					break;
+				}
+/*				int i=0;
+				foreach(WeaponType w in Enum.GetValues(typeof(WeaponType))){
+					Screen.WriteMapString(i,0,Weapon.StatsName(w));
+					++i;
+				}*/
+				DisplayStats(true,false);
+				Console.ReadKey(true);
+				Q1();
+				break;
+				}
+			case 'A':
+				{
+				if(StunnedThisTurn()){
+					break;
+				}
+/*				int i=0;
+				foreach(ArmorType a in Enum.GetValues(typeof(ArmorType))){
+					Screen.WriteMapString(i,0,Armor.StatsName(a));
+					++i;
+				}*/
+				DisplayStats(false,true);
+				Console.ReadKey(true);
+				Q1();
+				break;
+				}
 			case 'l':
 				GetTarget(true);
 				Q0();
@@ -1749,7 +1760,11 @@ ring of resistance
 				plus_to_hit += 10;
 			}
 			bool hit = a.IsHit(plus_to_hit);
-			//todo: should full defense modify plus_to_hit, or be a flat chance on top of it?
+			if(a.HasAttr(AttrType.DEFENSIVE_STANCE) && Global.CoinFlip()){
+				hit = false;
+			}
+			//todo: handle neck snap here after figuring out how stealth/detection works. i think it'll work as long as you
+			// hit them - probably with a bonus to hit because they can't see you.
 			if(attack_idx==0 && (type==ActorType.FROSTLING || type==ActorType.FIRE_DRAKE)){
 				hit = true; //hack! these are the 2 'area' attacks that always hit
 			}
@@ -1818,8 +1833,21 @@ ring of resistance
 					}
 					a.attrs[AttrType.PARALYZED]++; //todo: make sure this is how paralysis works
 				}
+				if(HasAttr(AttrType.FORCE_HIT) && M.actor[r,c] != null){
+					//todo: mace of force here
+				}
 			}
 			else{
+				if(a.HasAttr(AttrType.DEFENSIVE_STANCE)){
+					//make an attack against a random enemy next to a
+					List<Actor> list = a.ActorsWithinDistance(1,true);
+					list.Remove(this); //don't consider yourself or the original target
+					if(list.Count > 0){
+						B.Add(a.You("deflect") + " the attack. ");
+						return Attack(attack_idx,list[Global.Roll(1,list.Count)-1]);
+					}
+					//this would currently enter an infinite loop if two adjacent things used it at the same time
+				}
 				if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){
 					if(s == "& lunges forward and ^hits *. "){
 						B.Add(the_name + " lunges forward and misses " + a.the_name + ". ");
@@ -1840,7 +1868,7 @@ ring of resistance
 				}
 				if(HasAttr(AttrType.DRIVE_BACK_ON)){
 					if(!a.HasAttr(AttrType.IMMOBILIZED)){
-						a.AI_Step(this,true);
+						a.AI_Step(this,true); //todo: should you follow them after driving them back?
 					}
 				}
 			}
@@ -1856,11 +1884,17 @@ ring of resistance
 			if(HasAttr(AttrType.KEEN_EYES)){
 				mod = -20; //keen eyes makes it 55%
 			}
+			mod += TotalSkill(SkillType.COMBAT);
 			if(a != null){
-				if(a.IsHit(mod)){
+				bool hit = a.IsHit(mod);
+				if(a.HasAttr(AttrType.TUMBLING)){
+					hit = false;
+					a.attrs[AttrType.TUMBLING] = 0;
+				}
+				if(hit){
 					if(Global.Roll(1,20) == 20){
 						B.Add(You("critically hit") + " " + a.the_name + " with an arrow. ");
-						a.TakeDamage(DamageType.NORMAL,24,this); //max(3d6)
+						a.TakeDamage(DamageType.NORMAL,18,this); //max(3d6)
 					}
 					else{
 						B.Add(You("hit") + " " + a.the_name + " with an arrow. ");
@@ -2872,7 +2906,71 @@ they lose sight of you and their turns_player_seen is set to X - rand_function_o
 they'll find you, then attack, but you will have still moved past them) ; You will automatically dodge the first arrow
 that would hit you before your next turn.(it's still possible they'll roll 2 successes and hit you) ; Has the same
 effect as standing still, if you're on fire or catching fire. */
+				{
+				if(HasAttr(AttrType.IMMOBILIZED)){
+					B.Add("You can't perform this feat while immobilized. ");
+					return false;
+				}
+				Tile t = GetTarget(2);
+				if(t != null && t.Actor() != null){
+					List<Actor> actors_moved_past = new List<Actor>();
+					bool moved = false;
+					foreach(Tile neighbor in t.NeighborsBetween(row,col)){
+						if(neighbor.Actor() != null){
+							actors_moved_past.Add(neighbor.Actor());
+						}
+						if(neighbor.passable && !moved){
+							Move(t.row,t.col);
+							moved = true;
+							attrs[AttrType.TUMBLING]++;
+							B.Add("You tumble. ");
+							if(HasAttr(AttrType.CATCHING_FIRE)){ //copy&paste happened here:
+								attrs[AttrType.CATCHING_FIRE] = 0;
+								B.Add("You stop the flames from spreading. ");
+							}
+							else{
+								if(HasAttr(AttrType.ON_FIRE)){
+									bool update = false;
+									int oldradius = LightRadius();
+									if(attrs[AttrType.ON_FIRE] > light_radius){
+										update = true;
+									}
+									int i = 2;
+									if(Global.Roll(1,3) == 3){ // 1 in 3 times, you don't make progress against the fire
+										i = 1;
+									}
+									attrs[AttrType.ON_FIRE] -= i;
+									if(attrs[AttrType.ON_FIRE] < 0){
+										attrs[AttrType.ON_FIRE] = 0;
+									}
+									if(update){
+										UpdateRadius(oldradius,LightRadius());
+									}
+									if(HasAttr(AttrType.ON_FIRE)){
+										B.Add("You put out some of the fire. "); //todo: better message?
+									}
+									else{
+										B.Add("You put out the fire. ");
+									}
+								}
+							}
+						}
+					}
+					if(moved){
+						foreach(Actor a in actors_moved_past){
+							//todo: stealthy stuff here
+						}
+					}
+					else{
+						B.Add("The way is blocked! ");
+						return false;
+					}
+				}
+				else{
+					return false;
+				}
 				break;
+				}
 			case FeatType.ARCANE_HEALING: //okay, 25% fail rate for these.
 				if(attrs[AttrType.GLOBAL_FAIL_RATE] < 4){
 					if(curhp < maxhp){
@@ -2969,6 +3067,135 @@ effect as standing still, if you're on fire or catching fire. */
 				return true;
 			}
 			return false;
+		}
+		public void UpdateOnEquip(WeaponType from,WeaponType to){
+			switch(from){
+			case WeaponType.FLAMEBRAND:
+				attrs[AttrType.FIRE_HIT]--;
+				break;
+			case WeaponType.MACE_OF_FORCE:
+				attrs[AttrType.FORCE_HIT]--;
+				break;
+			case WeaponType.VENOMOUS_DAGGER:
+				attrs[AttrType.POISON_HIT]--;
+				break;
+			case WeaponType.STAFF_OF_MAGIC:
+				attrs[AttrType.BONUS_MAGIC]--;
+				break;
+			}
+			switch(to){
+			case WeaponType.FLAMEBRAND:
+				attrs[AttrType.FIRE_HIT]++;
+				break;
+			case WeaponType.MACE_OF_FORCE:
+				attrs[AttrType.FORCE_HIT]++;
+				break;
+			case WeaponType.VENOMOUS_DAGGER:
+				attrs[AttrType.POISON_HIT]++;
+				break;
+			case WeaponType.STAFF_OF_MAGIC:
+				attrs[AttrType.BONUS_MAGIC]++;
+				break;
+			}
+		}
+		public void UpdateOnEquip(ArmorType from,ArmorType to){
+			switch(from){
+			case ArmorType.ELVEN_LEATHER:
+				attrs[AttrType.BONUS_STEALTH] -= 2;
+				break;
+			case ArmorType.CHAINMAIL_OF_ARCANA:
+				attrs[AttrType.BONUS_MAGIC]--;
+				break;
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				attrs[AttrType.RESIST_FIRE]--;
+				attrs[AttrType.RESIST_COLD]--;
+				attrs[AttrType.RESIST_ELECTRICITY]--;
+				break;
+			}
+			switch(to){
+			case ArmorType.ELVEN_LEATHER:
+				attrs[AttrType.BONUS_STEALTH] += 2; //todo: balance check
+				break;
+			case ArmorType.CHAINMAIL_OF_ARCANA:
+				attrs[AttrType.BONUS_MAGIC]++;
+				break;
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				attrs[AttrType.RESIST_FIRE]++;
+				attrs[AttrType.RESIST_COLD]++;
+				attrs[AttrType.RESIST_ELECTRICITY]++;
+				break;
+			}
+		}
+		public void UpdateOnEquip(MagicItemType from,MagicItemType to){
+			switch(from){
+			case MagicItemType.RING_OF_RESISTANCE:
+				attrs[AttrType.RESIST_FIRE]--;
+				attrs[AttrType.RESIST_COLD]--;
+				attrs[AttrType.RESIST_ELECTRICITY]--;
+				break;
+			}
+			switch(to){
+			case MagicItemType.RING_OF_RESISTANCE:
+				attrs[AttrType.RESIST_FIRE]++;
+				attrs[AttrType.RESIST_COLD]++;
+				attrs[AttrType.RESIST_ELECTRICITY]++;
+				break;
+			}
+		}
+		public void DisplayStats(){ DisplayStats(false,false); }
+		public void DisplayStats(bool expand_weapons,bool expand_armors){
+			//color coded HP
+			//level and xp
+			//ac
+			//weapon
+			//armor
+			//magic items
+			//space for status effects
+			//(f-key spells?)
+			Console.CursorVisible = false;
+			Screen.WriteStatsString(2,0,"HP: " + curhp + "  ");
+			Screen.WriteStatsString(3,0,"Level: " + level + "  ");
+			Screen.WriteStatsString(4,0,"XP: " + xp + "  ");
+			Screen.WriteStatsString(5,0,"AC: " + ArmorClass() + "  ");
+			int weapon_lines = 1;
+			int armor_lines = 1;
+			colorstring cs = Weapon.StatsName(weapons.First.Value);
+			cs.s = ("W: " + cs.s).PadRight(12); //todo: the W: won't actually fit. well, the A: won't, with full plate.
+			Screen.WriteStatsString(6,0,cs);
+			if(expand_weapons){ //this can easily be extended to handle a variable number of weapons
+				weapon_lines = 5;
+				int i = 7;
+				foreach(WeaponType w in weapons){
+					if(w != weapons.First.Value){
+						cs = Weapon.StatsName(w);
+						cs.s = ("   " + cs.s).PadRight(12);
+						Screen.WriteStatsString(i,0,cs);
+						++i;
+					}
+				}
+				
+			}
+			cs = Armor.StatsName(armors.First.Value);
+			cs.s = ("A: " + cs.s).PadRight(12); //does not fit, todo, augh.
+			Screen.WriteStatsString(6+weapon_lines,0,cs);
+			if(expand_armors){
+				armor_lines = 3;
+				int i = 7 + weapon_lines;
+				foreach(ArmorType a in armors){
+					if(a != armors.First.Value){
+						cs = Armor.StatsName(a);
+						cs.s = ("   " + cs.s).PadRight(12);
+						Screen.WriteStatsString(i,0,cs);
+						++i;
+					}
+				}
+			}
+			Screen.WriteStatsString(6+weapon_lines+armor_lines,0,"~~~~~~~~~~~~");
+			for(int i=7+weapon_lines+armor_lines;i<11+weapon_lines+armor_lines;++i){
+				Screen.WriteStatsString(i,0,"".PadRight(12));
+			}
+			Console.ResetColor();
+			Console.CursorVisible = true;
 		}
 		public bool CanSee(int r,int c){ return CanSee(M.tile[r,c]); }
 		public bool CanSee(PhysicalObject o){
