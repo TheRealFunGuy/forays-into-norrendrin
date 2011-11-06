@@ -555,7 +555,6 @@ neck snap ...
 						B.Add("You ready yourself. ");
 					}
 				}
-				//todo: immob here.
 				if(HasAttr(AttrType.CATCHING_FIRE)){
 					attrs[AttrType.CATCHING_FIRE] = 0;
 					B.Add("You stop the flames from spreading. ");
@@ -585,6 +584,12 @@ neck snap ...
 							B.Add("You put out the fire. ");
 						}
 					}
+				}
+				if(HasAttr(AttrType.IMMOBILIZED)){
+					attrs[AttrType.IMMOBILIZED] = 0;
+					B.Add("You break free. ");
+					QS();
+					break;
 				}
 				if(M.tile[row,col].inv != null){
 					B.Add("You see " + M.tile[row,col].inv.a_name + ". ");
@@ -783,13 +788,48 @@ neck snap ...
 				if(StunnedThisTurn()){
 					break;
 				}
-/*				int i=0;
-				foreach(WeaponType w in Enum.GetValues(typeof(WeaponType))){
-					Screen.WriteMapString(i,0,Weapon.StatsName(w));
-					++i;
-				}*/
-				DisplayStats(true,false);
-				Console.ReadKey(true);
+				WeaponType old_weapon = weapons.First.Value;
+				bool done=false;
+				while(!done){
+					DisplayStats(true,false); //todo: display cursor in correct position
+					ConsoleKeyInfo command2 = Console.ReadKey(true);
+					char ch2 = ConvertInput(command2);
+					if(Global.Option(OptionType.VI_KEYS)){
+						ch2 = ConvertVIKeys(ch2);
+					}
+					switch(ch2){
+					case '8':
+						{
+						WeaponType w = weapons.Last.Value;
+						weapons.Remove(w);
+						weapons.AddFirst(w);
+						break;
+						}
+					case '2':
+						{
+						WeaponType w = weapons.First.Value;
+						weapons.Remove(w);
+						weapons.AddLast(w);
+						break;
+						}
+					case (char)27:
+					case ' ':
+						Q0();
+						return;
+					case (char)13:
+						done=true;
+						break;
+					default:
+						break;
+					}
+				}
+				if(old_weapon == weapons.First.Value){
+					Q0();
+					break;
+				}
+				else{
+					UpdateOnEquip(old_weapon,weapons.First.Value);
+				}
 				Q1();
 				break;
 				}
@@ -859,10 +899,14 @@ neck snap ...
 				Q0();
 				break;
 			case 'v':
-				Console.Write(Q.Count());
-				Console.ReadKey(true);
+				{
+				Tile t = GetTarget();
+				if(t != null){
+					Screen.AnimateProjectile(GetExtendedBresenhamLine(t.row,t.col),new colorchar(ConsoleColor.Yellow,'$'));
+				}
 				Q1();
 				break;
+				}
 			case 'X':
 				{
 				ConsoleKeyInfo command2 = Console.ReadKey(true);
@@ -3513,6 +3557,7 @@ effect as standing still, if you're on fire or catching fire. */
 					break;
 				}
 				if(!done){
+					Screen.ResetColors();
 					if(r == row && c == col){
 						string s = "You're standing here. ";
 						if(M.tile[r,c].inv != null){

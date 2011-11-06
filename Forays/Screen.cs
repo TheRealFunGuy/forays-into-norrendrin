@@ -5,6 +5,16 @@ namespace Forays{
 		public ConsoleColor color;
 		public ConsoleColor bgcolor;
 		public char c;
+		public colorchar(ConsoleColor color_,ConsoleColor bgcolor_,char c_){
+			color = color_;
+			bgcolor = bgcolor_;
+			c = c_;
+		}
+		public colorchar(ConsoleColor color_,char c_){
+			color = color_;
+			bgcolor = ConsoleColor.Black;
+			c = c_;
+		}
 	}
 	public struct colorstring{
 		public ConsoleColor color;
@@ -35,9 +45,7 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static void WriteMapChar(int r,int c,colorchar ch){
-			r += Global.MAP_OFFSET_ROWS;
-			c += Global.MAP_OFFSET_COLS;
+		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
 				memory[r,c] = ch;
 				if(ch.color != Console.ForegroundColor){
@@ -49,6 +57,17 @@ namespace Forays{
 				Console.SetCursorPosition(c,r);
 				Console.Write(ch.c);
 			}
+		}
+		public static void ResetColors(){
+			if(Console.ForegroundColor != ConsoleColor.Gray){
+				Console.ForegroundColor = ConsoleColor.Gray;
+			}
+			if(Console.BackgroundColor != ConsoleColor.Black){
+				Console.BackgroundColor = ConsoleColor.Black;
+			}
+		}
+		public static void WriteMapChar(int r,int c,colorchar ch){
+			WriteChar(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch);
 		}
 		public static void WriteMapString(int r,int c,string s){
 			colorstring cs;
@@ -88,21 +107,7 @@ namespace Forays{
 				Console.Write(s.s);
 			}
 		}
-		public static void WriteStatsChar(int r,int c,colorchar ch){
-			++r;
-			++c;
-			if(!memory[r,c].Equals(ch)){
-				memory[r,c] = ch;
-				if(ch.color != Console.ForegroundColor){
-					Console.ForegroundColor = ch.color;
-				}
-				if(ch.bgcolor != Console.BackgroundColor){
-					Console.BackgroundColor = ch.bgcolor;
-				}
-				Console.SetCursorPosition(c,r);
-				Console.Write(ch.c);
-			}
-		}
+		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r+1,c+1,ch); }
 		public static void WriteStatsString(int r,int c,string s){
 			colorstring cs;
 			cs.color = ConsoleColor.Gray;
@@ -140,6 +145,25 @@ namespace Forays{
 				Console.SetCursorPosition(c,r);
 				Console.Write(s.s);
 			}
+		}
+		public static void AnimateCell(int r,int c,colorchar ch,int duration){
+			colorchar prev = memory[r,c];
+			WriteChar(r,c,ch);
+			System.Threading.Thread.Sleep(duration);
+			WriteChar(r,c,prev);
+		}
+		public static void AnimateMapCell(int r,int c,colorchar ch){ AnimateMapCell(r,c,ch,50); }
+		public static void AnimateMapCell(int r,int c,colorchar ch,int duration){
+			AnimateCell(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch,duration);
+		}
+		public static void AnimateProjectile(List<Tile> list,colorchar ch){ AnimateProjectile(list,ch,50); }
+		public static void AnimateProjectile(List<Tile> list,colorchar ch,int duration){
+			Console.CursorVisible = false;
+			list.RemoveAt(0);
+			foreach(Tile t in list){
+				AnimateMapCell(t.row,t.col,ch,duration);
+			}
+			Console.CursorVisible = true;
 		}
 	}
 }
