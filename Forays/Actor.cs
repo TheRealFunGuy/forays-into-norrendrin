@@ -295,6 +295,14 @@ neck snap ...
 				}
 			}
 		}
+		public string YouFeel(){
+			if(name == "you"){
+				return "you feel";
+			}
+			else{
+				return the_name + " looks";
+			}
+		}
 		public void Input(){
 			bool return_after_recovery = false;
 			if(HasAttr(AttrType.DEFENSIVE_STANCE)){
@@ -697,7 +705,7 @@ neck snap ...
 				if(Global.Option(OptionType.LAST_TARGET) && target!=null && DistanceFrom(target)==1){ //since you can't fire
 					target = null;										//at adjacent targets anyway.
 				}
-				Tile t = GetTarget();
+				Tile t = GetTarget(); //todo: add targeting range here
 				if(t != null){
 					if(DistanceFrom(t) > 1){
 						FireArrow(t);
@@ -894,6 +902,10 @@ neck snap ...
 			case 'B':
 				B.DisplayLogtempfunction();
 				Q0();
+				break;
+			case 'C':
+				new Item(ConsumableType.PRISMATIC_ORB,"prismatic orb",'*',Color.White).Use(this);
+				Q1();
 				break;
 			case 'V':
 				//has_spell[SpellType.SHADOWSIGHT] = 1;

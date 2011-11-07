@@ -58,6 +58,14 @@ namespace Forays{
 			Console.SetCursorPosition(Global.MAP_OFFSET_COLS + s.Length,1);
 			Console.CursorVisible = true;
 		}
+		public void DisplayNow(){ //displays whatever is in the buffer. used before animations.
+			Console.CursorVisible = false;
+			Screen.ResetColors();
+			Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
+			Console.Write(str.PadRight(Global.COLS));
+			//Console.SetCursorPosition(Global.MAP_OFFSET_COLS + str.Length,1);
+			Console.CursorVisible = true;
+		}
 		public void DisplayLogtempfunction(){
 			for(int i=0;i<log.Length;++i){
 				Console.Error.Write("{0} ",log[i]);

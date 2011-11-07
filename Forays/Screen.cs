@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce};
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning};
 	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
@@ -273,6 +273,19 @@ namespace Forays{
 					return ConsoleColor.Blue;
 				case 4:
 					return ConsoleColor.DarkBlue;
+				default:
+					return ConsoleColor.Black;
+				}
+			case Color.RandomLightning:
+				switch(Global.Roll(1,4)){
+				case 1:
+					return ConsoleColor.White;
+				case 2:
+					return ConsoleColor.Yellow;
+				case 3:
+					return ConsoleColor.Yellow;
+				case 4:
+					return ConsoleColor.DarkYellow;
 				default:
 					return ConsoleColor.Black;
 				}
