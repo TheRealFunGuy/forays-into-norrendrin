@@ -68,43 +68,43 @@ namespace Forays{
 		}
 		public static colorstring StatsName(WeaponType type){
 			colorstring cs;
-			cs.bgcolor = ConsoleColor.Black;
-			cs.color = ConsoleColor.Gray;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.Gray;
 			switch(type){
 			case WeaponType.SWORD:
 				cs.s = "Sword";
 				break;
 			case WeaponType.FLAMEBRAND:
 				cs.s = "+Sword+";
-				cs.color = ConsoleColor.Red;
+				cs.color = Color.Red;
 				break;
 			case WeaponType.MACE:
 				cs.s = "Mace";
 				break;
 			case WeaponType.MACE_OF_FORCE:
 				cs.s = "+Mace+";
-				cs.color = ConsoleColor.Cyan;
+				cs.color = Color.Cyan;
 				break;
 			case WeaponType.DAGGER:
 				cs.s = "Dagger";
 				break;
 			case WeaponType.VENOMOUS_DAGGER:
 				cs.s = "+Dagger+";
-				cs.color = ConsoleColor.Green;
+				cs.color = Color.Green;
 				break;
 			case WeaponType.STAFF:
 				cs.s = "Staff";
 				break;
 			case WeaponType.STAFF_OF_MAGIC:
 				cs.s = "+Staff+";
-				cs.color = ConsoleColor.Magenta;
+				cs.color = Color.Magenta;
 				break;
 			case WeaponType.BOW:
 				cs.s = "Bow";
 				break;
 			case WeaponType.HOLY_LONGBOW:
 				cs.s = "+Bow+";
-				cs.color = ConsoleColor.Yellow;
+				cs.color = Color.Yellow;
 				break;
 			default:
 				cs.s = "no weapon";
@@ -160,29 +160,29 @@ namespace Forays{
 		}
 		public static colorstring StatsName(ArmorType type){
 			colorstring cs;
-			cs.bgcolor = ConsoleColor.Black;
-			cs.color = ConsoleColor.Gray;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.Gray;
 			switch(type){
 			case ArmorType.LEATHER:
 				cs.s = "Leather";
 				break;
 			case ArmorType.ELVEN_LEATHER:
 				cs.s = "+Leather+";
-				cs.color = ConsoleColor.DarkCyan;
+				cs.color = Color.DarkCyan;
 				break;
 			case ArmorType.CHAINMAIL:
 				cs.s = "Chainmail";
 				break;
 			case ArmorType.CHAINMAIL_OF_ARCANA:
 				cs.s = "+Chainmail+";
-				cs.color = ConsoleColor.Magenta;
+				cs.color = Color.Magenta;
 				break;
 			case ArmorType.FULL_PLATE:
 				cs.s = "Full plate";
 				break;
 			case ArmorType.FULL_PLATE_OF_RESISTANCE:
 				cs.s = "+Full plate+";
-				cs.color = ConsoleColor.Blue;
+				cs.color = Color.Blue;
 				break;
 			default:
 				cs.s = "no armor";

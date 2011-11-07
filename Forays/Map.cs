@@ -97,7 +97,7 @@ namespace Forays{
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					colorchar ch;
-					ch.bgcolor = ConsoleColor.Black;
+					ch.bgcolor = Color.Black;
 					if(player.CanSee(i,j)){
 						tile[i,j].seen = true;
 						if(actor[i,j] != null && player.CanSee(actor[i,j])){
@@ -114,10 +114,10 @@ namespace Forays{
 								ch.color = tile[i,j].color;
 								if(ch.c=='.' || ch.c=='#'){
 									if(tile[i,j].IsLit()){
-										ch.color = ConsoleColor.Yellow;
+										ch.color = Color.Yellow;
 									}
 									else{
-										ch.color = ConsoleColor.DarkCyan;
+										ch.color = Color.DarkCyan;
 									}
 								}
 							}
@@ -133,12 +133,12 @@ namespace Forays{
 								ch.c = tile[i,j].symbol;
 								ch.color = tile[i,j].color;
 								if(ch.c=='.' || ch.c=='#'){
-									ch.color = ConsoleColor.White;
+									ch.color = Color.White;
 								}
 							}
 							else{
 								ch.c = ' ';
-								ch.color = ConsoleColor.Black;
+								ch.color = Color.Black;
 							}
 						}
 					}
@@ -154,8 +154,8 @@ namespace Forays{
 			Console.CursorVisible = false;
 			colorstring s;
 			s.s = "";
-			s.bgcolor = ConsoleColor.Black;
-			s.color = ConsoleColor.Black;
+			s.bgcolor = Color.Black;
+			s.color = Color.Black;
 			int r = 0;
 			int c = 0;
 			for(int i=0;i<ROWS;++i){
@@ -164,7 +164,7 @@ namespace Forays{
 				c = 0;
 				for(int j=0;j<COLS;++j){
 					colorchar ch;
-					ch.bgcolor = ConsoleColor.Black;
+					ch.bgcolor = Color.Black;
 					if(player.CanSee(i,j)){
 						tile[i,j].seen = true;
 						if(actor[i,j] != null && player.CanSee(actor[i,j])){
@@ -181,10 +181,10 @@ namespace Forays{
 								ch.color = tile[i,j].color;
 								if(ch.c=='.' || ch.c=='#'){
 									if(tile[i,j].IsLit()){
-										ch.color = ConsoleColor.Yellow;
+										ch.color = Color.Yellow;
 									}
 									else{
-										ch.color = ConsoleColor.DarkCyan;
+										ch.color = Color.DarkCyan;
 									}
 								}
 							}
@@ -200,12 +200,12 @@ namespace Forays{
 								ch.c = tile[i,j].symbol;
 								ch.color = tile[i,j].color;
 								if(ch.c=='.' || ch.c=='#'){
-									ch.color = ConsoleColor.White;
+									ch.color = Color.White;
 								}
 							}
 							else{
 								ch.c = ' ';
-								ch.color = ConsoleColor.Black;
+								ch.color = Color.Black;
 							}
 						}
 					}

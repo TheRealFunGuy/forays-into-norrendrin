@@ -18,12 +18,12 @@ namespace Forays{
 		public static Buffer B{get;set;} //needed here?
 		public static Actor player{get;set;}
 		static Tile(){
-			proto[TileType.FLOOR] = new Tile(TileType.FLOOR,"floor",'.',ConsoleColor.White,true,false,null);
-			proto[TileType.WALL] = new Tile(TileType.WALL,"wall",'#',ConsoleColor.Gray,false,true,null);
-			proto[TileType.DOOR_C] = new Tile(TileType.DOOR_C,"closed door",'+',ConsoleColor.DarkYellow,false,true,TileType.DOOR_O);
-			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',ConsoleColor.DarkGreen,true,false,TileType.DOOR_C);
-			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',ConsoleColor.White,true,false,null);
-			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',ConsoleColor.Yellow,true,false,TileType.FLOOR);
+			proto[TileType.FLOOR] = new Tile(TileType.FLOOR,"floor",'.',Color.White,true,false,null);
+			proto[TileType.WALL] = new Tile(TileType.WALL,"wall",'#',Color.Gray,false,true,null);
+			proto[TileType.DOOR_C] = new Tile(TileType.DOOR_C,"closed door",'+',Color.DarkYellow,false,true,TileType.DOOR_O);
+			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',Color.DarkGreen,true,false,TileType.DOOR_C);
+			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',Color.White,true,false,null);
+			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.Yellow,true,false,TileType.FLOOR);
 			//trap ideas: quickfire trap: burst of fire that ignites stuff, then expands(like quickfire) for several turns.
 				//you'll probably have to run while on fire, instead of putting it out
 			//not an actual trap, but room mimic will be awesome.
@@ -47,7 +47,7 @@ namespace Forays{
 			row = r;
 			col = c;
 		}
-		public Tile(TileType type_,string name_,char symbol_,ConsoleColor color_,bool passable_,bool opaque_,TileType? toggles_into_){
+		public Tile(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
 			type = type_;
 			name = name_;
 			the_name = "the " + name;

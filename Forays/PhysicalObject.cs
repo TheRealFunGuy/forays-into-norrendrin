@@ -8,7 +8,7 @@ namespace Forays{
 		public string a_name{get; protected set;}
 		public string the_name{get; protected set;}
 		public char symbol{get; protected set;}
-		public ConsoleColor color{get; protected set;}
+		public Color color{get; protected set;}
 		
 		public static Map M{get;set;}
 		public PhysicalObject(){
@@ -18,7 +18,7 @@ namespace Forays{
 			a_name="";
 			the_name="";
 			symbol='%';
-			color=ConsoleColor.White;
+			color=Color.White;
 		}
 		public void Cursor(){
 			Console.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);

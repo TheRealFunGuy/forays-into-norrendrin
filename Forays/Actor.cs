@@ -67,7 +67,7 @@ neck snap ...
 		public static Actor player{get;set;}
 		static Actor(){
 			//proto[ActorType.PLAYER] = new Actor(); //unused!
-			proto[ActorType.GOBLIN] = new Actor(ActorType.GOBLIN,"goblin",'g',ConsoleColor.Green,20,100,5,1,0);
+			proto[ActorType.GOBLIN] = new Actor(ActorType.GOBLIN,"goblin",'g',Color.Green,20,100,5,1,0);
 			//
 		}
 		public Actor(Actor a,int r,int c){
@@ -92,7 +92,7 @@ neck snap ...
 			weapons = new LinkedList<WeaponType>(a.weapons);
 			armors = new LinkedList<ArmorType>(a.armors);
 		}
-		public Actor(ActorType type_,string name_,char symbol_,ConsoleColor color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_){
+		public Actor(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_){
 			type = type_;
 			name = name_;
 			the_name = "the " + name;
@@ -900,10 +900,12 @@ neck snap ...
 				break;
 			case 'v':
 				{
-				Tile t = GetTarget();
-				if(t != null){
-					Screen.AnimateProjectile(GetExtendedBresenhamLine(t.row,t.col),new colorchar(ConsoleColor.Yellow,'$'));
-				}
+//				Tile t = GetTarget();
+//				if(t != null){
+					//Screen.AnimateProjectile(GetExtendedBresenhamLine(t.row,t.col),new colorchar(ConsoleColor.Yellow,'$'));
+//					Screen.AnimateProjectile(GetBresenhamLine(t.row,t.col),new colorchar(Color.Blue,'*'),25);
+					Screen.AnimateExplosion(this,5,new colorchar(Color.RandomIce,'*'),25);
+				//}
 				Q1();
 				break;
 				}
@@ -919,8 +921,8 @@ neck snap ...
 				Console.CursorVisible = false;
 				colorchar cch;
 				cch.c = ' ';
-				cch.color = ConsoleColor.Black;
-				cch.bgcolor = ConsoleColor.Black;
+				cch.color = Color.Black;
+				cch.bgcolor = Color.Black;
 				foreach(Tile t in M.AllTiles()){
 					t.seen = false;
 					Screen.WriteMapChar(t.row,t.col,cch);
@@ -3634,33 +3636,33 @@ effect as standing still, if you're on fire or catching fire. */
 								colorchar cch = mem[t.row,t.col];
 								if(t.row == r && t.col == c){
 									if(!blocked){
-										if(cch.color == ConsoleColor.Green){
-											cch.color = ConsoleColor.Black;
+										if(cch.color == Color.Green){
+											cch.color = Color.Black;
 										}
-										cch.bgcolor = ConsoleColor.Green;
+										cch.bgcolor = Color.Green;
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 									else{
-										if(cch.color == ConsoleColor.Red){
-											cch.color = ConsoleColor.Black;
+										if(cch.color == Color.Red){
+											cch.color = Color.Black;
 										}
-										cch.bgcolor = ConsoleColor.Red;
+										cch.bgcolor = Color.Red;
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 								}
 								else{
 									if(!blocked){
-										if(cch.color == ConsoleColor.DarkGreen){
-											cch.color = ConsoleColor.Black;
+										if(cch.color == Color.DarkGreen){
+											cch.color = Color.Black;
 										}
-										cch.bgcolor = ConsoleColor.DarkGreen;
+										cch.bgcolor = Color.DarkGreen;
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 									else{
-										if(cch.color == ConsoleColor.DarkRed){
-											cch.color = ConsoleColor.Black;
+										if(cch.color == Color.DarkRed){
+											cch.color = Color.Black;
 										}
-										cch.bgcolor = ConsoleColor.DarkRed;
+										cch.bgcolor = Color.DarkRed;
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 									if(t.seen && !t.passable){

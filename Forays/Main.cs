@@ -26,7 +26,7 @@ namespace Forays{
 			Console.BufferHeight = Global.SCREEN_H; //25
 			//Console.CursorSize = 100;
 			Game game = new Game();
-			game.player = new Actor(ActorType.PLAYER,"you",'@',ConsoleColor.White,100,100,0,1,0);
+			game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,0,1,0);
 			game.player.weapons.Remove(WeaponType.NO_WEAPON);
 			game.player.weapons.AddLast(WeaponType.SWORD);
 			game.player.weapons.AddLast(WeaponType.MACE);
