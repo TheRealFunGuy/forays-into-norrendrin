@@ -32,8 +32,6 @@ stealth skill
 
 danger sense(on)
 	 -matters in map.draw...eesh.
-quick draw	...
-	-matters in Wield command
 silent chain	...
 	-matters in Stealth() method
 neck snap ...
@@ -214,6 +212,16 @@ neck snap ...
 			case SkillType.STEALTH:
 				result += attrs[AttrType.BONUS_STEALTH];
 				break;
+			}
+			return result;
+		}
+		public static int Rarity(ActorType type){
+			int result = ((int)type)%2; //hacky, since the enum is arranged common-uncommon
+			if(result == 0){
+				result = 2;
+			}
+			if(type == ActorType.PLAYER || type == ActorType.FIRE_DRAKE){
+				return 0;
 			}
 			return result;
 		}
@@ -807,7 +815,8 @@ neck snap ...
 				WeaponType old_weapon = weapons.First.Value;
 				bool done=false;
 				while(!done){
-					DisplayStats(true,false); //todo: display cursor in correct position
+					DisplayStats(true,false);
+					Console.SetCursorPosition(4,7);
 					ConsoleKeyInfo command2 = Console.ReadKey(true);
 					char ch2 = ConvertInput(command2);
 					if(Global.Option(OptionType.VI_KEYS)){
@@ -841,12 +850,18 @@ neck snap ...
 				}
 				if(old_weapon == weapons.First.Value){
 					Q0();
-					break;
 				}
 				else{
+					if(HasFeat(FeatType.QUICK_DRAW)){
+						B.Add("You quickly ready your " + Weapon.Name(weapons.First.Value) + ". ");
+						Q0();
+					}
+					else{
+						B.Add("You ready your " + Weapon.Name(weapons.First.Value) + ". ");
+						Q1();
+					}
 					UpdateOnEquip(old_weapon,weapons.First.Value);
 				}
-				Q1();
 				break;
 				}
 			case 'A':
@@ -854,14 +869,50 @@ neck snap ...
 				if(StunnedThisTurn()){
 					break;
 				}
-/*				int i=0;
-				foreach(ArmorType a in Enum.GetValues(typeof(ArmorType))){
-					Screen.WriteMapString(i,0,Armor.StatsName(a));
-					++i;
-				}*/
-				DisplayStats(false,true);
-				Console.ReadKey(true);
-				Q1();
+				ArmorType old_armor = armors.First.Value;
+				bool done=false;
+				while(!done){
+					DisplayStats(false,true);
+					Console.SetCursorPosition(4,8);
+					ConsoleKeyInfo command2 = Console.ReadKey(true);
+					char ch2 = ConvertInput(command2);
+					if(Global.Option(OptionType.VI_KEYS)){
+						ch2 = ConvertVIKeys(ch2);
+					}
+					switch(ch2){
+					case '8':
+						{
+						ArmorType a = armors.Last.Value;
+						armors.Remove(a);
+						armors.AddFirst(a);
+						break;
+						}
+					case '2':
+						{
+						ArmorType a = armors.First.Value;
+						armors.Remove(a);
+						armors.AddLast(a);
+						break;
+						}
+					case (char)27:
+					case ' ':
+						Q0();
+						return;
+					case (char)13:
+						done=true;
+						break;
+					default:
+						break;
+					}
+				}
+				if(old_armor == armors.First.Value){
+					Q0();
+				}
+				else{
+					B.Add("You wear your " + Armor.Name(armors.First.Value) + ". ");
+					Q1();
+					UpdateOnEquip(old_armor,armors.First.Value);
+				}
 				break;
 				}
 			case 'l':
@@ -960,9 +1011,6 @@ neck snap ...
 			}
 		}
 		public void InputAI(){
-			//check for regeneration
-			//cansee(player) check, also player_seen
-			//and player_seen distance 0 check
 			//bool path_step? am i using pathing for anybody?
 			if(target != null){
 				if(CanSee(target)){ //this is where stealth matters. seeing the tile it's on doesn't always mean you can see
@@ -3225,8 +3273,9 @@ effect as standing still, if you're on fire or catching fire. */
 			Screen.WriteStatsString(5,0,"AC: " + ArmorClass() + "  ");
 			int weapon_lines = 1;
 			int armor_lines = 1;
+			int magic_item_lines = magic_items.Count;
 			colorstring cs = Weapon.StatsName(weapons.First.Value);
-			cs.s = ("W: " + cs.s).PadRight(12); //todo: the W: won't actually fit. well, the A: won't, with full plate.
+			cs.s = ("" + cs.s).PadRight(12); //todo: the W: won't actually fit. well, the A: won't, with full plate.
 			Screen.WriteStatsString(6,0,cs);
 			if(expand_weapons){ //this can easily be extended to handle a variable number of weapons
 				weapon_lines = 5;
@@ -3234,7 +3283,7 @@ effect as standing still, if you're on fire or catching fire. */
 				foreach(WeaponType w in weapons){
 					if(w != weapons.First.Value){
 						cs = Weapon.StatsName(w);
-						cs.s = ("   " + cs.s).PadRight(12);
+						cs.s = ("" + cs.s).PadRight(12);
 						Screen.WriteStatsString(i,0,cs);
 						++i;
 					}
@@ -3242,7 +3291,7 @@ effect as standing still, if you're on fire or catching fire. */
 				
 			}
 			cs = Armor.StatsName(armors.First.Value);
-			cs.s = ("A: " + cs.s).PadRight(12); //does not fit, todo, augh.
+			cs.s = ("" + cs.s).PadRight(12); //does not fit, todo, augh.
 			Screen.WriteStatsString(6+weapon_lines,0,cs);
 			if(expand_armors){
 				armor_lines = 3;
@@ -3250,13 +3299,13 @@ effect as standing still, if you're on fire or catching fire. */
 				foreach(ArmorType a in armors){
 					if(a != armors.First.Value){
 						cs = Armor.StatsName(a);
-						cs.s = ("   " + cs.s).PadRight(12);
+						cs.s = ("" + cs.s).PadRight(12);
 						Screen.WriteStatsString(i,0,cs);
 						++i;
 					}
 				}
 			}
-			Screen.WriteStatsString(6+weapon_lines+armor_lines,0,"~~~~~~~~~~~~");
+			Screen.WriteStatsString(6+weapon_lines+armor_lines,0,"~~~~~~~~~~~~"); //todo: magic items somewhere in here
 			for(int i=7+weapon_lines+armor_lines;i<11+weapon_lines+armor_lines;++i){
 				Screen.WriteStatsString(i,0,"".PadRight(12));
 			}
@@ -3338,16 +3387,14 @@ effect as standing still, if you're on fire or catching fire. */
 			return null;
 		}
 		public bool IsWithinSightRangeOf(int r,int c){
-			int dy = Math.Abs(row-r);
-			int dx = Math.Abs(col-c);
-			int maxd = Math.Max(dy,dx);
-			if(maxd <= 3){
+			int dist = DistanceFrom(r,c);
+			if(dist <= 3){
 				return true;
 			}
-			if(maxd <= 6 && HasAttr(AttrType.LOW_LIGHT_VISION)){
+			if(dist <= 6 && HasAttr(AttrType.LOW_LIGHT_VISION)){
 				return true;
 			}
-			if(maxd <= 12 && HasAttr(AttrType.DARKVISION)){
+			if(dist <= 12 && HasAttr(AttrType.DARKVISION)){
 				return true;
 			}
 			if(M.tile[r,c].opaque){

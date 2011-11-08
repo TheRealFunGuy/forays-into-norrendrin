@@ -23,7 +23,7 @@ namespace Forays{
 			proto[TileType.DOOR_C] = new Tile(TileType.DOOR_C,"closed door",'+',Color.DarkYellow,false,true,TileType.DOOR_O);
 			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',Color.DarkGreen,true,false,TileType.DOOR_C);
 			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',Color.White,true,false,null);
-			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.Yellow,true,false,TileType.FLOOR);
+			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.Yellow,true,false,null);
 			//trap ideas: quickfire trap: burst of fire that ignites stuff, then expands(like quickfire) for several turns.
 				//you'll probably have to run while on fire, instead of putting it out
 			//not an actual trap, but room mimic will be awesome.
@@ -179,6 +179,107 @@ namespace Forays{
 				foreach(Actor a in actors){
 					a.UpdateRadius(0,a.light_radius);
 				}
+			}
+		}
+		public void OpenChest(){
+			if(type == TileType.CHEST){
+				if(Global.Roll(1,10) == 10){
+					List<int> upgrades = new List<int>();
+					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.FLAMEBRAND)){
+						upgrades.Add(0);
+					}
+					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.MACE_OF_FORCE)){
+						upgrades.Add(1);
+					}
+					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.VENOMOUS_DAGGER)){
+						upgrades.Add(2);
+					}
+					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.STAFF_OF_MAGIC)){
+						upgrades.Add(3);
+					}
+					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.HOLY_LONGBOW)){
+						upgrades.Add(4);
+					}
+					if(Global.Roll(1,3) == 3 && !player.armors.Contains(ArmorType.ELVEN_LEATHER)){
+						upgrades.Add(5);
+					}
+					if(Global.Roll(1,3) == 3 && !player.armors.Contains(ArmorType.CHAINMAIL_OF_ARCANA)){
+						upgrades.Add(6);
+					}
+					if(Global.Roll(1,3) == 3 && !player.armors.Contains(ArmorType.FULL_PLATE_OF_RESISTANCE)){
+						upgrades.Add(7);
+					}
+					if(Global.Roll(1,2) == 2 && !player.magic_items.Contains(MagicItemType.PENDANT_OF_LIFE)){
+						upgrades.Add(8);
+					}
+					if(Global.Roll(1,3) == 3 && !player.magic_items.Contains(MagicItemType.RING_OF_RESISTANCE)){
+						upgrades.Add(9);
+					}
+					if(Global.Roll(1,2) == 2 && !player.magic_items.Contains(MagicItemType.RING_OF_PROTECTION)){
+						upgrades.Add(10);
+					}
+					if(Global.Roll(1,2) == 2 && !player.magic_items.Contains(MagicItemType.CLOAK_OF_DISAPPEARANCE)){
+						upgrades.Add(11);
+					}
+					if(upgrades.Count == 0){
+						OpenChest();
+						return;
+					}
+					int upgrade = upgrades[Global.Roll(1,upgrades.Count)-1];
+					switch(upgrade){
+					case 0: //flamebrand
+						player.weapons.Find(WeaponType.SWORD).Value = WeaponType.FLAMEBRAND;
+						player.UpdateOnEquip(WeaponType.SWORD,WeaponType.FLAMEBRAND);
+						break;
+					case 1: //mace of force
+						player.weapons.Find(WeaponType.MACE).Value = WeaponType.MACE_OF_FORCE;
+						player.UpdateOnEquip(WeaponType.MACE,WeaponType.MACE_OF_FORCE);
+						break;
+					case 2: //venomous dagger
+						player.weapons.Find(WeaponType.DAGGER).Value = WeaponType.VENOMOUS_DAGGER;
+						player.UpdateOnEquip(WeaponType.DAGGER,WeaponType.VENOMOUS_DAGGER);
+						break;
+					case 3: //staff of magic
+						player.weapons.Find(WeaponType.STAFF).Value = WeaponType.STAFF_OF_MAGIC;
+						player.UpdateOnEquip(WeaponType.STAFF,WeaponType.STAFF_OF_MAGIC);
+						break;
+					case 4: //holy longbow
+						player.weapons.Find(WeaponType.BOW).Value = WeaponType.HOLY_LONGBOW;
+						player.UpdateOnEquip(WeaponType.BOW,WeaponType.HOLY_LONGBOW);
+						break;
+					case 5: //elven leather
+						player.armors.Find(ArmorType.LEATHER).Value = ArmorType.ELVEN_LEATHER;
+						player.UpdateOnEquip(ArmorType.LEATHER,ArmorType.ELVEN_LEATHER);
+						break;
+					case 6: //chainmail of arcana
+						player.armors.Find(ArmorType.CHAINMAIL).Value = ArmorType.CHAINMAIL_OF_ARCANA;
+						player.UpdateOnEquip(ArmorType.CHAINMAIL,ArmorType.CHAINMAIL_OF_ARCANA);
+						break;
+					case 7: //full plate of resistance
+						player.armors.Find(ArmorType.FULL_PLATE).Value = ArmorType.FULL_PLATE_OF_RESISTANCE;
+						player.UpdateOnEquip(ArmorType.FULL_PLATE,ArmorType.FULL_PLATE_OF_RESISTANCE);
+						break;
+					case 8: //pendant of life
+						player.magic_items.AddLast(MagicItemType.PENDANT_OF_LIFE);
+						break;
+					case 9: //ring of resistance
+						player.magic_items.AddLast(MagicItemType.RING_OF_RESISTANCE);
+						break;
+					case 10: //ring of protection
+						player.magic_items.AddLast(MagicItemType.RING_OF_PROTECTION);
+						break;
+					case 11: //cloak of disappearance
+						player.magic_items.AddLast(MagicItemType.CLOAK_OF_DISAPPEARANCE);
+						break;
+					default:
+						break;
+					}
+				}
+				else{
+					Item i = Item.Create(Item.RandomItem(),player);
+					B.Add("You find " + i.AName() + ". ");
+				}
+				TurnToFloor();
 			}
 		}
 		public bool IsLit(){ //default is player as viewer

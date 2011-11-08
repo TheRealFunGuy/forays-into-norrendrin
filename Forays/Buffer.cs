@@ -45,10 +45,25 @@ namespace Forays{
 				Print(false);
 			}
 		}
-		public void IfSeenAdd(PhysicalObject o1,string s){ IfSeenAdd(o1,null,s); }
 		public void IfSeenAdd(PhysicalObject o1,PhysicalObject o2,string s){
 			if(player.CanSee(o1) && (o2 == null || player.CanSee(o2))){
 				Add(s);//todo: make sure everything uses this method properly
+			}
+		}
+		public void Add(string s,params PhysicalObject[] objs){ //if there's at least one object, the player must be able to
+			if(objs.Length > 0){ //see at least one of them. if not, no message is added. 
+				bool seen = false;
+				foreach(PhysicalObject obj in objs){
+					if(obj == player || player.CanSee(obj)){
+						seen = true;
+						break;
+					}
+				}
+				if(seen){
+				}
+			}
+			else{
+				//normal add
 			}
 		}
 		public void DisplayNow(string s){

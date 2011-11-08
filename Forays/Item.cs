@@ -68,6 +68,14 @@ namespace Forays{
 			}
 			return i;
 		}
+		public static Item Create(ConsumableType type,Actor a){
+			Item i = null;
+			if(a.inv.Count < Global.MAX_INVENTORY_SIZE){
+				i = new Item(proto[type],-1,-1);
+				a.inv.Add(i);
+			}
+			return i;
+		}
 		public string AName(){
 			string result;
 			int position;
@@ -128,7 +136,6 @@ namespace Forays{
 				return 1;
 			}
 		}
-		public int Rarity(){ return Item.Rarity(type); }
 		public static ConsumableType RandomItem(){
 			List<ConsumableType> list = new List<ConsumableType>();
 			foreach(ConsumableType item in Enum.GetValues(typeof(ConsumableType))){
@@ -359,8 +366,8 @@ namespace Forays{
 					--quantity;
 				}
 				else{
-					//todo: user.lose_this_item
-					//make sure no references exist.
+					//todo: uncomment this line: user.inv.Remove(this);
+					//todo: make sure no references exist.
 				}
 			}
 			return used;
