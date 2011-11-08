@@ -482,13 +482,25 @@ namespace Forays{
 				return 0;
 			}
 		}
-		public static int AddedFailRate(ArmorType type){
+		public static int AddedFailRate(ArmorType type){ //todo: balance check: should these be higher?
 			switch(type){
 			case ArmorType.CHAINMAIL: //chainmail of arcana has no penalty
 				return 5;
 			case ArmorType.FULL_PLATE:
 			case ArmorType.FULL_PLATE_OF_RESISTANCE:
 				return 15;
+			default:
+				return 0;
+			}
+		}
+		public static int StealthPenalty(ArmorType type){ //todo: balance check: should these be higher?
+			switch(type){
+			case ArmorType.CHAINMAIL:
+			case ArmorType.CHAINMAIL_OF_ARCANA:
+				return 1;
+			case ArmorType.FULL_PLATE:
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				return 3;
 			default:
 				return 0;
 			}

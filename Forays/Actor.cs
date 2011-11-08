@@ -26,19 +26,14 @@ tough(?)
 	-as if
 spirit skill
 	-matters in lots of places, i guess.
-stealth skill
-	-matters in AI methods, at least.
 
 
 danger sense(on)
 	 -matters in map.draw...eesh.
-silent chain	...
-	-matters in Stealth() method
-neck snap ...
-	-matters in Attack.
 
 
 -when displaying skill level, the format should be base + bonus, with bonus colored differently, just so it's perfectly clear.
+-lots of things need to alert nearby monsters:many spells, fighting(including instant kills but not neck snaps), certain feats
 */
 	public class Actor : PhysicalObject{
 		public ActorType type{get; private set;}
@@ -57,7 +52,8 @@ neck snap ...
 		public Dict<SpellType,int> spells = new Dict<SpellType,int>();
 		private int time_of_last_action;
 		private int recover_time;
-		public Tile player_seen;
+		public Tile player_seen; //this will probably become target_location and will be used for interesting things
+		public int player_visibility_duration;
 		public LinkedList<WeaponType> weapons = new LinkedList<WeaponType>();
 		public LinkedList<ArmorType> armors = new LinkedList<ArmorType>();
 		public LinkedList<MagicItemType> magic_items = new LinkedList<MagicItemType>();
@@ -74,7 +70,7 @@ neck snap ...
 		static Actor(){
 			//proto[ActorType.PLAYER] = new Actor(); //unused!
 			proto[ActorType.GOBLIN] = new Actor(ActorType.GOBLIN,"goblin",'g',Color.Green,20,100,5,1,0);
-			//
+			//make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
 		}
 		public Actor(Actor a,int r,int c){
 			type = a.type;
@@ -192,6 +188,16 @@ neck snap ...
 				total++;
 			}
 			total += Armor.Protection(armors.First.Value);
+			return total;
+		}
+		public int Stealth(){
+			int total = TotalSkill(SkillType.STEALTH);
+			if(!M.tile[row,col].IsLit()){
+				total += 2;
+			}
+			if(!HasFeat(FeatType.ARMORED_MAGE)){
+				total -= Armor.StealthPenalty(armors.First.Value);
+			}
 			return total;
 		}
 		public int TotalSkill(SkillType skill){
@@ -1012,9 +1018,51 @@ neck snap ...
 		}
 		public void InputAI(){
 			//bool path_step? am i using pathing for anybody?
+			if(CanSee(player)){
+				if(player_seen == null && HasAttr(AttrType.DETECTING_MONSTERS)){ //orc warmages etc. when they first notice
+					player_visibility_duration = -1;
+					target = player;
+					player_seen = M.tile[player.row,player.col];
+					B.Add(the_name + " looks straight at you. "); //todo: rethink message
+					//todo: possibly alert others here
+					Q1();
+					return;
+				}
+				else{
+					target = player;
+					player_seen = M.tile[player.row,player.col];
+					player_visibility_duration = -1;
+				}
+			}
+			else{
+				if((IsWithinSightRangeOf(player.row,player.col) || M.tile[player.row,player.col].IsLit())
+					&& HasLOS(player.row,player.col)){ //if they're stealthed and nearby...
+					if(player.Stealth() * DistanceFrom(player) * 10 - player_visibility_duration++*5 < Global.Roll(1,100)){
+						player_visibility_duration = -1;
+						target = player;
+						player_seen = M.tile[player.row,player.col];
+						//print different messages here todo
+						B.Add(the_name + " notices you. ");
+						//alert others todo
+						Q1();
+						return;
+					}
+				}
+				else{
+					if(player_visibility_duration >= 0){ //if they hadn't seen the player yet...
+						player_visibility_duration = 0;
+					}
+					else{
+						if(player_seen == null && player_visibility_duration == -10){ //todo: check this value for balance
+							player_visibility_duration = 0;
+							target = null; //todo: maybe introduce a TIMES_ALERTED attr that makes it harder and harder for
+						}//them to calm down, eventually noticing you instantly?
+					}
+				}
+			}
 			if(target != null){
-				if(CanSee(target)){ //this is where stealth matters. seeing the tile it's on doesn't always mean you can see
-					ActiveAI(); //the monster there. 
+				if(CanSee(target)){
+					ActiveAI();
 				}
 				else{
 					SeekAI();
@@ -1725,6 +1773,10 @@ neck snap ...
 		}
 		public void IdleAI(){ //todo: perhaps some more 'ambient' actions, like zombies moaning if you're close enough to hear
 			switch(type){
+			case ActorType.LARGE_BAT: //flies around
+				break;
+			case ActorType.ZOMBIE:
+				break;
 			case ActorType.ORC_WARMAGE:
 				break;
 			case ActorType.FIRE_DRAKE:
@@ -1870,6 +1922,9 @@ neck snap ...
 			}
 			AttackInfo info = AttackList.Attack(type,attack_idx);
 			int plus_to_hit = TotalSkill(SkillType.COMBAT);
+			if(this.IsHiddenFrom(a)){ //sneak attacks get +25% accuracy. this usually totals 100% vs. unarmored targets.
+				plus_to_hit += 25;
+			}
 			if(HasAttr(AttrType.BLESSED)){
 				plus_to_hit += 10;
 			}
@@ -1884,6 +1939,16 @@ neck snap ...
 			}
 			string s = info.desc + ". ";
 			if(hit){
+				if(HasFeat(FeatType.NECK_SNAP) && a.HasAttr(AttrType.MEDIUM_HUMANOID)){
+					B.Add(You("quietly snap") + " " + a.Your() + " neck. ");
+					a.TakeDamage(DamageType.NORMAL,9001,this);
+					Q1();
+					return true;
+				}
+				int dice = info.dice;
+				if(weapons.First.Value != WeaponType.NO_WEAPON){
+					dice = Weapon.Damage(weapons.First.Value);
+				}
 				bool crit = false;
 				int pos = s.IndexOf('&');
 				if(pos != -1){
@@ -1892,7 +1957,11 @@ neck snap ...
 				pos = s.IndexOf('^');
 				if(pos != -1){
 					string sc = "";
-					if(Global.Roll(1,20) == 20){
+					int critical_target = 20;
+					if(weapons.First.Value == WeaponType.DAGGER){
+						critical_target = 18;
+					}
+					if(info.type == DamageType.NORMAL && Global.Roll(1,20) >= critical_target){
 						crit = true;
 						sc = "critically ";
 					}
@@ -1902,12 +1971,50 @@ neck snap ...
 				if(pos != -1){
 					s = s.Substring(0,pos) + a.the_name + s.Substring(pos+1);
 				}
-				if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){
-					B.Add(s);
+				if(this.IsHiddenFrom(a) && crit){
+					if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) 
+						&& !a.HasAttr(AttrType.PLANTLIKE) && !a.HasAttr(AttrType.BOSS_MONSTER)){
+						if(a.type != ActorType.PLAYER){ //being nice to the player here...
+							switch(weapons.First.Value){
+							case WeaponType.SWORD:
+							case WeaponType.FLAMEBRAND:
+								B.Add("You run " + a.the_name + " through! ");
+								break;
+							case WeaponType.MACE:
+							case WeaponType.MACE_OF_FORCE:
+								B.Add("You bash " + a.Your() + " head in! ");
+								break;
+							case WeaponType.DAGGER:
+							case WeaponType.VENOMOUS_DAGGER:
+								B.Add("You pierce one of " + a.Your() + " vital organs! ");
+								break;
+							case WeaponType.STAFF:
+							case WeaponType.STAFF_OF_MAGIC:
+								B.Add("You bring your staff down on " + a.Your() + " head with a loud crack! ");
+								break;
+							case WeaponType.BOW:
+							case WeaponType.HOLY_LONGBOW:
+								B.Add("You choke " + a.the_name + " with your bowstring! ");
+								break;
+							default:
+								break;
+							}
+							a.TakeDamage(DamageType.NORMAL,1337,this);
+							Q1();
+							return true;
+						}
+						else{ //...but not too nice
+							B.Add(a_name + " strikes from the shadows! ");
+							B.Add(Your() + " deadly attack leaves you stunned! ");
+							int lotsofdamage = Math.Max(dice*6,a.curhp/2);
+							a.attrs[AttrType.STUNNED]++;
+							Q.Add(new Event(a,Global.Roll(2,5)*100,AttrType.STUNNED,"You are no longer stunned. "));
+							a.TakeDamage(DamageType.NORMAL,lotsofdamage,this);
+						}
+					}
 				}
-				int dice = info.dice;
-				if(weapons.First.Value != WeaponType.NO_WEAPON){
-					dice = Weapon.Damage(weapons.First.Value);
+				if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){ //todo: use new buffer method here
+					B.Add(s);
 				}
 				int dmg;
 				if(crit){
@@ -3314,22 +3421,23 @@ effect as standing still, if you're on fire or catching fire. */
 		}
 		public bool CanSee(int r,int c){ return CanSee(M.tile[r,c]); }
 		public bool CanSee(PhysicalObject o){
+			Actor a = o as Actor;
+			if(a != null){
+				if(HasAttr(AttrType.DETECTING_MONSTERS) && DistanceFrom(a) <= 6){
+					return true;
+				}
+			}
 			if(IsWithinSightRangeOf(o.row,o.col) || M.tile[o.row,o.col].IsLit()){
 				if(HasLOS(o.row,o.col)){
 					if(o is Actor){
-						//todo: stealth check here
-						//if((o as Actor).IsStealthed() or whatever
+						if((o as Actor).IsHiddenFrom(this)){
+							return false;
+						}
 						return true;
 					}
 					else{
 						return true;
 					}
-				}
-			}
-			Actor a = o as Actor;
-			if(a != null){
-				if(HasAttr(AttrType.DETECTING_MONSTERS) && DistanceFrom(a) <= 6){
-					return true;
 				}
 			}
 			return false;
@@ -3405,6 +3513,21 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 			}
 			return false;
+		}
+		public bool IsHiddenFrom(Actor a){
+			if(this == a){
+				return false;
+			}
+			if(type == ActorType.PLAYER){
+				if(a.player_visibility_duration < 0){
+					return false;
+				}
+				return true;
+			}
+			else{
+				//todo: a monster will increment a TURNS_VISIBLE attribute until the player spots it. until then:
+				return false;
+			}
 		}
 		public int DirectionOfOnly(TileType tiletype){ return DirectionOfOnly(tiletype,false); }
 		public int DirectionOfOnly(TileType tiletype,bool orth){//if there's only 1 unblocked tile of this kind, return its dir
