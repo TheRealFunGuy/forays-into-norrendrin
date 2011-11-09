@@ -191,6 +191,9 @@ danger sense(on)
 			return total;
 		}
 		public int Stealth(){
+			if(LightRadius() > 0){
+				return 0; //negative stealth is the same as zero stealth
+			}
 			int total = TotalSkill(SkillType.STEALTH);
 			if(!M.tile[row,col].IsLit()){
 				total += 2;
@@ -2314,11 +2317,13 @@ danger sense(on)
 				}
 				else{
 					if(player.CanSee(this)){
-						if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){
-							B.Add(the_name + " is destroyed. ");
-						}
-						else{
-							B.Add(the_name + " dies. ");
+						if(dmg < 1000){ //everything that deals this much damage prints its own message.
+							if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){
+								B.Add(the_name + " is destroyed. ");
+							}
+							else{
+								B.Add(the_name + " dies. ");
+							}
 						}
 					}
 					//todo: give xp here
@@ -2394,6 +2399,7 @@ danger sense(on)
 									}
 								}
 							}
+							B.Add("You escape. ");
 							break;
 						default:
 							break;

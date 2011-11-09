@@ -102,60 +102,12 @@ namespace Forays{
 		}
 		public void Draw(){
 			Console.CursorVisible = false;
-			for(int i=0;i<ROWS;++i){
-				for(int j=0;j<COLS;++j){
-					colorchar ch;
-					ch.bgcolor = Color.Black;
-					if(player.CanSee(i,j)){
-						tile[i,j].seen = true;
-						if(actor[i,j] != null && player.CanSee(actor[i,j])){
-							ch.c = actor[i,j].symbol;
-							ch.color = actor[i,j].color;
-						}
-						else{
-							if(tile[i,j].inv != null){
-								ch.c = tile[i,j].inv.symbol;
-								ch.color = tile[i,j].inv.color;
-							}
-							else{
-								ch.c = tile[i,j].symbol;
-								ch.color = tile[i,j].color;
-								if(ch.c=='.' || ch.c=='#'){
-									if(tile[i,j].IsLit()){
-										ch.color = Color.Yellow;
-									}
-									else{
-										ch.color = Color.DarkCyan;
-									}
-								}
-							}
-						}
-					}
-					else{
-						if(actor[i,j] != null && player.CanSee(actor[i,j])){
-							ch.c = actor[i,j].symbol;
-							ch.color = actor[i,j].color;
-						}
-						else{
-							if(tile[i,j].seen){
-								ch.c = tile[i,j].symbol;
-								ch.color = tile[i,j].color;
-								if(ch.c=='.' || ch.c=='#'){
-									ch.color = Color.White;
-								}
-							}
-							else{
-								ch.c = ' ';
-								ch.color = Color.Black;
-							}
-						}
-					}
-					//if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; }
-					//^--top secret, mostly because it doesn't work well - redrawing leaves gaps for some reason.
-					Screen.WriteMapChar(i,j,ch);
+			for(int i=0;i<ROWS;++i){ //if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; }
+				for(int j=0;j<COLS;++j){ //^--top secret, mostly because it doesn't work well - 
+					Screen.WriteMapChar(i,j,VisibleColorChar(i,j)); //redrawing leaves gaps for some reason.
 				}
 			}
-			Console.ResetColor();
+			Screen.ResetColors();
 			Console.CursorVisible = true;
 		}
 		public void RedrawWithStrings(){
@@ -171,52 +123,7 @@ namespace Forays{
 				r = i;
 				c = 0;
 				for(int j=0;j<COLS;++j){
-					colorchar ch;
-					ch.bgcolor = Color.Black;
-					if(player.CanSee(i,j)){
-						tile[i,j].seen = true;
-						if(actor[i,j] != null && player.CanSee(actor[i,j])){
-							ch.c = actor[i,j].symbol;
-							ch.color = actor[i,j].color;
-						}
-						else{
-							if(tile[i,j].inv != null){
-								ch.c = tile[i,j].inv.symbol;
-								ch.color = tile[i,j].inv.color;
-							}
-							else{
-								ch.c = tile[i,j].symbol;
-								ch.color = tile[i,j].color;
-								if(ch.c=='.' || ch.c=='#'){
-									if(tile[i,j].IsLit()){
-										ch.color = Color.Yellow;
-									}
-									else{
-										ch.color = Color.DarkCyan;
-									}
-								}
-							}
-						}
-					}
-					else{
-						if(actor[i,j] != null && player.CanSee(actor[i,j])){
-							ch.c = actor[i,j].symbol;
-							ch.color = actor[i,j].color;
-						}
-						else{
-							if(tile[i,j].seen){
-								ch.c = tile[i,j].symbol;
-								ch.color = tile[i,j].color;
-								if(ch.c=='.' || ch.c=='#'){
-									ch.color = Color.White;
-								}
-							}
-							else{
-								ch.c = ' ';
-								ch.color = Color.Black;
-							}
-						}
-					}
+					colorchar ch = VisibleColorChar(i,j);
 					if(ch.color != s.color){
 						if(s.s.Length > 0){
 							Screen.WriteMapString(r,c,s);
@@ -237,8 +144,57 @@ namespace Forays{
 				}
 				Screen.WriteMapString(r,c,s);
 			}
-			Console.ResetColor();
+			Screen.ResetColors();
 			Console.CursorVisible = true;
+		}
+		public colorchar VisibleColorChar(int r,int c){
+			colorchar ch;
+			ch.bgcolor = Color.Black;
+			if(player.CanSee(r,c)){
+				tile[r,c].seen = true;
+				if(actor[r,c] != null && player.CanSee(actor[r,c])){
+					ch.c = actor[r,c].symbol;
+					ch.color = actor[r,c].color;
+				}
+				else{
+					if(tile[r,c].inv != null){
+						ch.c = tile[r,c].inv.symbol;
+						ch.color = tile[r,c].inv.color;
+					}
+					else{
+						ch.c = tile[r,c].symbol;
+						ch.color = tile[r,c].color;
+						if(ch.c=='.' || ch.c=='#'){
+							if(tile[r,c].IsLit()){
+								ch.color = Color.Yellow;
+							}
+							else{
+								ch.color = Color.DarkCyan;
+							}
+						}
+					}
+				}
+			}
+			else{
+				if(actor[r,c] != null && player.CanSee(actor[r,c])){
+					ch.c = actor[r,c].symbol;
+					ch.color = actor[r,c].color;
+				}
+				else{
+					if(tile[r,c].seen){
+						ch.c = tile[r,c].symbol;
+						ch.color = tile[r,c].color;
+						if(ch.c=='.' || ch.c=='#'){
+							ch.color = Color.White;
+						}
+					}
+					else{
+						ch.c = ' ';
+						ch.color = Color.Black;
+					}
+				}
+			}
+			return ch;
 		}
 		public void RemoveTargets(Actor a){ //cleanup of references to dead monsters
 			for(int i=0;i<ROWS;++i){
