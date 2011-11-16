@@ -15,7 +15,7 @@ namespace Forays{
 		public Tile[,] tile{get;set;} //note for dungeon generator overhaul: make sure there's something to hide behind.
 		public Actor[,] actor{get;set;} //i could make a tilearray/actorarray class if i wanted to use a pos as an index
 		public int current_level{get; private set;}
-		private static List<Tile> alltiles = new List<Tile>();
+		private List<Tile> alltiles = new List<Tile>();
 		private static List<pos> allpositions = new List<pos>();
 		
 		private const int ROWS = Global.ROWS; //hax lol

@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 namespace Forays{
 	public static class Global{
+		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
 		public const int ROWS = 22;

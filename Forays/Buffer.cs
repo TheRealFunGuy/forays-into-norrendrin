@@ -114,7 +114,7 @@ namespace Forays{
 				Console.Write(str);
 				if(str2 != "" || special_message == true){
 					Console.ForegroundColor = ConsoleColor.Yellow;
-					Console.Write("[more]");
+					Console.Write("[more]"); //todo: update here, use Screen.ForegroundColor.
 					Console.ForegroundColor = ConsoleColor.Gray;
 					M.Draw();
 					Console.ReadKey();

@@ -33,6 +33,44 @@ namespace Forays{
 	}
 	public static class Screen{
 		private static colorchar[,] memory;
+		private static bool terminal_bold = false; //for linux terminals
+		private static readonly string bold_on = (char)27 + "[1m"; //VT100 codes, sweet
+		private static readonly string bold_off = (char)27 + "[m";
+		public static ConsoleColor ForegroundColor{
+			get{
+				if(Global.LINUX && terminal_bold){
+					return Console.ForegroundColor+8;
+				}
+				return Console.ForegroundColor;
+			}
+			set{
+				if(Global.LINUX && (int)value >= 8){
+					Console.ForegroundColor = value - 8;
+					terminal_bold = true;
+					Console.Write(bold_on);
+				}
+				else{
+					if(Global.LINUX && terminal_bold){
+						Console.Write(bold_off);
+						terminal_bold = false;
+					}
+					Console.ForegroundColor = value;
+				}
+			}
+		}
+		public static ConsoleColor BackgroundColor{
+			get{
+				return Console.BackgroundColor;
+			}
+			set{
+				if(Global.LINUX && (int)value >= 8){
+					Console.BackgroundColor = value - 8;
+				}
+				else{
+					Console.BackgroundColor = value;
+				}
+			}
+		}
 		public static colorchar Char(int r,int c){ return memory[r,c]; }
 		public static colorchar MapChar(int r,int c){ return memory[r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS]; }
 		public static colorchar StatsChar(int r,int c){ return memory[r+1,c+1]; }
@@ -45,6 +83,8 @@ namespace Forays{
 					memory[i,j].bgcolor = Color.Black;
 				}
 			}
+			BackgroundColor = Console.BackgroundColor;
+			ForegroundColor = Console.ForegroundColor;
 		}
 		public static colorchar[,] GetCurrentMap(){
 			colorchar[,] result = new colorchar[Global.ROWS,Global.COLS];
@@ -71,23 +111,23 @@ namespace Forays{
 			if(!memory[r,c].Equals(ch)){
 				memory[r,c] = ch;
 				ConsoleColor co = GetColor(ch.color);
-				if(co != Console.ForegroundColor){
-					Console.ForegroundColor = co;
+				if(co != ForegroundColor){
+					ForegroundColor = co;
 				}
 				co = GetColor(ch.bgcolor);
-				if(co != Console.BackgroundColor){
-					Console.BackgroundColor = co;
+				if(co != BackgroundColor){
+					BackgroundColor = co;
 				}
 				Console.SetCursorPosition(c,r);
 				Console.Write(ch.c);
 			}
 		}
 		public static void ResetColors(){
-			if(Console.ForegroundColor != ConsoleColor.Gray){
-				Console.ForegroundColor = ConsoleColor.Gray;
+			if(ForegroundColor != ConsoleColor.Gray){
+				ForegroundColor = ConsoleColor.Gray;
 			}
-			if(Console.BackgroundColor != ConsoleColor.Black){
-				Console.BackgroundColor = ConsoleColor.Black;
+			if(BackgroundColor != ConsoleColor.Black){
+				BackgroundColor = ConsoleColor.Black;
 			}
 		}
 		public static void WriteMapChar(int r,int c,colorchar ch){
@@ -114,12 +154,12 @@ namespace Forays{
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;
 				ConsoleColor co = GetColor(s.color);
-				if(Console.ForegroundColor != co){
-					Console.ForegroundColor = co;
+				if(ForegroundColor != co){
+					ForegroundColor = co;
 				}
 				co = GetColor(s.bgcolor);
-				if(Console.BackgroundColor != co){
-					Console.BackgroundColor = co;
+				if(BackgroundColor != co){
+					BackgroundColor = co;
 				}
 				int i = 0;
 				foreach(char ch in s.s){
@@ -155,12 +195,12 @@ namespace Forays{
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;
 				ConsoleColor co = GetColor(s.color);
-				if(Console.ForegroundColor != co){
-					Console.ForegroundColor = co;
+				if(ForegroundColor != co){
+					ForegroundColor = co;
 				}
 				co = GetColor(s.bgcolor);
-				if(Console.BackgroundColor != co){
-					Console.BackgroundColor = co;
+				if(BackgroundColor != co){
+					BackgroundColor = co;
 				}
 				int i = 0;
 				foreach(char ch in s.s){

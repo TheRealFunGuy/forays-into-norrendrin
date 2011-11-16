@@ -30,8 +30,16 @@ namespace Forays{
 		public Actor player;
 		
 		static void Main(string[] args){
+			{
+				int os = (int)Environment.OSVersion.Platform;
+				if(os == 4 || os == 6 ||  os == 128){
+					Global.LINUX = true;
+				}
+			}
+			if(Global.LINUX){
+				Console.BufferHeight = Global.SCREEN_H; //25
+			}
 			Console.TreatControlCAsInput = true;
-			Console.BufferHeight = Global.SCREEN_H; //25
 			//Console.CursorSize = 100;
 			Game game = new Game();
 			game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,0,1,0);
