@@ -7,7 +7,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
-using System.Collections.Generic;
+using System.Collections.Generic; using System.Threading;
 namespace Forays{
 	public class AttackInfo{
 		public int cost;
@@ -478,6 +478,7 @@ danger sense(on)
 			}
 			B.Print(false);
 			Cursor();
+			Console.CursorVisible = true;
 			if(HasAttr(AttrType.PARALYZED)){
 				Q1();
 				return;
@@ -1158,9 +1159,15 @@ danger sense(on)
 						if(AI_Step(target,true)){
 							QS();
 						}
-						else{ //todo: remove 'line up shot' message if immobilized?
+						else{ 
+							bool immob = false;
+							if(HasAttr(AttrType.IMMOBILIZED)){
+								immob = true;
+							}
 							if(AI_Sidestep(target)){
-								B.Add(the_name + " tries to line up a shot. ");
+								if(!immob){
+									B.Add(the_name + " tries to line up a shot. ");
+								}
 							}
 							QS();
 						}
@@ -1172,9 +1179,15 @@ danger sense(on)
 					if(FirstActorInLine(target) == target){
 						FireArrow(target);
 					}
-					else{ //todo: same as above
+					else{
+						bool immob = false;
+						if(HasAttr(AttrType.IMMOBILIZED)){
+							immob = true;
+						}
 						if(AI_Sidestep(target)){
-							B.Add(the_name + " tries to line up a shot. ");
+							if(!immob){
+								B.Add(the_name + " tries to line up a shot. ");
+							}
 						}
 						QS();
 					}
@@ -3423,7 +3436,6 @@ effect as standing still, if you're on fire or catching fire. */
 				Screen.WriteStatsString(i,0,"".PadRight(12));
 			}
 			Console.ResetColor();
-			Console.CursorVisible = true;
 		}
 		public bool CanSee(int r,int c){ return CanSee(M.tile[r,c]); }
 		public bool CanSee(PhysicalObject o){
@@ -3832,33 +3844,42 @@ effect as standing still, if you're on fire or catching fire. */
 								colorchar cch = mem[t.row,t.col];
 								if(t.row == r && t.col == c){
 									if(!blocked){
-										if(cch.color == Color.Green){
+										cch.bgcolor = Color.Green;
+										if(Global.LINUX){ //no bright bg in terminals
+											cch.bgcolor = Color.DarkGreen;
+										}
+										if(cch.color == cch.bgcolor){
 											cch.color = Color.Black;
 										}
-										cch.bgcolor = Color.Green;
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 									else{
-										if(cch.color == Color.Red){
+										cch.bgcolor = Color.Red;
+										if(Global.LINUX){
+											cch.bgcolor = Color.DarkRed;
+										}
+										if(cch.color == cch.bgcolor){
 											cch.color = Color.Black;
 										}
-										cch.bgcolor = Color.Red;
 										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+									if(t.seen && !t.passable){
+										blocked = true;
 									}
 								}
 								else{
 									if(!blocked){
-										if(cch.color == Color.DarkGreen){
+										cch.bgcolor = Color.DarkGreen;
+										if(cch.color == cch.bgcolor){
 											cch.color = Color.Black;
 										}
-										cch.bgcolor = Color.DarkGreen;
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 									else{
-										if(cch.color == Color.DarkRed){
+										cch.bgcolor = Color.DarkRed;
+										if(cch.color == cch.bgcolor){
 											cch.color = Color.Black;
 										}
-										cch.bgcolor = Color.DarkRed;
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 									if(t.seen && !t.passable){

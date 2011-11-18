@@ -45,11 +45,6 @@ namespace Forays{
 				Print(false);
 			}
 		}
-		public void IfSeenAdd(PhysicalObject o1,PhysicalObject o2,string s){
-			if(player.CanSee(o1) && (o2 == null || player.CanSee(o2))){
-				Add(s);//todo: make sure everything uses this method properly
-			}
-		}
 		public void Add(string s,params PhysicalObject[] objs){ //if there's at least one object, the player must be able to
 			if(objs.Length > 0){ //see at least one of them. if not, no message is added. 
 				bool seen = false;
@@ -113,9 +108,9 @@ namespace Forays{
 				Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
 				Console.Write(str);
 				if(str2 != "" || special_message == true){
-					Console.ForegroundColor = ConsoleColor.Yellow;
-					Console.Write("[more]"); //todo: update here, use Screen.ForegroundColor.
-					Console.ForegroundColor = ConsoleColor.Gray;
+					Screen.ForegroundColor = ConsoleColor.Yellow;
+					Console.Write("[more]");
+					Screen.ForegroundColor = ConsoleColor.Gray;
 					M.Draw();
 					Console.ReadKey();
 				}
@@ -126,7 +121,7 @@ namespace Forays{
 				Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
 				Console.Write("".PadRight(Global.COLS));
 			}
-			Console.CursorVisible = true;
+			//Console.CursorVisible = true;
 		}
 		public void PrintAll(){
 			if(str != ""){

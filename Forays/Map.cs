@@ -108,7 +108,7 @@ namespace Forays{
 				}
 			}
 			Screen.ResetColors();
-			Console.CursorVisible = true;
+			//Console.CursorVisible = true;
 		}
 		public void RedrawWithStrings(){
 			Console.CursorVisible = false;
@@ -145,7 +145,7 @@ namespace Forays{
 				Screen.WriteMapString(r,c,s);
 			}
 			Screen.ResetColors();
-			Console.CursorVisible = true;
+			//Console.CursorVisible = true;
 		}
 		public colorchar VisibleColorChar(int r,int c){
 			colorchar ch;

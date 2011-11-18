@@ -46,8 +46,10 @@ namespace Forays{
 			set{
 				if(Global.LINUX && (int)value >= 8){
 					Console.ForegroundColor = value - 8;
-					terminal_bold = true;
-					Console.Write(bold_on);
+					if(!terminal_bold){
+						terminal_bold = true;
+						Console.Write(bold_on);
+					}
 				}
 				else{
 					if(Global.LINUX && terminal_bold){
@@ -73,7 +75,7 @@ namespace Forays{
 		}
 		public static colorchar Char(int r,int c){ return memory[r,c]; }
 		public static colorchar MapChar(int r,int c){ return memory[r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS]; }
-		public static colorchar StatsChar(int r,int c){ return memory[r+1,c+1]; }
+		public static colorchar StatsChar(int r,int c){ return memory[r+1,c]; }
 		static Screen(){
 			memory = new colorchar[Global.SCREEN_H,Global.SCREEN_W];
 			for(int i=0;i<Global.SCREEN_H;++i){
@@ -86,6 +88,7 @@ namespace Forays{
 			BackgroundColor = Console.BackgroundColor;
 			ForegroundColor = Console.ForegroundColor;
 		}
+		public static colorchar BlankChar(){ return new colorchar(Color.Black,' '); }
 		public static colorchar[,] GetCurrentMap(){
 			colorchar[,] result = new colorchar[Global.ROWS,Global.COLS];
 			for(int i=0;i<Global.ROWS;++i){
@@ -107,15 +110,26 @@ namespace Forays{
 			}
 			return false;
 		}
+		public static void Blank(){
+			Console.CursorVisible = false;
+			for(int i=0;i<Global.SCREEN_H;++i){
+				Console.SetCursorPosition(0,i);
+				Console.Write("".PadRight(Global.SCREEN_W));
+			}
+			//Console.CursorVisible = true; //this works for Main's call, but it's a bit hacky.	
+		}
 		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
+				if(ch.c == ' '){
+					ch.color = ch.bgcolor;
+				}
 				memory[r,c] = ch;
 				ConsoleColor co = GetColor(ch.color);
 				if(co != ForegroundColor){
 					ForegroundColor = co;
 				}
 				co = GetColor(ch.bgcolor);
-				if(co != BackgroundColor){
+				if(co != Console.BackgroundColor || ch.c == ' '){//voodoo here. not sure why this is needed.
 					BackgroundColor = co;
 				}
 				Console.SetCursorPosition(c,r);
@@ -173,7 +187,7 @@ namespace Forays{
 				Console.Write(s.s);
 			}
 		}
-		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r+1,c+1,ch); }
+		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r+1,c,ch); }
 		public static void WriteStatsString(int r,int c,string s){
 			colorstring cs;
 			cs.color = Color.Gray;
@@ -190,7 +204,7 @@ namespace Forays{
 			}
 			if(s.s.Length > 0){
 				++r;
-				++c;
+				//++c;
 				colorchar cch;
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;

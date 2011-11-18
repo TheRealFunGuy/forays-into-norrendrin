@@ -37,6 +37,9 @@ namespace Forays{
 				}
 			}
 			if(Global.LINUX){
+				Screen.Blank();
+			}
+			else{
 				Console.BufferHeight = Global.SCREEN_H; //25
 			}
 			Console.TreatControlCAsInput = true;
