@@ -155,25 +155,25 @@ namespace Forays{
 			switch(type){
 			case ConsumableType.HEALING:
 				user.TakeDamage(DamageType.HEAL,Global.Roll(8,6),null);
-				B.Add("A blue glow surrounds " + user.the_name + ". ");
+				B.Add("A blue glow surrounds " + user.the_name + ". ",user);
 				break;
 			case ConsumableType.CURE_POISON:
 				if(user.HasAttr(AttrType.POISONED)){
 					user.attrs[AttrType.POISONED] = 0;
-					B.Add(user.YouFeel() + " relieved. ");
+					B.Add(user.YouFeel() + " relieved. ",user);
 				}
 				else{
-					B.Add(user.YouFeel() + " no different. ");
+					B.Add(user.YouFeel() + " no different. ",user);
 				}
 				break;
 			case ConsumableType.REGENERATION:
 				{
 				user.attrs[AttrType.REGENERATING]++;
 				if(name == "you"){
-					B.Add("Your blood tingles. ");
+					B.Add("Your blood tingles. ",user);
 				}
 				else{
-					B.Add(user.the_name + " looks energized. ");
+					B.Add(user.the_name + " looks energized. ",user);
 				}
 				int duration = Global.Roll(1,10)+20;
 				Q.Add(new Event(user,duration*100,AttrType.REGENERATING));
@@ -184,11 +184,11 @@ namespace Forays{
 				user.attrs[AttrType.RESIST_FIRE]++;
 				user.attrs[AttrType.RESIST_COLD]++;
 				user.attrs[AttrType.RESIST_ELECTRICITY]++;
-				B.Add(user.YouFeel() + " insulated. ");
+				B.Add(user.YouFeel() + " insulated. ",user);
 				int duration = Global.Roll(2,10)+5;
 				Q.Add(new Event(user,duration*100,AttrType.RESIST_FIRE));
 				Q.Add(new Event(user,duration*100,AttrType.RESIST_COLD));
-				Q.Add(new Event(user,duration*100,AttrType.RESIST_ELECTRICITY,user.YouFeel() + " less insulated. "));
+				Q.Add(new Event(user,duration*100,AttrType.RESIST_ELECTRICITY,user.YouFeel() + " less insulated. ",user));
 				break;
 				}
 			case ConsumableType.CLARITY:
@@ -197,7 +197,7 @@ namespace Forays{
 					B.Add("Your mind clears. ");
 				}
 				else{
-					B.Add(user.the_name + " seems focused. ");
+					B.Add(user.the_name + " seems focused. ",user);
 				}
 				break;
 			case ConsumableType.PHASING:
@@ -208,7 +208,7 @@ namespace Forays{
 						rr += user.row;
 						rc += user.col;
 						if(M.BoundsCheck(rr,rc) && M.tile[rr,rc].passable && M.actor[rr,rc] == null){
-							B.Add(user.You("step") + " through a rip in reality. ");
+							B.Add(user.You("step") + " through a rip in reality. ",M.tile[user.row,user.col],M.tile[rr,rc]);
 							user.Move(rr,rc);
 							break;
 						}
@@ -221,7 +221,7 @@ namespace Forays{
 					int rc = Global.Roll(1,Global.COLS-2);
 					if(Math.Abs(rr-user.row) >= 10 || Math.Abs(rc-user.col) >= 10 || (Math.Abs(rr-user.row) >= 7 && Math.Abs(rc-user.col) >= 7)){
 						if(M.BoundsCheck(rr,rc) && M.tile[rr,rc].passable && M.actor[rr,rc] == null){
-							B.Add(user.You("jump") + " through a rift in reality. ");
+							B.Add(user.You("jump") + " through a rift in reality. ",M.tile[user.row,user.col],M.tile[rr,rc]);
 							user.Move(rr,rc);
 							break;
 						}
@@ -255,7 +255,7 @@ namespace Forays{
 								t = t.TileInDirection(i);
 							}
 							if(t.passable && M.actor[t.row,t.col] == null){
-								B.Add(user.You("travel") + " through the passage. ");
+								B.Add(user.You("travel") + " through the passage. ",user);
 								user.Move(t.row,t.col);
 							}
 							else{
@@ -276,9 +276,9 @@ namespace Forays{
 				}
 			case ConsumableType.DETECT_MONSTERS:
 				user.attrs[AttrType.DETECTING_MONSTERS]++;
-				B.Add("The scroll reveals " + user.Your() + " foes. ");
+				B.Add("The scroll reveals " + user.Your() + " foes. ",user);
 				int duration = Global.Roll(2,50)+50;
-				Q.Add(new Event(user,duration*100,AttrType.DETECTING_MONSTERS,user.Your() + " foes are no longer revealed. "));
+				Q.Add(new Event(user,duration*100,AttrType.DETECTING_MONSTERS,user.Your() + " foes are no longer revealed. ",user));
 				break;
 			case ConsumableType.MAGIC_MAP:
 				B.Add("The scroll reveals the layout of this level. ");
@@ -298,7 +298,9 @@ namespace Forays{
 				break;
 			case ConsumableType.WIZARDS_LIGHT:
 				foreach(Tile t in M.AllTiles()){
-					t.light_value++;
+					if(!t.opaque){
+						t.light_value++;
+					}
 					//todo: when you close and then open a door, it loses its light value. just need to track some kind of
 					//global state to fix this.
 				}
@@ -308,14 +310,14 @@ namespace Forays{
 				{
 				Tile t = user.GetTarget();
 				if(t != null){
-					B.Add(user.You("throw") + " the prismatic orb. ");
 					Actor first = user.FirstActorInLine(t);
+					B.Add(user.You("throw") + " the prismatic orb. ",user);
 					if(first != null){
 						t = first.Tile();
-						B.Add("It shatters on " + first.the_name + "! ");
+						B.Add("It shatters on " + first.the_name + "! ",first);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ");
+						B.Add("It shatters on " + t.the_name + "! ",t);
 					}
 					List<DamageType> dmg = new List<DamageType>();
 					dmg.Add(DamageType.FIRE);
@@ -354,7 +356,7 @@ namespace Forays{
 					B.Add("You apply a bandage. ");
 				}
 				else{
-					B.Add(the_name + " applies a bandage. ");
+					B.Add(the_name + " applies a bandage. ",user);
 				}
 				break;
 			default:

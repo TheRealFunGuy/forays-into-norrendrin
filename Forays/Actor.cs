@@ -7,7 +7,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
-using System.Collections.Generic; using System.Threading;
+using System.Collections.Generic;
 namespace Forays{
 	public class AttackInfo{
 		public int cost;
@@ -30,7 +30,19 @@ spirit skill
 
 danger sense(on)
 	 -matters in map.draw...eesh.
-
+here's how this will work:
+Tile will gain a list(or other list-like data type) of integers that represent the chance of the player being seen if he steps
+there next turn.
+Move will gain another part: depending on LOS(just like the light check), visible tiles will have their lists updated.
+	-additional steps are required for distant lit tiles, as follows:
+		-it is not practical to check every tile to see whether it is lit. therefore, i will create a list of lit tiles in Map.
+		-this list will only be updated when the player has Danger Sense.
+		-perhaps light_value-- will become a method. this method will decrement, then, if light_value is 0, remove from list.
+		-same with light_value++ - if light_value is greater than 0, add to list. this should still be fairly quick.
+		-this, of course, only keeps track of passable tiles, but that's perfect anyway.
+		-so, each MOVING monster will check LOS to each LIT tile during its move. this is much, much better than
+			checking each monster's LOS to each tile on every turn.
+ultimately, during Map.Draw, the highest value in each tile's list will be used to find its danger level, & therefore its color
 
 -when displaying skill level, the format should be base + bonus, with bonus colored differently, just so it's perfectly clear.
 -lots of things need to alert nearby monsters:many spells, fighting(including instant kills but not neck snaps), certain feats
@@ -327,7 +339,7 @@ danger sense(on)
 			}
 			if(HasAttr(AttrType.PARALYZED)){
 				attrs[AttrType.PARALYZED]--;
-				B.Add(the_name + " can't move! ");
+				B.Add(the_name + " can't move! ",this);
 				if(type != ActorType.PLAYER){ //handled differently for the player: since the map still needs to be drawn,
 					Q1();						// this is handled in InputHuman().
 					return_after_recovery = true; //the message is still printed, of course.
@@ -339,9 +351,7 @@ danger sense(on)
 					if(curhp > maxhp){
 						curhp = maxhp;
 					}
-					if(type == ActorType.PLAYER || player.CanSee(this)){
-						B.Add(You("regenerate") + ". ");
-					}
+					B.Add(You("regenerate") + ". ",this);
 				}
 				else{
 					int hplimit = 10;
@@ -364,7 +374,7 @@ danger sense(on)
 				TakeDamage(DamageType.POISON,Global.Roll(1,3)-1,null);
 			}
 			if(HasAttr(AttrType.ON_FIRE) && time_of_last_action < Q.turn){
-				B.Add(YouAre() + " on fire! ");
+				B.Add(YouAre() + " on fire! ",this);
 				TakeDamage(DamageType.FIRE,Global.Roll(attrs[AttrType.ON_FIRE],6),null);
 			}
 			if(return_after_recovery){
@@ -964,52 +974,68 @@ danger sense(on)
 				B.DisplayLogtempfunction();
 				Q0();
 				break;
-			case 'C':
-				new Item(ConsumableType.PRISMATIC_ORB,"prismatic orb",'*',Color.White).Use(this);
-				Q1();
-				break;
-			case 'V':
-				//has_spell[SpellType.SHADOWSIGHT] = 1;
-				//CastSpell(SpellType.SHADOWSIGHT);
-				if(HasAttr(AttrType.LOW_LIGHT_VISION)){
-					attrs[AttrType.LOW_LIGHT_VISION] = 0;
-				}
-				else{
-					attrs[AttrType.LOW_LIGHT_VISION]++;
-				}
-				Q0();
-				break;
-			case 'v':
+			case 'C': //debug mode cheats
 				{
-//				Tile t = GetTarget();
-//				if(t != null){
-					//Screen.AnimateProjectile(GetExtendedBresenhamLine(t.row,t.col),new colorchar(ConsoleColor.Yellow,'$'));
-//					Screen.AnimateProjectile(GetBresenhamLine(t.row,t.col),new colorchar(Color.Blue,'*'),25);
+				List<string> l = new List<string>();
+				l.Add("Throw a prismatic orb");
+				l.Add("Ice explosion animation");
+				l.Add("Toggle low light vision");
+				l.Add("Check key names");
+				l.Add("Forget the map");
+				l.Add("Heal to full");
+				l.Add("Fire a bolt");
+				switch(Select("Activate which cheat? ",l)){
+				case 0:
+					{
+					new Item(ConsumableType.PRISMATIC_ORB,"prismatic orb",'*',Color.White).Use(this);
+					Q1();
+					break;
+					}
+				case 1:
 					Screen.AnimateExplosion(this,5,new colorchar(Color.RandomIce,'*'),25);
-				//}
-				Q1();
-				break;
+					Q1();
+					break;
+				case 2:
+					if(HasAttr(AttrType.LOW_LIGHT_VISION)){
+						attrs[AttrType.LOW_LIGHT_VISION] = 0;
+					}
+					else{
+						attrs[AttrType.LOW_LIGHT_VISION]++;
+					}
+					Q0();
+					break;
+				case 3:
+					ConsoleKeyInfo command2 = Console.ReadKey(true);
+					Console.Write(command2.Key);
+					Q0();
+					break;
+				case 4:
+					{
+					Console.CursorVisible = false;
+					colorchar cch;
+					cch.c = ' ';
+					cch.color = Color.Black;
+					cch.bgcolor = Color.Black;
+					foreach(Tile t in M.AllTiles()){
+						t.seen = false;
+						Screen.WriteMapChar(t.row,t.col,cch);
+					}
+					Console.CursorVisible = true;
+					Q0();
+					break;
+					}
+				case 5:
+					curhp = maxhp;
+					Q0();
+					break;
+				case 6:
+					Screen.AnimateBoltProjectile(GetExtendedBresenhamLine(11,33),Color.RandomFire,25);
+					Q1();
+					break;
+				default:
+					Q0();
+					break;
 				}
-			case 'X':
-				{
-				ConsoleKeyInfo command2 = Console.ReadKey(true);
-				Console.Write(command2.Key);
-				Q0();
-				break;
-				}
-			case 'x':
-				{
-				Console.CursorVisible = false;
-				colorchar cch;
-				cch.c = ' ';
-				cch.color = Color.Black;
-				cch.bgcolor = Color.Black;
-				foreach(Tile t in M.AllTiles()){
-					t.seen = false;
-					Screen.WriteMapChar(t.row,t.col,cch);
-				}
-				Console.CursorVisible = true;
-				Q0();
 				break;
 				}
 			case ' ':
@@ -1027,7 +1053,7 @@ danger sense(on)
 					player_visibility_duration = -1;
 					target = player;
 					player_seen = M.tile[player.row,player.col];
-					B.Add(the_name + " looks straight at you. "); //todo: rethink message
+					B.Add(the_name + " looks straight at you. ",this); //todo: rethink message
 					//todo: possibly alert others here
 					Q1();
 					return;
@@ -1046,7 +1072,7 @@ danger sense(on)
 						target = player;
 						player_seen = M.tile[player.row,player.col];
 						//print different messages here todo
-						B.Add(the_name + " notices you. ");
+						B.Add(the_name + " notices you. ",this);
 						//alert others todo
 						Q1();
 						return;
@@ -1166,7 +1192,7 @@ danger sense(on)
 							}
 							if(AI_Sidestep(target)){
 								if(!immob){
-									B.Add(the_name + " tries to line up a shot. ");
+									B.Add(the_name + " tries to line up a shot. ",this);
 								}
 							}
 							QS();
@@ -1186,7 +1212,7 @@ danger sense(on)
 						}
 						if(AI_Sidestep(target)){
 							if(!immob){
-								B.Add(the_name + " tries to line up a shot. ");
+								B.Add(the_name + " tries to line up a shot. ",this);
 							}
 						}
 						QS();
@@ -1617,10 +1643,10 @@ danger sense(on)
 								if(Attack(1,target)){
 									if(target.HasAttr(AttrType.IMMOBILIZED)){
 										if(target.name == "you"){
-											B.IfSeenAdd(this,target,"You don't move far. ");
+											B.Add("You don't move far. ");
 										}
 										else{
-											B.IfSeenAdd(this,target,target.the_name + " doesn't move far. ");
+											B.Add(target.the_name + " doesn't move far. ",target,this);
 										}
 									}
 									else{
@@ -1740,14 +1766,14 @@ danger sense(on)
 				if(player_seen != null){
 					if(DistanceFrom(player_seen) == 1 && M.actor[player_seen.row,player_seen.col] != null){
 						if(HasAttr(AttrType.IMMOBILIZED)){
-							B.Add(You("break") + " free. ");
+							B.Add(You("break") + " free. ",this);
 							attrs[AttrType.IMMOBILIZED] = 0;
 							QS();
 						}
 						else{
 							if(M.actor[player_seen.row,player_seen.col].HasAttr(AttrType.IMMOBILIZED)){
 								if(HasAttr(AttrType.HUMANOID_INTELLIGENCE) && M.actor[player_seen.row,player_seen.col].symbol == symbol){
-									B.Add(You("break") + M.actor[player_seen.row,player_seen.col].the_name + " free. ");
+									B.Add(You("break") + M.actor[player_seen.row,player_seen.col].the_name + " free. ",this,M.actor[player_seen.row,player_seen.col]);
 									M.actor[player_seen.row,player_seen.col].attrs[AttrType.IMMOBILIZED] = 0;
 									QS();
 								}
@@ -1805,7 +1831,7 @@ danger sense(on)
 		public bool AI_Step(PhysicalObject obj){ return AI_Step(obj,false); }
 		public bool AI_Step(PhysicalObject obj,bool flee){
 			if(HasAttr(AttrType.IMMOBILIZED)){
-				B.Add(You("break") + " free. ");
+				B.Add(You("break") + " free. ",this);
 				attrs[AttrType.IMMOBILIZED] = 0;
 				return true;
 			}
@@ -2029,9 +2055,7 @@ danger sense(on)
 						}
 					}
 				}
-				if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){ //todo: use new buffer method here
-					B.Add(s);
-				}
+				B.Add(s,this,a);
 				int dmg;
 				if(crit){
 					dmg = dice * 6;
@@ -2044,30 +2068,22 @@ danger sense(on)
 				a.TakeDamage(info.type,dmg,this);
 				if(M.actor[r,c] != null){
 					if(HasAttr(AttrType.FIRE_HIT) || attrs[AttrType.ON_FIRE] >= 3){
-						if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){
-							B.Add(a.YouAre() + " burned. ");
-						}
+						B.Add(a.YouAre() + " burned. ",this,a);
 						a.TakeDamage(DamageType.FIRE,Global.Roll(1,6),this);
 					}
 				}
 				if(HasAttr(AttrType.COLD_HIT) && attack_idx==0 && M.actor[r,c] != null){
 					//hack: only applies to attack 0
-					if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){
-						B.Add(a.YouAre() + " chilled. ");
-					}
+					B.Add(a.YouAre() + " chilled. ",this,a);
 					a.TakeDamage(DamageType.COLD,Global.Roll(1,6),this);
 				}
 				if(HasAttr(AttrType.POISON_HIT) && M.actor[r,c] != null){
-					if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){
-						B.Add(a.YouAre() + " poisoned. ");
-					}
+					B.Add(a.YouAre() + " poisoned. ",this,a);
 					a.attrs[AttrType.POISONED]++; //todo: make sure this is how poison works
 				}
 				if(HasAttr(AttrType.PARALYSIS_HIT) && attack_idx==0 && M.actor[r,c] != null){
 					//hack: only applies to attack 0
-					if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){
-						B.Add(a.YouAre() + " paralyzed. ");
-					}
+					B.Add(a.YouAre() + " paralyzed. ",this,a);
 					a.attrs[AttrType.PARALYZED]++; //todo: make sure this is how paralysis works
 				}
 				if(HasAttr(AttrType.FORCE_HIT) && M.actor[r,c] != null){
@@ -2080,12 +2096,12 @@ danger sense(on)
 					List<Actor> list = a.ActorsWithinDistance(1,true);
 					list.Remove(this); //don't consider yourself or the original target
 					if(list.Count > 0){
-						B.Add(a.You("deflect") + " the attack. ");
+						B.Add(a.You("deflect") + " the attack. ",this,a);
 						return Attack(attack_idx,list[Global.Roll(1,list.Count)-1]);
 					}
 					//this would currently enter an infinite loop if two adjacent things used it at the same time
 				}
-				if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){
+				if(this==player || a==player || player.CanSee(this) || player.CanSee(a)){ //didn't change this yet
 					if(s == "& lunges forward and ^hits *. "){
 						B.Add(the_name + " lunges forward and misses " + a.the_name + ". ");
 					}
@@ -2130,21 +2146,21 @@ danger sense(on)
 				}
 				if(hit){
 					if(Global.Roll(1,20) == 20){
-						B.Add(You("critically hit") + " " + a.the_name + " with an arrow. ");
+						B.Add(You("critically hit") + " " + a.the_name + " with an arrow. ",this,a);
 						a.TakeDamage(DamageType.NORMAL,18,this); //max(3d6)
 					}
 					else{
-						B.Add(You("hit") + " " + a.the_name + " with an arrow. ");
+						B.Add(You("hit") + " " + a.the_name + " with an arrow. ",this,a);
 						a.TakeDamage(DamageType.NORMAL,Global.Roll(3,6),this);
 					}
 				}
 				else{
-					B.Add(You("miss",true) + " " + a.the_name + " with an arrow. ");
+					B.Add(You("miss",true) + " " + a.the_name + " with an arrow. ",this,a);
 				}
 			}
 			else{
 				Tile t = M.tile[obj.row,obj.col];
-				B.Add(You("hit") + " " + t.the_name + " with an arrow. ");
+				B.Add(You("hit") + " " + t.the_name + " with an arrow. ",this,t);
 			}
 			Q1();
 		}
@@ -2167,7 +2183,7 @@ danger sense(on)
 					damage_dealt = true;
 				}
 				else{
-					B.Add(YouAre() + " undamaged. ");
+					B.Add(YouAre() + " undamaged. ",this);
 				}
 				break;
 			case DamageType.MAGIC:
@@ -2176,7 +2192,7 @@ danger sense(on)
 					damage_dealt = true;
 				}
 				else{
-					B.Add(YouAre() + " unharmed. ");
+					B.Add(YouAre() + " unharmed. ",this);
 				}
 				break;
 			case DamageType.FIRE:
@@ -2196,12 +2212,12 @@ danger sense(on)
 						speed = 50;
 						attrs[AttrType.ON_FIRE]++;
 						if(player.CanSee(this)){
-							B.Add(the_name + " catches fire! ");
+							B.Add(the_name + " catches fire! ",this);
 						}
 					}
 				}
 				else{
-					B.Add(YouAre() + " unburnt. ");
+					B.Add(YouAre() + " unburnt. ",this);
 				}
 				break;
 				}
@@ -2209,7 +2225,7 @@ danger sense(on)
 				{
 				if(HasAttr(AttrType.IMMUNE_COLD)){
 					dmg = 0;
-					B.Add(YouAre() + " unharmed. ");
+					B.Add(YouAre() + " unharmed. ",this);
 				}
 				int div = 1;
 				for(int i=attrs[AttrType.RESIST_COLD];i>0;--i){
@@ -2221,7 +2237,7 @@ danger sense(on)
 					damage_dealt = true;
 				}
 				else{
-					B.Add(YouAre() + " unharmed. ");
+					B.Add(YouAre() + " unharmed. ",this);
 				}
 				break;
 				}
@@ -2237,7 +2253,7 @@ danger sense(on)
 					damage_dealt = true;
 				}
 				else{
-					B.Add(YouAre() + " unharmed. ");
+					B.Add(YouAre() + " unharmed. ",this);
 				}
 				break;
 				}
@@ -2252,8 +2268,8 @@ danger sense(on)
 						B.Add("You feel the poison coursing through your veins! ");
 					}
 					else{
-						if(Global.Roll(1,5) == 5 && player.CanSee(this)){
-							B.Add(the_name + " shudders. ");
+						if(Global.Roll(1,5) == 5){
+							B.Add(the_name + " shudders. ",this);
 						}
 					}
 				}
@@ -2284,11 +2300,11 @@ danger sense(on)
 				if(HasAttr(AttrType.SPORE_BURST) && !HasAttr(AttrType.COOLDOWN_1)){
 					attrs[AttrType.COOLDOWN_1]++;
 					Q.Add(new Event(this,(Global.Roll(1,5)+1)*100,AttrType.COOLDOWN_1));
-					B.Add(You("retaliate") + " with a burst of spores! ");
-					foreach(Actor a in ActorsWithinDistance(8)){
+					B.Add(You("retaliate") + " with a burst of spores! ",this);
+					foreach(Actor a in ActorsWithinDistance(8)){ //todo: LOS check would make sense here, right?
 						if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) && !a.HasAttr(AttrType.SPORE_BURST)){
 							if(HasLOS(a.row,a.col)){
-								B.Add("The spores hit " + a.the_name + ". ");
+								B.Add("The spores hit " + a.the_name + ". ",a);
 								int duration = Global.Roll(2,4);
 								a.attrs[AttrType.POISONED] += duration;
 								if(name == "you"){
@@ -2306,7 +2322,7 @@ danger sense(on)
 					}
 				}
 				if(HasAttr(AttrType.HOLY_SHIELDED) && source != null){
-					B.Add(Your() + " holy shield burns " + source.the_name + ". ");
+					B.Add(Your() + " holy shield burns " + source.the_name + ". ",this,source);
 					int amount = Global.Roll(1,6);
 					if(amount >= source.curhp){
 						amount = source.curhp - 1;
@@ -2332,10 +2348,10 @@ danger sense(on)
 					if(player.CanSee(this)){
 						if(dmg < 1000){ //everything that deals this much damage prints its own message.
 							if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){
-								B.Add(the_name + " is destroyed. ");
+								B.Add(the_name + " is destroyed. ",this);
 							}
 							else{
-								B.Add(the_name + " dies. ");
+								B.Add(the_name + " dies. ",this);
 							}
 						}
 					}
@@ -2432,10 +2448,10 @@ danger sense(on)
 			Tile next = line[idx+1];
 			Actor source = M.actor[line[0].row,line[0].col];
 			if(next.passable && M.actor[next.row,next.col] == null){
-				B.Add(YouAre() + " knocked back. ");
+				B.Add(YouAre() + " knocked back. ",this);
 				if(HasAttr(AttrType.IMMOBILIZED)){
 					attrs[AttrType.IMMOBILIZED] = 0;
-					B.Add(YouAre() + " no longer immobilized. ");
+					B.Add(YouAre() + " no longer immobilized. ",this);
 				}
 				Move(next.row,next.col);
 			}
@@ -2444,16 +2460,16 @@ danger sense(on)
 				int c = col;
 				bool immobilized = HasAttr(AttrType.IMMOBILIZED);
 				if(!next.passable){
-					B.Add(YouAre() + " knocked into " + next.the_name + ". ");
+					B.Add(YouAre() + " knocked into " + next.the_name + ". ",this,next);
 					TakeDamage(DamageType.NORMAL,Global.Roll(1,6),source);
 				}
 				else{
-					B.Add(YouAre() + " knocked into " + M.actor[next.row,next.col].the_name + ". ");
+					B.Add(YouAre() + " knocked into " + M.actor[next.row,next.col].the_name + ". ",this,M.actor[next.row,next.col]);
 					TakeDamage(DamageType.NORMAL,Global.Roll(1,6),source);
 					M.actor[next.row,next.col].TakeDamage(DamageType.NORMAL,Global.Roll(1,6),source);
 				}
 				if(immobilized && M.actor[r,c] != null){
-					B.Add(YouAre() + " no longer immobilized. ");
+					B.Add(YouAre() + " no longer immobilized. ",this);
 				}
 			}
 			return true;
@@ -2476,7 +2492,7 @@ danger sense(on)
 					if(HasFeat(FeatType.STUDENTS_LUCK) && !HasAttr(AttrType.STUDENTS_LUCK_USED)){
 						attrs[AttrType.STUDENTS_LUCK_USED]++;
 						if(Global.Roll(1,100) - FailRate(spell) <= 0){
-							B.Add("Sparks fly from " + Your() + " fingers. ");
+							B.Add("Sparks fly from " + Your() + " fingers. ",this);
 							Q1();
 							return true;
 						}
@@ -2485,18 +2501,21 @@ danger sense(on)
 						}
 					}
 					else{
-						B.Add("Sparks fly from " + Your() + " fingers. "); //or 'you fail to concentrate hard enough'
+						B.Add("Sparks fly from " + Your() + " fingers. ",this); //or 'you fail to concentrate hard enough'
 						Q1(); //or 'the shaman's mouth and fingers move, but nothing happens'
 						return true; //or 'the shaman seems to concentrate hard, but nothing happens'
 					}
 				}
 			}
 			else{
-				bonus = 1;
+				if(HasFeat(FeatType.MASTERS_EDGE)){
+					bonus = 1;
+				}
 			}
 			switch(spell){
 			case SpellType.SHINE:
 				if(!HasAttr(AttrType.ENHANCED_TORCH)){
+					B.Add("You cast shine. ");
 					B.Add("Your torch begins to shine brightly. ");
 					attrs[AttrType.ENHANCED_TORCH]++;
 					if(light_radius > 0){
@@ -2517,13 +2536,10 @@ danger sense(on)
 				if(t != null){
 					Actor a = FirstActorInLine(t);
 					if(a != null){
-						if(name == "you"){
-							B.Add("The missile hits " + a.the_name + ". ");
-						}
-						else{
-							B.Add(the_name + " casts Magic Missile at you. "); //todo: add animations, remove "at you"
-						}
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this); //i think that will flow properly.
+						B.Add(You("cast") + " magic missile. ",this);
+						//animate
+						B.Add("The missile hits " + a.the_name + ". ",a);
+						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
 					}
 					else{
 						if(t.IsLit()){
@@ -2540,6 +2556,7 @@ danger sense(on)
 				break;
 			case SpellType.DETECT_MONSTERS:
 				if(!HasAttr(AttrType.DETECTING_MONSTERS)){
+					B.Add("You cast detect monsters. ");
 					B.Add("You can sense beings around you. ");
 					attrs[AttrType.DETECTING_MONSTERS]++;
 					Q.Add(new Event(this,2100,AttrType.DETECTING_MONSTERS,"You can no longer sense beings around you. "));
@@ -2555,13 +2572,10 @@ danger sense(on)
 				}
 				if(t != null){
 					Actor a = M.actor[t.row,t.col];
+					B.Add(You("cast") + " force palm. ",this);
+					//animate
 					if(a != null){
-						if(name != "you"){
-							B.Add(the_name + " casts Force Palm at you. "); //todo: descriptive style for ALL spells?
-						}
-						else{
-							B.Add("You strike " + a.the_name + " with your palm. ");
-						}
+						B.Add(You("strike") + " " + a.the_name + ". ",this,a);
 						string s = a.the_name;
 						List<Tile> line = GetExtendedBresenhamLine(a.row,a.col);
 						int idx = line.IndexOf(M.tile[a.row,a.col]);
@@ -2573,11 +2587,11 @@ danger sense(on)
 							}
 							else{
 								if(!next.passable){
-									B.Add(s + "'s corpse is knocked into " + next.the_name + ". ");
+									B.Add(s + "'s corpse is knocked into " + next.the_name + ". ",t,next);
 								}
 								else{
 									if(M.actor[next.row,next.col] != null){
-										B.Add(s + "'s corpse is knocked into " + M.actor[next.row,next.col].the_name + ". ");
+										B.Add(s + "'s corpse is knocked into " + M.actor[next.row,next.col].the_name + ". ",t,M.actor[next.row,next.col]);
 										M.actor[next.row,next.col].TakeDamage(DamageType.NORMAL,Global.Roll(1,6),this);
 									}
 								}
@@ -2586,7 +2600,7 @@ danger sense(on)
 					}
 					else{
 						if(t.passable){
-							B.Add("You strike the air with your palm. ");
+							B.Add("You strike empty space. ");
 						}
 						else{
 							B.Add("You strike " + t.the_name + " with your palm. ");
@@ -2614,7 +2628,8 @@ danger sense(on)
 							a += row;
 							b += col;
 							if(M.BoundsCheck(a,b) && M.tile[a,b].passable && M.actor[a,b] == null){
-								B.Add(You("step") + " through a rip in reality. ");
+								B.Add(You("cast") + " blink. ",this);
+								B.Add(You("step") + " through a rip in reality. ",this);
 								Move(a,b);
 								break;
 							}
@@ -2622,33 +2637,34 @@ danger sense(on)
 					}
 				}
 				break;
-			case SpellType.IMMOLATE: //perhaps being on fire scales linearly: each level is a bit of damage and +1 light_rad
+			case SpellType.IMMOLATE:
 				if(t == null){
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " immolate. ",this);
 					Actor a = M.actor[t.row,t.col];
 					if(a != null){
 						if(!a.HasAttr(AttrType.RESIST_FIRE)){
-							if(name == "you"){
-								B.Add(a.the_name + " starts to catch fire. ");
+							if(a.name == "you"){
+								B.Add("You start to catch fire! ");
 							}
 							else{
-								B.Add(the_name + " casts Immolate. You start to catch fire! ");
+								B.Add(a.the_name + " starts to catch fire. ",a);
 							}
 							a.attrs[AttrType.CATCHING_FIRE]++;
 						}
 						else{
 							if(a.name == "you"){
-								B.Add(the_name + " casts Immolate. You shrug off the flames. ");
+								B.Add("You shrug off the flames. ");
 							}
 							else{
-								B.Add(a.the_name + " fails to ignite. ");
+								B.Add(a.the_name + " fails to ignite. ",a);
 							}
 						}
 					}
 					else{
-						B.Add(You("throw") + " flames. ");
+						B.Add(You("throw") + " flames. ",this);
 					}
 				}
 				else{
@@ -2660,18 +2676,14 @@ danger sense(on)
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " icy blast. ",this);
 					Actor a = FirstActorInLine(t);
 					if(a != null){
-						if(name == "you"){
-							B.Add("The icy blast hits " + a.the_name + ". ");
-						}
-						else{
-							B.Add(the_name + " casts Icy Blast at you. ");
-						}
+						B.Add("The icy blast hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.COLD,Global.Roll(2+bonus,6),this);
 					}
 					else{
-						B.Add("The icy blast hits " + t.the_name + ". ");
+						B.Add("The icy blast hits " + t.the_name + ". ",t);
 					}
 				}
 				else{
@@ -2683,17 +2695,13 @@ danger sense(on)
 					t = TileInDirection(GetDirection());
 				}
 				if(t != null){
+					B.Add(You("cast") + " burning hands. ",this);
 					Actor a = M.actor[t.row,t.col];
 					if(a != null){
-						if(name == "you"){
-							B.Add("You project flames onto " + a.the_name + ". ");
-						}
-						else{
-							B.Add(the_name + " casts Burning Hands. You are seared. ");
-						}
+						B.Add(You("project") + " flames onto " + a.the_name + ". ",this,a);
 						a.TakeDamage(DamageType.FIRE,Global.Roll(3+bonus,6),this);
 						if(M.actor[t.row,t.col] != null && Global.Roll(1,10) <= 2){
-							B.Add(You("start") + " to catch fire! ");
+							B.Add(a.You("start") + " to catch fire! ",a);
 							a.attrs[AttrType.CATCHING_FIRE]++;
 						}
 					}
@@ -2710,26 +2718,22 @@ danger sense(on)
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " freeze. ",this);
 					Actor a = M.actor[t.row,t.col];
 					if(a != null){
-						if(name == "you"){
-							B.Add("Ice forms around " + a.the_name + ". ");
-						}
-						else{
-							B.Add(the_name + " casts Freeze. Ice forms around you. ");
-						}
+						B.Add("Ice forms around " + a.the_name + ". ",a);
 						int r = a.row;
 						int c = a.col;
 						a.TakeDamage(DamageType.COLD,Global.Roll(1+bonus,6),this);
 						if(M.actor[r,c] != null && !a.HasAttr(AttrType.IMMOBILIZED) && Global.Roll(1,10) <= 6){
-							B.Add(a.the_name + " is immobilized. ");
+							B.Add(a.the_name + " is immobilized. ",a);
 							a.attrs[AttrType.IMMOBILIZED]++;
 							int duration = Global.Roll(1,3) * 100;
-							Q.Add(new Event(a,duration,AttrType.IMMOBILIZED,a.the_name + " is no longer immobilized. "));
+							Q.Add(new Event(a,duration,AttrType.IMMOBILIZED,a.the_name + " is no longer immobilized. ",a));
 						}
 					}
 					else{
-						B.Add("Some ice forms on " + t.the_name + ". ");
+						B.Add("Some ice forms on " + t.the_name + ". ",t);
 					}
 				}
 				else{
@@ -2741,22 +2745,18 @@ danger sense(on)
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " sonic boom. ",this);
 					Actor a = FirstActorInLine(t);
 					if(a != null){
-						if(name == "you"){
-							B.Add("A wave of sound hits " + a.the_name + ". ");
-						}
-						else{
-							B.Add(the_name + " casts Sonic Boom. A wave of sound hits you. ");
-						}
+						B.Add("A wave of sound hits " + a.the_name + ". ",a);
 						int r = a.row;
 						int c = a.col;
 						a.TakeDamage(DamageType.MAGIC,Global.Roll(2+bonus,6),this);
 						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
-							B.Add(a.the_name + " is stunned. ");
+							B.Add(a.the_name + " is stunned. ",a);
 							a.attrs[AttrType.STUNNED]++;
 							int duration = (Global.Roll(1,4)+2) * 100;
-							Q.Add(new Event(a,duration,AttrType.STUNNED,the_name + " is no longer stunned. "));
+							Q.Add(new Event(a,duration,AttrType.STUNNED,the_name + " is no longer stunned. ",a));
 						}
 					}
 					else{
@@ -2777,13 +2777,18 @@ danger sense(on)
 						}
 					}
 				}
-				B.Add(You("crackle") + " with electricity. ");
-				while(targets.Count > 0){
-					int idx = Global.Roll(1,targets.Count) - 1;
-					Actor a = targets[idx];
-					targets.Remove(a);
-					B.Add("Electricity hits " + a.the_name + ". ");
-					a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
+				B.Add(You("cast") + " arc lightning. ",this);
+				if(targets.Count == 0){
+					B.Add("The air around " + the_name + " crackles. ",this);
+				}
+				else{
+					while(targets.Count > 0){
+						int idx = Global.Roll(1,targets.Count) - 1;
+						Actor a = targets[idx];
+						targets.Remove(a);
+						B.Add("Electricity arcs to " + a.the_name + ". ",this,a);
+						a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
+					}
 				}
 				break;
 				}
@@ -2795,12 +2800,10 @@ danger sense(on)
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " shock. ",this);
 					Actor a = FirstActorInLine(t);
 					if(a != null){
-						if(name != "you"){
-							B.Add(the_name + " casts Shock. ");
-						}
-						B.Add("Electricity arcs to " + a.the_name + ". ");
+						B.Add("Electricity leaps to " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
 					}
 					else{
@@ -2812,6 +2815,7 @@ danger sense(on)
 				}
 				break;
 			case SpellType.SHADOWSIGHT:
+				B.Add("You cast shadowsight. ");
 				B.Add("Your eyes pierce the darkness. ");
 				if(!HasAttr(AttrType.DARKVISION)){
 					attrs[AttrType.DARKVISION]++;
@@ -2820,6 +2824,7 @@ danger sense(on)
 				}
 				break;
 			case SpellType.RETREAT: //this is a player-only spell for now because it uses player_seen to track position
+				B.Add("You cast retreat. ");
 				if(player_seen == null){
 					player_seen = M.tile[row,col];
 					B.Add("You create a rune of transport on " + M.tile[row,col].the_name + ". ");
@@ -2847,7 +2852,8 @@ danger sense(on)
 					if(a != null){
 						t = M.tile[a.row,a.col];
 					}
-					B.Add("Fwoosh! ");
+					B.Add(You("cast") + " fireball. ",this);
+					B.Add("Fwoosh! ",this,t);
 					List<Actor> targets = new List<Actor>();
 					for(int i=t.row-2;i<=t.row+2;++i){
 						for(int j=t.col-2;j<=t.col+2;++j){
@@ -2860,7 +2866,7 @@ danger sense(on)
 						int idx = Global.Roll(1,targets.Count) - 1;
 						Actor ac = targets[idx];
 						targets.Remove(ac);
-						B.Add("The explosion hits " + ac.the_name + ". ");
+						B.Add("The explosion hits " + ac.the_name + ". ",ac);
 						ac.TakeDamage(DamageType.FIRE,Global.Roll(3+bonus,6),this);
 					}
 				}
@@ -2886,6 +2892,7 @@ danger sense(on)
 					t = TileInDirection(i);
 					if(t != null){
 						if(t.type == TileType.WALL){
+							B.Add("You cast passage. ");
 							while(!t.passable){
 								if(t.row == 0 || t.row == ROWS-1 || t.col == 0 || t.col == COLS-1){
 									break;
@@ -2916,6 +2923,7 @@ danger sense(on)
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " force beam. ",this);
 					List<Tile> line = GetExtendedBresenhamLine(t.row,t.col);
 					for(int i=0;i<3;++i){ //hits thrice
 						Actor firstactor = null;
@@ -2941,11 +2949,11 @@ danger sense(on)
 								}
 								else{
 									if(!nexttile.passable){
-										B.Add(s + "'s corpse is knocked into " + nexttile.the_name + ". ");
+										B.Add(s + "'s corpse is knocked into " + nexttile.the_name + ". ",firsttile,nexttile);
 									}
 									else{
 										if(nextactor != null){
-											B.Add(s + "'s corpse is knocked into " + nextactor.the_name + ". ");
+											B.Add(s + "'s corpse is knocked into " + nextactor.the_name + ". ",firsttile,nextactor);
 											nextactor.TakeDamage(DamageType.NORMAL,Global.Roll(1,6),this);
 										}
 									}
@@ -2963,19 +2971,15 @@ danger sense(on)
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " disintegrate. ",this);
 					Actor a = FirstActorInLine(t);
 					if(a != null){
-						if(name == "you"){
-							B.Add("You direct destructive energies toward " + a.the_name + ". ");
-						}
-						else{
-							B.Add(the_name + " casts Disintegrate. " + the_name + " directs destructive energies toward you. ");
-						}
+						B.Add(You("direct") + " destructive energies toward " + a.the_name + ". ",this,a);
 						a.TakeDamage(DamageType.MAGIC,Global.Roll(8+bonus,6),this);
 					}
 					else{
 						if(t.type == TileType.WALL || t.type == TileType.DOOR_C || t.type == TileType.DOOR_O || t.type == TileType.CHEST){
-							B.Add(t.the_name + " turns to dust. ");
+							B.Add(t.the_name + " turns to dust. ",t);
 							t.TurnToFloor();
 						}
 					}
@@ -2994,49 +2998,52 @@ danger sense(on)
 						}
 					}
 				}
-				B.Add("A massive ice storm surrounds " + the_name + ". ");
+				B.Add(You("cast") + " blizzard. ",this);
+				B.Add("A massive ice storm surrounds " + the_name + ". ",this);
 				while(targets.Count > 0){
 					int idx = Global.Roll(1,targets.Count) - 1;
 					Actor a = targets[idx];
 					targets.Remove(a);
-					B.Add("The blizzard hits " + a.the_name + ". ");
+					B.Add("The blizzard hits " + a.the_name + ". ",a);
 					int r = a.row;
 					int c = a.col;
 					a.TakeDamage(DamageType.COLD,Global.Roll(5+bonus,6),this);
 					if(M.actor[r,c] != null && Global.Roll(1,10) <= 8){
-						B.Add(a.the_name + " is immobilized. ");
+						B.Add(a.the_name + " is immobilized. ",a);
 						a.attrs[AttrType.IMMOBILIZED]++;
 						int duration = Global.Roll(1,3) * 100;
-						Q.Add(new Event(a,duration,AttrType.IMMOBILIZED,a.the_name + " is no longer immobilized. "));
+						Q.Add(new Event(a,duration,AttrType.IMMOBILIZED,a.the_name + " is no longer immobilized. ",a));
 					}
 				}
 				break;
 				}
 			case SpellType.BLESS:
 				if(!HasAttr(AttrType.BLESSED)){
-					B.Add(the_name + " casts Bless. ");
-					B.Add(You("shine") + " briefly with inner light. ");
+					B.Add(You("cast") + " bless. ",this);
+					B.Add(You("shine") + " briefly with inner light. ",this);
 					attrs[AttrType.BLESSED]++;
 					Q.Add(new Event(this,400,AttrType.BLESSED));
 				}
 				else{
-					B.Add(YouAre() + " already blessed! ");
+					B.Add(YouAre() + " already blessed! ",this);
 					return false;
 				}
 				break;
 			case SpellType.MINOR_HEAL:
+				B.Add(You("cast") + " minor heal. ",this);
+				B.Add("A bluish glow surrounds " + the_name + ". ",this);
 				TakeDamage(DamageType.HEAL,Global.Roll(4,6),null);
-				B.Add("A bluish glow surrounds " + the_name + ". ");
 				break;
 			case SpellType.HOLY_SHIELD:
 				if(!HasAttr(AttrType.HOLY_SHIELDED)){
-					B.Add("A fiery halo appears above " + the_name + ". ");
+					B.Add(You("cast") + " holy shield. ",this);
+					B.Add("A fiery halo appears above " + the_name + ". ",this);
 					attrs[AttrType.HOLY_SHIELDED]++;
 					int duration = (Global.Roll(3,2)+1) * 100;
-					Q.Add(new Event(this,duration,AttrType.HOLY_SHIELDED,the_name + "'s halo fades. "));
+					Q.Add(new Event(this,duration,AttrType.HOLY_SHIELDED,the_name + "'s halo fades. ",this));
 				}
 				else{
-					B.Add(Your() + " holy shield is already active. ");
+					B.Add(Your() + " holy shield is already active. ",this);
 					return false;
 				}
 				break;
@@ -3077,27 +3084,27 @@ danger sense(on)
 			switch(feat){
 			case FeatType.SPIN_ATTACK:
 				{
+				B.Add("You perform a spin attack. ");
 				int dice = Weapon.Damage(weapons.First.Value);
-				bool hit = false;
+				//bool hit = false;
 				foreach(Tile t in TilesAtDistance(1)){
 					if(t.Actor() != null){
-						hit = true;
+						//hit = true;
 						Actor a = t.Actor();
-						B.Add("You hit " + a.the_name + ". ");
+						B.Add("You hit " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.NORMAL,Global.Roll(dice,6),this);
 					}
 				}
 				foreach(Tile t in TilesAtDistance(2)){
 					if(t.Actor() != null){
-						hit = true;
+						//hit = true;
 						Actor a = t.Actor();
-						B.Add("You hit " + a.the_name + ". "); //todo: message check
+						B.Add("Your blade's magic hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.MAGIC,TotalSkill(SkillType.MAGIC),this);
 					}
 				}
-				if(!hit){
-					B.Add("You perform a spin attack. ");
-				}
+				//if(!hit){
+				//}
 				break;
 				}
 			case FeatType.LUNGE:
@@ -3211,7 +3218,7 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 				break;
 				}
-			case FeatType.ARCANE_HEALING: //okay, 25% fail rate for these.
+			case FeatType.ARCANE_HEALING: //25% fail rate for the 'failrate' feats
 				if(attrs[AttrType.GLOBAL_FAIL_RATE] < 4){
 					if(curhp < maxhp){
 						attrs[AttrType.GLOBAL_FAIL_RATE]++;
@@ -3287,19 +3294,19 @@ effect as standing still, if you're on fire or catching fire. */
 			if(HasAttr(AttrType.STUNNED) && Global.Roll(1,5) == 5){
 				int dir = Global.RandomDirection();
 				if(HasAttr(AttrType.IMMOBILIZED)){
-					B.Add(You("almost fall") + " over. ");
+					B.Add(You("almost fall") + " over. ",this);
 				}
 				else{
 					if(!TileInDirection(dir).passable){
-						B.Add(You("stagger") + " into " + TileInDirection(dir).the_name + ". ");
+						B.Add(You("stagger") + " into " + TileInDirection(dir).the_name + ". ",this);
 					}
 					else{
 						if(ActorInDirection(dir) != null){
-							B.Add(You("stagger") + " into " + ActorInDirection(dir).the_name + ". ");
+							B.Add(You("stagger") + " into " + ActorInDirection(dir).the_name + ". ",this);
 						}
 						else{
 							Move(TileInDirection(dir).row,TileInDirection(dir).col);
-							B.Add(You("stagger") + ". ");
+							B.Add(You("stagger") + ". ",this);
 						}
 					}
 				}

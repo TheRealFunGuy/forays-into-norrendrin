@@ -27,38 +27,36 @@ namespace Forays{
 			M = g.M;
 			player = g.player;
 		}
-		public void Add(string s){
-			if(Char.IsLetter(s[0])){
-				char[] c = s.ToCharArray();
-				c[0] = Char.ToUpper(s[0]);
-				s = new string(c);
-			}
-			str = str + s;
-			while(str.Length > max_length){
-				for(int i=max_length-7;i>=0;--i){
-					if(str.Substring(i,1)==" "){
-						str2 = str.Substring(i+1);
-						str = str.Substring(0,i+1);
-						break;
-					}
-				}
-				Print(false);
-			}
-		}
 		public void Add(string s,params PhysicalObject[] objs){ //if there's at least one object, the player must be able to
-			if(objs.Length > 0){ //see at least one of them. if not, no message is added. 
-				bool seen = false;
+			bool add = false;
+			if(objs != null && objs.Length > 0){ //see at least one of them. if not, no message is added. 
 				foreach(PhysicalObject obj in objs){
 					if(obj == player || player.CanSee(obj)){
-						seen = true;
+						add = true;
 						break;
 					}
-				}
-				if(seen){
 				}
 			}
 			else{
-				//normal add
+				add = true;
+			}
+			if(add){
+				if(Char.IsLetter(s[0])){
+					char[] c = s.ToCharArray();
+					c[0] = Char.ToUpper(s[0]);
+					s = new string(c);
+				}
+				str = str + s;
+				while(str.Length > max_length){
+					for(int i=max_length-7;i>=0;--i){
+						if(str.Substring(i,1)==" "){
+							str2 = str.Substring(i+1);
+							str = str.Substring(0,i+1);
+							break;
+						}
+					}
+					Print(false);
+				}
 			}
 		}
 		public void DisplayNow(string s){

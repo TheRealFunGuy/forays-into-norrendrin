@@ -90,6 +90,54 @@ namespace Forays{
 				return null;
 			}
 		}
+		public int DirectionOf(PhysicalObject obj){ //returns -1 if object isn't directly in one of the 8 directions
+			int dy = Math.Abs(obj.row - row);
+			int dx = Math.Abs(obj.col - col);
+			if(dy == 0){
+				if(col < obj.col){
+					return 6;
+				}
+				if(col > obj.col){
+					return 4;
+				}
+				else{
+					if(dx == 0){
+						return 5;
+					}
+				}
+			}
+			if(dx == 0){
+				if(row > obj.row){
+					return 8;
+				}
+				else{
+					if(row < obj.row){
+						return 2;
+					}
+				}
+			}
+			if(row+col == obj.row+obj.col){ //slope is -1
+				if(row > obj.row){
+					return 9;
+				}
+				else{
+					if(row < obj.row){
+						return 1;
+					}
+				}
+			}
+			if(row-col == obj.row-obj.col){ //slope is 1
+				if(row > obj.row){
+					return 7;
+				}
+				else{
+					if(row < obj.row){
+						return 3;
+					}
+				}
+			}
+			return -1;
+		}
 		public Actor Actor(){
 			return M.actor[row,col];
 		}

@@ -63,6 +63,7 @@ namespace Forays{
 		private AttrType attr;
 		private int value;
 		private string msg;
+		private List<PhysicalObject> msg_objs; //used to determine visibility of msg
 		private int time_created;
 		private bool dead;
 		public static Queue Q{get;set;}
@@ -73,6 +74,7 @@ namespace Forays{
 			type=EventType.MOVE;
 			value=0;
 			msg="";
+			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
 		}
@@ -83,6 +85,7 @@ namespace Forays{
 			attr=attr_;
 			value=1;
 			msg="";
+			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
 		}
@@ -93,6 +96,7 @@ namespace Forays{
 			attr=attr_;
 			value=value_;
 			msg="";
+			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
 		}
@@ -103,6 +107,7 @@ namespace Forays{
 			attr=attr_;
 			value=1;
 			msg=msg_;
+			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
 		}
@@ -113,6 +118,35 @@ namespace Forays{
 			attr=attr_;
 			value=value_;
 			msg=msg_;
+			msg_objs = null;
+			time_created=Q.turn;
+			dead=false;
+		}
+		public Event(PhysicalObject target_,int delay_,AttrType attr_,string msg_,params PhysicalObject[] objs){
+			target=target_;
+			delay=delay_;
+			type=EventType.REMOVE_ATTR;
+			attr=attr_;
+			value=1;
+			msg=msg_;
+			msg_objs = new List<PhysicalObject>();
+			foreach(PhysicalObject obj in objs){
+				msg_objs.Add(obj);
+			}
+			time_created=Q.turn;
+			dead=false;
+		}
+		public Event(PhysicalObject target_,int delay_,AttrType attr_,int value_,string msg_,params PhysicalObject[] objs){
+			target=target_;
+			delay=delay_;
+			type=EventType.REMOVE_ATTR;
+			attr=attr_;
+			value=value_;
+			msg=msg_;
+			msg_objs = new List<PhysicalObject>();
+			foreach(PhysicalObject obj in objs){
+				msg_objs.Add(obj);
+			}
 			time_created=Q.turn;
 			dead=false;
 		}
@@ -123,6 +157,7 @@ namespace Forays{
 			attr=AttrType.NO_ATTR;
 			value=0;
 			msg="";
+			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
 		}
@@ -133,16 +168,21 @@ namespace Forays{
 			attr=AttrType.NO_ATTR;
 			value=0;
 			msg=msg_;
+			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
 		}
-		public Event(PhysicalObject target_,int delay_,EventType type_,AttrType attr_,int value_,string msg_){
+		public Event(PhysicalObject target_,int delay_,EventType type_,AttrType attr_,int value_,string msg_,params PhysicalObject[] objs){
 			target=target_;
 			delay=delay_;
 			type=type_;
 			attr=attr_;
 			value=value_;
 			msg=msg_;
+			msg_objs = new List<PhysicalObject>();
+			foreach(PhysicalObject obj in objs){
+				msg_objs.Add(obj);
+			}
 			time_created=Q.turn;
 			dead=false;
 		}
@@ -176,7 +216,12 @@ namespace Forays{
 					}
 				}
 				if(msg != ""){
-					B.Add(msg);
+					if(msg_objs == null){
+						B.Add(msg);
+					}
+					else{
+						B.Add(msg,msg_objs.ToArray());
+					}
 				}
 			}
 		}

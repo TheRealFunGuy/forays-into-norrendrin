@@ -30,6 +30,7 @@ namespace Forays{
 			//also not an actual trap, but arena rooms will be cool too. perhaps you'll see the opponent, in stasis.
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
 			//stun trap. much less nasty than paralysis or even confusion.
+			//definitely need braziers with radius 1 light
 		}
 		public Tile(Tile t,int r,int c){
 			type = t.type;

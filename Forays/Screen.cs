@@ -120,17 +120,14 @@ namespace Forays{
 		}
 		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
-				if(ch.c == ' '){
-					ch.color = ch.bgcolor;
-				}
 				memory[r,c] = ch;
 				ConsoleColor co = GetColor(ch.color);
 				if(co != ForegroundColor){
 					ForegroundColor = co;
 				}
 				co = GetColor(ch.bgcolor);
-				if(co != Console.BackgroundColor || ch.c == ' '){//voodoo here. not sure why this is needed.
-					BackgroundColor = co;
+				if(co != Console.BackgroundColor || (Global.LINUX && ch.c == ' ')){//voodoo here. not sure why this is needed.
+					BackgroundColor = co; //todo: test on linux with one more test - for bgcolor, to speed things up.
 				}
 				Console.SetCursorPosition(c,r);
 				Console.Write(ch.c);
@@ -244,6 +241,39 @@ namespace Forays{
 			list.RemoveAt(0);
 			foreach(Tile t in list){
 				AnimateMapCell(t.row,t.col,ch,duration);
+			}
+			Console.CursorVisible = true;
+		}
+		public static void AnimateBoltProjectile(List<Tile> list,Color color){ AnimateBoltProjectile(list,color,50); }
+		public static void AnimateBoltProjectile(List<Tile> list,Color color,int duration){
+			Console.CursorVisible = false;
+			Tile prev = list[0];
+			list.RemoveAt(0);
+			colorchar ch;
+			ch.color = color;
+			ch.bgcolor = Color.Black;
+			ch.c='!';
+			foreach(Tile t in list){
+				switch(t.DirectionOf(prev)){
+				case 7:
+				case 3:
+					ch.c = '\\';
+					break;
+				case 8:
+				case 2:
+					ch.c = '|';
+					break;
+				case 9:
+				case 1:
+					ch.c = '/';
+					break;
+				case 4:
+				case 6:
+					ch.c = '-';
+					break;
+				}
+				AnimateMapCell(t.row,t.col,ch,duration);
+				prev = t;
 			}
 			Console.CursorVisible = true;
 		}
