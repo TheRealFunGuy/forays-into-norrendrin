@@ -1,0 +1,20 @@
+things to do between 0.5 and 1.0:
+
+20 dungeon levels, with an appropriate number of monsters and items
+
+at least 1 special level per game, with an appropriate number of different special levels
+
+animations should support the concept of a 'viewer' - cells outside viewer's FOV don't animate.
+
+
+things to do somewhere between 0.1 and 1.0:
+
+add a poltergeist monster that will haunt an area, throwing items and slamming doors. since the player hears doors open, this will encourage them to investigate.
+
+todo: KillEvents should now check msg_objs and remove from it
+
+unclear: how should stealth work when i.e. a mob you can't see is hit by your spin attack?
+	-doesn't matter too much since it's not realistic anyway
+
+
+

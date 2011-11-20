@@ -228,7 +228,7 @@ namespace Forays{
 					}
 				}
 				break;
-			case ConsumableType.PASSAGE:
+			case ConsumableType.PASSAGE: //todo: add animation
 				{
 				if(user.HasAttr(AttrType.IMMOBILIZED)){
 					B.Add("You can't use this item while immobilized. ");

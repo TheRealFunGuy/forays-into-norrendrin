@@ -90,7 +90,7 @@ namespace Forays{
 				return null;
 			}
 		}
-		public int DirectionOf(PhysicalObject obj){ //returns -1 if object isn't directly in one of the 8 directions
+		public int DirectionOf(PhysicalObject obj){ //todo: update
 			int dy = Math.Abs(obj.row - row);
 			int dx = Math.Abs(obj.col - col);
 			if(dy == 0){
@@ -136,6 +136,55 @@ namespace Forays{
 					}
 				}
 			}
+			//todo: calculate all other dirs here
+			/*.................flipped y
+........m........
+.......l|n.......
+........|........
+.....k..|..o.....
+......\.|./......
+...j...\|/...p...
+..i-----@-----a.1
+...h.../|\...b.2.
+....../.|.\.B.3..
+.....g..|..c.4...
+........|...5....
+.......f|d.......
+........e........
+
+@-------------...
+|\;..b.2.........
+|.\.B.3..........
+|..\.4;..........
+|...\...;........
+|....\....;6.....
+|.....\.....;....
+|......\.....5;..
+	rise:	run:	ri/ru:	angle(flipped y):
+b:	1	5	1/5		(obviously the dividing line should be 22.5 degrees here)
+d:	5	1	5		67.5
+f:	5	-1	-5		112.5
+h:	1	-5	-1/5		157.5
+j:	-1	-5	1/5		202.5
+l:	-5	-1	5		247.5
+n:	-5	1	-5		292.5
+p:	-1	5	-1/5		337.5
+algorithm for determining direction...			(for b)		(for 4)		(for 6)		(for 5)		(for B)
+first, determine 'major' direction - NSEW		E		E		E		E		E
+then, determine 'minor' direction - diagonals		SE		SE		SE		SE		SE
+find the ratio of d-major/d(other dir) (both positive)	1/5		3/5		5/11		7/13		2/4
+compare this number to 1/2:  if less than 1/2, major.	
+	if more than 1/2, minor.
+	if exactly 1/2, tiebreaker.
+							major(E)	minor(SE)	major(E)	minor(SE)	tiebreak
+
+
+
+
+
+
+
+*/
 			return -1;
 		}
 		public Actor Actor(){

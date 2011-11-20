@@ -3086,10 +3086,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				{
 				B.Add("You perform a spin attack. ");
 				int dice = Weapon.Damage(weapons.First.Value);
-				//bool hit = false;
 				foreach(Tile t in TilesAtDistance(1)){
 					if(t.Actor() != null){
-						//hit = true;
 						Actor a = t.Actor();
 						B.Add("You hit " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.NORMAL,Global.Roll(dice,6),this);
@@ -3097,14 +3095,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				foreach(Tile t in TilesAtDistance(2)){
 					if(t.Actor() != null){
-						//hit = true;
 						Actor a = t.Actor();
-						B.Add("Your blade's magic hits " + a.the_name + ". ",a);
+						B.Add("Your magically charged attack hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.MAGIC,TotalSkill(SkillType.MAGIC),this);
 					}
 				}
-				//if(!hit){
-				//}
 				break;
 				}
 			case FeatType.LUNGE:
@@ -3931,7 +3926,9 @@ effect as standing still, if you're on fire or catching fire. */
 				return -1;
 			}
 			else{
-				return GetSelection(message,strings.Count,no_cancel);
+				int result = GetSelection(message,strings.Count,no_cancel);
+				M.RedrawWithStrings();
+				return result;
 			}
 		}
 		public int GetSelection(string s,int count,bool no_cancel){
