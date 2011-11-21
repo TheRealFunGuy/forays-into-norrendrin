@@ -179,13 +179,64 @@ compare this number to 1/2:  if less than 1/2, major.
 							major(E)	minor(SE)	major(E)	minor(SE)	tiebreak
 
 
-
-
-
-
-
 */
-			return -1;
+			int primary; //orthogonal
+			int secondary; //diagonal
+			int dprimary = Math.Min(dy,dx);
+			int dsecondary = Math.Max(dy,dx);
+			if(row < obj.row){ //down
+				if(col < obj.col){ //right
+					secondary = 3;
+					if(dx > dy){ //slope less than 1
+						primary = 6;
+					}
+					else{ //slope greater than 1
+						primary = 2;
+					}
+				}
+				else{ //left
+					secondary = 1;
+					if(dx > dy){ //slope less than 1
+						primary = 4;
+					}
+					else{ //slope greater than 1
+						primary = 2;
+					}
+				}
+			}
+			else{ //up
+				if(col < obj.col){ //right
+					secondary = 9;
+					if(dx > dy){ //slope less than 1
+						primary = 6;
+					}
+					else{ //slope greater than 1
+						primary = 8;
+					}
+				}
+				else{ //left
+					secondary = 7;
+					if(dx > dy){ //slope less than 1
+						primary = 4;
+					}
+					else{ //slope greater than 1
+						primary = 8;
+					}
+				}
+			}
+			int tiebreaker = primary;
+			float ratio = (float)dprimary / (float)dsecondary;
+			if(ratio < 0.5f){
+				return primary;
+			}
+			else{
+				if(ratio > 0.5f){
+					return secondary;
+				}
+				else{
+					return tiebreaker;
+				}
+			}
 		}
 		public Actor Actor(){
 			return M.actor[row,col];

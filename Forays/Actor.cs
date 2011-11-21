@@ -129,6 +129,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			recover_time = 0;
 			weapons.AddFirst(WeaponType.NO_WEAPON);
 			armors.AddFirst(ArmorType.NO_ARMOR);
+			F = new SpellType[13];
+			for(int i=0;i<13;++i){
+				F[i] = SpellType.NO_SPELL;
+			}
 		}
 		public static Actor Create(ActorType type,int r,int c){
 			Actor a = null;
@@ -974,7 +978,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				B.DisplayLogtempfunction();
 				Q0();
 				break;
-			case 'C': //debug mode cheats
+			case 'C': //debug mode 
 				{
 				List<string> l = new List<string>();
 				l.Add("Throw a prismatic orb");
@@ -984,6 +988,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Forget the map");
 				l.Add("Heal to full");
 				l.Add("Fire a bolt");
+				l.Add("Test DirectionOf");
+				l.Add("Spawn a monster");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1029,7 +1035,49 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Q0();
 					break;
 				case 6:
-					Screen.AnimateBoltProjectile(GetExtendedBresenhamLine(11,33),Color.RandomFire,25);
+					Screen.AnimateBoltProjectile(GetBresenhamLine(11,33),Color.RandomFire,20);
+					Q1();
+					break;
+				case 7:
+					{
+					char c = '!';
+					foreach(Tile t in M.AllTiles()){
+						switch(DirectionOf(t)){
+						case 7:
+						case 3:
+							c = '\\';
+							break;
+						case 8:
+						case 2:
+							c = '|';
+							break;
+						case 9:
+						case 1:
+							c = '/';
+							break;
+						case 4:
+						case 6:
+							c = '-';
+							break;
+						case 5:
+							c = '*';
+							break;
+						}
+						if(row == t.row || col == t.col || row+col == t.row+t.col || row-col == t.row-t.col){
+							Screen.WriteMapChar(t.row,t.col,new colorchar(Color.Red,'+'));
+						}
+						else{
+							Screen.WriteMapChar(t.row,t.col,c);
+						}
+					}
+					Console.ReadKey(true);
+					Q1();
+					}
+					break;
+				case 8:
+					if(M.actor[18,50] == null){
+						Create(ActorType.GOBLIN,18,50);
+					}
 					Q1();
 					break;
 				default:
@@ -1861,7 +1909,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				if(colchange == 0){
 					dirs.Add(8);
 				}
-				if(colchange == -1){
+				if(colchange == 1){
 					dirs.Add(9);
 				}
 			}
@@ -2110,7 +2158,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							B.Add(the_name + " nearly hits " + a.the_name + " with a blast of cold. ");
 						}
 						else{
-							if(s.Substring(0,20) == "& extends a tentacle"){
+							if(s.Length >= 20 && s.Substring(0,20) == "& extends a tentacle"){
 								B.Add(the_name + " misses " + a.the_name + " with a tentacle. ");
 							}
 							else{
@@ -2537,7 +2585,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Actor a = FirstActorInLine(t);
 					if(a != null){
 						B.Add(You("cast") + " magic missile. ",this);
-						//animate
+						Screen.AnimateBoltProjectile(GetBresenhamLine(a.row,a.col),Color.Magenta);
 						B.Add("The missile hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
 					}

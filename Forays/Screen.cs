@@ -141,6 +141,9 @@ namespace Forays{
 				BackgroundColor = ConsoleColor.Black;
 			}
 		}
+		public static void WriteMapChar(int r,int c,char ch){
+			WriteMapChar(r,c,new colorchar(Color.Gray,ch));
+		}
 		public static void WriteMapChar(int r,int c,colorchar ch){
 			WriteChar(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch);
 		}
@@ -247,33 +250,31 @@ namespace Forays{
 		public static void AnimateBoltProjectile(List<Tile> list,Color color){ AnimateBoltProjectile(list,color,50); }
 		public static void AnimateBoltProjectile(List<Tile> list,Color color,int duration){
 			Console.CursorVisible = false;
-			Tile prev = list[0];
-			list.RemoveAt(0);
 			colorchar ch;
 			ch.color = color;
 			ch.bgcolor = Color.Black;
 			ch.c='!';
+			switch(list[0].DirectionOf(list[list.Count-1])){
+			case 7:
+			case 3:
+				ch.c = '\\';
+				break;
+			case 8:
+			case 2:
+				ch.c = '|';
+				break;
+			case 9:
+			case 1:
+				ch.c = '/';
+				break;
+			case 4:
+			case 6:
+				ch.c = '-';
+				break;
+			}
+			list.RemoveAt(0);
 			foreach(Tile t in list){
-				switch(t.DirectionOf(prev)){
-				case 7:
-				case 3:
-					ch.c = '\\';
-					break;
-				case 8:
-				case 2:
-					ch.c = '|';
-					break;
-				case 9:
-				case 1:
-					ch.c = '/';
-					break;
-				case 4:
-				case 6:
-					ch.c = '-';
-					break;
-				}
 				AnimateMapCell(t.row,t.col,ch,duration);
-				prev = t;
 			}
 			Console.CursorVisible = true;
 		}
