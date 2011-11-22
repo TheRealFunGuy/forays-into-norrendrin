@@ -8,6 +8,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
 using System.Collections.Generic;
+using System.Threading;
 namespace Forays{
 	public class AttackInfo{
 		public int cost;
@@ -987,9 +988,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Check key names");
 				l.Add("Forget the map");
 				l.Add("Heal to full");
-				l.Add("Fire a bolt");
+				l.Add("Fire a beam");
 				l.Add("Test DirectionOf");
 				l.Add("Spawn a monster");
+				l.Add("Use a rune of passage");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1035,7 +1037,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Q0();
 					break;
 				case 6:
-					Screen.AnimateBoltProjectile(GetBresenhamLine(11,33),Color.RandomFire,20);
+					Screen.AnimateBeam(GetBresenhamLine(11,33),new colorchar(Color.DarkGray,'%'));
 					Q1();
 					break;
 				case 7:
@@ -1078,6 +1080,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(M.actor[18,50] == null){
 						Create(ActorType.GOBLIN,18,50);
 					}
+					Q1();
+					break;
+				case 9:
+					new Item(ConsumableType.PASSAGE,"rune of passage",'&',Color.White).Use(this);
 					Q1();
 					break;
 				default:
@@ -2582,10 +2588,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					t = GetTarget();
 				}
 				if(t != null){
+					B.Add(You("cast") + " magic missile. ",this);
+					AnimateBoltProjectile(t,Color.Magenta);
 					Actor a = FirstActorInLine(t);
 					if(a != null){
-						B.Add(You("cast") + " magic missile. ",this);
-						Screen.AnimateBoltProjectile(GetBresenhamLine(a.row,a.col),Color.Magenta);
 						B.Add("The missile hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
 					}
@@ -2621,7 +2627,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				if(t != null){
 					Actor a = M.actor[t.row,t.col];
 					B.Add(You("cast") + " force palm. ",this);
-					//animate
+					AnimateMapCell(t,Color.Cyan,'*');
 					if(a != null){
 						B.Add(You("strike") + " " + a.the_name + ". ",this,a);
 						string s = a.the_name;
@@ -2691,7 +2697,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(t != null){
 					B.Add(You("cast") + " immolate. ",this);
-					Actor a = M.actor[t.row,t.col];
+					AnimateMapCell(t,Color.RandomFire,'*'); //eventually i want this to use higher
+					Actor a = M.actor[t.row,t.col];	//ascii for this to get a 'growing flame' effect.
 					if(a != null){
 						if(!a.HasAttr(AttrType.RESIST_FIRE)){
 							if(a.name == "you"){
@@ -2725,6 +2732,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(t != null){
 					B.Add(You("cast") + " icy blast. ",this);
+					AnimateProjectile(t,Color.RandomIce,'*');
 					Actor a = FirstActorInLine(t);
 					if(a != null){
 						B.Add("The icy blast hits " + a.the_name + ". ",a);
@@ -2744,6 +2752,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(t != null){
 					B.Add(You("cast") + " burning hands. ",this);
+					AnimateMapCell(t,Color.DarkRed,'*');
 					Actor a = M.actor[t.row,t.col];
 					if(a != null){
 						B.Add(You("project") + " flames onto " + a.the_name + ". ",this,a);
@@ -2767,6 +2776,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(t != null){
 					B.Add(You("cast") + " freeze. ",this);
+					AnimateMapCell(t,Color.DarkBlue,'#');
 					Actor a = M.actor[t.row,t.col];
 					if(a != null){
 						B.Add("Ice forms around " + a.the_name + ". ",a);
@@ -2794,6 +2804,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(t != null){
 					B.Add(You("cast") + " sonic boom. ",this);
+					AnimateProjectile(t,Color.Yellow,'~');
 					Actor a = FirstActorInLine(t);
 					if(a != null){
 						B.Add("A wave of sound hits " + a.the_name + ". ",a);
@@ -2826,6 +2837,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				B.Add(You("cast") + " arc lightning. ",this);
+				AnimateExplosion(this,1,Color.RandomLightning,'*');
 				if(targets.Count == 0){
 					B.Add("The air around " + the_name + " crackles. ",this);
 				}
@@ -2851,10 +2863,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					B.Add(You("cast") + " shock. ",this);
 					Actor a = FirstActorInLine(t);
 					if(a != null){
+						AnimateBoltProjectile(t,Color.RandomLightning);
 						B.Add("Electricity leaps to " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
 					}
 					else{
+						AnimateMapCell(this,Color.RandomLightning,'*');
 						B.Add("Electricity arcs between your fingers. ");
 					}
 				}
@@ -2901,6 +2915,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						t = M.tile[a.row,a.col];
 					}
 					B.Add(You("cast") + " fireball. ",this);
+					AnimateBoltProjectile(t,Color.Red);
+					Screen.AnimateExplosion(t,2,new colorchar(Color.RandomFire,'*'));
 					B.Add("Fwoosh! ",this,t);
 					List<Actor> targets = new List<Actor>();
 					for(int i=t.row-2;i<=t.row+2;++i){
@@ -2941,17 +2957,52 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(t != null){
 						if(t.type == TileType.WALL){
 							B.Add("You cast passage. ");
+							Console.CursorVisible = false;
+							colorchar ch = new colorchar(Color.Cyan,'!');
+							switch(DirectionOf(t)){
+							case 8:
+							case 2:
+								ch.c = '|';
+								break;
+							case 4:
+							case 6:
+								ch.c = '-';
+								break;
+							}
+							List<Tile> tiles = new List<Tile>();
+							List<colorchar> memlist = new List<colorchar>();
 							while(!t.passable){
 								if(t.row == 0 || t.row == ROWS-1 || t.col == 0 || t.col == COLS-1){
 									break;
 								}
+								tiles.Add(t);
+								memlist.Add(Screen.MapChar(t.row,t.col));
+								Screen.WriteMapChar(t.row,t.col,ch);
+								Thread.Sleep(35);
 								t = t.TileInDirection(i);
 							}
 							if(t.passable && M.actor[t.row,t.col] == null){
+								if(M.tile[row,col].inv != null){
+									Screen.WriteMapChar(row,col,new colorchar(Tile().inv.color,Tile().inv.symbol));
+								}
+								else{
+									Screen.WriteMapChar(row,col,new colorchar(Tile().color,Tile().symbol));
+								}
+								Screen.WriteMapChar(t.row,t.col,new colorchar(color,symbol));
+								int j = 0;
+								foreach(Tile tile in tiles){
+									Screen.WriteMapChar(tile.row,tile.col,memlist[j++]);
+									Thread.Sleep(35);
+								}
 								B.Add("You travel through the passage. ");
 								Move(t.row,t.col);
 							}
 							else{
+								int j = 0;
+								foreach(Tile tile in tiles){
+									Screen.WriteMapChar(tile.row,tile.col,memlist[j++]);
+									Thread.Sleep(35);
+								}
 								B.Add("The passage is blocked. ");
 							}
 						}
@@ -2972,6 +3023,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(t != null){
 					B.Add(You("cast") + " force beam. ",this);
+					B.DisplayNow();
 					List<Tile> line = GetExtendedBresenhamLine(t.row,t.col);
 					for(int i=0;i<3;++i){ //hits thrice
 						Actor firstactor = null;
@@ -2979,6 +3031,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						Tile firsttile = null;
 						Tile nexttile = null;
 						foreach(Tile tile in line){
+							if(!tile.passable){
+								firsttile = tile;
+								break;
+							}
 							if(M.actor[tile.row,tile.col] != null && M.actor[tile.row,tile.col] != this){
 								int idx = line.IndexOf(tile);
 								firsttile = tile;
@@ -2988,6 +3044,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 								break;
 							}
 						}
+						Screen.AnimateBoltBeam(GetBresenhamLine(firsttile.row,firsttile.col),Color.Cyan);
 						if(firstactor != null){
 							string s = firstactor.the_name;
 							firstactor.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
@@ -3020,6 +3077,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(t != null){
 					B.Add(You("cast") + " disintegrate. ",this);
+					AnimateBoltBeam(t,Color.DarkGreen);
 					Actor a = FirstActorInLine(t);
 					if(a != null){
 						B.Add(You("direct") + " destructive energies toward " + a.the_name + ". ",this,a);
@@ -3027,6 +3085,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 					else{
 						if(t.type == TileType.WALL || t.type == TileType.DOOR_C || t.type == TileType.DOOR_O || t.type == TileType.CHEST){
+							B.Add(You("direct") + " destructive energies toward " + t.the_name + ". ",this,t);
 							B.Add(t.the_name + " turns to dust. ",t);
 							t.TurnToFloor();
 						}
@@ -3047,6 +3106,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				B.Add(You("cast") + " blizzard. ",this);
+				AnimateExplosion(this,5,Color.RandomIce,'*');
 				B.Add("A massive ice storm surrounds " + the_name + ". ",this);
 				while(targets.Count > 0){
 					int idx = Global.Roll(1,targets.Count) - 1;
@@ -3996,6 +4056,30 @@ effect as standing still, if you're on fire or catching fire. */
 					}
 				}
 			}
+		}
+		public void AnimateProjectile(PhysicalObject o,Color color,char c){
+			B.DisplayNow();
+			Screen.AnimateProjectile(GetBresenhamLine(o.row,o.col),new colorchar(color,c));
+		}
+		public void AnimateMapCell(PhysicalObject o,Color color,char c){
+			B.DisplayNow();
+			Screen.AnimateMapCell(o.row,o.col,new colorchar(color,c));
+		}
+		public void AnimateBoltProjectile(PhysicalObject o,Color color){
+			B.DisplayNow();
+			Screen.AnimateBoltProjectile(GetBresenhamLine(o.row,o.col),color);
+		}
+		public void AnimateExplosion(PhysicalObject o,int radius,Color color,char c){
+			B.DisplayNow();
+			Screen.AnimateExplosion(o,radius,new colorchar(color,c));
+		}
+		public void AnimateBeam(PhysicalObject o,Color color,char c){
+			B.DisplayNow();
+			Screen.AnimateBeam(GetBresenhamLine(o.row,o.col),new colorchar(color,c));
+		}
+		public void AnimateBoltBeam(PhysicalObject o,Color color){
+			B.DisplayNow();
+			Screen.AnimateBoltBeam(GetBresenhamLine(o.row,o.col),color);
 		}
 	}
 	public static class AttackList{ //consider more descriptive attacks, such as the zealot smashing you with a mace

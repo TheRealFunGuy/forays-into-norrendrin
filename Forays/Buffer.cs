@@ -107,7 +107,7 @@ namespace Forays{
 				Console.Write(str);
 				if(str2 != "" || special_message == true){
 					Screen.ForegroundColor = ConsoleColor.Yellow;
-					Console.Write("[more]");
+					Console.Write("[more]"); //todo: do i need to set cursor to visible here?
 					Screen.ForegroundColor = ConsoleColor.Gray;
 					M.Draw();
 					Console.ReadKey();

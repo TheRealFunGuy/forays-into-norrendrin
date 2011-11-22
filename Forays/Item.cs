@@ -8,6 +8,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
 using System.Collections.Generic;
+using System.Threading;
 namespace Forays{
 	public class Item : PhysicalObject{
 		public ConsumableType type{get; private set;}
@@ -248,18 +249,53 @@ namespace Forays{
 					Tile t = user.TileInDirection(i);
 					if(t != null){
 						if(t.type == TileType.WALL){
+							Console.CursorVisible = false;
+							colorchar ch = new colorchar(Color.Cyan,'!');
+							switch(user.DirectionOf(t)){
+							case 8:
+							case 2:
+								ch.c = '|';
+								break;
+							case 4:
+							case 6:
+								ch.c = '-';
+								break;
+							}
+							List<Tile> tiles = new List<Tile>();
+							List<colorchar> memlist = new List<colorchar>();
 							while(!t.passable){
 								if(t.row == 0 || t.row == Global.ROWS-1 || t.col == 0 || t.col == Global.COLS-1){
 									break;
 								}
+								tiles.Add(t);
+								memlist.Add(Screen.MapChar(t.row,t.col));
+								Screen.WriteMapChar(t.row,t.col,ch);
+								Thread.Sleep(35);
 								t = t.TileInDirection(i);
 							}
 							if(t.passable && M.actor[t.row,t.col] == null){
-								B.Add(user.You("travel") + " through the passage. ",user);
+								if(M.tile[user.row,user.col].inv != null){
+									Screen.WriteMapChar(user.row,user.col,new colorchar(user.Tile().inv.color,user.Tile().inv.symbol));
+								}
+								else{
+									Screen.WriteMapChar(user.row,user.col,new colorchar(user.Tile().color,user.Tile().symbol));
+								}
+								Screen.WriteMapChar(t.row,t.col,new colorchar(user.color,user.symbol));
+								int j = 0;
+								foreach(Tile tile in tiles){
+									Screen.WriteMapChar(tile.row,tile.col,memlist[j++]);
+									Thread.Sleep(35);
+								}
+								B.Add(user.You("travel") + " through the passage. ",user,t);
 								user.Move(t.row,t.col);
 							}
 							else{
-								B.Add("The passage is blocked. ");
+								int j = 0;
+								foreach(Tile tile in tiles){
+									Screen.WriteMapChar(tile.row,tile.col,memlist[j++]);
+									Thread.Sleep(35);
+								}
+								B.Add("The passage is blocked. ",user);
 							}
 						}
 						else{

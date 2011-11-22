@@ -8,13 +8,29 @@ animations should support the concept of a 'viewer' - cells outside viewer's FOV
 
 
 things to do somewhere between 0.1 and 1.0:
+...
+...
 
-add a poltergeist monster that will haunt an area, throwing items and slamming doors. since the player hears doors open, this will encourage them to investigate.
 
-todo: KillEvents should now check msg_objs and remove from it
 
-unclear: how should stealth work when i.e. a mob you can't see is hit by your spin attack?
-	-doesn't matter too much since it's not realistic anyway
+20 monsters +
+troll
+necromancer
+cultist
+	-something for cultists to summon - this should be on a special level though, and it would be badass.
+		-summoning circles and all
+poltergeist (uncommon)
+	-throws objects, slams doors(which the player will hear and investigate), shrieks, ...
+	-if you stay in its area for a certain amount of time, it manifests:
+		-gray or green 'G'
+		-i want it to retain some of its annoying qualities. perhaps a short period of time where it moves randomly and
+			is hard to hit or damage for some reason. oh, it should laugh while doing this of course.
+		
+
+something that uses 'double team' and spawns one or more clones with 1hp each and the NO_EXP flag.
+what's appropriate? a magic-using member of a brutish race? a ninja? a human of some kind?
+	-perhaps a fairly dynamic ninja-esque enemy, then. Somewhat fast. Single-use thrown item that can stun(?) you during its approach. Uses double team (once) when damaged.
+	-can't actually be a ninja without stealth, though. maybe a mystic or monk? (would probably change the thrown item part)
 
 
 

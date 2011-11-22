@@ -192,6 +192,11 @@ namespace Forays{
 				target = null;
 				dead = true;
 			}
+			if(msg_objs != null && (type==type_ || type_==EventType.ANY_EVENT)){
+				if(msg_objs.Contains(target)){
+					msg_objs.Remove(target);
+				}
+			}
 		}
 		public void Execute(){
 			if(!dead){

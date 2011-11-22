@@ -278,6 +278,9 @@ namespace Forays{
 			}
 			Console.CursorVisible = true;
 		}
+		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch){
+			AnimateExplosion(obj,radius,ch,50);
+		}
 		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch,int duration){
 			Console.CursorVisible = false;
 			colorchar[,] prev = new colorchar[radius*2+1,radius*2+1];
@@ -300,6 +303,60 @@ namespace Forays{
 						WriteMapChar(obj.row-radius+i,obj.col-radius+j,prev[i,j]);
 					}
 				}
+			}
+			Console.CursorVisible = true;
+		}
+		public static void AnimateBoltBeam(List<Tile> list,Color color){ AnimateBoltBeam(list,color,50); }
+		public static void AnimateBoltBeam(List<Tile> list,Color color,int duration){
+			Console.CursorVisible = false;
+			colorchar ch;
+			ch.color = color;
+			ch.bgcolor = Color.Black;
+			ch.c='!';
+			switch(list[0].DirectionOf(list[list.Count-1])){
+			case 7:
+			case 3:
+				ch.c = '\\';
+				break;
+			case 8:
+			case 2:
+				ch.c = '|';
+				break;
+			case 9:
+			case 1:
+				ch.c = '/';
+				break;
+			case 4:
+			case 6:
+				ch.c = '-';
+				break;
+			}
+			list.RemoveAt(0);
+			List<colorchar> memlist = new List<colorchar>();
+			foreach(Tile t in list){
+				memlist.Add(MapChar(t.row,t.col));
+				WriteMapChar(t.row,t.col,ch);
+				Thread.Sleep(duration);
+			}
+			int i = 0;
+			foreach(Tile t in list){
+				WriteMapChar(t.row,t.col,memlist[i++]);
+			}
+			Console.CursorVisible = true;
+		}
+		public static void AnimateBeam(List<Tile> list,colorchar ch){ AnimateBeam(list,ch,50); }
+		public static void AnimateBeam(List<Tile> list,colorchar ch,int duration){
+			Console.CursorVisible = false;
+			list.RemoveAt(0);
+			List<colorchar> memlist = new List<colorchar>();
+			foreach(Tile t in list){
+				memlist.Add(MapChar(t.row,t.col));
+				WriteMapChar(t.row,t.col,ch);
+				Thread.Sleep(duration);
+			}
+			int i = 0;
+			foreach(Tile t in list){
+				WriteMapChar(t.row,t.col,memlist[i++]);
 			}
 			Console.CursorVisible = true;
 		}
