@@ -116,7 +116,7 @@ namespace Forays{
 				Console.SetCursorPosition(0,i);
 				Console.Write("".PadRight(Global.SCREEN_W));
 			}
-			//Console.CursorVisible = true; //this works for Main's call, but it's a bit hacky.	
+			//Console.CursorVisible = true; //not turning it back on until i need it
 		}
 		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
@@ -126,8 +126,8 @@ namespace Forays{
 					ForegroundColor = co;
 				}
 				co = GetColor(ch.bgcolor);
-				if(co != Console.BackgroundColor || (Global.LINUX && ch.c == ' ')){//voodoo here. not sure why this is needed.
-					BackgroundColor = co; //todo: test on linux with one more test - for bgcolor, to speed things up.
+				if(co != Console.BackgroundColor || (Global.LINUX && ch.c == ' ' && ch.color == Color.Black && ch.bgcolor == Color.DarkGreen)){//voodoo here. not sure why this is needed.
+					BackgroundColor = co;
 				}
 				Console.SetCursorPosition(c,r);
 				Console.Write(ch.c);
