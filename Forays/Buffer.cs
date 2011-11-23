@@ -7,6 +7,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
+using System.Collections.Generic;
 namespace Forays{
 	public class Buffer{
 		private int max_length;
@@ -64,7 +65,7 @@ namespace Forays{
 			Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
 			Console.Write(s.PadRight(Global.COLS));
 			Console.SetCursorPosition(Global.MAP_OFFSET_COLS + s.Length,1);
-			Console.CursorVisible = true;
+			//Console.CursorVisible = true;
 		}
 		public void DisplayNow(){ //displays whatever is in the buffer. used before animations.
 			Console.CursorVisible = false;
@@ -72,7 +73,7 @@ namespace Forays{
 			Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
 			Console.Write(str.PadRight(Global.COLS));
 			//Console.SetCursorPosition(Global.MAP_OFFSET_COLS + str.Length,1);
-			Console.CursorVisible = true;
+			//Console.CursorVisible = true;
 		}
 		public void DisplayLogtempfunction(){
 			for(int i=0;i<log.Length;++i){
@@ -139,7 +140,14 @@ namespace Forays{
 				}
 			}
 		}
-		public string Printed(int num){ return log[(position+num-1)%20]; }
+		public string Printed(int num){ return log[(position+num)%20]; }
+		public List<string> GetMessages(){
+			List<string> result = new List<string>();
+			for(int i=0;i<20;++i){
+				result.Add(Printed(i));
+			}
+			return result;
+		}
 	}
 }
 

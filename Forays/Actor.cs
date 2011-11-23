@@ -83,6 +83,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		static Actor(){
 			//proto[ActorType.PLAYER] = new Actor(); //unused!
 			proto[ActorType.GOBLIN] = new Actor(ActorType.GOBLIN,"goblin",'g',Color.Green,20,100,5,1,0);
+			proto[ActorType.GOBLIN].attrs[AttrType.STEALTHY] = 1;
 			//make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
 		}
 		public Actor(Actor a,int r,int c){
@@ -106,8 +107,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			recover_time = 0;
 			weapons = new LinkedList<WeaponType>(a.weapons);
 			armors = new LinkedList<ArmorType>(a.armors);
+			attrs = a.attrs;
+			skills = a.skills;
+			spells = a.spells;
 		}
-		public Actor(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_){
+		public Actor(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			type = type_;
 			name = name_;
 			the_name = "the " + name;
@@ -133,6 +137,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			F = new SpellType[13];
 			for(int i=0;i<13;++i){
 				F[i] = SpellType.NO_SPELL;
+			}
+			foreach(AttrType at in attrlist){
+				attrs[at]++;
 			}
 		}
 		public static Actor Create(ActorType type,int r,int c){
@@ -380,7 +387,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			if(HasAttr(AttrType.ON_FIRE) && time_of_last_action < Q.turn){
 				B.Add(YouAre() + " on fire! ",this);
-				TakeDamage(DamageType.FIRE,Global.Roll(attrs[AttrType.ON_FIRE],6),null);
+				TakeDamage(DamageType.FIRE,Global.Roll(attrs[AttrType.ON_FIRE],6),null); //todo: make TakeDamage return bool not_dead? i think so
 			}
 			if(return_after_recovery){
 				return;
@@ -390,6 +397,34 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			else{
 				InputAI();
+			}
+			if(HasAttr(AttrType.STEALTHY)){ //monsters only
+				if((player.IsWithinSightRangeOf(row,col) || M.tile[row,col].IsLit()) && player.HasLOS(row,col)){
+					if(IsHiddenFrom(player)){  //if they're stealthed and near the player...
+						if(Stealth() * DistanceFrom(player) * 10 - attrs[AttrType.TURNS_VISIBLE]++*5 < Global.Roll(1,100)){
+							attrs[AttrType.TURNS_VISIBLE] = -1;
+							if(DistanceFrom(player) > 3){
+								B.Add("You notice " + a_name + ". ");
+							}
+							else{
+								B.Add("You notice " + a_name + " nearby. ");
+							}
+						}
+					}
+					else{
+						attrs[AttrType.TURNS_VISIBLE] = -1;
+					}
+				}
+				else{
+					if(attrs[AttrType.TURNS_VISIBLE] >= 0){ //if they hadn't been seen yet...
+						attrs[AttrType.TURNS_VISIBLE] = 0;
+					}
+					else{
+						if(attrs[AttrType.TURNS_VISIBLE]-- == -10){ //todo: check this value for balance
+							attrs[AttrType.TURNS_VISIBLE] = 0;
+						}
+					}
+				}
 			}
 			if(HasAttr(AttrType.ON_FIRE) && attrs[AttrType.ON_FIRE] < 5 && time_of_last_action < Q.turn){
 				if(attrs[AttrType.ON_FIRE] > light_radius){
@@ -553,11 +588,25 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				int dir = ch - 48; //ascii 0-9 are 48-57
 				if(dir > 0){
 					if(ActorInDirection(dir)!=null){
-						if(F[0] == SpellType.NO_SPELL){
-							Attack(0,ActorInDirection(dir));
+						if(!ActorInDirection(dir).IsHiddenFrom(this)){
+							if(F[0] == SpellType.NO_SPELL){
+								Attack(0,ActorInDirection(dir));
+							}
+							else{
+								CastSpell(F[0],TileInDirection(dir));
+							}
 						}
 						else{
-							CastSpell(F[0],TileInDirection(dir));
+							ActorInDirection(dir).attrs[AttrType.TURNS_VISIBLE] = -1;
+							if(!IsHiddenFrom(ActorInDirection(dir))){
+								B.Add("You walk straight into " + ActorInDirection(dir).a_name + "! ");
+							}
+							else{
+								B.Add("You walk straight into " + ActorInDirection(dir).a_name + "! ");
+								B.Add(ActorInDirection(dir).the_name + " looks just as surprised as you. ");
+								ActorInDirection(dir).player_visibility_duration = -1;
+							}
+							Q1();
 						}
 					}
 					else{
@@ -735,20 +784,26 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 			case 'f':
 				{
-				if(Global.Option(OptionType.LAST_TARGET) && target!=null && DistanceFrom(target)==1){ //since you can't fire
-					target = null;										//at adjacent targets anyway.
-				}
-				Tile t = GetTarget(); //todo: add targeting range here
-				if(t != null){
-					if(DistanceFrom(t) > 1){
-						FireArrow(t);
+				if(weapons.First.Value == WeaponType.BOW || weapons.First.Value == WeaponType.HOLY_LONGBOW){
+					if(Global.Option(OptionType.LAST_TARGET) && target!=null && DistanceFrom(target)==1){ //since you can't fire
+						target = null;										//at adjacent targets anyway.
+					}
+					Tile t = GetTarget(); //todo: add targeting range here
+					if(t != null){
+						if(DistanceFrom(t) > 1){
+							FireArrow(t);
+						}
+						else{
+							B.Add("You can't fire at adjacent targets. ");
+							Q0();
+						}
 					}
 					else{
-						B.Add("You can't fire at adjacent targets. ");
 						Q0();
 					}
 				}
 				else{
+					B.Add("You can't fire arrows without your bow equipped. ");
 					Q0();
 				}
 				break;
@@ -964,8 +1019,20 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				Q1();
 				break;
 			case 'P':
+				{
+				Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+				int i = 1;
+				foreach(string s in B.GetMessages()){
+					Screen.WriteMapString(i,0,s.PadRight(COLS));
+					++i;
+				}
+				Screen.WriteMapString(21,0,"".PadRight(COLS,'-'));
+				B.DisplayNow("Previous messages: ");
+				Console.CursorVisible = true;
+				Console.ReadKey(true);
 				Q0();
 				break;
+				}
 			case '=':
 				Q0();
 				break;
@@ -1137,7 +1204,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						player_visibility_duration = 0;
 					}
 					else{
-						if(player_seen == null && player_visibility_duration == -10){ //todo: check this value for balance
+						if(player_seen == null && player_visibility_duration-- == -10){ //todo: check this value for balance
 							player_visibility_duration = 0;
 							target = null; //todo: maybe introduce a TIMES_ALERTED attr that makes it harder and harder for
 						}//them to calm down, eventually noticing you instantly?
@@ -1945,6 +2012,21 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			dirs.Add(RotateDirection(RotateDirection(dirs[0],cw),cw));
 			dirs.Add(RotateDirection(RotateDirection(dirs[0],!cw),!cw)); //this completes the list of 5 directions.
 			foreach(int i in dirs){
+				if(ActorInDirection(i) != null && ActorInDirection(i).IsHiddenFrom(this)){
+					player_visibility_duration = -1;
+					target = player; //not extensible yet
+					player_seen = M.tile[player.row,player.col];
+					if(!IsHiddenFrom(player)){
+						B.Add(the_name + " walks straight into you! ");
+						B.Add(the_name + " looks startled. ");
+					}
+					else{
+						attrs[AttrType.TURNS_VISIBLE] = -1;
+						B.Add(a_name + " walks straight into you! ");
+						B.Add(the_name + " looks just as surprised as you. ");
+					}
+					return true;
+				}
 				if(AI_MoveOrOpen(i)){
 					return true;
 				}
@@ -2186,12 +2268,19 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			if(StunnedThisTurn()){
 				return;
 			}
-			Actor a = FirstActorInLine(obj);
+			Tile t = M.tile[obj.row,obj.col];
 			int mod = -30; //bows have base accuracy 45%
 			if(HasAttr(AttrType.KEEN_EYES)){
 				mod = -20; //keen eyes makes it 55%
 			}
 			mod += TotalSkill(SkillType.COMBAT);
+			Actor a = FirstActorInLine(obj);
+			if(a != null){
+				t = a.Tile();
+			}
+			B.Add(You("fire") + " an arrow. ",this);
+			B.DisplayNow();
+			Screen.AnimateBoltProjectile(GetBresenhamLine(t.row,t.col),Color.DarkYellow,20);
 			if(a != null){
 				bool hit = a.IsHit(mod);
 				if(a.HasAttr(AttrType.TUMBLING)){
@@ -2200,21 +2289,20 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(hit){
 					if(Global.Roll(1,20) == 20){
-						B.Add(You("critically hit") + " " + a.the_name + " with an arrow. ",this,a);
+						B.Add("The arrow critically hits " + a.the_name + ". ",this,a);
 						a.TakeDamage(DamageType.NORMAL,18,this); //max(3d6)
 					}
 					else{
-						B.Add(You("hit") + " " + a.the_name + " with an arrow. ",this,a);
+						B.Add("The arrow hits " + a.the_name + ". ",this,a);
 						a.TakeDamage(DamageType.NORMAL,Global.Roll(3,6),this);
 					}
 				}
 				else{
-					B.Add(You("miss",true) + " " + a.the_name + " with an arrow. ",this,a);
+					B.Add("The arrow misses " + a.the_name + ". ",this,a);
 				}
 			}
 			else{
-				Tile t = M.tile[obj.row,obj.col];
-				B.Add(You("hit") + " " + t.the_name + " with an arrow. ",this,t);
+				B.Add("The arrow hits " + t.the_name + ". ",this,t);
 			}
 			Q1();
 		}
@@ -3545,7 +3633,7 @@ effect as standing still, if you're on fire or catching fire. */
 			for(int i=7+weapon_lines+armor_lines;i<11+weapon_lines+armor_lines;++i){
 				Screen.WriteStatsString(i,0,"".PadRight(12));
 			}
-			Console.ResetColor();
+			Screen.ResetColors();
 		}
 		public bool CanSee(int r,int c){ return CanSee(M.tile[r,c]); }
 		public bool CanSee(PhysicalObject o){
@@ -3643,7 +3731,7 @@ effect as standing still, if you're on fire or catching fire. */
 			return false;
 		}
 		public bool IsHiddenFrom(Actor a){
-			if(this == a){
+			if(this == a){ //you can always see yourself
 				return false;
 			}
 			if(type == ActorType.PLAYER){
@@ -3653,7 +3741,12 @@ effect as standing still, if you're on fire or catching fire. */
 				return true;
 			}
 			else{
-				//todo: a monster will increment a TURNS_VISIBLE attribute until the player spots it. until then:
+				if(a.type != ActorType.PLAYER){ //monsters are never hidden from each other
+					return false;
+				}
+				if(HasAttr(AttrType.STEALTHY) && attrs[AttrType.TURNS_VISIBLE] >= 0){
+					return true;
+				}
 				return false;
 			}
 		}
@@ -4003,8 +4096,8 @@ effect as standing still, if you're on fire or catching fire. */
 							Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 						}
 						oldline = line;
-						Console.CursorVisible = true;
 					}
+					Console.CursorVisible = true;
 					M.tile[r,c].Cursor();
 				}
 				if(done){
@@ -4031,6 +4124,7 @@ effect as standing still, if you're on fire or catching fire. */
 			Screen.WriteMapString(i,0,"".PadRight(COLS,'-'));
 			Screen.WriteMapString(i+1,0,"".PadRight(COLS));
 			if(no_ask){
+				B.DisplayNow(message);
 				return -1;
 			}
 			else{

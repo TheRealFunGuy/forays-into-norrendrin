@@ -34,7 +34,7 @@ namespace Forays{
 			return total;
 		}
 		public static bool CoinFlip(){
-			if(r.Next(1,2) == 2){
+			if(r.Next(1,3) == 2){ //returns 1 or 2...
 				return true;
 			}
 			else{
