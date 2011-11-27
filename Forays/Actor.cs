@@ -81,10 +81,39 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public static Buffer B{get;set;}
 		public static Actor player{get;set;}
 		static Actor(){
-			//proto[ActorType.PLAYER] = new Actor(); //unused!
-			proto[ActorType.GOBLIN] = new Actor(ActorType.GOBLIN,"goblin",'g',Color.Green,20,100,5,1,0);
-			proto[ActorType.GOBLIN].attrs[AttrType.STEALTHY] = 1;
+			//currently, nothing has a value for level or xp.
+			//todo: lots of things need low-light vision
+			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,0,0,0);
+			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,5,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.LARGE_BAT,"large bat",'b',Color.DarkGray,20,60,0,0,0,AttrType.DARKVISION);
+			Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,40,90,0,0,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH);
+			Define(ActorType.SKELETON,"skeleton",'s',Color.White,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY);
+			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,50,60,0,0,0);
+			Define(ActorType.FROSTLING,"frostling",'E',Color.Gray,60,100,0,0,0,AttrType.IMMUNE_COLD,AttrType.COLD_HIT);
+			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			//spells
+			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,75,150,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
+			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,0,0,0);
+			Define(ActorType.ROBED_ZEALOT,"robed zealot",'p',Color.Yellow,60,100,0,0,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			//spells
+			Define(ActorType.WORG,"worg",'c',Color.White,55,60,0,0,0);
+			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,50,100,0,0,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
+			Define(ActorType.OGRE,"ogre",'O',Color.Green,75,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION);
+			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,60,100,0,0,0,AttrType.POISON_HIT);
+			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,80,120,0,0,0,AttrType.CONSTRUCT,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY);
+			//SMASH_HIT or whatever - 50% chance of making temporary rubble in each empty space around target
+			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			//spells
+			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,60,100,0,0,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH);
+			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,0,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
+			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,0,0,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
+			//Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,0,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH);
+			//Define(ActorType.NECROMANCER,"necromancer",'p',Color. cyan or white...
 			//make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
+		}
+		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
+			proto[type_] = new Actor(type_,name_,symbol_,color_,maxhp_,speed_,xp_,level_,light_radius_,attrlist);
 		}
 		public Actor(Actor a,int r,int c){
 			type = a.type;
@@ -1059,6 +1088,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Test DirectionOf");
 				l.Add("Spawn a monster");
 				l.Add("Use a rune of passage");
+				l.Add("Create darkness");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1151,6 +1181,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 9:
 					new Item(ConsumableType.PASSAGE,"rune of passage",'&',Color.White).Use(this);
+					Q1();
+					break;
+				case 10:
+					foreach(Tile t in TilesWithinDistance(1)){
+						t.light_value--;
+					}
 					Q1();
 					break;
 				default:

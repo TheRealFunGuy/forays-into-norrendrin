@@ -25,7 +25,7 @@ namespace Forays{
 	public enum OptionType{LAST_TARGET,VI_KEYS,OPEN_CHESTS};
 	public class Game{
 		public Map M;
-		public Queue Q;
+		public Queue Q;	
 		public Buffer B;
 		public Actor player;
 		

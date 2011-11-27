@@ -6,8 +6,20 @@ at least 1 special level per game, with an appropriate number of different speci
 
 animations should support the concept of a 'viewer' - cells outside viewer's FOV don't animate.
 
+if lashers happen to need balancing: their tentacles could miss adjacent targets more often, or deal less damage to them
 
 things to do somewhere between 0.1 and 1.0:
+
+perhaps enemies that you sneak attack should have a chance of yelling in surprise
+
+remove stealthy flag from goblin
+
+piercing/slashing/bashing are still 'normal' damage...
+
+and some elemental attacks are magical...
+
+
+
 ...
 ...
 
@@ -25,12 +37,106 @@ poltergeist (uncommon)
 		-gray or green 'G'
 		-i want it to retain some of its annoying qualities. perhaps a short period of time where it moves randomly and
 			is hard to hit or damage for some reason. oh, it should laugh while doing this of course.
-		
 
-something that uses 'double team' and spawns one or more clones with 1hp each and the NO_EXP flag.
-what's appropriate? a magic-using member of a brutish race? a ninja? a human of some kind?
-	-perhaps a fairly dynamic ninja-esque enemy, then. Somewhat fast. Single-use thrown item that can stun(?) you during its approach. Uses double team (once) when damaged.
-	-can't actually be a ninja without stealth, though. maybe a mystic or monk? (would probably change the thrown item part)
+dream warrior
+	-spawns several 'clones' with 1hp and a NO_EXP flag, and a 0-damage attack. maybe some kind of mental suggestion attack?
 
+skulking killer. dark blue 'p'. normal speed probably. stealthy. when it gets close enough, it will (once) throw either a bola to slow you, or (something else) to stun you and deal a small amount of damage. definitely prowls the level.
+
+-next, i need to figure out how attacking/being attacked interacts with the 'turns seen' number.
+	-once you sneak attack them, their player_seen number is set to -1.
+	-once they sneak attack you, their TURNS_VISIBLE is set to -1.
+
+
+
+
+building offense shouldn't be the beat-all strategy: feats are pretty important.
+i already know that i need a few monsters that make Spirit more important. (and don't care a lot how much damage you do?)
+
+so, more early TACTICAL enemies. scarecrow, archer, zombie are probably acceptable for this, but i am actually lacking some.
+that is, more enemies that give the player choices. enemies that just dps you don't contribute to this at all.
+
+
+berserker. red or dark red 'p'. normal speed. two abilities:
+	-when brought below 0hp, does not die for 2-3 turns
+	-raging axe attack: each turn for 2-3 turns(?), takes a step forward and attacks the 3 spaces ahead.
+		-perhaps the first turn is the 'windup' turn, to avoid having another monster that lunges.
+(don't fight these guys in a corridor)
+
+
+swordsman. blue/white/gray 'p'. normal speed. each attack the swordsman makes boosts his bonus combat skill. this bonus is reset when you make a melee attack against him (or if he goes back to idle).
+(if you're not engaging him in swordplay, he'll cut you up)
+	-the swordsman's stance becomes more aggressive!
+		or
+	-the swordsman adopts a more aggressive stance!
+		or
+	-the swordsman switches to a more aggressive stance!
+	-...
+	-the swordsman returns to a defensive stance.
+
+
+shade/shadow/ shadow (foo). dark blue or dark gray or black...something... Two abilities:
+	- Reduces the light level in nearby tiles. Won't enter lit tiles. Takes damage while in lit tiles.
+		-could also simply reduce your light radius as it gets closer...at distance 10 it reduces by 1, at distance 7
+			by 2, at distance 5 by 3, at distance 3 by 4, and at distance 2 by 5. then BAM IT'S ON YOU.
+			-this actually seems better AND gives another use for Shine. better in the following ways:
+				-you don't know from which way it's coming
+				-better paranoia messages
+				-it looks better too
+	- some kind of supernatural effect, amirite?
+
+shadow. dark blue/dark gray 'G' probably. Three abilities:
+	-Regenerates while in darkness. (maybe!)
+	-Reduces the light radius of the player and other monsters as it approaches.
+	12		-1/12		6						11		or just *doubled*	12
+		10	-1/6		5						10(visible)				10
+	8		-3/12		5	.	.	.	.	.	9	.	.	.	.	10
+		7	-2/6		4						8					8
+	6		-5/12		4	.	.	.	.	.	7	.	.	.	.	8
+		5	-3/6		3						6					6
+	4		-7/12		3	.	.	.	.	.	5	.	.	.	.	6
+		3	-4/6		2(you now see it just outside your light rad)	4					4
+		2	-5/6		1						2					2
+	1		-11/12		1						1					2
+	-Its attack causes dimness of vision: natural sight range will be reduced to 1/3 of its normal value for 20 + 2d20 turns.
+
+
+
+a grenade throwing monster would be pretty interesting, wouldn't it? it would throw fairly inaccurate grenades at you, which would take 1 turn to explode. So, if they landed right on you, you'd get hurt on the next turn, but they'd hit pretty much any square near you.
+	-knockback? =-o
+
+-a ranged monster with an ability that is affected by Spirit(a magical, mental, or supernatural ability with a duration).
+
+room mimic
+	-how is this going to work? perhaps it's usually generated at the end of a longish corridor, so blinking out is harder to do.
+	-it shouldn't ACTUALLY prevent teleportation escapes, though. a quick Passage out is probably just the thing.
+	-perhaps some kind of interactive 'don't stand here' thing.
+	-so, the event checks every several turns to see if the player is within its area(which is the entire room)
+	-if this happens, it either sets some state, or spawns another event type to check again a few turns later(remember, there's a chest in here)
+		-how about a good chance of an extra item or two, as well?
+			-EITHER 1d3 items OR a chest?
+		-wait, why not trigger on the chest, also? both will work great.
+	-when the mimic has been disturbed, a message is printed, the membrane/door starts to close, and acid starts to fall.
+		-and some of the walls and floor turn to red?
+	-i think the average distance from chest to door will be like 3, so probably 2d2 turns.
+	-if the player is on the door when it closes, he takes some damage and becomes immobilized. (and can then escape)
+	-otherwise, the door becomes a membrane (would be great if certain terrain had ATTACKABLE flag, yeah?) with an okay amount of HP.
+	-all the while, every 1d3 turns acid drops onto the floor from the ceiling - this is delayed by 1 turn, so it doesn't hit the player directly.
+		-lasts for 1d3+3 turns or so
+	-standing in the acid deals damage, of course.
+	-ALSO, to prevent the player from simply dancing around until he gets out...the room should probably either shrink, or be subject to an area attack.
+		-a crushing attack is way easier. lowish damage, i suppose.
+	-annnnd, when the player escapes, the membrane soon returns to its door form and the walls and floors to their normal colors.
+
+	-first, i need terrain for acid and membrane, no problem.
+	-and an event for 'spawn acid here', no prob
+	-now, what state do i need to track? the event already tracks the area, no problem.
+		-'player inside room' - the first trigger. unneeded if i trigger only on the chest.
+		-state for 'disturbed', of course
+		-'number of turns until membrane closes'
+		-state for membrane: closing, crushing, closed.
+		-'number of turns until next acid attack'
+		-'number of turns until next crushing attack'
+		-'membrane has been destroyed' - could also just mean it's dead, and remove the event.
 
 
