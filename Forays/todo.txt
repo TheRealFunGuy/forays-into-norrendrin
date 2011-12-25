@@ -12,6 +12,7 @@ generate trolls with rocks they can throw
 
 
 
+
 things to do somewhere between 0.1 and 1.0:
 
 perhaps enemies that you sneak attack should have a chance of yelling in surprise
@@ -192,5 +193,11 @@ room mimic
 		-'number of turns until next acid attack'
 		-'number of turns until next crushing attack'
 		-'membrane has been destroyed' - could also just mean it's dead, and remove the event.
+
+
+noise and stealth:
+
+
+
 
 
