@@ -8,20 +8,72 @@ animations should support the concept of a 'viewer' - cells outside viewer's FOV
 
 if lashers happen to need balancing: their tentacles could miss adjacent targets more often, or deal less damage to them
 
+generate trolls with rocks they can throw
+
+
+
 things to do somewhere between 0.1 and 1.0:
 
 perhaps enemies that you sneak attack should have a chance of yelling in surprise
 
-remove stealthy flag from goblin
-
-piercing/slashing/bashing are still 'normal' damage...
-
-and some elemental attacks are magical...
-
-
+consider making ranged attacks...not attacks at all, but generated straight from the AI routine
 
 ...
 ...
+
+
+--generate the list of monsters first, THEN generate the level. then verify that i.e. a troll has a proper lair.
+
+
+
+goblin bat scarecrow
+skeleton cultist poltergeist
+zombie wolf frostling
+archer shaman swordsman
+direrat dreamwarrior banshee
+worg zealot skulkingkiller
+crawler ogre shadow
+berserker grenadier spider
+golem necromancer troll
+lasher warmage behemoth
+
+attack info:
+
+cultist		- hit for 2
+poltergeist	- slimes you?
+swordsman	- hit for 3
+dream warrior	- hit for 2 or 3
+banshee		- touch or hit for 2 probably. cold_hit?
+skulking killer	- hit for 3
+shadow		- touch for 2 or 3. cold_hit?
+berserker	- hit for 3
+orc grenadier	- hit for the orc default
+necromancer	- hit for 2 i guess
+troll		- claw for 3 i think
+
+
+cultist: appears in small groups(2-3)
+(normal ai, except..)
+if heavily damaged, will use special attack(probably taking out a small orb and smashing it on the ground, and screaming something appropriate)
+special attack sets the cultist and everything adjacent on fire, after which he continues to attack
+
+poltergeist: spawns as an event with a certain area, sometimes an entire room.
+effects:
+opens and slams doors in its area
+throws items in its area at the player
+shrieks loudly to call nearby monsters
+laughs(no effect)
+if the player sticks around, it'll manifest, after which it occasionally laughs and moves around?
+	-this can be made much more complex
+		-it would also move away occasionally
+
+swordsman: improves combat skill each time he attacks, until you attack back.
+dream warrior: 
+banshee:
+
+
+
+
 
 
 
@@ -104,8 +156,10 @@ shadow. dark blue/dark gray 'G' probably. Three abilities:
 
 a grenade throwing monster would be pretty interesting, wouldn't it? it would throw fairly inaccurate grenades at you, which would take 1 turn to explode. So, if they landed right on you, you'd get hurt on the next turn, but they'd hit pretty much any square near you.
 	-knockback? =-o
+	-orc grenadier perhaps?
 
 -a ranged monster with an ability that is affected by Spirit(a magical, mental, or supernatural ability with a duration).
+	-banshee or something similar. screams in a cone, applies fear for a few turns. what else?
 
 room mimic
 	-how is this going to work? perhaps it's usually generated at the end of a longish corridor, so blinking out is harder to do.

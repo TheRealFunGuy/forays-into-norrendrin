@@ -12,21 +12,67 @@ using System.Threading;
 namespace Forays{
 	public class AttackInfo{
 		public int cost;
-		public int dice;
-		public DamageType type;
+		public Damage damage;
 		public string desc;
 		public AttackInfo(int cost_,int dice_,DamageType type_,string desc_){
 			cost=cost_;
-			dice=dice_;
-			type=type_;
+			damage.dice=dice_;
+			damage.type=type_;
+			damage.damclass=DamageClass.PHYSICAL;
 			desc=desc_;
+		}
+		public AttackInfo(int cost_,int dice_,DamageType type_,DamageClass damclass_,string desc_){
+			cost=cost_;
+			damage.dice=dice_;
+			damage.type=type_;
+			damage.damclass=damclass_;
+			desc=desc_;
+		}
+		public AttackInfo(AttackInfo a){
+			cost=a.cost;
+			damage = a.damage;
+			desc=a.desc;
+		}
+	}
+	public struct Damage{
+		public int amount{ //amount isn't determined until you ask for it
+			get{
+				if(!num.HasValue){
+					num = Global.Roll(dice,6);
+				}
+				return num.Value;
+			}
+			set{
+				num = value;
+			}
+		}
+		private int? num;
+		public int dice;
+		public DamageType type;
+		public DamageClass damclass;
+		public Actor source;
+		public void Resolve(){ amount = Global.Roll(dice,6); }
+		public Damage(int dice_,bool resolve_immediately,DamageType type_,DamageClass damclass_,Actor source_){
+			dice=dice_;
+			if(resolve_immediately){
+				num=Global.Roll(dice_,6);
+			}
+			type=type_;
+			damclass=damclass_;
+			source=source_;
+		}
+		public Damage(DamageType type_,DamageClass damclass_,Actor source_,int totaldamage){
+			dice=0;
+			num=totaldamage;
+			type=type_;
+			damclass=damclass_;
+			source=source_;
 		}
 	}
 	/*keen eyes -half check. still needs trap detection bonus.
-tough(?)
-	-as if
 spirit skill
-	-matters in lots of places, i guess.
+	-matters in lots of places, i guess. perhaps a TotalDuration method that calculates this - it could even try to be smart
+		and treat values below 50 as 'number of turns' and 50+ as 'number of ticks'
 
 
 danger sense(on)
@@ -65,7 +111,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public Dict<SpellType,int> spells = new Dict<SpellType,int>();
 		private int time_of_last_action;
 		private int recover_time;
-		public Tile player_seen; //this will probably become target_location and will be used for interesting things
+		public Tile target_location;
 		public int player_visibility_duration;
 		public LinkedList<WeaponType> weapons = new LinkedList<WeaponType>();
 		public LinkedList<ArmorType> armors = new LinkedList<ArmorType>();
@@ -131,7 +177,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			target = null;
 			row = r;
 			col = c; //todo:UPDATE CONSTRUCTORS TO INCLUDE ALL MEMBERS
-			player_seen = null;
+			target_location = null;
 			time_of_last_action = 0;
 			recover_time = 0;
 			weapons = new LinkedList<WeaponType>(a.weapons);
@@ -158,7 +204,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			level = level_;
 			light_radius = light_radius_;
 			target = null;
-			player_seen = null;
+			target_location = null;
 			time_of_last_action = 0;
 			recover_time = 0;
 			weapons.AddFirst(WeaponType.NO_WEAPON);
@@ -278,7 +324,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			return result;
 		}
 		public static int Rarity(ActorType type){
-			int result = ((int)type)%2; //hacky, since the enum is arranged common-uncommon
+			int result = ((int)type)%2; //hacky, since the enum is arranged common-uncommon todo: this needs to be redone anyway
 			if(result == 0){
 				result = 2;
 			}
@@ -416,7 +462,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			if(HasAttr(AttrType.ON_FIRE) && time_of_last_action < Q.turn){
 				B.Add(YouAre() + " on fire! ",this);
-				TakeDamage(DamageType.FIRE,Global.Roll(attrs[AttrType.ON_FIRE],6),null); //todo: make TakeDamage return bool not_dead? i think so
+				TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(attrs[AttrType.ON_FIRE],6),null); //todo: make TakeDamage return bool not_dead? i think so
 			}
 			if(return_after_recovery){
 				return;
@@ -1206,10 +1252,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public void InputAI(){
 			//bool path_step? am i using pathing for anybody?
 			if(CanSee(player)){
-				if(player_seen == null && HasAttr(AttrType.DETECTING_MONSTERS)){ //orc warmages etc. when they first notice
+				if(target_location == null && HasAttr(AttrType.DETECTING_MONSTERS)){ //orc warmages etc. when they first notice
 					player_visibility_duration = -1;
 					target = player;
-					player_seen = M.tile[player.row,player.col];
+					target_location = M.tile[player.row,player.col];
 					B.Add(the_name + " looks straight at you. ",this); //todo: rethink message
 					//todo: possibly alert others here
 					Q1();
@@ -1217,7 +1263,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				else{
 					target = player;
-					player_seen = M.tile[player.row,player.col];
+					target_location = M.tile[player.row,player.col];
 					player_visibility_duration = -1;
 				}
 			}
@@ -1227,7 +1273,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(player.Stealth() * DistanceFrom(player) * 10 - player_visibility_duration++*5 < Global.Roll(1,100)){
 						player_visibility_duration = -1;
 						target = player;
-						player_seen = M.tile[player.row,player.col];
+						target_location = M.tile[player.row,player.col];
 						//print different messages here todo
 						B.Add(the_name + " notices you. ",this);
 						//alert others todo
@@ -1240,7 +1286,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						player_visibility_duration = 0;
 					}
 					else{
-						if(player_seen == null && player_visibility_duration-- == -10){ //todo: check this value for balance
+						if(target_location == null && player_visibility_duration-- == -10){ //todo: check this value for balance
 							player_visibility_duration = 0;
 							target = null; //todo: maybe introduce a TIMES_ALERTED attr that makes it harder and harder for
 						}//them to calm down, eventually noticing you instantly?
@@ -1920,18 +1966,18 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				//todo: needs to hunt player down
 				break;
 			default:
-				if(player_seen != null){
-					if(DistanceFrom(player_seen) == 1 && M.actor[player_seen.row,player_seen.col] != null){
+				if(target_location != null){
+					if(DistanceFrom(target_location) == 1 && M.actor[target_location.row,target_location.col] != null){
 						if(HasAttr(AttrType.IMMOBILIZED)){
 							B.Add(You("break") + " free. ",this);
 							attrs[AttrType.IMMOBILIZED] = 0;
 							QS();
 						}
 						else{
-							if(M.actor[player_seen.row,player_seen.col].HasAttr(AttrType.IMMOBILIZED)){
-								if(HasAttr(AttrType.HUMANOID_INTELLIGENCE) && M.actor[player_seen.row,player_seen.col].symbol == symbol){
-									B.Add(You("break") + M.actor[player_seen.row,player_seen.col].the_name + " free. ",this,M.actor[player_seen.row,player_seen.col]);
-									M.actor[player_seen.row,player_seen.col].attrs[AttrType.IMMOBILIZED] = 0;
+							if(M.actor[target_location.row,target_location.col].HasAttr(AttrType.IMMOBILIZED)){
+								if(HasAttr(AttrType.HUMANOID_INTELLIGENCE) && M.actor[target_location.row,target_location.col].symbol == symbol){
+									B.Add(You("break") + M.actor[target_location.row,target_location.col].the_name + " free. ",this,M.actor[target_location.row,target_location.col]);
+									M.actor[target_location.row,target_location.col].attrs[AttrType.IMMOBILIZED] = 0;
 									QS();
 								}
 								else{
@@ -1939,17 +1985,17 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 								}
 							}
 							else{
-								Move(player_seen.row,player_seen.col); //swap places
-								player_seen = null;
+								Move(target_location.row,target_location.col); //swap places
+								target_location = null;
 								QS();
 							}
 						}
 					}
 					else{
-						if(AI_Step(player_seen)){
+						if(AI_Step(target_location)){
 							QS();
-							if(DistanceFrom(player_seen) == 0){
-								player_seen = null;
+							if(DistanceFrom(target_location) == 0){
+								target_location = null;
 							}
 						}
 						else{ //could not move, end turn.
@@ -2051,7 +2097,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				if(ActorInDirection(i) != null && ActorInDirection(i).IsHiddenFrom(this)){
 					player_visibility_duration = -1;
 					target = player; //not extensible yet
-					player_seen = M.tile[player.row,player.col];
+					target_location = M.tile[player.row,player.col];
 					if(!IsHiddenFrom(player)){
 						B.Add(the_name + " walks straight into you! ");
 						B.Add(the_name + " looks startled. ");
@@ -2135,6 +2181,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				return false;
 			}
 			AttackInfo info = AttackList.Attack(type,attack_idx);
+			info.damage.source = this;
 			int plus_to_hit = TotalSkill(SkillType.COMBAT);
 			if(this.IsHiddenFrom(a)){ //sneak attacks get +25% accuracy. this usually totals 100% vs. unarmored targets.
 				plus_to_hit += 25;
@@ -2159,7 +2206,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Q1();
 					return true;
 				}
-				int dice = info.dice;
+				int dice = info.damage.dice;
 				if(weapons.First.Value != WeaponType.NO_WEAPON){
 					dice = Weapon.Damage(weapons.First.Value);
 				}
@@ -2175,7 +2222,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(weapons.First.Value == WeaponType.DAGGER){
 						critical_target = 18;
 					}
-					if(info.type == DamageType.NORMAL && Global.Roll(1,20) >= critical_target){
+					if(info.damage.type == DamageType.NORMAL && Global.Roll(1,20) >= critical_target){
 						crit = true;
 						sc = "critically ";
 					}
@@ -2223,7 +2270,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							int lotsofdamage = Math.Max(dice*6,a.curhp/2);
 							a.attrs[AttrType.STUNNED]++;
 							Q.Add(new Event(a,Global.Roll(2,5)*100,AttrType.STUNNED,"You are no longer stunned. "));
-							a.TakeDamage(DamageType.NORMAL,lotsofdamage,this);
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,lotsofdamage,this);
 						}
 					}
 				}
@@ -2237,17 +2284,17 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				int r = a.row;
 				int c = a.col;
-				a.TakeDamage(info.type,dmg,this);
+				a.TakeDamage(info.damage.type,info.damage.damclass,dmg,this);
 				if(M.actor[r,c] != null){
-					if(HasAttr(AttrType.FIRE_HIT) || attrs[AttrType.ON_FIRE] >= 3){
+					if(HasAttr(AttrType.FIRE_HIT) || attrs[AttrType.ON_FIRE] >= 3){ //todo: a frostling's ranged attack shouldn't apply this
 						B.Add(a.YouAre() + " burned. ",this,a);
-						a.TakeDamage(DamageType.FIRE,Global.Roll(1,6),this);
+						a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(1,6),this);
 					}
 				}
 				if(HasAttr(AttrType.COLD_HIT) && attack_idx==0 && M.actor[r,c] != null){
 					//hack: only applies to attack 0
 					B.Add(a.YouAre() + " chilled. ",this,a);
-					a.TakeDamage(DamageType.COLD,Global.Roll(1,6),this);
+					a.TakeDamage(DamageType.COLD,DamageClass.PHYSICAL,Global.Roll(1,6),this);
 				}
 				if(HasAttr(AttrType.POISON_HIT) && M.actor[r,c] != null){
 					B.Add(a.YouAre() + " poisoned. ",this,a);
@@ -2326,11 +2373,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				if(hit){
 					if(Global.Roll(1,20) == 20){
 						B.Add("The arrow critically hits " + a.the_name + ". ",this,a);
-						a.TakeDamage(DamageType.NORMAL,18,this); //max(3d6)
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,18,this); //max(3d6)
 					}
 					else{
 						B.Add("The arrow hits " + a.the_name + ". ",this,a);
-						a.TakeDamage(DamageType.NORMAL,Global.Roll(3,6),this);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),this);
 					}
 				}
 				else{
@@ -2349,15 +2396,26 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			return true;
 		}
 		public void TakeDamage(DamageType dmgtype,int dmg,Actor source){
+			TakeDamage(new Damage(dmgtype,DamageClass.NO_TYPE,source,dmg));
+		}
+		public void TakeDamage(DamageType dmgtype,DamageClass damclass,int dmg,Actor source){
+			TakeDamage(new Damage(dmgtype,damclass,source,dmg));
+		}
+		public void TakeDamage(Damage dmg){
 			bool damage_dealt = false;
-			//todo: attr: tough?
 			if(HasAttr(AttrType.INVULNERABLE)){
-				dmg = 0;
+				dmg.amount = 0;
 			}
-			switch(dmgtype){
+			if(HasAttr(AttrType.TOUGH) && dmg.damclass == DamageClass.PHYSICAL){
+				dmg.amount -= 3; //todo: test this value
+			}
+			if(dmg.damclass == DamageClass.MAGICAL){
+				dmg.amount -= TotalSkill(SkillType.SPIRIT) / 2;
+			}
+			switch(dmg.type){
 			case DamageType.NORMAL:
-				if(dmg > 0){
-					curhp -= dmg;
+				if(dmg.amount > 0){
+					curhp -= dmg.amount;
 					damage_dealt = true;
 				}
 				else{
@@ -2365,8 +2423,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				break;
 			case DamageType.MAGIC:
-				if(dmg > 0){
-					curhp -= dmg;
+				if(dmg.amount > 0){
+					curhp -= dmg.amount;
 					damage_dealt = true;
 				}
 				else{
@@ -2376,15 +2434,15 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case DamageType.FIRE:
 				{
 				if(HasAttr(AttrType.IMMUNE_FIRE)){
-					dmg = 0;
+					dmg.amount = 0;
 				}
 				int div = 1;
 				for(int i=attrs[AttrType.RESIST_FIRE];i>0;--i){
 					div = div * 2;
 				}
-				dmg = dmg / div;
-				if(dmg > 0){
-					curhp -= dmg;
+				dmg.amount = dmg.amount / div;
+				if(dmg.amount > 0){
+					curhp -= dmg.amount;
 					damage_dealt = true;
 					if(type == ActorType.SHAMBLING_SCARECROW){
 						speed = 50;
@@ -2402,16 +2460,16 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case DamageType.COLD:
 				{
 				if(HasAttr(AttrType.IMMUNE_COLD)){
-					dmg = 0;
+					dmg.amount = 0;
 					B.Add(YouAre() + " unharmed. ",this);
 				}
 				int div = 1;
 				for(int i=attrs[AttrType.RESIST_COLD];i>0;--i){
 					div = div * 2;
 				}
-				dmg = dmg / div;
-				if(dmg > 0){
-					curhp -= dmg;
+				dmg.amount = dmg.amount / div;
+				if(dmg.amount > 0){
+					curhp -= dmg.amount;
 					damage_dealt = true;
 				}
 				else{
@@ -2425,9 +2483,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				for(int i=attrs[AttrType.RESIST_ELECTRICITY];i>0;--i){
 					div = div * 2;
 				}
-				dmg = dmg / div;
-				if(dmg > 0){
-					curhp -= dmg;
+				dmg.amount = dmg.amount / div;
+				if(dmg.amount > 0){
+					curhp -= dmg.amount;
 					damage_dealt = true;
 				}
 				else{
@@ -2437,10 +2495,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 			case DamageType.POISON:
 				if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){
-					dmg = 0;
+					dmg.amount = 0;
 				}
-				if(dmg > 0){
-					curhp -= dmg;
+				if(dmg.amount > 0){
+					curhp -= dmg.amount;
 					damage_dealt = true;
 					if(type == ActorType.PLAYER){
 						B.Add("You feel the poison coursing through your veins! ");
@@ -2453,7 +2511,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				break;
 			case DamageType.HEAL:
-				curhp += dmg;
+				curhp += dmg.amount;
 				if(curhp > maxhp){
 					curhp = maxhp;
 				}
@@ -2467,11 +2525,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					recover_time = Q.turn + 500;
 				}
 				attrs[AttrType.RESTING] = 0;
-				if(source != null){
+				if(dmg.source != null){
 					if(type != ActorType.PLAYER){
-						target = source;
-						if(light_radius > 0 && HasLOS(source.row,source.col)){//for enemies who can't see in darkness
-							player_seen = M.tile[source.row,source.col];
+						target = dmg.source;
+						if(light_radius > 0 && HasLOS(dmg.source.row,dmg.source.col)){//for enemies who can't see in darkness
+							target_location = M.tile[dmg.source.row,dmg.source.col];
 						}
 					}
 				}
@@ -2499,13 +2557,13 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						}
 					}
 				}
-				if(HasAttr(AttrType.HOLY_SHIELDED) && source != null){
-					B.Add(Your() + " holy shield burns " + source.the_name + ". ",this,source);
+				if(HasAttr(AttrType.HOLY_SHIELDED) && dmg.source != null){
+					B.Add(Your() + " holy shield burns " + dmg.source.the_name + ". ",this,dmg.source);
 					int amount = Global.Roll(1,6);
-					if(amount >= source.curhp){
-						amount = source.curhp - 1;
+					if(amount >= dmg.source.curhp){
+						amount = dmg.source.curhp - 1;
 					}
-					source.TakeDamage(DamageType.FIRE,amount,this); //doesn't yet prevent loops involving 2 holy shields.
+					dmg.source.TakeDamage(DamageType.FIRE,DamageClass.MAGICAL,amount,this); //doesn't yet prevent loops involving 2 holy shields.
 				}
 			}
 			if(curhp <= 0){
@@ -2524,7 +2582,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				else{
 					if(player.CanSee(this)){
-						if(dmg < 1000){ //everything that deals this much damage prints its own message.
+						if(dmg.amount < 1000){ //everything that deals this much damage prints its own message.
 							if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){
 								B.Add(the_name + " is destroyed. ",this);
 							}
@@ -2547,7 +2605,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					attrs[AttrType.INVULNERABLE]++;
 					Q.Add(new Event(this,500,AttrType.INVULNERABLE));
 				}
-				if(magic_items.Contains(MagicItemType.CLOAK_OF_DISAPPEARANCE) && damage_dealt && dmg >= curhp){
+				if(magic_items.Contains(MagicItemType.CLOAK_OF_DISAPPEARANCE) && damage_dealt && dmg.amount >= curhp){
 					B.PrintAll();
 					M.Draw();
 					B.DisplayNow("Your cloak becomes translucent. Use your cloak to escape?(Y/N): ");
@@ -2639,12 +2697,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				bool immobilized = HasAttr(AttrType.IMMOBILIZED);
 				if(!next.passable){
 					B.Add(YouAre() + " knocked into " + next.the_name + ". ",this,next);
-					TakeDamage(DamageType.NORMAL,Global.Roll(1,6),source);
+					TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),source);
 				}
 				else{
 					B.Add(YouAre() + " knocked into " + M.actor[next.row,next.col].the_name + ". ",this,M.actor[next.row,next.col]);
 					TakeDamage(DamageType.NORMAL,Global.Roll(1,6),source);
-					M.actor[next.row,next.col].TakeDamage(DamageType.NORMAL,Global.Roll(1,6),source);
+					M.actor[next.row,next.col].TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),source);
 				}
 				if(immobilized && M.actor[r,c] != null){
 					B.Add(YouAre() + " no longer immobilized. ",this);
@@ -2717,7 +2775,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Actor a = FirstActorInLine(t);
 					if(a != null){
 						B.Add("The missile hits " + a.the_name + ". ",a);
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
+						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
 					}
 					else{
 						if(t.IsLit()){
@@ -2758,7 +2816,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						List<Tile> line = GetExtendedBresenhamLine(a.row,a.col);
 						int idx = line.IndexOf(M.tile[a.row,a.col]);
 						Tile next = line[idx+1];
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
+						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
 						if(Global.Roll(1,10) <= 6){
 							if(M.actor[t.row,t.col] != null){
 								a.GetKnockedBack(this);
@@ -2770,7 +2828,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 								else{
 									if(M.actor[next.row,next.col] != null){
 										B.Add(s + "'s corpse is knocked into " + M.actor[next.row,next.col].the_name + ". ",t,M.actor[next.row,next.col]);
-										M.actor[next.row,next.col].TakeDamage(DamageType.NORMAL,Global.Roll(1,6),this);
+										M.actor[next.row,next.col].TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),this);
 									}
 								}
 							}
@@ -2860,7 +2918,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Actor a = FirstActorInLine(t);
 					if(a != null){
 						B.Add("The icy blast hits " + a.the_name + ". ",a);
-						a.TakeDamage(DamageType.COLD,Global.Roll(2+bonus,6),this);
+						a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(2+bonus,6),this);
 					}
 					else{
 						B.Add("The icy blast hits " + t.the_name + ". ",t);
@@ -2880,7 +2938,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Actor a = M.actor[t.row,t.col];
 					if(a != null){
 						B.Add(You("project") + " flames onto " + a.the_name + ". ",this,a);
-						a.TakeDamage(DamageType.FIRE,Global.Roll(3+bonus,6),this);
+						a.TakeDamage(DamageType.FIRE,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
 						if(M.actor[t.row,t.col] != null && Global.Roll(1,10) <= 2){
 							B.Add(a.You("start") + " to catch fire! ",a);
 							a.attrs[AttrType.CATCHING_FIRE]++;
@@ -2906,7 +2964,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						B.Add("Ice forms around " + a.the_name + ". ",a);
 						int r = a.row;
 						int c = a.col;
-						a.TakeDamage(DamageType.COLD,Global.Roll(1+bonus,6),this);
+						a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
 						if(M.actor[r,c] != null && !a.HasAttr(AttrType.IMMOBILIZED) && Global.Roll(1,10) <= 6){
 							B.Add(a.the_name + " is immobilized. ",a);
 							a.attrs[AttrType.IMMOBILIZED]++;
@@ -2934,7 +2992,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						B.Add("A wave of sound hits " + a.the_name + ". ",a);
 						int r = a.row;
 						int c = a.col;
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(2+bonus,6),this);
+						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(2+bonus,6),this);
 						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
 							B.Add(a.the_name + " is stunned. ",a);
 							a.attrs[AttrType.STUNNED]++;
@@ -2971,7 +3029,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						Actor a = targets[idx];
 						targets.Remove(a);
 						B.Add("Electricity arcs to " + a.the_name + ". ",this,a);
-						a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
+						a.TakeDamage(DamageType.ELECTRIC,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
 					}
 				}
 				break;
@@ -2989,7 +3047,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(a != null){
 						AnimateBoltProjectile(t,Color.RandomLightning);
 						B.Add("Electricity leaps to " + a.the_name + ". ",a);
-						a.TakeDamage(DamageType.ELECTRIC,Global.Roll(3+bonus,6),this);
+						a.TakeDamage(DamageType.ELECTRIC,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
 					}
 					else{
 						AnimateMapCell(this,Color.RandomLightning,'*');
@@ -3009,16 +3067,16 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Q.Add(new Event(this,duration,AttrType.DARKVISION,"Your darkvision wears off. "));
 				}
 				break;
-			case SpellType.RETREAT: //this is a player-only spell for now because it uses player_seen to track position
+			case SpellType.RETREAT: //this is a player-only spell for now because it uses target_location to track position
 				B.Add("You cast retreat. ");
-				if(player_seen == null){
-					player_seen = M.tile[row,col];
+				if(target_location == null){
+					target_location = M.tile[row,col];
 					B.Add("You create a rune of transport on " + M.tile[row,col].the_name + ". ");
 				}
 				else{
-					if(M.actor[player_seen.row,player_seen.col] == null && player_seen.passable){
+					if(M.actor[target_location.row,target_location.col] == null && target_location.passable){
 						B.Add("You activate your rune of transport. ");
-						Move(player_seen.row,player_seen.col);
+						Move(target_location.row,target_location.col);
 						if(HasAttr(AttrType.IMMOBILIZED)){
 							attrs[AttrType.IMMOBILIZED] = 0;
 							B.Add("You are no longer immobilized. ");
@@ -3055,7 +3113,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						Actor ac = targets[idx];
 						targets.Remove(ac);
 						B.Add("The explosion hits " + ac.the_name + ". ",ac);
-						ac.TakeDamage(DamageType.FIRE,Global.Roll(3+bonus,6),this);
+						ac.TakeDamage(DamageType.FIRE,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
 					}
 				}
 				else{
@@ -3171,7 +3229,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						Screen.AnimateBoltBeam(GetBresenhamLine(firsttile.row,firsttile.col),Color.Cyan);
 						if(firstactor != null){
 							string s = firstactor.the_name;
-							firstactor.TakeDamage(DamageType.MAGIC,Global.Roll(1+bonus,6),this);
+							firstactor.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
 							if(Global.Roll(1,10) <= 9){
 								if(M.actor[firsttile.row,firsttile.col] != null){
 									firstactor.GetKnockedBack(line);
@@ -3183,7 +3241,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 									else{
 										if(nextactor != null){
 											B.Add(s + "'s corpse is knocked into " + nextactor.the_name + ". ",firsttile,nextactor);
-											nextactor.TakeDamage(DamageType.NORMAL,Global.Roll(1,6),this);
+											nextactor.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),this);
 										}
 									}
 								}
@@ -3205,7 +3263,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Actor a = FirstActorInLine(t);
 					if(a != null){
 						B.Add(You("direct") + " destructive energies toward " + a.the_name + ". ",this,a);
-						a.TakeDamage(DamageType.MAGIC,Global.Roll(8+bonus,6),this);
+						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(8+bonus,6),this);
 					}
 					else{
 						if(t.type == TileType.WALL || t.type == TileType.DOOR_C || t.type == TileType.DOOR_O || t.type == TileType.CHEST){
@@ -3239,7 +3297,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					B.Add("The blizzard hits " + a.the_name + ". ",a);
 					int r = a.row;
 					int c = a.col;
-					a.TakeDamage(DamageType.COLD,Global.Roll(5+bonus,6),this);
+					a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(5+bonus,6),this);
 					if(M.actor[r,c] != null && Global.Roll(1,10) <= 8){
 						B.Add(a.the_name + " is immobilized. ",a);
 						a.attrs[AttrType.IMMOBILIZED]++;
@@ -3322,14 +3380,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(t.Actor() != null){
 						Actor a = t.Actor();
 						B.Add("You hit " + a.the_name + ". ",a);
-						a.TakeDamage(DamageType.NORMAL,Global.Roll(dice,6),this);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(dice,6),this);
 					}
 				}
 				foreach(Tile t in TilesAtDistance(2)){
 					if(t.Actor() != null){
 						Actor a = t.Actor();
 						B.Add("Your magically charged attack hits " + a.the_name + ". ",a);
-						a.TakeDamage(DamageType.MAGIC,TotalSkill(SkillType.MAGIC),this);
+						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,TotalSkill(SkillType.MAGIC),this);
 					}
 				}
 				break;
@@ -3376,7 +3434,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				//todo:
 /*Tumble - (A, 200 energy) - You pick a tile within distance 2. If there is at least one passable tile between 
 you and it(you CAN tumble past actors), you move to that tile. Additional effects: If you move past an actor, 
-they lose sight of you and their turns_player_seen is set to X - rand_function_of(stealth skill). (there's a good chance
+they lose sight of you and their turns_target_location is set to X - rand_function_of(stealth skill). (there's a good chance
 they'll find you, then attack, but you will have still moved past them) ; You will automatically dodge the first arrow
 that would hit you before your next turn.(it's still possible they'll roll 2 successes and hit you) ; Has the same
 effect as standing still, if you're on fire or catching fire. */
@@ -4239,92 +4297,92 @@ effect as standing still, if you're on fire or catching fire. */
 		public static AttackInfo Attack(ActorType type,int num){
 			switch(type){
 			case ActorType.PLAYER:
-				return attack[19];
+				return new AttackInfo(attack[19]);
 			case ActorType.RAT:
-				return attack[0];
+				return new AttackInfo(attack[0]);
 			case ActorType.GOBLIN:
-				return attack[3];
+				return new AttackInfo(attack[3]);
 			case ActorType.LARGE_BAT:
 				switch(num){
 				case 0:
-					return attack[0];
+					return new AttackInfo(attack[0]);
 				case 1:
-					return attack[5];
+					return new AttackInfo(attack[5]);
 				default:
 					return null;
 				}
 			case ActorType.SHAMBLING_SCARECROW:
-				return attack[17];
+				return new AttackInfo(attack[17]);
 			case ActorType.SKELETON:
-				return attack[3];
+				return new AttackInfo(attack[3]);
 			case ActorType.GOBLIN_ARCHER:
-				return attack[3];
+				return new AttackInfo(attack[3]);
 			case ActorType.WOLF:
-				return attack[2];
+				return new AttackInfo(attack[2]);
 			case ActorType.FROSTLING:
 				switch(num){
 				case 0:
-					return attack[3];
+					return new AttackInfo(attack[3]);
 				case 1:
-					return attack[6];
+					return new AttackInfo(attack[6]);
 				case 2:
-					return attack[7];
+					return new AttackInfo(attack[7]);
 				default:
 					return null;
 				}
 			case ActorType.GOBLIN_SHAMAN:
-				return attack[3];
+				return new AttackInfo(attack[3]);
 			case ActorType.ZOMBIE:
 				switch(num){
 				case 0:
-					return attack[8];
+					return new AttackInfo(attack[8]);
 				case 1:
-					return attack[9];
+					return new AttackInfo(attack[9]);
 				default:
 					return null;
 				}
 			case ActorType.DIRE_RAT:
-				return attack[1];
+				return new AttackInfo(attack[1]);
 			case ActorType.ROBED_ZEALOT:
-				return attack[4];
+				return new AttackInfo(attack[4]);
 			case ActorType.WORG:
-				return attack[2];
+				return new AttackInfo(attack[2]);
 			case ActorType.CARRION_CRAWLER:
 				switch(num){
 				case 0:
-					return attack[10];
+					return new AttackInfo(attack[10]);
 				case 1:
-					return attack[1];
+					return new AttackInfo(attack[1]);
 				default:
 					return null;
 				}
 			case ActorType.OGRE:
-				return attack[11];
+				return new AttackInfo(attack[11]);
 			case ActorType.PHASE_SPIDER:
-				return attack[1];
+				return new AttackInfo(attack[1]);
 			case ActorType.STONE_GOLEM:
-				return attack[12];
+				return new AttackInfo(attack[12]);
 			case ActorType.ORC_WARMAGE:
-				return attack[4];
+				return new AttackInfo(attack[4]);
 			case ActorType.LASHER_FUNGUS:
 				switch(num){
 				case 0:
-					return attack[13];
+					return new AttackInfo(attack[13]);
 				case 1:
-					return attack[14];
+					return new AttackInfo(attack[14]);
 				default:
 					return null;
 				}
 			case ActorType.CORPSETOWER_BEHEMOTH:
-				return attack[15];
+				return new AttackInfo(attack[15]);
 			case ActorType.FIRE_DRAKE:
 				switch(num){
 				case 0:
-					return attack[16];
+					return new AttackInfo(attack[16]);
 				case 1:
-					return attack[17];
+					return new AttackInfo(attack[17]);
 				case 2:
-					return attack[18];
+					return new AttackInfo(attack[18]);
 				default:
 					return null;
 				}

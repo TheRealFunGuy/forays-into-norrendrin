@@ -21,7 +21,7 @@ namespace Forays{
 			proto[TileType.FLOOR] = new Tile(TileType.FLOOR,"floor",'.',Color.White,true,false,null);
 			proto[TileType.WALL] = new Tile(TileType.WALL,"wall",'#',Color.Gray,false,true,null);
 			proto[TileType.DOOR_C] = new Tile(TileType.DOOR_C,"closed door",'+',Color.DarkYellow,false,true,TileType.DOOR_O);
-			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',Color.DarkGreen,true,false,TileType.DOOR_C);
+			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',Color.DarkYellow,true,false,TileType.DOOR_C);
 			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',Color.White,true,false,null);
 			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.Yellow,true,false,null);
 			//trap ideas: quickfire trap: burst of fire that ignites stuff, then expands(like quickfire) for several turns.

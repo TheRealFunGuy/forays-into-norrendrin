@@ -376,7 +376,7 @@ namespace Forays{
 						B.DisplayNow();
 						Screen.AnimateExplosion(t,1,ch,100);
 						foreach(Actor a in t.ActorsWithinDistance(1)){
-							a.TakeDamage(damtype,Global.Roll(2,6),user);
+							a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
 						}
 						dmg.Remove(damtype);
 					}
