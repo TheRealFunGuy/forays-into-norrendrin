@@ -33,6 +33,11 @@ namespace Forays{
 			}
 			return total;
 		}
+		public static int Roll(int sides){
+			int total = 0;
+			total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
+			return total;
+		}
 		public static bool CoinFlip(){
 			if(r.Next(1,3) == 2){ //returns 1 or 2...
 				return true;

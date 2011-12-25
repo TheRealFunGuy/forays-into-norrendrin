@@ -48,7 +48,7 @@ namespace DungeonGen{
 			bool done = false;
 			int count = 1;
 			bool show_converted = false;
-			d.Generate();
+			d.GenerateInitial();
 			while(!done){
 				if(show_converted){
 					d.DrawConverted();
@@ -153,7 +153,7 @@ namespace DungeonGen{
 					break;
 				case ConsoleKey.Z:
 					d.Clear();
-					d.Generate();
+					d.GenerateInitial();
 					break;
 				case ConsoleKey.N:
 					{
@@ -204,6 +204,21 @@ namespace DungeonGen{
 		public bool rooms_overwrite_corridors = true;
 		public bool corridor_chains_overlap_themselves = false;
 ////////////////
+public char[,] Generate(){
+	while(true){
+		GenerateInitial();
+		RemoveDiagonals();
+		RemoveDeadEnds();
+		RemoveUnconnected();
+		if(NumberOfFloors() < 320 || HasLargeUnusedSpaces()){
+			Clear();
+		}
+		else{
+			break;
+		}
+	}
+	return map;
+}
 public Dungeon(){
 	for(int i=0;i<H;++i){
 		for(int j=0;j<W;++j){
@@ -1059,7 +1074,7 @@ Console.ReadKey(true);*/
 	}
 	return result;
 }
-public void Generate(){
+public void GenerateInitial(){
 ////
 //StreamWriter file;
 //try{
