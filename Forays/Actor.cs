@@ -608,6 +608,21 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				Q1();
 				return;
 			}
+			if(HasAttr(AttrType.RUNNING)){
+				bool monsters_visible = false;
+				foreach(Actor a in M.AllActors()){
+					if(a!=this && CanSee(a) && HasLOS(a.row,a.col)){ //check LOS, prevents detected mobs from stopping you
+						monsters_visible = true;
+					}
+				}
+				if(!monsters_visible && TileInDirection(attrs[AttrType.RUNNING]).passable){
+					PlayerWalk(attrs[AttrType.RUNNING]);
+					return;
+				}
+				else{
+					attrs[AttrType.RUNNING] = 0;
+				}
+			}
 			if(HasAttr(AttrType.RESTING)){
 				if(attrs[AttrType.RESTING] == 10){
 					attrs[AttrType.RESTING] = -1;
@@ -643,14 +658,21 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			if(Global.Option(OptionType.VI_KEYS)){
 				ch = ConvertVIKeys(ch);
 			}
-			/*bool alt = false;
+			bool alt = false;
 			bool ctrl = false;
+			bool shift = false;
 			if((command.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt){
+				B.Add("alt. ");
 				alt = true;
 			}
 			if((command.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control){
+				B.Add("ctrl. ");
 				ctrl = true;
-			}*/
+			}
+			if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+				B.Add("shift. ");
+				shift = true;
+			}
 			switch(ch){
 			case '7':
 			case '8':
@@ -658,68 +680,13 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case '4':
 			case '6':
 			case '1':
-			case '2'://don't forget support for alt-dir
+			case '2'://maybe try alt-dir and shift-dir on windows?
 			case '3':
+				{
 				int dir = ch - 48; //ascii 0-9 are 48-57
-				if(dir > 0){
-					if(ActorInDirection(dir)!=null){
-						if(!ActorInDirection(dir).IsHiddenFrom(this)){
-							if(F[0] == SpellType.NO_SPELL){
-								Attack(0,ActorInDirection(dir));
-							}
-							else{
-								CastSpell(F[0],TileInDirection(dir));
-							}
-						}
-						else{
-							ActorInDirection(dir).attrs[AttrType.TURNS_VISIBLE] = -1;
-							if(!IsHiddenFrom(ActorInDirection(dir))){
-								B.Add("You walk straight into " + ActorInDirection(dir).a_name + "! ");
-							}
-							else{
-								B.Add("You walk straight into " + ActorInDirection(dir).a_name + "! ");
-								B.Add(ActorInDirection(dir).the_name + " looks just as surprised as you. ");
-								ActorInDirection(dir).player_visibility_duration = -1;
-							}
-							Q1();
-						}
-					}
-					else{
-						if(TileInDirection(dir).passable){
-							if(Global.Option(OptionType.OPEN_CHESTS) && TileInDirection(dir).type==TileType.CHEST){
-								if(StunnedThisTurn()){
-									break;
-								}
-								TileInDirection(dir).Toggle(this);
-								Q1();
-							}
-							else{
-								if(TileInDirection(dir).inv != null){
-									B.Add("You see " + TileInDirection(dir).inv.a_name + ". ");
-								}
-								Move(TileInDirection(dir).row,TileInDirection(dir).col);
-								QS();
-							}
-						}
-						else{
-							if(TileInDirection(dir).type == TileType.DOOR_C){
-								if(StunnedThisTurn()){
-									break;
-								}
-								TileInDirection(dir).Toggle(this);
-								Q1();
-							}
-							else{
-								B.Add("There is " + TileInDirection(dir).a_name + " in the way. ");
-								Q0();
-							}
-						}
-					}
-				}
-				else{
-					Q0();
-				}
+				PlayerWalk(dir);
 				break;
+				}
 			case '5':
 			case '.':
 				if(HasFeat(FeatType.FULL_DEFENSE) && EnemiesAdjacent() > 0){
@@ -769,6 +736,26 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				QS();
 				break;
+			case 'w':
+				{
+				int dir = GetDirection("Start walking in which direction? ");
+				if(dir != 0){
+					bool monsters_visible = false;
+					foreach(Actor a in M.AllActors()){
+						if(a!=this && CanSee(a) && HasLOS(a.row,a.col)){
+							monsters_visible = true;
+						}
+					}
+					PlayerWalk(dir);
+					if(!monsters_visible){
+						attrs[AttrType.RUNNING] = dir;
+					}
+				}
+				else{
+					Q0();
+				}
+				break;
+				}
 			case 'o':
 				{
 				int door = DirectionOfOnly(TileType.DOOR_C);
@@ -1135,6 +1122,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Spawn a monster");
 				l.Add("Use a rune of passage");
 				l.Add("Create darkness");
+				l.Add("Generate new level");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1235,6 +1223,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 					Q1();
 					break;
+				case 11:
+					M.GenerateLevel();
+					Q0();
+					break;
 				default:
 					Q0();
 					break;
@@ -1247,6 +1239,66 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			default:
 				Q0();
 				break;
+			}
+		}
+		public void PlayerWalk(int dir){
+			if(dir > 0){
+				if(ActorInDirection(dir)!=null){
+					if(!ActorInDirection(dir).IsHiddenFrom(this)){
+						if(F[0] == SpellType.NO_SPELL){
+							Attack(0,ActorInDirection(dir));
+						}
+						else{
+							CastSpell(F[0],TileInDirection(dir));
+						}
+					}
+					else{
+						ActorInDirection(dir).attrs[AttrType.TURNS_VISIBLE] = -1;
+						if(!IsHiddenFrom(ActorInDirection(dir))){
+							B.Add("You walk straight into " + ActorInDirection(dir).a_name + "! ");
+						}
+						else{
+							B.Add("You walk straight into " + ActorInDirection(dir).a_name + "! ");
+							B.Add(ActorInDirection(dir).the_name + " looks just as surprised as you. ");
+							ActorInDirection(dir).player_visibility_duration = -1;
+						}
+						Q1();
+					}
+				}
+				else{
+					if(TileInDirection(dir).passable){
+						if(Global.Option(OptionType.OPEN_CHESTS) && TileInDirection(dir).type==TileType.CHEST){
+							if(StunnedThisTurn()){
+								return;
+							}
+							TileInDirection(dir).Toggle(this);
+							Q1();
+						}
+						else{
+							if(TileInDirection(dir).inv != null){
+								B.Add("You see " + TileInDirection(dir).inv.a_name + ". ");
+							}
+							Move(TileInDirection(dir).row,TileInDirection(dir).col);
+							QS();
+						}
+					}
+					else{
+						if(TileInDirection(dir).type == TileType.DOOR_C){
+							if(StunnedThisTurn()){
+								return;
+							}
+							TileInDirection(dir).Toggle(this);
+							Q1();
+						}
+						else{
+							B.Add("There is " + TileInDirection(dir).a_name + " in the way. ");
+							Q0();
+						}
+					}
+				}
+			}
+			else{
+				Q0();
 			}
 		}
 		public void InputAI(){
@@ -2524,7 +2576,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				else{
 					recover_time = Q.turn + 500;
 				}
-				attrs[AttrType.RESTING] = 0;
+				Interrupt();
 				if(dmg.source != null){
 					if(type != ActorType.PLAYER){
 						target = dmg.source;
@@ -3369,6 +3421,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		}
 		public void ResetForNewLevel(){
 			//todo: lots here. name?
+			target = null;
+			player_seen = null;
 		}
 		public bool UseFeat(FeatType feat){
 			switch(feat){
@@ -3574,6 +3628,10 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			Q1();
 			return true;
+		}
+		public void Interrupt(){
+			attrs[AttrType.RESTING] = 0;
+			attrs[AttrType.RUNNING] = 0;
 		}
 		public bool StunnedThisTurn(){
 			if(HasAttr(AttrType.STUNNED) && Global.Roll(1,5) == 5){
@@ -3883,10 +3941,12 @@ effect as standing still, if you're on fire or catching fire. */
 		}
 		public int GetDirection(){ return GetDirection("Which direction? ",false); }
 		public int GetDirection(bool orth){ return GetDirection("Which direction? ",orth); }
+		public int GetDirection(string s){ return GetDirection(s,false); }
 		public int GetDirection(string s,bool orth){
 			B.DisplayNow(s);
 			ConsoleKeyInfo command;
 			char ch;
+			Console.CursorVisible = true;
 			while(true){
 				command = Console.ReadKey(true);
 				ch = ConvertInput(command);
@@ -3896,13 +3956,16 @@ effect as standing still, if you're on fire or catching fire. */
 				int i = (int)Char.GetNumericValue(ch);
 				if(i>=1 && i<=9 && i!=5){
 					if(!orth || i%2==0){ //in orthogonal mode, return only even dirs
+						Console.CursorVisible = false;
 						return i;
 					}
 				}
 				if(ch == (char)27){ //escape
+					Console.CursorVisible = false;
 					return -1;
 				}
 				if(ch == ' '){
+					Console.CursorVisible = false;
 					return -1;
 				}
 			}

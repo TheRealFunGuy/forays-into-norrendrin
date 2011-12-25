@@ -212,9 +212,11 @@ namespace Forays{
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					if(actor[i,j] != null){
-						actor[i,j].inv.Clear();
-						actor[i,j].target = null;
-						Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
+						if(actor[i,j] != player){
+							actor[i,j].inv.Clear();
+							actor[i,j].target = null;
+							Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
+						}
 						actor[i,j] = null;
 					}
 					tile[i,j].inv = null;
@@ -222,15 +224,53 @@ namespace Forays{
 				}
 			}
 			alltiles.Clear();
-			//generate layout
+			DungeonGen.Dungeon dungeon = new DungeonGen.Dungeon();
+			char[,] charmap = dungeon.Generate();
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					switch(charmap[i,j]){
+					case '#':
+						Tile.Create(TileType.WALL,i,j);
+						break;
+					case '.':
+						Tile.Create(TileType.FLOOR,i,j);
+						break;
+					case '+':
+						Tile.Create(TileType.DOOR_C,i,j);
+						break;
+					case '-':
+						Tile.Create(TileType.DOOR_O,i,j);
+						break;
+					case '>':
+						Tile.Create(TileType.STAIRS,i,j);
+						break;
+					default:
+						Tile.Create(TileType.FLOOR,i,j);
+						break;
+					}
+					alltiles.Add(tile[i,j]);
+				}
+			}
 			//update player for new level, including reset of player's target
+			player.ResetForNewLevel();
 			//spawn some items and mobs
 			if(current_level == 10){
 				Q.Add(new Event(1000,EventType.BOSS_ARRIVE));
 			}
 			//find a spot for the player that no monsters can see
 			//if there is no such spot, place the player randomly
-		}//remember to add new tiles to alltiles
+			for(bool done=false;!done;){
+				int rr = Global.Roll(ROWS-1);
+				int rc = Global.Roll(COLS-1);
+				if(tile[rr,rc].passable && actor[rr,rc] == null){
+					int light = player.light_radius;
+					player.light_radius = 0;
+					player.Move(rr,rc);
+					player.UpdateRadius(0,light,true);
+					done = true;
+				}
+			}
+		}
 	}
 }
 
