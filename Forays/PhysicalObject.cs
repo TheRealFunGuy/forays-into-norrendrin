@@ -258,6 +258,17 @@ compare this number to 1/2:  if less than 1/2, major.
 			}
 			return result;
 		}
+		public List<Actor> ActorsAtDistance(int dist){
+			List<Actor> result = new List<Actor>();
+			for(int i=row-dist;i<=row+dist;++i){
+				for(int j=col-dist;j<=col+dist;++j){
+					if(DistanceFrom(i,j) == dist && M.BoundsCheck(i,j) && M.actor[i,j] != null){
+						result.Add(M.actor[i,j]);
+					}
+				}
+			}
+			return result;
+		}
 		public List<Tile> TilesWithinDistance(int dist){ return TilesWithinDistance(dist,false); }
 		public List<Tile> TilesWithinDistance(int dist,bool exclude_origin){
 			List<Tile> result = new List<Tile>();

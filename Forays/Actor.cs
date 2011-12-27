@@ -658,21 +658,18 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			if(Global.Option(OptionType.VI_KEYS)){
 				ch = ConvertVIKeys(ch);
 			}
-			bool alt = false;
+			/*bool alt = false;
 			bool ctrl = false;
 			bool shift = false;
 			if((command.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt){
-				B.Add("alt. ");
 				alt = true;
 			}
 			if((command.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control){
-				B.Add("ctrl. ");
 				ctrl = true;
 			}
 			if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
-				B.Add("shift. ");
 				shift = true;
-			}
+			}*/
 			switch(ch){
 			case '7':
 			case '8':
@@ -1939,6 +1936,58 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				break;
+			case ActorType.CULTIST:
+				if(curhp <= 10 && !HasAttr(AttrType.ON_FIRE)){
+					string invocation;
+					switch(Global.Roll(4)){
+					case 1:
+						invocation = "ae vara kersai";
+						break;
+					case 2:
+						invocation = "kersai dzaggath";
+						break;
+					case 3:
+						invocation = "od fir ode bahgal";
+						break;
+					case 4:
+						invocation = "denei kersai nammat";
+						break;
+					default:
+						invocation = "blarg";
+						break;
+					}
+					if(Global.CoinFlip()){
+						B.Add(You("whisper") + " '" + invocation + "'. ");
+					}
+					else{
+						B.Add(You("scream") + " '" + invocation.ToUpper() + "'. ");
+					}
+					B.Add("Flames erupt from " + the_name + ". ");
+					attrs[AttrType.ON_FIRE] = 3; //todo
+					foreach(Actor a in ActorsAtDistance(1)){
+						//
+					}
+				}
+				else{
+					if(DistanceFrom(target) == 1){
+						Attack(0,target);
+					}
+					else{
+						AI_Step(target);
+						QS();
+					}
+				}
+				break;
+			case ActorType.POLTERGEIST:
+			case ActorType.SWORDSMAN:
+			case ActorType.DREAM_WARRIOR:
+			case ActorType.BANSHEE:
+			case ActorType.SKULKING_KILLER:
+			case ActorType.SHADOW:
+			case ActorType.BERSERKER:
+			case ActorType.ORC_GRENADIER:
+			case ActorType.NECROMANCER:
+			case ActorType.TROLL:
 			case ActorType.FIRE_DRAKE:
 				if(false){
 					//todo: if player has fire resist upgrades, handle those first, here.
@@ -3422,7 +3471,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public void ResetForNewLevel(){
 			//todo: lots here. name?
 			target = null;
-			player_seen = null;
+			target_location = null;
 		}
 		public bool UseFeat(FeatType feat){
 			switch(feat){
@@ -4334,7 +4383,7 @@ effect as standing still, if you're on fire or catching fire. */
 		}
 	}
 	public static class AttackList{ //consider more descriptive attacks, such as the zealot smashing you with a mace
-		private static AttackInfo[] attack = new AttackInfo[20];
+		private static AttackInfo[] attack = new AttackInfo[24];
 		static AttackList(){
 			attack[0] = new AttackInfo(100,1,DamageType.NORMAL,"& ^bites *");
 			attack[1] = new AttackInfo(100,2,DamageType.NORMAL,"& ^bites *");
@@ -4355,7 +4404,11 @@ effect as standing still, if you're on fire or catching fire. */
 			attack[16] = new AttackInfo(100,3,DamageType.NORMAL,"& ^bites *");
 			attack[17] = new AttackInfo(100,3,DamageType.NORMAL,"& ^claws *");
 			attack[18] = new AttackInfo(150,4,DamageType.FIRE,"& breathes fire");
-			attack[19] = new AttackInfo(100,1,DamageType.NORMAL,"& ^hit *");
+			attack[19] = new AttackInfo(100,1,DamageType.NORMAL,"& ^hit *"); //the player's default attack
+			attack[20] = new AttackInfo(100,2,DamageType.NORMAL,"& ^pokes *");
+			attack[21] = new AttackInfo(100,1,DamageType.NORMAL,"& slimes *");
+			attack[22] = new AttackInfo(100,2,DamageType.NORMAL,"& ^claws *");
+			attack[23] = new AttackInfo(100,2,DamageType.NORMAL,"& touches *");
 		}
 		public static AttackInfo Attack(ActorType type,int num){
 			switch(type){
@@ -4449,6 +4502,35 @@ effect as standing still, if you're on fire or catching fire. */
 				default:
 					return null;
 				}
+			case ActorType.CULTIST:
+				return new AttackInfo(attack[3]);
+			case ActorType.POLTERGEIST:
+				switch(num){
+				case 0:
+					return new AttackInfo(attack[20]);
+				case 1:
+					return new AttackInfo(attack[21]);
+				default:
+					return null;
+				}
+			case ActorType.SWORDSMAN:
+				return new AttackInfo(attack[4]);
+			case ActorType.DREAM_WARRIOR:
+				return new AttackInfo(attack[4]);
+			case ActorType.BANSHEE:
+				return new AttackInfo(attack[22]);
+			case ActorType.SKULKING_KILLER:
+				return new AttackInfo(attack[4]);
+			case ActorType.SHADOW:
+				return new AttackInfo(attack[23]);
+			case ActorType.BERSERKER:
+				return new AttackInfo(attack[4]);
+			case ActorType.ORC_GRENADIER:
+				return new AttackInfo(attack[4]);
+			case ActorType.NECROMANCER:
+				return new AttackInfo(attack[3]);
+			case ActorType.TROLL:
+				return new AttackInfo(attack[17]);
 			default:
 				return null;
 			}
