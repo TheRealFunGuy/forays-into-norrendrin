@@ -2,14 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 //
-//so, making 8 points to generate rooms should be no problem...
-//the first point would be at H/3,W/5
-//to generate the list of points:
-//row positions are (1 to rows_of_points) / rows_of_points+1
-//col positions are (1 to cols_of_points) / cols_of_points+1
-//
-//
-//
 //hmm, about a 'connect these 2 rooms' method...
 //start with a corridor coming from each one that doesn't hit anything (or nothing but corridors)
 //the 2 endpoints of these corridors are your starting points. pick one at random.
