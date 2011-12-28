@@ -154,9 +154,19 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,60,100,0,0,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH);
 			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,0,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
 			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,0,0,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
-			//Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,0,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH);
-			//Define(ActorType.NECROMANCER,"necromancer",'p',Color. cyan or white...
+			Define(ActorType.CULTIST,"cultist",'p',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,40,90,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
+			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,45,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,50,80,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
+			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY);
+			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LIGHT_DRAIN);
+			Define(ActorType.BERSERKER,"berserker",'p',Color.DarkRed,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,0,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH);
 			//make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
+			//check vision for all.
 		}
 		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			proto[type_] = new Actor(type_,name_,symbol_,color_,maxhp_,speed_,xp_,level_,light_radius_,attrlist);
@@ -182,9 +192,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			recover_time = 0;
 			weapons = new LinkedList<WeaponType>(a.weapons);
 			armors = new LinkedList<ArmorType>(a.armors);
-			attrs = a.attrs;
-			skills = a.skills;
-			spells = a.spells;
+			attrs = new Dict<AttrType, int>(a.attrs);
+			skills = new Dict<SkillType,int>(a.skills);
+			spells = new Dict<SpellType,int>(a.spells);
 		}
 		public Actor(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			type = type_;
@@ -420,7 +430,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 		}
 		public void Input(){
-			bool return_after_recovery = false;
+			bool return_before_input = false;
 			if(HasAttr(AttrType.DEFENSIVE_STANCE)){
 				attrs[AttrType.DEFENSIVE_STANCE] = 0;
 			}
@@ -429,7 +439,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				B.Add(the_name + " can't move! ",this);
 				if(type != ActorType.PLAYER){ //handled differently for the player: since the map still needs to be drawn,
 					Q1();						// this is handled in InputHuman().
-					return_after_recovery = true; //the message is still printed, of course.
+					return_before_input = true; //the message is still printed, of course.
 				}
 			}
 			if(curhp < maxhp){
@@ -458,13 +468,17 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					
 			}
 			if(HasAttr(AttrType.POISONED) && time_of_last_action < Q.turn){
-				TakeDamage(DamageType.POISON,Global.Roll(1,3)-1,null);
+				if(!TakeDamage(DamageType.POISON,Global.Roll(1,3)-1,null)){
+					return;
+				}
 			}
 			if(HasAttr(AttrType.ON_FIRE) && time_of_last_action < Q.turn){
 				B.Add(YouAre() + " on fire! ",this);
-				TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(attrs[AttrType.ON_FIRE],6),null); //todo: make TakeDamage return bool not_dead? i think so
+				if(!TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(attrs[AttrType.ON_FIRE],6),null)){
+					return;
+				}
 			}
-			if(return_after_recovery){
+			if(return_before_input){
 				return;
 			}
 			if(type==ActorType.PLAYER){
@@ -502,7 +516,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 			}
 			if(HasAttr(AttrType.ON_FIRE) && attrs[AttrType.ON_FIRE] < 5 && time_of_last_action < Q.turn){
-				if(attrs[AttrType.ON_FIRE] > light_radius){
+				if(attrs[AttrType.ON_FIRE] >= light_radius){
 					UpdateRadius(attrs[AttrType.ON_FIRE],attrs[AttrType.ON_FIRE]+1);
 				}
 				attrs[AttrType.ON_FIRE]++;
@@ -1206,7 +1220,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 8:
 					if(M.actor[18,50] == null){
-						Create(ActorType.GOBLIN,18,50);
+						Create(ActorType.CULTIST,18,50);
 					}
 					Q1();
 					break;
@@ -1953,7 +1967,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						invocation = "denei kersai nammat";
 						break;
 					default:
-						invocation = "blarg";
+						invocation = "gubed gubed gubed";
 						break;
 					}
 					if(Global.CoinFlip()){
@@ -1963,9 +1977,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						B.Add(You("scream") + " '" + invocation.ToUpper() + "'. ");
 					}
 					B.Add("Flames erupt from " + the_name + ". ");
-					attrs[AttrType.ON_FIRE] = 3; //todo
+					if(LightRadius() < 3){
+						UpdateRadius(LightRadius(),3);
+					}
+					attrs[AttrType.ON_FIRE] = 3;
 					foreach(Actor a in ActorsAtDistance(1)){
-						//
+						if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.IMMUNE_FIRE)){
+							a.attrs[AttrType.CATCHING_FIRE] = 1;
+						}
 					}
 				}
 				else{
@@ -2496,13 +2515,13 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			return true;
 		}
-		public void TakeDamage(DamageType dmgtype,int dmg,Actor source){
-			TakeDamage(new Damage(dmgtype,DamageClass.NO_TYPE,source,dmg));
+		public bool TakeDamage(DamageType dmgtype,int dmg,Actor source){
+			return TakeDamage(new Damage(dmgtype,DamageClass.NO_TYPE,source,dmg));
 		}
-		public void TakeDamage(DamageType dmgtype,DamageClass damclass,int dmg,Actor source){
-			TakeDamage(new Damage(dmgtype,damclass,source,dmg));
+		public bool TakeDamage(DamageType dmgtype,DamageClass damclass,int dmg,Actor source){
+			return TakeDamage(new Damage(dmgtype,damclass,source,dmg));
 		}
-		public void TakeDamage(Damage dmg){
+		public bool TakeDamage(Damage dmg){ //returns true if still alive
 			bool damage_dealt = false;
 			if(HasAttr(AttrType.INVULNERABLE)){
 				dmg.amount = 0;
@@ -2545,12 +2564,13 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				if(dmg.amount > 0){
 					curhp -= dmg.amount;
 					damage_dealt = true;
-					if(type == ActorType.SHAMBLING_SCARECROW){
+					if(type == ActorType.SHAMBLING_SCARECROW && speed != 50){
 						speed = 50;
-						attrs[AttrType.ON_FIRE]++;
-						if(player.CanSee(this)){
-							B.Add(the_name + " catches fire! ",this);
+						if(attrs[AttrType.ON_FIRE] >= LightRadius()){
+							UpdateRadius(LightRadius(),LightRadius()+1);
 						}
+						attrs[AttrType.ON_FIRE]++;
+						B.Add(the_name + " leaps about as it catches fire! ",this);
 					}
 				}
 				else{
@@ -2699,6 +2719,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Q.KillEvents(this,EventType.ANY_EVENT);
 					M.RemoveTargets(this);
 					M.actor[row,col] = null;
+					return false;
 				}
 			}
 			else{
@@ -2774,6 +2795,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					magic_items.Remove(MagicItemType.CLOAK_OF_DISAPPEARANCE);
 				}
 			}
+			return true;
 		}
 		public bool GetKnockedBack(PhysicalObject obj){ return GetKnockedBack(obj.GetExtendedBresenhamLine(row,col)); }
 		public bool GetKnockedBack(List<Tile> line){

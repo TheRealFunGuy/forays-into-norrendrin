@@ -55,7 +55,7 @@ namespace Forays{
 		}
 	}
 	public class Dict<TKey,TValue>{
-		private Dictionary<TKey,TValue> d = new Dictionary<TKey,TValue>();
+		private Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
 		public TValue this[TKey key]{
 			get{
 				return d.ContainsKey(key)? d[key] : default(TValue);
@@ -64,6 +64,8 @@ namespace Forays{
 				d[key] = value;
 			}
 		}
+		public Dict(){ d = new Dictionary<TKey,TValue>(); }
+		public Dict(Dict<TKey,TValue> d2){ d = new Dictionary<TKey, TValue>(d2.d); }
 	}
 	public struct pos{ //eventually, this might become part of PhysicalObject. if so, i'll create a property for 'row' and 'col'
 		public int row; //so the change will be entirely transparent.
