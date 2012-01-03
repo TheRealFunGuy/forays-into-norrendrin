@@ -56,6 +56,7 @@ namespace Forays{
 							break;
 						}
 					}
+					Screen.ResetColors();
 					Print(false);
 				}
 			}
@@ -108,9 +109,10 @@ namespace Forays{
 				Console.Write(str);
 				if(str2 != "" || special_message == true){
 					Screen.ForegroundColor = ConsoleColor.Yellow;
-					Console.Write("[more]"); //todo: do i need to set cursor to visible here?
+					Console.Write("[more]");
 					Screen.ForegroundColor = ConsoleColor.Gray;
 					M.Draw();
+					Console.CursorVisible = true; //untested
 					Console.ReadKey();
 				}
 				str = str2;

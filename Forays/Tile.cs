@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 namespace Forays{
 	public class Tile : PhysicalObject{
-		public TileType type{get; private set;}
-		public bool passable{get; private set;}
-		public bool opaque{get; private set;}
+		public TileType type{get;set;}
+		public bool passable{get;set;}
+		public bool opaque{get;set;}
 		public bool seen{get;set;}
 		public int light_value{get;set;}
-		private TileType? toggles_into;
+		public TileType? toggles_into;
 		public Item inv{get;set;}
 		
 		private static Dictionary<TileType,Tile> proto= new Dictionary<TileType, Tile>();
@@ -24,6 +24,9 @@ namespace Forays{
 			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',Color.DarkYellow,true,false,TileType.DOOR_C);
 			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',Color.White,true,false,null);
 			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.Yellow,true,false,null);
+			proto[TileType.FIREPIT] = new Tile(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
+			proto[TileType.STALAGMITE] = new Tile(TileType.STALAGMITE,"stalagmite",'^',Color.White,false,true,TileType.FLOOR);
+			proto[TileType.GRENADE] = new Tile(TileType.GRENADE,"SPECIAL",',',Color.Red,true,false,null); //special treatment
 			//trap ideas: quickfire trap: burst of fire that ignites stuff, then expands(like quickfire) for several turns.
 				//you'll probably have to run while on fire, instead of putting it out
 			//not an actual trap, but room mimic will be awesome.
@@ -31,6 +34,7 @@ namespace Forays{
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
 			//stun trap. much less nasty than paralysis or even confusion.
 			//definitely need braziers with radius 1 light
+			//orcish grenade trap. drops 1d2 grenades up to 1 tile away.
 		}
 		public Tile(Tile t,int r,int c){
 			type = t.type;
@@ -90,6 +94,12 @@ namespace Forays{
 				return "-";
 			case TileType.STAIRS:
 				return ">";
+			case TileType.CHEST:
+				return "~";
+			case TileType.FIREPIT:
+				return "0";
+			case TileType.GRENADE:
+				return ",";
 			default:
 				return ".";
 			}
@@ -102,36 +112,39 @@ namespace Forays{
 			}
 			return t;
 		}
-		public void Toggle(PhysicalObject toggler){ //todo: when a mob opens a seen door, it will be visible, so add
-			if(toggles_into != null){	//	a message: "You hear a door opening. " - and that should be enough!
-				bool lighting_update = false;
-				List<Actor> actors = new List<Actor>();
-				for(int i=row-1;i<=row+1;++i){
-					for(int j=col-1;j<=col+1;++j){
-						if(M.tile[i,j].IsLit()){
-							lighting_update = true;
-						}
+		public void Toggle(PhysicalObject toggler){
+			if(toggles_into != null){
+				Toggle(toggler,toggles_into.Value);
+			}
+		}
+		public void Toggle(PhysicalObject toggler,TileType toggle_to){
+			bool lighting_update = false; //todo: when a mob opens a seen door, it'll be visible, so add
+			List<Actor> actors = new List<Actor>(); // a message: "You hear a door opening. " - and that should be enough!
+			for(int i=row-1;i<=row+1;++i){
+				for(int j=col-1;j<=col+1;++j){
+					if(M.tile[i,j].IsLit()){
+						lighting_update = true;
 					}
 				}
-				if(lighting_update){
-					for(int i=row-Global.MAX_LIGHT_RADIUS;i<=row+Global.MAX_LIGHT_RADIUS;++i){
-						for(int j=col-Global.MAX_LIGHT_RADIUS;j<=col+Global.MAX_LIGHT_RADIUS;++j){
-							if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
-								if(M.actor[i,j] != null && M.actor[i,j].light_radius > 0){
-									actors.Add(M.actor[i,j]);
-									M.actor[i,j].UpdateRadius(M.actor[i,j].light_radius,0);
-								}
+			}
+			if(lighting_update){
+				for(int i=row-Global.MAX_LIGHT_RADIUS;i<=row+Global.MAX_LIGHT_RADIUS;++i){
+					for(int j=col-Global.MAX_LIGHT_RADIUS;j<=col+Global.MAX_LIGHT_RADIUS;++j){
+						if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
+							if(M.actor[i,j] != null && M.actor[i,j].light_radius > 0){
+								actors.Add(M.actor[i,j]);
+								M.actor[i,j].UpdateRadius(M.actor[i,j].light_radius,0);
 							}
 						}
 					}
 				}
+			}
 
-				TransformTo(toggles_into.Value);
+			TransformTo(toggle_to);
 
-				if(lighting_update){
-					foreach(Actor a in actors){
-						a.UpdateRadius(0,a.light_radius);
-					}
+			if(lighting_update){
+				foreach(Actor a in actors){
+					a.UpdateRadius(0,a.light_radius);
 				}
 			}
 		}

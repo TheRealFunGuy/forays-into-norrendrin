@@ -8,7 +8,13 @@ animations should support the concept of a 'viewer' - cells outside viewer's FOV
 
 if lashers happen to need balancing: their tentacles could miss adjacent targets more often, or deal less damage to them
 
-generate trolls with rocks they can throw
+generate trolls with rocks they can throw, in a lair, and have them stay in that lair.
+
+should group monsters regroup when they can't see the player?
+
+should dream warrior teleport straight to target_location in seekAI?
+
+shadow should reduce the light radius of zealots, too
 
 
 
@@ -18,6 +24,13 @@ things to do somewhere between 0.1 and 1.0:
 perhaps enemies that you sneak attack should have a chance of yelling in surprise
 
 consider making ranged attacks...not attacks at all, but generated straight from the AI routine
+
+Tab should enter lookmode and jump to the nearest interesting thing.
+
+all noise should alert monsters. you should REALLY need to be stealthy.
+
+use NO_EXP flag, or simply set xp to 0 for clones and summons?
+
 
 ...
 ...
@@ -41,12 +54,12 @@ lasher warmage behemoth
 attack info:
 
 cultist		- hit for 2
-poltergeist	- slimes you?
+poltergeist	- slimes you for 1 or pokes you for 2
 swordsman	- hit for 3
 dream warrior	- hit for 2 or 3
 banshee		- touch or hit for 2 probably. cold_hit?
 skulking killer	- hit for 3
-shadow		- touch for 2 or 3. cold_hit?
+shadow		- touch for 2.
 berserker	- hit for 3
 orc grenadier	- hit for the orc default
 necromancer	- hit for 2 i guess

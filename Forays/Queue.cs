@@ -55,9 +55,15 @@ namespace Forays{
 				current.Value.Kill(target,type);
 			}
 		}
+		public void KillEvents(PhysicalObject target,AttrType attr){
+			for(LinkedListNode<Event> current = list.First;current!=null;current = current.Next){
+				current.Value.Kill(target,attr);
+			}
+		}
 	}
 	public class Event{
 		private PhysicalObject target;
+		private List<Tile> area;
 		private int delay;
 		private EventType type;
 		private AttrType attr;
@@ -68,6 +74,8 @@ namespace Forays{
 		private bool dead;
 		public static Queue Q{get;set;}
 		public static Buffer B{get;set;}
+		public static Map M{get;set;}
+		public static Actor player{get;set;}
 		public Event(PhysicalObject target_,int delay_){
 			target=target_;
 			delay=delay_;
@@ -161,6 +169,28 @@ namespace Forays{
 			time_created=Q.turn;
 			dead=false;
 		}
+		public Event(PhysicalObject target_,int delay_,EventType type_){
+			target=target_;
+			delay=delay_;
+			type=type_;
+			attr=AttrType.NO_ATTR;
+			value=0;
+			msg="";
+			msg_objs = null;
+			time_created=Q.turn;
+			dead=false;
+		}
+		public Event(PhysicalObject target_,int delay_,EventType type_,int value_){
+			target=target_;
+			delay=delay_;
+			type=type_;
+			attr=AttrType.NO_ATTR;
+			value=value_;
+			msg="";
+			msg_objs = null;
+			time_created=Q.turn;
+			dead=false;
+		}
 		public Event(int delay_,string msg_){
 			target=null;
 			delay=delay_;
@@ -172,8 +202,36 @@ namespace Forays{
 			time_created=Q.turn;
 			dead=false;
 		}
-		public Event(PhysicalObject target_,int delay_,EventType type_,AttrType attr_,int value_,string msg_,params PhysicalObject[] objs){
+		public Event(List<Tile> area_,int delay_,EventType type_){
+			target=null;
+			area=area_;
+			delay=delay_;
+			type=type_;
+			attr=AttrType.NO_ATTR;
+			value=0;
+			msg="";
+			msg_objs = null;
+			time_created=Q.turn;
+			dead=false;
+		}
+		public Event(List<Tile> area_,int delay_,EventType type_,string msg_,params PhysicalObject[] objs){
+			target=null;
+			area=area_;
+			delay=delay_;
+			type=type_;
+			attr=AttrType.NO_ATTR;
+			value=0;
+			msg=msg_;
+			msg_objs = new List<PhysicalObject>();
+			foreach(PhysicalObject obj in objs){
+				msg_objs.Add(obj);
+			}
+			time_created=Q.turn;
+			dead=false;
+		}
+		public Event(PhysicalObject target_,List<Tile> area_,int delay_,EventType type_,AttrType attr_,int value_,string msg_,params PhysicalObject[] objs){
 			target=target_;
+			area=area_;
 			delay=delay_;
 			type=type_;
 			attr=attr_;
@@ -188,14 +246,48 @@ namespace Forays{
 		}
 		public int TimeToExecute(){ return delay + time_created; }
 		public void Kill(PhysicalObject target_,EventType type_){
-			if(target==target_ && (type==type_ || type_==EventType.ANY_EVENT)){
-				target = null;
-				dead = true;
-			}
 			if(msg_objs != null && (type==type_ || type_==EventType.ANY_EVENT)){
 				if(msg_objs.Contains(target)){
 					msg_objs.Remove(target);
 				}
+			}
+			Tile t = target_ as Tile;
+			if(t != null && area != null && area.Contains(t)){
+/*				target = null;
+				if(msg_objs != null){
+					msg_objs.Clear();
+					msg_objs = null;
+				}
+				area.Clear();
+				area = null;
+				dead = true;*/
+				area.Remove(t);
+			}
+			if(target==target_ && (type==type_ || type_==EventType.ANY_EVENT)){
+				target = null;
+				if(msg_objs != null){
+					msg_objs.Clear();
+					msg_objs = null;
+				}
+				if(area != null){
+					area.Clear();
+					area = null;
+				}
+				dead = true;
+			}
+		}
+		public void Kill(PhysicalObject target_,AttrType attr_){
+			if(target==target_ && type==EventType.REMOVE_ATTR && attr==attr_){
+				target = null;
+				if(msg_objs != null){
+					msg_objs.Clear();
+					msg_objs = null;
+				}
+				if(area != null){
+					area.Clear();
+					area = null;
+				}
+				dead = true;
 			}
 		}
 		public void Execute(){
@@ -215,7 +307,152 @@ namespace Forays{
 						temp.attrs[attr] = 0;
 					}
 					if(attr==AttrType.ENHANCED_TORCH && temp.light_radius > 0){
-						temp.UpdateRadius(temp.light_radius,6,true); //where 6 is the default radius
+						temp.UpdateRadius(temp.LightRadius(),6 - temp.attrs[AttrType.DIM_LIGHT],true); //where 6 is the default radius
+						if(temp.attrs[AttrType.ON_FIRE] > temp.light_radius){
+							temp.UpdateRadius(temp.light_radius,temp.attrs[AttrType.ON_FIRE]);
+						}
+					}
+					if(attr==AttrType.SLOWED){
+						if(temp.type != ActorType.PLAYER){
+							temp.speed = Actor.Prototype(temp.type).speed;
+						}
+						else{
+							temp.speed = 100;
+						}
+					}
+					if(attr==AttrType.COOLDOWN_1 && temp.type == ActorType.BERSERKER){
+						B.Add(temp.Your() + " rage diminishes. ",temp);
+						B.Add(temp.the_name + " dies. ",temp);
+						temp.TakeDamage(DamageType.NORMAL,8888,null);
+					}
+					break;
+					}
+				case EventType.POLTERGEIST:
+					{
+					if(Global.CoinFlip()){
+						for(int tries=0;tries>=0 && tries < 5;++tries){
+							switch(Global.Roll(4)){
+							case 1: //doors
+								List<Tile> doors = new List<Tile>();
+								foreach(Tile t in area){
+									if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O){
+										doors.Add(t);
+									}
+								}
+								if(doors.Count > 0){
+									Tile t = doors[Global.Roll(doors.Count)-1];
+									if(t.type == TileType.DOOR_C){
+										if(player.CanSee(t)){
+											B.Add(t.the_name + " flies open! ",t);
+										}
+										else{
+											B.Add("You hear a door open. ");
+										}
+										t.Toggle(null);
+									}
+									else{
+										if(t.actor() == null){
+											if(player.CanSee(t)){
+												B.Add(t.the_name + " slams closed! ",t);
+											}
+											else{
+												B.Add("You hear a door slam. ");
+											}
+											t.Toggle(null);
+										}
+										else{
+											B.Add(t.the_name + " slams closed on " + t.actor().the_name + "! ",t);
+											t.actor().TakeDamage(DamageType.BASHING,DamageClass.PHYSICAL,Global.Roll(6),null);
+										}
+									}
+								}
+								break;
+							case 2: //items todo
+								break;
+							case 3: //shriek todo
+								break;
+							case 4: //laugh todo
+								break;
+							}
+						}
+					}
+					break;
+					}
+				case EventType.GRENADE:
+					{
+					Tile t = target as Tile;
+					if(t.type == TileType.GRENADE){
+						B.Add("The grenade explodes! ",t);
+						t.Toggle(null);
+						foreach(Actor a in t.ActorsWithinDistance(1)){
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),null);
+						}
+						if(t.actor() != null){
+							int dir = Global.RandomDirection();
+							t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
+						}
+					}
+					break;
+					}
+				case EventType.STALAGMITE:
+					{
+					int stalagmites = 0;
+					foreach(Tile tile in area){
+						if(tile.type == TileType.STALAGMITE){
+							stalagmites++;
+						}
+					}
+					if(stalagmites > 0){
+						if(stalagmites > 1){
+							B.Add("The stalagmites crumble. ",area.ToArray());
+						}
+						else{
+							B.Add("The stalagmite crumbles. ",area.ToArray());
+						}
+						foreach(Tile tile in area){
+							if(tile.type == TileType.STALAGMITE){
+								tile.Toggle(null);
+							}
+						}
+					}
+					break;
+					}
+				case EventType.REGENERATING_FROM_DEATH:
+					{
+					value++;
+					if(value > 0 && target.actor() == null){
+						Actor.Create(ActorType.TROLL,target.row,target.col);
+						target.actor().curhp = value;
+						B.Add("The troll stands up! ",target); //todo: no exp
+						target.actor().player_visibility_duration = -1;
+						if(target.tile().type == TileType.DOOR_C){
+							target.tile().Toggle(target.actor());
+						}
+					}
+					else{
+						int roll = Global.Roll(20);
+						if(value == -1){
+							roll = 1;
+						}
+						if(value == 0){
+							roll = 3;
+						}
+						switch(roll){
+						case 1:
+						case 2:
+							B.Add("The troll's corpse twitches. ",target);
+							break;
+						case 3:
+						case 4:
+							B.Add("You hear sounds coming from the troll's corpse. ",target);
+							break;
+						case 5:
+							B.Add("The troll on the floor seems to be regenerating. ");
+							break;
+						default:
+							break;
+						}
+						Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
 					}
 					break;
 					}
