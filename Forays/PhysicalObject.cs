@@ -12,9 +12,9 @@ namespace Forays{
 	public class PhysicalObject{
 		public int row{get; protected set;}
 		public int col{get; protected set;}
-		public string name{get; protected set;}
-		public string a_name{get; protected set;}
-		public string the_name{get; protected set;}
+		public string name{get;set;}
+		public string a_name{get;set;}
+		public string the_name{get;set;}
 		public char symbol{get; protected set;}
 		public Color color{get; protected set;}
 		
@@ -90,7 +90,7 @@ namespace Forays{
 				return null;
 			}
 		}
-		public int DirectionOf(PhysicalObject obj){ //todo: update
+		public int DirectionOf(PhysicalObject obj){
 			int dy = Math.Abs(obj.row - row);
 			int dx = Math.Abs(obj.col - col);
 			if(dy == 0){
@@ -136,7 +136,7 @@ namespace Forays{
 					}
 				}
 			}
-			//todo: calculate all other dirs here
+			// calculate all other dirs here
 			/*.................flipped y
 ........m........
 .......l|n.......
@@ -238,10 +238,10 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 		}
-		public Actor Actor(){
+		public Actor actor(){
 			return M.actor[row,col];
 		}
-		public Tile Tile(){
+		public Tile tile(){
 			return M.tile[row,col];
 		}
 		public List<Actor> ActorsWithinDistance(int dist){ return ActorsWithinDistance(dist,false); }

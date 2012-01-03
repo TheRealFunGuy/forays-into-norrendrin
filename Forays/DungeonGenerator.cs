@@ -206,6 +206,7 @@ public char[,] Generate(){
 			Clear();
 		}
 		else{
+			Convert();
 			break;
 		}
 	}

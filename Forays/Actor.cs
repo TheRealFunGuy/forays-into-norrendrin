@@ -97,8 +97,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 	public class Actor : PhysicalObject{
 		public ActorType type{get; private set;}
 		public int maxhp{get; private set;}
-		public int curhp{get; private set;}
-		public int speed{get; private set;}
+		public int curhp{get; set;}
+		public int speed{get; set;}
 		public int xp{get; private set;}
 		public int level{get; private set;}
 		public int light_radius{get;set;}
@@ -127,46 +127,44 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public static Buffer B{get;set;}
 		public static Actor player{get;set;}
 		static Actor(){
-			//currently, nothing has a value for level or xp.
-			//todo: lots of things need low-light vision
-			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,0,0,0);
-			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,5,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			//todo: currently, nothing has a value for level or xp.
+			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,0,0,0,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,5,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.LARGE_BAT,"large bat",'b',Color.DarkGray,20,60,0,0,0,AttrType.DARKVISION);
-			Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,40,90,0,0,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH);
-			Define(ActorType.SKELETON,"skeleton",'s',Color.White,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY);
-			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,50,60,0,0,0);
+			Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,40,90,0,0,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH,AttrType.IMMUNE_ARROWS,AttrType.DARKVISION);
+			Define(ActorType.SKELETON,"skeleton",'s',Color.White,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,50,60,0,0,0,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.FROSTLING,"frostling",'E',Color.Gray,60,100,0,0,0,AttrType.IMMUNE_COLD,AttrType.COLD_HIT);
-			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			//spells
+			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Prototype(ActorType.GOBLIN_SHAMAN).GainSpell(SpellType.FORCE_PALM,SpellType.BURNING_HANDS,SpellType.SHOCK,SpellType.MAGIC_MISSILE,SpellType.IMMOLATE);
 			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,75,150,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
-			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,0,0,0);
+			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,0,0,0,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.ROBED_ZEALOT,"robed zealot",'p',Color.Yellow,60,100,0,0,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			//spells
-			Define(ActorType.WORG,"worg",'c',Color.White,55,60,0,0,0);
+			Prototype(ActorType.ROBED_ZEALOT).GainSpell(SpellType.MINOR_HEAL,SpellType.BLESS,SpellType.HOLY_SHIELD);
+			Define(ActorType.WORG,"worg",'c',Color.White,55,60,0,0,0,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,50,100,0,0,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
 			Define(ActorType.OGRE,"ogre",'O',Color.Green,75,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION);
-			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,60,100,0,0,0,AttrType.POISON_HIT);
-			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,80,120,0,0,0,AttrType.CONSTRUCT,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY);
-			//SMASH_HIT or whatever - 50% chance of making temporary rubble in each empty space around target
-			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			//spells
-			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,60,100,0,0,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH);
+			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,60,100,0,0,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,80,120,0,0,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.ARC_LIGHTNING,SpellType.BURNING_HANDS,SpellType.FORCE_BEAM,SpellType.SHOCK,SpellType.SONIC_BOOM,SpellType.IMMOLATE);
+			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,60,100,0,0,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH,AttrType.DARKVISION);
 			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,0,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
 			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,0,0,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
-			Define(ActorType.CULTIST,"cultist",'p',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,40,90,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
+			Define(ActorType.CULTIST,"cultist",'p',Color.DarkRed,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,40,90,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,45,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,50,80,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
-			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY);
-			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LIGHT_DRAIN);
-			Define(ActorType.BERSERKER,"berserker",'p',Color.DarkRed,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,45,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.DREAM_CLONE,"dream warrior",'p',Color.Cyan,1,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.CONSTRUCT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,50,80,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DIM_VISION_HIT,AttrType.DARKVISION);
+			Define(ActorType.BERSERKER,"berserker",'p',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,0,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH);
-			//make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
-			//check vision for all.
+			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,0,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
+			//todo: make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
 		}
 		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			proto[type_] = new Actor(type_,name_,symbol_,color_,maxhp_,speed_,xp_,level_,light_radius_,attrlist);
@@ -185,25 +183,36 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			level = a.level;
 			light_radius = a.light_radius;
 			target = null;
+			F = new SpellType[13];
+			for(int i=0;i<13;++i){
+				F[i] = SpellType.NO_SPELL;
+			}
+			inv = new List<Item>();
 			row = r;
-			col = c; //todo:UPDATE CONSTRUCTORS TO INCLUDE ALL MEMBERS
+			col = c;
 			target_location = null;
 			time_of_last_action = 0;
 			recover_time = 0;
+			player_visibility_duration = 0;
 			weapons = new LinkedList<WeaponType>(a.weapons);
 			armors = new LinkedList<ArmorType>(a.armors);
+			magic_items = new LinkedList<MagicItemType>(a.magic_items);
 			attrs = new Dict<AttrType, int>(a.attrs);
 			skills = new Dict<SkillType,int>(a.skills);
+			feats = new Dict<FeatType,int>(a.feats);
 			spells = new Dict<SpellType,int>(a.spells);
 		}
 		public Actor(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			type = type_;
 			name = name_;
 			the_name = "the " + name;
-			a_name = "a " + name; //todo: fix this
+			a_name = "a " + name;
 			if(name=="you"){
 				the_name = "you";
 				a_name = "you";
+			}
+			if(name[0].ToString().ToUpper() == "O"){ //only ogres and orcs currently, therefore *hack*
+				a_name = "an " + name;
 			}
 			symbol = symbol_;
 			color = color_;
@@ -214,9 +223,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			level = level_;
 			light_radius = light_radius_;
 			target = null;
+			inv = null;
 			target_location = null;
 			time_of_last_action = 0;
 			recover_time = 0;
+			player_visibility_duration = 0;
 			weapons.AddFirst(WeaponType.NO_WEAPON);
 			armors.AddFirst(ArmorType.NO_ARMOR);
 			F = new SpellType[13];
@@ -225,7 +236,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			foreach(AttrType at in attrlist){
 				attrs[at]++;
-			}
+			}//row and col are -1
 		}
 		public static Actor Create(ActorType type,int r,int c){
 			Actor a = null;
@@ -287,6 +298,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public bool HasAttr(AttrType attr){ return attrs[attr] > 0; }
 		public bool HasFeat(FeatType feat){ return feats[feat] > 0; }
 		public bool HasSpell(SpellType spell){ return spells[spell] > 0; }
+		public void GainSpell(params SpellType[] spell_list){
+			foreach(SpellType spell in spell_list){
+				spells[spell]++;
+			}
+		}
 		public int LightRadius(){ return Math.Max(light_radius,attrs[AttrType.ON_FIRE]); }
 		public int ArmorClass(){
 			int total = TotalSkill(SkillType.DEFENSE);
@@ -299,7 +315,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			total += Armor.Protection(armors.First.Value);
 			return total;
 		}
-		public int Stealth(){
+		public int Stealth(){ //this method should probably become part of TotalSkill
 			if(LightRadius() > 0){
 				return 0; //negative stealth is the same as zero stealth
 			}
@@ -333,12 +349,17 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			return result;
 		}
+		public int DurationOfMagicalEffect(int original){ //intended to be used with whole turns, i.e. numbers below 50.
+			int diff = (original * TotalSkill(SkillType.SPIRIT)) / 20; //each point of Spirit takes off 1/20th of the duration
+			return original - diff; //therefore, maxed Spirit cuts durations in half
+		} //todo: use this method, duh.
 		public static int Rarity(ActorType type){
-			int result = ((int)type)%2; //hacky, since the enum is arranged common-uncommon todo: this needs to be redone anyway
-			if(result == 0){
+			int result = 1;
+			if(((int)type)%3 == 2){
 				result = 2;
 			}
-			if(type == ActorType.PLAYER || type == ActorType.FIRE_DRAKE){
+			if(type == ActorType.PLAYER || type == ActorType.FIRE_DRAKE
+			|| type == ActorType.RAT || type == ActorType.DREAM_CLONE){
 				return 0;
 			}
 			return result;
@@ -368,12 +389,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 			}
 			if(change){
-				if(to < 6){ //hack: this is a temporary fix so that you don't permenantly give off light after being on fire
-					light_radius = 0;
-				}
-				else{
-					light_radius = to;
-				}
+				light_radius = to;
 			}
 		}
 		public void RemoveTarget(Actor a){
@@ -440,6 +456,27 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				if(type != ActorType.PLAYER){ //handled differently for the player: since the map still needs to be drawn,
 					Q1();						// this is handled in InputHuman().
 					return_before_input = true; //the message is still printed, of course.
+				}
+			}
+			if(HasAttr(AttrType.AFRAID)){
+				Actor banshee = null;
+				int dist = 100;
+				foreach(Actor a in M.AllActors()){
+					if(a.type == ActorType.BANSHEE && DistanceFrom(a) < dist && HasLOS(a.row,a.col)){
+						banshee = a;
+						dist = DistanceFrom(a);
+					}
+				}
+				if(banshee != null){
+					B.Add(You("flee") + ". ",this);
+					AI_Step(banshee,true);
+				}
+				else{
+					B.Add(YouFeel() + " unsettled. ");
+				}
+				if(type != ActorType.PLAYER){ //same story
+					Q1();
+					return_before_input = true;
 				}
 			}
 			if(curhp < maxhp){
@@ -509,7 +546,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						attrs[AttrType.TURNS_VISIBLE] = 0;
 					}
 					else{
-						if(attrs[AttrType.TURNS_VISIBLE]-- == -10){ //todo: check this value for balance
+						if(attrs[AttrType.TURNS_VISIBLE]-- == -10){ //check this value for balance
 							attrs[AttrType.TURNS_VISIBLE] = 0;
 						}
 					}
@@ -526,9 +563,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					UpdateRadius(0,1);
 				}
 				attrs[AttrType.CATCHING_FIRE] = 0;
-				attrs[AttrType.ON_FIRE] = 1;
+				if(!HasAttr(AttrType.ON_FIRE)){
+					attrs[AttrType.ON_FIRE] = 1;
+				}
 			}
-			time_of_last_action = Q.turn; //todo: this might eventually need a slight rework for 0-time turns
+			time_of_last_action = Q.turn; //this might eventually need a slight rework for 0-time turns
 		}
 		private char ConvertInput(ConsoleKeyInfo k){
 			switch(k.Key){
@@ -568,6 +607,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case ConsoleKey.D3:
 			case ConsoleKey.NumPad3:
 				return '3';
+			case ConsoleKey.Tab:
+				return (char)9;
 			case ConsoleKey.Escape:
 				return (char)27;
 			case ConsoleKey.Enter:
@@ -618,7 +659,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			B.Print(false);
 			Cursor();
 			Console.CursorVisible = true;
-			if(HasAttr(AttrType.PARALYZED)){
+			if(HasAttr(AttrType.PARALYZED) || HasAttr(AttrType.AFRAID)){
 				Q1();
 				return;
 			}
@@ -729,7 +770,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							UpdateRadius(oldradius,LightRadius());
 						}
 						if(HasAttr(AttrType.ON_FIRE)){
-							B.Add("You put out some of the fire. "); //todo: better message?
+							B.Add("You put out some of the fire. "); //better message?
 						}
 						else{
 							B.Add("You put out the fire. ");
@@ -861,7 +902,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(Global.Option(OptionType.LAST_TARGET) && target!=null && DistanceFrom(target)==1){ //since you can't fire
 						target = null;										//at adjacent targets anyway.
 					}
-					Tile t = GetTarget(); //todo: add targeting range here
+					Tile t = GetTarget(12);
 					if(t != null){
 						if(DistanceFrom(t) > 1){
 							FireArrow(t);
@@ -1072,21 +1113,52 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				GetTarget(true);
 				Q0();
 				break;
+			case (char)9: //tab
+				{
+				List<PhysicalObject> interesting_targets = new List<PhysicalObject>(); //c&p go
+				foreach(Actor a in M.AllActors()){
+					if(a != this && CanSee(a)){
+						interesting_targets.Add(a);
+					}
+				}
+				if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING)){
+					foreach(Tile t in M.AllTiles()){
+						if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
+						|| t.type == TileType.STAIRS || t.type == TileType.CHEST
+						|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
+						|| t.type == TileType.STALAGMITE //todo: traps here
+						|| t.inv != null){
+							if(CanSee(t)){
+								interesting_targets.Add(t);
+							}
+						}
+					}
+				}
+				if(interesting_targets.Count > 0){
+					GetTarget(true,-1,true);
+				}
+				else{
+					B.Add("You don't see anything interesting. ");
+				}
+				Q0();
+				break;
+				}
 			case 'T':
 				if(StunnedThisTurn()){
 					break;
 				}
 				if(light_radius==0){
 					if(HasAttr(AttrType.ENHANCED_TORCH)){
-						UpdateRadius(LightRadius(),Global.MAX_LIGHT_RADIUS,true);
+						UpdateRadius(LightRadius(),Global.MAX_LIGHT_RADIUS - attrs[AttrType.DIM_LIGHT]*2,true);
 					}
 					else{
-						UpdateRadius(LightRadius(),6,true); //normal light radius
+						UpdateRadius(LightRadius(),6 - attrs[AttrType.DIM_LIGHT],true); //normal light radius is 6
 					}
 					B.Add("You activate your everburning torch. ");
 				}
 				else{
-					UpdateRadius(LightRadius(),attrs[AttrType.ON_FIRE],true); //this call has a hack associated with it
+					UpdateRadius(LightRadius(),0,true);
+					UpdateRadius(0,attrs[AttrType.ON_FIRE]);
 					B.Add("You deactivate your everburning torch. ");
 				}
 				Q1();
@@ -1134,6 +1206,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Use a rune of passage");
 				l.Add("Create darkness");
 				l.Add("Generate new level");
+				l.Add("Create grenades!");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1220,7 +1293,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 8:
 					if(M.actor[18,50] == null){
-						Create(ActorType.CULTIST,18,50);
+						Create(ActorType.STONE_GOLEM,18,50);
 					}
 					Q1();
 					break;
@@ -1236,6 +1309,36 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 11:
 					M.GenerateLevel();
+					Q0();
+					break;
+				case 12:
+					Tile t = GetTarget();
+					if(t != null){
+						TileType oldtype = t.type;
+						t.TransformTo(TileType.GRENADE);
+						t.toggles_into = oldtype;
+						t.passable = Tile.Prototype(oldtype).passable;
+						t.opaque = Tile.Prototype(oldtype).opaque;
+						switch(oldtype){
+						case TileType.FLOOR:
+							t.the_name = "the grenade on the floor";
+							t.a_name = "a grenade on a floor";
+							break;
+						case TileType.STAIRS:
+							t.the_name = "the grenade on the stairway";
+							t.a_name = "a grenade on a stairway";
+							break;
+						case TileType.DOOR_O:
+							t.the_name = "the grenade in the open door";
+							t.a_name = "a grenade in an open door";
+							break;
+						default:
+							t.the_name = "the grenade and " + Tile.Prototype(oldtype).the_name;
+							t.a_name = "a grenade and " + Tile.Prototype(oldtype).a_name;
+							break;
+						}
+						Q.Add(new Event(t,100,EventType.GRENADE));
+					}
 					Q0();
 					break;
 				default:
@@ -1349,9 +1452,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						player_visibility_duration = 0;
 					}
 					else{
-						if(target_location == null && player_visibility_duration-- == -10){ //todo: check this value for balance
+						if(target_location == null && player_visibility_duration-- == -10){
 							player_visibility_duration = 0;
-							target = null; //todo: maybe introduce a TIMES_ALERTED attr that makes it harder and harder for
+							target = null; //maybe introduce a TIMES_ALERTED attr that makes it harder and harder for
 						}//them to calm down, eventually noticing you instantly?
 					}
 				}
@@ -1366,6 +1469,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			else{
 				IdleAI();
+			}
+			if(type == ActorType.SHADOW){
+				CalculateDimming();
 			}
 		}
 		public void ActiveAI(){
@@ -1612,7 +1718,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case ActorType.ROBED_ZEALOT:
 				switch(DistanceFrom(target)){
 				case 1:
-					if(curhp <= 20){ //todo: check these numbers
+					if(curhp <= 20){
 						CastSpell(SpellType.MINOR_HEAL);
 					}
 					else{
@@ -1951,17 +2057,18 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				break;
 			case ActorType.CULTIST:
-				if(curhp <= 10 && !HasAttr(AttrType.ON_FIRE)){
+				if(curhp <= 10 && !HasAttr(AttrType.COOLDOWN_1)){
+					attrs[AttrType.COOLDOWN_1]++;
 					string invocation;
 					switch(Global.Roll(4)){
 					case 1:
-						invocation = "ae vara kersai";
+						invocation = "ae vatra kersai";
 						break;
 					case 2:
 						invocation = "kersai dzaggath";
 						break;
 					case 3:
-						invocation = "od fir ode bahgal";
+						invocation = "od fir od bahgal";
 						break;
 					case 4:
 						invocation = "denei kersai nammat";
@@ -1977,13 +2084,142 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						B.Add(You("scream") + " '" + invocation.ToUpper() + "'. ");
 					}
 					B.Add("Flames erupt from " + the_name + ". ");
-					if(LightRadius() < 3){
-						UpdateRadius(LightRadius(),3);
+					if(LightRadius() < 2){
+						UpdateRadius(LightRadius(),2);
 					}
-					attrs[AttrType.ON_FIRE] = 3;
+					attrs[AttrType.ON_FIRE] = 2;
 					foreach(Actor a in ActorsAtDistance(1)){
 						if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.IMMUNE_FIRE)){
 							a.attrs[AttrType.CATCHING_FIRE] = 1;
+						}
+					}
+					Q1();
+				}
+				else{
+					if(DistanceFrom(target) == 1){
+						Attack(0,target);
+					}
+					else{
+						AI_Step(target);
+						QS();
+					}
+				}
+				break;
+			case ActorType.POLTERGEIST: //after it materializes, of course
+				//
+				break;
+			case ActorType.SWORDSMAN:
+				if(DistanceFrom(target) == 1){
+					Attack(0,target);
+					B.Add(You("adopt") + " a more aggressive stance. "); //or 'the swordsman's stance becomes more aggressive'?
+					attrs[AttrType.BONUS_COMBAT] += 3;
+				}
+				else{
+					AI_Step(target);
+					QS();
+				}
+				break;
+			case ActorType.DREAM_WARRIOR:
+				if(DistanceFrom(target) == 1){
+					if(curhp <= 20 && !HasAttr(AttrType.COOLDOWN_1)){
+						attrs[AttrType.COOLDOWN_1]++;
+						List<Tile> openspaces = new List<Tile>();
+						foreach(Tile t in target.TilesAtDistance(1)){
+							if(t.passable && t.actor() == null){
+								openspaces.Add(t);
+							}
+						}
+						foreach(Tile t in openspaces){
+							Create(ActorType.DREAM_CLONE,t.row,t.col);
+							t.actor().player_visibility_duration = -1;
+						}
+						openspaces.Add(tile());
+						Tile newtile = openspaces[Global.Roll(openspaces.Count)-1];
+						if(newtile != tile()){
+							Move(newtile.row,newtile.col);
+						}
+						if(openspaces.Count > 1){
+							B.Add(the_name + " is suddenly standing all around " + target.the_name + ". ");
+							Q1();
+						}
+						else{
+							Attack(0,target);
+						}
+					}
+					else{
+						Attack(0,target);
+					}
+				}
+				else{
+					AI_Step(target);
+					QS();
+				}
+				break;
+			case ActorType.BANSHEE:
+				if(!HasAttr(AttrType.COOLDOWN_1)){
+					attrs[AttrType.COOLDOWN_1]++;
+					Q.Add(new Event(this,(Global.Roll(5)+5)*100,AttrType.COOLDOWN_1));
+					B.Add(You("scream") + ". ");
+					int i = 1;
+					Actor a;
+					List<Actor> targets = new List<Actor>();
+					for(bool done=false;!done;++i){
+						a = FirstActorInLine(target,i);
+						if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) && !a.HasAttr(AttrType.PLANTLIKE)){
+							targets.Add(a);
+						}
+						if(a == target){
+							done = true;
+						}
+					}
+					foreach(Actor actor in targets){
+						if(actor.TakeDamage(new Damage(1,true,DamageType.MAGIC,DamageClass.MAGICAL,this))){
+							actor.attrs[AttrType.AFRAID]++;
+							Q.Add(new Event(actor,(Global.Roll(3)+2)*100,AttrType.AFRAID));
+						}
+					}
+					Q1();
+				}
+				else{
+					if(DistanceFrom(target) == 1){
+						Attack(0,target);
+					}
+					else{
+						AI_Step(target);
+						QS();
+					}
+				}
+				break;
+			case ActorType.SKULKING_KILLER:
+				if(!HasAttr(AttrType.COOLDOWN_1) && DistanceFrom(target) < 4){
+					attrs[AttrType.COOLDOWN_1]++;
+					attrs[AttrType.TURNS_VISIBLE] = -1;
+					if(Global.Roll(10) >= 4){
+						AnimateProjectile(target,Color.Gray,'%');
+						if(target.CanSee(this)){
+							B.Add(the_name + " throws a bola at " + target.the_name + ". ",this,target);
+						}
+						else{
+							B.Add("A bola whirls toward " + target.the_name + ". ",this,target);
+						}
+						target.attrs[AttrType.SLOWED]++;
+						target.speed += 50;
+						Q.Add(new Event(target,(Global.Roll(3)+4)*100,AttrType.SLOWED,target.YouAre() + " no longer slowed. ",target));
+						B.Add(target.YouAre() + " slowed by the bola. ",target);
+					}
+					else{
+						AnimateProjectile(target,Color.Gray,'*');
+						if(target.CanSee(this)){
+							B.Add(the_name + " throws a bola at " + target.the_name + ". ",this,target);
+						}
+						else{
+							B.Add("A bola whirls toward " + target.the_name + ". ",this,target);
+						}
+						B.Add("It hits " + target.Your() + " head! ",target);
+						if(target.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(2,6),this)){
+							target.attrs[AttrType.STUNNED]++;
+							Q.Add(new Event(target,(Global.Roll(3)+4)*100,AttrType.STUNNED,target.YouAre() + " no longer stunned. ",target));
+							B.Add(target.YouAre() + " stunned. ",target);
 						}
 					}
 				}
@@ -1997,19 +2233,249 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				break;
-			case ActorType.POLTERGEIST:
-			case ActorType.SWORDSMAN:
-			case ActorType.DREAM_WARRIOR:
-			case ActorType.BANSHEE:
-			case ActorType.SKULKING_KILLER:
-			case ActorType.SHADOW:
+			case ActorType.SHADOW: //default for now
+				if(DistanceFrom(target) == 1){
+					Attack(0,target);
+				}
+				else{
+					AI_Step(target);
+					QS();
+				}
+				break;
 			case ActorType.BERSERKER:
+				if(HasAttr(AttrType.COOLDOWN_2)){
+					int dir = attrs[AttrType.COOLDOWN_2];
+					bool cw = Global.CoinFlip()? true : false;
+					if(TileInDirection(dir).passable && ActorInDirection(dir) == null){
+						if(HasAttr(AttrType.IMMOBILIZED)){
+							attrs[AttrType.IMMOBILIZED] = 0;
+							B.Add(the_name + " breaks free. ",this);
+						}
+						B.Add(the_name + " leaps forward swinging his axe! ",this);
+						Move(TileInDirection(dir).row,TileInDirection(dir).col);
+						Actor a = ActorInDirection(RotateDirection(dir,cw));
+						if(a != null){
+							B.Add(Your() + " axe hits " + a.the_name + ". ",this,a);
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+						}
+						a = ActorInDirection(dir);
+						if(a != null){
+							B.Add(Your() + " axe hits " + a.the_name + ". ",this,a);
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+						}
+						a = ActorInDirection(RotateDirection(dir,!cw));
+						if(a != null){
+							B.Add(Your() + " axe hits " + a.the_name + ". ",this,a);
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+						}
+						Q1();
+					}
+					else{
+						if(ActorInDirection(dir) != null){
+							B.Add(the_name + " swings his axe furiously! ",this);
+							Actor a = ActorInDirection(RotateDirection(dir,cw));
+							if(a != null){
+								B.Add(Your() + " axe hits " + a.the_name + ". ",this,a);
+								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+							}
+							a = ActorInDirection(dir);
+							if(a != null){
+								B.Add(Your() + " axe hits " + a.the_name + ". ",this,a);
+								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+							}
+							a = ActorInDirection(RotateDirection(dir,!cw));
+							if(a != null){
+								B.Add(Your() + " axe hits " + a.the_name + ". ",this,a);
+								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+							}
+							Q1();
+						}
+						else{
+							B.Add(the_name + " turns to face " + target.the_name + ". ",this,target);
+							attrs[AttrType.COOLDOWN_2] = DirectionOf(target);
+							Q1();
+						}
+					}
+				}
+				else{
+					if(DistanceFrom(target) == 1){
+						Attack(0,target);
+						if(target != null && Global.Roll(3) == 3){
+							B.Add(the_name + " screams with fury! ",this);
+							attrs[AttrType.COOLDOWN_2] = DirectionOf(target);
+							Q.Add(new Event(this,350,AttrType.COOLDOWN_2,DirectionOf(target),Your() + " rage diminishes. ",this));
+						}
+					}
+					else{
+						AI_Step(target);
+						QS();
+					}
+				}
+				break;
 			case ActorType.ORC_GRENADIER:
+				if(!HasAttr(AttrType.COOLDOWN_1) && DistanceFrom(target) <= 6){
+					attrs[AttrType.COOLDOWN_1]++;
+					Q.Add(new Event(this,(Global.Roll(2)*100)+150,AttrType.COOLDOWN_1));
+					B.Add(the_name + " tosses a grenade toward " + target.the_name + ". ",this,target);
+					List<Tile> tiles = new List<Tile>();
+					foreach(Tile tile in target.TilesWithinDistance(1)){
+						if(tile.passable){
+							tiles.Add(tile);
+						}
+					}
+					Tile t = tiles[Global.Roll(tiles.Count)-1];
+					if(t.actor() != null){
+						if(t.actor() == player){
+							B.Add("It lands under you! ");
+						}
+						else{
+							B.Add("It lands under " + t.actor().the_name + ". ");
+						}
+					}
+					else{
+						if(t.inv != null){
+							B.Add("It lands under " + t.inv.the_name + ". ");
+						}
+					}
+					TileType oldtype = t.type;
+					t.TransformTo(TileType.GRENADE);
+					t.toggles_into = oldtype;
+					t.passable = Tile.Prototype(oldtype).passable;
+					t.opaque = Tile.Prototype(oldtype).opaque;
+					switch(oldtype){
+					case TileType.FLOOR:
+						t.the_name = "the grenade on the floor";
+						t.a_name = "a grenade on a floor";
+						break;
+					case TileType.STAIRS:
+						t.the_name = "the grenade on the stairway";
+						t.a_name = "a grenade on a stairway";
+						break;
+					case TileType.DOOR_O:
+						t.the_name = "the grenade in the open door";
+						t.a_name = "a grenade in an open door";
+						break;
+					default:
+						t.the_name = "the grenade and " + Tile.Prototype(oldtype).the_name;
+						t.a_name = "a grenade and " + Tile.Prototype(oldtype).a_name;
+						break;
+					}
+					Q.Add(new Event(t,100,EventType.GRENADE));
+					Q1();
+				}
+				else{
+					if(curhp <= 20){
+						if(AI_Step(target,true)){
+							B.Add(the_name + " backs away. ",this);
+						}
+						QS();
+					}
+					else{
+						if(DistanceFrom(target) == 1){
+							Attack(0,target);
+						}
+						else{
+							AI_Step(target);
+							QS();
+						}
+					}
+				}
+				break;
 			case ActorType.NECROMANCER:
-			case ActorType.TROLL:
+				if(!HasAttr(AttrType.COOLDOWN_1) && DistanceFrom(target) <= 6){
+					attrs[AttrType.COOLDOWN_1]++;
+					Q.Add(new Event(this,(Global.Roll(4)+8)*100,AttrType.COOLDOWN_1));
+					B.Add(the_name + " calls out to the dead. ",this);
+					ActorType summon = Global.CoinFlip()? ActorType.SKELETON : ActorType.ZOMBIE;
+					List<Tile> tiles = new List<Tile>();
+					foreach(Tile tile in TilesWithinDistance(2)){
+						if(tile.passable && tile.actor() == null && DirectionOf(tile) == DirectionOf(target)){
+							tiles.Add(tile);
+						}
+					}
+					if(tiles.Count == 0){
+						foreach(Tile tile in TilesWithinDistance(2)){
+							if(tile.passable && tile.actor() == null){
+								tiles.Add(tile);
+							}
+						}
+					}
+					if(tiles.Count == 0 || attrs[AttrType.COOLDOWN_2] >= 4){
+						B.Add("Nothing happens. ",this);
+					}
+					else{
+						attrs[AttrType.COOLDOWN_2]++;
+						Tile t = tiles[Global.Roll(tiles.Count)-1];
+						B.Add(Prototype(summon).a_name + " digs through the floor! ");
+						Create(summon,t.row,t.col);
+						M.actor[t.row,t.col].player_visibility_duration = -1;
+					}
+					Q1();
+				}
+				else{
+					bool blast = false;
+					switch(DistanceFrom(target)){
+					case 1:
+						if(Global.CoinFlip() && AI_Step(target,true)){
+							QS();
+						}
+						else{
+							Attack(0,target);
+						}
+						break;
+					case 2:
+						if(Global.CoinFlip() && FirstActorInLine(target) == target){
+							blast = true;
+						}
+						else{
+							if(AI_Step(target,true)){
+								QS();
+							}
+							else{
+								blast = true;
+							}
+						}
+						break;
+					case 3:
+					case 4:
+						if(FirstActorInLine(target) == target){
+							blast = true;
+						}
+						else{
+							AI_Sidestep(target);
+							QS();
+						}
+						break;
+					default:
+						AI_Step(target);
+						QS();
+						break;
+					}
+					if(blast){
+						B.Add(the_name + " fires dark energy at " + target.the_name + ". ",this,target);
+						target.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(6),this);
+						Q1();
+					}
+				}
+				break;
+			case ActorType.TROLL: //standard for now
+				if(DistanceFrom(target) == 1){
+					Attack(0,target);
+				}
+				else{
+					AI_Step(target);
+					QS();
+				}
+				break;
 			case ActorType.FIRE_DRAKE:
-				if(false){
+				if((player.armors.First.Value == ArmorType.FULL_PLATE_OF_RESISTANCE
+				|| player.magic_items.Contains(MagicItemType.RING_OF_RESISTANCE))
+				&& DistanceFrom(player) <= 12 && CanSee(player)){
 					//todo: if player has fire resist upgrades, handle those first, here.
+					//B.Add(the_name + " exhales slowly toward you. ",this);
+					//pick full plate or ring
+					//"The runes melt off of your [item]!" or something similar.
+					//
 				}
 				else{
 					if(!HasAttr(AttrType.COOLDOWN_1)){
@@ -2078,12 +2544,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				break;
 			case ActorType.ORC_WARMAGE:
 				//todo: needs to cast detect monsters
+				QS();
 				break;
 			case ActorType.LASHER_FUNGUS:
 				QS();
 				break;
 			case ActorType.FIRE_DRAKE:
 				//todo: needs to hunt player down
+				QS();
 				break;
 			default:
 				if(target_location != null){
@@ -2139,16 +2607,113 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public void IdleAI(){ //todo: perhaps some more 'ambient' actions, like zombies moaning if you're close enough to hear
 			switch(type){
 			case ActorType.LARGE_BAT: //flies around
+				QS();
 				break;
 			case ActorType.ZOMBIE:
+				QS();
 				break;
 			case ActorType.ORC_WARMAGE:
+				QS();
+				break;
+			case ActorType.SHAMBLING_SCARECROW:
+				QS();
+				break;
+			case ActorType.POLTERGEIST:
+				QS();
+				break;
+			case ActorType.SWORDSMAN:
+				if(attrs[AttrType.BONUS_COMBAT] > 0){
+					attrs[AttrType.BONUS_COMBAT] = 0;
+				}
+				QS();
+				break;
+			case ActorType.BANSHEE:
+				QS();
 				break;
 			case ActorType.FIRE_DRAKE:
+				QS();
 				break;
 			default: //simply end turn
 				QS();
 				break;
+			}
+		}
+		public void CalculateDimming(){
+			int dist = 100;
+			Actor closest_shadow = null;
+			foreach(Actor a in player.ActorsWithinDistance(10,true)){
+				if(a.type == ActorType.SHADOW){
+					if(a.DistanceFrom(player) < dist){
+						dist = a.DistanceFrom(player);
+						closest_shadow = a;
+					}
+				}
+			}
+			if(closest_shadow == null){
+				if(player.HasAttr(AttrType.DIM_LIGHT)){
+					player.attrs[AttrType.DIM_LIGHT] = 0;
+					if(player.light_radius > 0){
+						B.Add("Your light grows brighter. ");
+						if(player.HasAttr(AttrType.ENHANCED_TORCH)){
+							player.UpdateRadius(player.LightRadius(),12,true);
+						}
+						else{
+							player.UpdateRadius(player.LightRadius(),6,true);
+						}
+					}
+				}
+			}
+			else{
+				Actor sh = closest_shadow; //laziness
+				int dimness = 0;
+				if(sh.DistanceFrom(player) <= 2){
+					dimness = 5;
+				}
+				else{
+					if(sh.DistanceFrom(player) <= 3){
+						dimness = 4;
+					}
+					else{
+						if(sh.DistanceFrom(player) <= 5){
+							dimness = 3;
+						}
+						else{
+							if(sh.DistanceFrom(player) <= 7){
+								dimness = 2;
+							}
+							else{
+								if(sh.DistanceFrom(player) <= 10){
+									dimness = 1;
+								}
+							}
+						}
+					}
+				}
+				if(dimness > player.attrs[AttrType.DIM_LIGHT]){
+					int difference = dimness - player.attrs[AttrType.DIM_LIGHT];
+					player.attrs[AttrType.DIM_LIGHT] = dimness;
+					if(player.light_radius > 0){
+						if(player.attrs[AttrType.ON_FIRE] < player.light_radius){ //if the player should notice...
+							B.Add("Your light grows dimmer. ");
+							player.UpdateRadius(player.light_radius,player.light_radius - difference,true);
+							if(player.attrs[AttrType.ON_FIRE] > player.light_radius){
+								player.UpdateRadius(player.light_radius,player.attrs[AttrType.ON_FIRE]);
+							}
+						}
+					}
+				}
+				else{
+					if(dimness < player.attrs[AttrType.DIM_LIGHT]){
+						int difference = dimness - player.attrs[AttrType.DIM_LIGHT];
+						player.attrs[AttrType.DIM_LIGHT] = dimness;
+						if(player.light_radius > 0){
+							if(player.attrs[AttrType.ON_FIRE] < player.light_radius - difference){ //if the player should notice...
+								B.Add("Your light grows brighter. ");
+								player.UpdateRadius(player.LightRadius(),player.light_radius - difference,true);
+							}
+						}
+					}
+				}
 			}
 		}
 		public bool AI_Step(PhysicalObject obj){ return AI_Step(obj,false); }
@@ -2235,29 +2800,42 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			return false;
 		}
-		public int RotateDirection(int dir,bool clockwise){
-			switch(dir){
-			case 7:
-				return clockwise?8:4;
-			case 8:
-				return clockwise?9:7;
-			case 9:
-				return clockwise?6:8;
-			case 4:
-				return clockwise?7:1;
-			case 5:
-				return 5;
-			case 6:
-				return clockwise?3:9;
-			case 1:
-				return clockwise?4:2;
-			case 2:
-				return clockwise?1:3;
-			case 3:
-				return clockwise?2:6;
-			default:
-				return 0;
+		public int RotateDirection(int dir,bool clockwise){ return RotateDirection(dir,clockwise,1); }
+		public int RotateDirection(int dir,bool clockwise,int num){
+			for(int i=0;i<num;++i){
+				switch(dir){
+				case 7:
+					dir = clockwise?8:4;
+					break;
+				case 8:
+					dir = clockwise?9:7;
+					break;
+				case 9:
+					dir = clockwise?6:8;
+					break;
+				case 4:
+					dir = clockwise?7:1;
+					break;
+				case 5:
+					break;
+				case 6:
+					dir = clockwise?3:9;
+					break;
+				case 1:
+					dir = clockwise?4:2;
+					break;
+				case 2:
+					dir = clockwise?1:3;
+					break;
+				case 3:
+					dir = clockwise?2:6;
+					break;
+				default:
+					dir = 0;
+					break;
+				}
 			}
+			return dir;
 		}
 		public bool AI_MoveOrOpen(int dir){
 			return AI_MoveOrOpen(TileInDirection(dir).row,TileInDirection(dir).col);
@@ -2402,6 +2980,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				else{
 					dmg = Global.Roll(dice,6);
 				}
+				dmg += TotalSkill(SkillType.COMBAT);
 				int r = a.row;
 				int c = a.col;
 				a.TakeDamage(info.damage.type,info.damage.damclass,dmg,this);
@@ -2427,6 +3006,40 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(HasAttr(AttrType.FORCE_HIT) && M.actor[r,c] != null){
 					//todo: mace of force here
+				}
+				if(HasAttr(AttrType.DIM_VISION_HIT) && M.actor[r,c] != null){
+					if(!a.HasAttr(AttrType.DIM_VISION)){
+						string str = "";
+						if(a.type == ActorType.PLAYER){
+							B.Add("Your vision grows weak. ");
+							str = "Your vision returns to normal. ";
+						}
+						a.attrs[AttrType.DIM_VISION]++;
+						Q.Add(new Event(a,(Global.Roll(2,20)+20)*100,AttrType.DIM_VISION,str));
+					}
+				}
+				if(HasAttr(AttrType.STALAGMITE_HIT)){
+					List<Tile> tiles = new List<Tile>();
+					foreach(Tile tile in M.tile[r,c].TilesWithinDistance(1)){
+						if(tile.actor() == null && (tile.type == TileType.FLOOR || tile.type == TileType.STALAGMITE)){
+							if(Global.CoinFlip()){ //50% for each...
+								tiles.Add(tile);
+							}
+						}
+					}
+					foreach(Tile tile in tiles){
+						if(tile.type == TileType.STALAGMITE){
+							Q.KillEvents(tile,EventType.STALAGMITE);
+						}
+						else{
+							tile.Toggle(this,TileType.STALAGMITE);
+						}
+					}
+					Q.Add(new Event(tiles,150,EventType.STALAGMITE));
+				}
+				if(M.actor[r,c] != null && a.type == ActorType.SWORDSMAN && a.attrs[AttrType.BONUS_COMBAT] > 0){
+					B.Add(a.the_name + " returns to a defensive stance. ",a);
+					a.attrs[AttrType.BONUS_COMBAT] = 0;
 				}
 			}
 			else{
@@ -2460,8 +3073,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(HasAttr(AttrType.DRIVE_BACK_ON)){
 					if(!a.HasAttr(AttrType.IMMOBILIZED)){
-						a.AI_Step(this,true); //todo: should you follow them after driving them back?
+						a.AI_Step(this,true); //todo: should you follow them after driving them back? i'm thinking yes.
 					}
+				}
+				if(a.type == ActorType.SWORDSMAN && a.attrs[AttrType.BONUS_COMBAT] > 0){
+					B.Add(a.the_name + " returns to a defensive stance. ",a);
+					a.attrs[AttrType.BONUS_COMBAT] = 0;
 				}
 			}
 			Q.Add(new Event(this,info.cost));
@@ -2479,7 +3096,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			mod += TotalSkill(SkillType.COMBAT);
 			Actor a = FirstActorInLine(obj);
 			if(a != null){
-				t = a.Tile();
+				t = a.tile();
 			}
 			B.Add(You("fire") + " an arrow. ",this);
 			B.DisplayNow();
@@ -2527,7 +3144,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				dmg.amount = 0;
 			}
 			if(HasAttr(AttrType.TOUGH) && dmg.damclass == DamageClass.PHYSICAL){
-				dmg.amount -= 3; //todo: test this value
+				dmg.amount -= 3; //test this value
 			}
 			if(dmg.damclass == DamageClass.MAGICAL){
 				dmg.amount -= TotalSkill(SkillType.SPIRIT) / 2;
@@ -2637,6 +3254,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					curhp = maxhp;
 				}
 				break;
+			case DamageType.NONE:
+				break;
 			}
 			if(damage_dealt){
 				if(HasAttr(AttrType.MAGICAL_BLOOD)){
@@ -2658,7 +3277,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					attrs[AttrType.COOLDOWN_1]++;
 					Q.Add(new Event(this,(Global.Roll(1,5)+1)*100,AttrType.COOLDOWN_1));
 					B.Add(You("retaliate") + " with a burst of spores! ",this);
-					foreach(Actor a in ActorsWithinDistance(8)){ //todo: LOS check would make sense here, right?
+					foreach(Actor a in ActorsWithinDistance(8)){
 						if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) && !a.HasAttr(AttrType.SPORE_BURST)){
 							if(HasLOS(a.row,a.col)){
 								B.Add("The spores hit " + a.the_name + ". ",a);
@@ -2702,7 +3321,23 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				else{
-					if(player.CanSee(this)){
+					if(type == ActorType.BERSERKER && dmg.amount < 1000){ //hack
+						if(!HasAttr(AttrType.COOLDOWN_1)){
+							attrs[AttrType.COOLDOWN_1]++;
+							Q.Add(new Event(this,350,AttrType.COOLDOWN_1));
+							Q.KillEvents(this,AttrType.COOLDOWN_2);
+							if(!HasAttr(AttrType.COOLDOWN_2)){
+								attrs[AttrType.COOLDOWN_2] = DirectionOf(player);
+							}
+							B.Add(the_name + " somehow remains standing! He screams with fury! ",this);
+						}
+						return true;
+					}
+					if(HasAttr(AttrType.REGENERATES_FROM_DEATH) && dmg.type != DamageType.FIRE){ //hack - works only with trolls
+						B.Add(the_name + " falls to the ground, still twitching. ",this);
+						Q.Add(new Event(tile(),200,EventType.REGENERATING_FROM_DEATH,curhp - (Global.Roll(10)+5)));
+					}
+					else{
 						if(dmg.amount < 1000){ //everything that deals this much damage prints its own message.
 							if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){
 								B.Add(the_name + " is destroyed. ",this);
@@ -2712,10 +3347,16 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							}
 						}
 					}
-					//todo: give xp here
 					if(LightRadius() > 0){
 						UpdateRadius(LightRadius(),0);
 					}
+					if(type == ActorType.SHADOW){
+						if(player.HasAttr(AttrType.DIM_LIGHT)){
+							type = ActorType.ZOMBIE; //awful awful hack. (CalculateDimming checks for Shadows)
+							CalculateDimming();
+						}
+					}
+					//todo: give xp here
 					Q.KillEvents(this,EventType.ANY_EVENT);
 					M.RemoveTargets(this);
 					M.actor[row,col] = null;
@@ -2730,7 +3371,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				if(magic_items.Contains(MagicItemType.CLOAK_OF_DISAPPEARANCE) && damage_dealt && dmg.amount >= curhp){
 					B.PrintAll();
 					M.Draw();
-					B.DisplayNow("Your cloak becomes translucent. Use your cloak to escape?(Y/N): ");
+					B.DisplayNow("Your cloak starts to fade from sight. Use your cloak to escape?(Y/N): ");
 					ConsoleKeyInfo command;
 					bool done = false;
 					while(!done){
@@ -2878,7 +3519,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					B.Add("Your torch begins to shine brightly. ");
 					attrs[AttrType.ENHANCED_TORCH]++;
 					if(light_radius > 0){
-						UpdateRadius(LightRadius(),Global.MAX_LIGHT_RADIUS,true);
+						UpdateRadius(LightRadius(),Global.MAX_LIGHT_RADIUS - attrs[AttrType.DIM_LIGHT]*2,true);
 					}
 					Q.Add(new Event(9500,"Your torch begins to flicker a bit. "));
 					Q.Add(new Event(this,10000,AttrType.ENHANCED_TORCH,"Your torch no longer shines as brightly. "));
@@ -3288,10 +3929,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							}
 							if(t.passable && M.actor[t.row,t.col] == null){
 								if(M.tile[row,col].inv != null){
-									Screen.WriteMapChar(row,col,new colorchar(Tile().inv.color,Tile().inv.symbol));
+									Screen.WriteMapChar(row,col,new colorchar(tile().inv.color,tile().inv.symbol));
 								}
 								else{
-									Screen.WriteMapChar(row,col,new colorchar(Tile().color,Tile().symbol));
+									Screen.WriteMapChar(row,col,new colorchar(tile().color,tile().symbol));
 								}
 								Screen.WriteMapChar(t.row,t.col,new colorchar(color,symbol));
 								int j = 0;
@@ -3491,9 +4132,22 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 		}
 		public void ResetForNewLevel(){
-			//todo: lots here. name?
+			if(Global.Option(OptionType.WIZLIGHT_CAST)){
+				Global.Options[OptionType.WIZLIGHT_CAST] = false;
+			}
 			target = null;
 			target_location = null;
+			if(HasAttr(AttrType.DIM_LIGHT)){
+				attrs[AttrType.DIM_LIGHT] = 0;
+				if(light_radius > 0){
+					if(HasAttr(AttrType.ENHANCED_TORCH)){
+						light_radius = 12;
+					}
+					else{
+						light_radius = 6;
+					}
+				}
+			}
 		}
 		public bool UseFeat(FeatType feat){
 			switch(feat){
@@ -3502,15 +4156,15 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				B.Add("You perform a spin attack. ");
 				int dice = Weapon.Damage(weapons.First.Value);
 				foreach(Tile t in TilesAtDistance(1)){
-					if(t.Actor() != null){
-						Actor a = t.Actor();
+					if(t.actor() != null){
+						Actor a = t.actor();
 						B.Add("You hit " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(dice,6),this);
 					}
 				}
 				foreach(Tile t in TilesAtDistance(2)){
-					if(t.Actor() != null){
-						Actor a = t.Actor();
+					if(t.actor() != null){
+						Actor a = t.actor();
 						B.Add("Your magically charged attack hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,TotalSkill(SkillType.MAGIC),this);
 					}
@@ -3524,15 +4178,15 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					return false;
 				}
 				Tile t = GetTarget(2);
-				if(t != null && t.Actor() != null){
+				if(t != null && t.actor() != null){
 					bool moved = false;
 					foreach(Tile neighbor in t.NeighborsBetween(row,col)){
-						if(neighbor.passable && neighbor.Actor() == null){
+						if(neighbor.passable && neighbor.actor() == null){
 							Move(neighbor.row,neighbor.col);
 							moved = true;
 							B.Add("You lunge! ");
 							attrs[AttrType.BONUS_COMBAT] += 3;
-							Attack(0,t.Actor());
+							Attack(0,t.actor());
 							attrs[AttrType.BONUS_COMBAT] -= 3;
 							break;
 						}
@@ -3569,12 +4223,12 @@ effect as standing still, if you're on fire or catching fire. */
 					return false;
 				}
 				Tile t = GetTarget(2);
-				if(t != null && t.Actor() != null){
+				if(t != null && t.actor() != null){
 					List<Actor> actors_moved_past = new List<Actor>();
 					bool moved = false;
 					foreach(Tile neighbor in t.NeighborsBetween(row,col)){
-						if(neighbor.Actor() != null){
-							actors_moved_past.Add(neighbor.Actor());
+						if(neighbor.actor() != null){
+							actors_moved_past.Add(neighbor.actor());
 						}
 						if(neighbor.passable && !moved){
 							Move(t.row,t.col);
@@ -3604,7 +4258,7 @@ effect as standing still, if you're on fire or catching fire. */
 										UpdateRadius(oldradius,LightRadius());
 									}
 									if(HasAttr(AttrType.ON_FIRE)){
-										B.Add("You put out some of the fire. "); //todo: better message?
+										B.Add("You put out some of the fire. ");
 									}
 									else{
 										B.Add("You put out the fire. ");
@@ -3935,13 +4589,14 @@ effect as standing still, if you're on fire or catching fire. */
 		}
 		public bool IsWithinSightRangeOf(int r,int c){
 			int dist = DistanceFrom(r,c);
-			if(dist <= 3){
+			int divisor = HasAttr(AttrType.DIM_VISION)? 3 : 1;
+			if(dist <= 3/divisor){
 				return true;
 			}
-			if(dist <= 6 && HasAttr(AttrType.LOW_LIGHT_VISION)){
+			if(dist <= 6/divisor && HasAttr(AttrType.LOW_LIGHT_VISION)){
 				return true;
 			}
-			if(dist <= 12 && HasAttr(AttrType.DARKVISION)){
+			if(dist <= 12/divisor && HasAttr(AttrType.DARKVISION)){
 				return true;
 			}
 			if(M.tile[r,c].opaque){
@@ -4041,11 +4696,12 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 			}
 		}
-		public Tile GetTarget(){ return GetTarget(false,-1); }
-		public Tile GetTarget(bool lookmode){ return GetTarget(lookmode,-1); }
-		public Tile GetTarget(int max_distance){ return GetTarget(false,max_distance); }
-		public Tile GetTarget(bool lookmode,int max_distance){ //todo: might need a M.Draw, to handle targeting from inventory or spell screen?
-			Tile result = null;
+		public Tile GetTarget(){ return GetTarget(false,-1,true); }
+		public Tile GetTarget(bool lookmode){ return GetTarget(lookmode,-1,!lookmode); } //note default
+		public Tile GetTarget(int max_distance){ return GetTarget(false,max_distance,true); }
+		public Tile GetTarget(bool lookmode,int max_distance){ return GetTarget(lookmode,max_distance,!lookmode); }
+		public Tile GetTarget(bool lookmode,int max_distance,bool start_at_interesting_target){
+			Tile result = null;  //todo: might need a M.Draw, to handle targeting from inventory or spell screen?
 			ConsoleKeyInfo command;
 			int r,c;
 			int minrow = 0;
@@ -4058,6 +4714,30 @@ effect as standing still, if you're on fire or catching fire. */
 				mincol = Math.Max(mincol,col - max_distance);
 				maxcol = Math.Min(maxcol,col + max_distance);
 			}
+			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
+			int target_idx = 0;
+			for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
+				foreach(Actor a in ActorsAtDistance(i)){
+					if(CanSee(a)){
+						interesting_targets.Add(a);
+					}
+				}
+			}
+			if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING)){
+				for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
+					foreach(Tile t in TilesAtDistance(i)){
+						if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
+						|| t.type == TileType.STAIRS || t.type == TileType.CHEST
+						|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
+						|| t.type == TileType.STALAGMITE //todo: traps here
+						|| t.inv != null){
+							if(CanSee(t)){
+								interesting_targets.Add(t);
+							}
+						}
+					}
+				}
+			}
 			colorchar[,] mem = new colorchar[ROWS,COLS];
 			List<Tile> line = new List<Tile>();
 			List<Tile> oldline = new List<Tile>();
@@ -4066,156 +4746,76 @@ effect as standing still, if you're on fire or catching fire. */
 					mem[i,j] = Screen.MapChar(i,j);
 				}
 			}
-			if(lookmode){
-				B.DisplayNow("Move the cursor to look around. ");
-			}
-			else{
-				B.DisplayNow("Move cursor to choose target, then press Enter. ");
-			}
-			if(lookmode || target==null || !CanSee(target) || DistanceFrom(target)>max_distance){
-				r = row;
-				c = col;
-				Cursor();
-			}
-			else{
-				r = target.row;
-				c = target.col;
-				if(Global.Option(OptionType.LAST_TARGET)){
-					return M.tile[r,c];
+			if(!start_at_interesting_target || interesting_targets.Count == 0){
+				if(lookmode){
+					B.DisplayNow("Move the cursor to look around. ");
 				}
-				target.Cursor();	
+				else{
+					B.DisplayNow("Move cursor to choose target, then press Enter. ");
+				}
 			}
+			if(lookmode){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					r = row;
+					c = col;
+			//		Cursor();
+					target_idx = -1;
+				}
+				else{
+					r = interesting_targets[0].row;
+					c = interesting_targets[0].col;
+			//		interesting_targets[0].Cursor();
+				}
+			}
+			else{
+				if(target == null || !CanSee(target)
+				|| (max_distance > 0 && DistanceFrom(target) > max_distance)){
+					if(!start_at_interesting_target || interesting_targets.Count == 0){
+						r = row;
+						c = col;
+			//			Cursor();
+						target_idx = -1;
+					}
+					else{
+						r = interesting_targets[0].row;
+						c = interesting_targets[0].col;
+			//			interesting_targets[0].Cursor();
+					}
+				}
+				else{
+					r = target.row;
+					c = target.col;
+					if(Global.Option(OptionType.LAST_TARGET)){
+						return M.tile[r,c];
+					}
+			//		target.Cursor();
+					target_idx = interesting_targets.IndexOf(target);
+				}
+			}
+			bool first_iteration = true;
 			bool done=false; //when done==true, we're ready to return 'result'
 			while(!done){
-				command = Console.ReadKey(true);
-				char ch = ConvertInput(command);
-				if(Global.Option(OptionType.VI_KEYS)){
-					ch = ConvertVIKeys(ch);
-				}
-				switch(ch){
-				case '7':
-					if(r==minrow){
-						if(c!=mincol){
-							--c;
-						}
-					}
-					else{
-						if(c==mincol){
-							--r;
-						}
-						else{
-							--r;
-							--c;
-						}
-					}
-					break;
-				case '8':
-					if(r!=minrow){
-						--r;
-					}
-					break;
-				case '9':
-					if(r==minrow){
-						if(c!=maxcol){
-							++c;
-						}
-					}
-					else{
-						if(c==maxcol){
-							--r;
-						}
-						else{
-							--r;
-							++c;
-						}
-					}
-					break;
-				case '4':
-					if(c!=mincol){
-						--c;
-					}
-					break;
-				case '6':
-					if(c!=maxcol){
-						++c;
-					}
-					break;
-				case '1':
-					if(r==maxrow){
-						if(c!=mincol){
-							--c;
-						}
-					}
-					else{
-						if(c==mincol){
-							++r;
-						}
-						else{
-							++r;
-							--c;
-						}
-					}
-					break;
-				case '2':
-					if(r!=maxrow){
-						++r;
-					}
-					break;
-				case '3':
-					if(r==maxrow){
-						if(c!=maxcol){
-							++c;
-						}
-					}
-					else{
-						if(c==maxcol){
-							++r;
-						}
-						else{
-							++r;
-							++c;
-						}
-					}
-					break;
-				case (char)27:
-					done = true;
-					break;
-				case (char)13: //todo: i'm pretty sure you can hit yourself with spells atm. check for self HERE to fix that.
-					if(HasBresenhamLine(r,c)){ //uses bresenham until i want symmetrical firing too
-						if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
-							target = M.actor[r,c];
-						}
-						result = M.tile[r,c];
-					}
-					done = true;
-					break;
-				case ' ':
-					if(lookmode){
-						done = true;
-					}
-					break;
-				default:
-					break;
-				}
-				if(!done){
+				if(!done){ //i moved this around, thus this relic.
 					Screen.ResetColors();
 					if(r == row && c == col){
-						string s = "You're standing here. ";
-						if(M.tile[r,c].inv != null){
-							s = s + "You see " + M.tile[r,c].inv.AName() + " here. ";
-						}
-						else{
-							if(M.tile[r,c].type != TileType.FLOOR){
-								s = s + "You see " + M.tile[r,c].a_name + " here. ";
+						if(!first_iteration){
+							string s = "You're standing here. ";
+							if(M.tile[r,c].inv != null){
+								s = s + "You see " + M.tile[r,c].inv.AName() + " here. ";
 							}
+							else{
+								if(M.tile[r,c].type != TileType.FLOOR){
+									s = s + "You see " + M.tile[r,c].a_name + " here. ";
+								}
+							}
+							B.DisplayNow(s);
 						}
-						B.DisplayNow(s);
 					}
 					else{
 						if(CanSee(M.tile[r,c])){
 							string s = "";
 							int count = 0;
-							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){ //todo: test this code
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
 								++count;
 								s = s + M.actor[r,c].a_name;
 							}
@@ -4234,6 +4834,7 @@ effect as standing still, if you're on fire or catching fire. */
 							if(count == 1){
 								switch(M.tile[r,c].type){
 								case TileType.STAIRS:
+								case TileType.FLOOR:
 									s = s + " on ";
 									break;
 								case TileType.DOOR_O:
@@ -4325,8 +4926,130 @@ effect as standing still, if you're on fire or catching fire. */
 						}
 						oldline = line;
 					}
-					Console.CursorVisible = true;
+					first_iteration = false;
 					M.tile[r,c].Cursor();
+				}
+				Console.CursorVisible = true;
+				command = Console.ReadKey(true);
+				char ch = ConvertInput(command);
+				if(Global.Option(OptionType.VI_KEYS)){
+					ch = ConvertVIKeys(ch);
+				}
+				switch(ch){
+				case '7':
+					if(r==minrow){
+						if(c!=mincol){
+							--c;
+						}
+					}
+					else{
+						if(c==mincol){
+							--r;
+						}
+						else{
+							--r;
+							--c;
+						}
+					}
+					break;
+				case '8':
+					if(r!=minrow){
+						--r;
+					}
+					break;
+				case '9':
+					if(r==minrow){
+						if(c!=maxcol){
+							++c;
+						}
+					}
+					else{
+						if(c==maxcol){
+							--r;
+						}
+						else{
+							--r;
+							++c;
+						}
+					}
+					break;
+				case '4':
+					if(c!=mincol){
+						--c;
+					}
+					break;
+				case '6':
+					if(c!=maxcol){
+						++c;
+					}
+					break;
+				case '1':
+					if(r==maxrow){
+						if(c!=mincol){
+							--c;
+						}
+					}
+					else{
+						if(c==mincol){
+							++r;
+						}
+						else{
+							++r;
+							--c;
+						}
+					}
+					break;
+				case '2':
+					if(r!=maxrow){
+						++r;
+					}
+					break;
+				case '3':
+					if(r==maxrow){
+						if(c!=maxcol){
+							++c;
+						}
+					}
+					else{
+						if(c==maxcol){
+							++r;
+						}
+						else{
+							++r;
+							++c;
+						}
+					}
+					break;
+				case (char)9:
+					if(interesting_targets.Count > 0){
+						target_idx++;
+						if(target_idx == interesting_targets.Count){
+							target_idx = 0;
+						}
+						r = interesting_targets[target_idx].row;
+						c = interesting_targets[target_idx].col;
+				//		interesting_targets[target_idx].Cursor();
+					}
+					break;
+				case (char)27:
+					done = true;
+					break;
+				case (char)13: //todo: i'm pretty sure you can hit yourself with spells atm. check for self HERE to fix that.
+					if(HasBresenhamLine(r,c)){ //uses bresenham until i want symmetrical firing too
+						if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+							target = M.actor[r,c];
+						}
+						result = M.tile[r,c];
+					}
+					done = true;
+					break;
+				case ' ':
+					if(lookmode){
+						done = true;
+					}
+					break;
+				default:
+					break;
 				}
 				if(done){
 					Console.CursorVisible = false;
@@ -4405,7 +5128,7 @@ effect as standing still, if you're on fire or catching fire. */
 		}
 	}
 	public static class AttackList{ //consider more descriptive attacks, such as the zealot smashing you with a mace
-		private static AttackInfo[] attack = new AttackInfo[24];
+		private static AttackInfo[] attack = new AttackInfo[25];
 		static AttackList(){
 			attack[0] = new AttackInfo(100,1,DamageType.NORMAL,"& ^bites *");
 			attack[1] = new AttackInfo(100,2,DamageType.NORMAL,"& ^bites *");
@@ -4417,7 +5140,7 @@ effect as standing still, if you're on fire or catching fire. */
 			attack[7] = new AttackInfo(100,4,DamageType.COLD,"& releases a burst of cold");
 			attack[8] = new AttackInfo(200,2,DamageType.NORMAL,"& lunges forward and ^hits *");
 			attack[9] = new AttackInfo(100,4,DamageType.NORMAL,"& ^bites *");
-			attack[10] = new AttackInfo(100,0,DamageType.NORMAL,"& lashes * with a tentacle");
+			attack[10] = new AttackInfo(100,0,DamageType.NONE,"& lashes * with a tentacle");
 			attack[11] = new AttackInfo(100,4,DamageType.NORMAL,"& ^hits *");
 			attack[12] = new AttackInfo(100,4,DamageType.NORMAL,"& ^slams *");
 			attack[13] = new AttackInfo(120,3,DamageType.NORMAL,"& extends a tentacle and ^hits *");
@@ -4431,6 +5154,7 @@ effect as standing still, if you're on fire or catching fire. */
 			attack[21] = new AttackInfo(100,1,DamageType.NORMAL,"& slimes *");
 			attack[22] = new AttackInfo(100,2,DamageType.NORMAL,"& ^claws *");
 			attack[23] = new AttackInfo(100,2,DamageType.NORMAL,"& touches *");
+			attack[24] = new AttackInfo(100,0,DamageType.NONE,"& ^hits *");
 		}
 		public static AttackInfo Attack(ActorType type,int num){
 			switch(type){
@@ -4539,6 +5263,8 @@ effect as standing still, if you're on fire or catching fire. */
 				return new AttackInfo(attack[4]);
 			case ActorType.DREAM_WARRIOR:
 				return new AttackInfo(attack[4]);
+			case ActorType.DREAM_CLONE:
+				return new AttackInfo(attack[24]);
 			case ActorType.BANSHEE:
 				return new AttackInfo(attack[22]);
 			case ActorType.SKULKING_KILLER:

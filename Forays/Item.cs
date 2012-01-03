@@ -229,7 +229,7 @@ namespace Forays{
 					}
 				}
 				break;
-			case ConsumableType.PASSAGE: //todo: add animation
+			case ConsumableType.PASSAGE:
 				{
 				if(user.HasAttr(AttrType.IMMOBILIZED)){
 					B.Add("You can't use this item while immobilized. ");
@@ -275,10 +275,10 @@ namespace Forays{
 							}
 							if(t.passable && M.actor[t.row,t.col] == null){
 								if(M.tile[user.row,user.col].inv != null){
-									Screen.WriteMapChar(user.row,user.col,new colorchar(user.Tile().inv.color,user.Tile().inv.symbol));
+									Screen.WriteMapChar(user.row,user.col,new colorchar(user.tile().inv.color,user.tile().inv.symbol));
 								}
 								else{
-									Screen.WriteMapChar(user.row,user.col,new colorchar(user.Tile().color,user.Tile().symbol));
+									Screen.WriteMapChar(user.row,user.col,new colorchar(user.tile().color,user.tile().symbol));
 								}
 								Screen.WriteMapChar(t.row,t.col,new colorchar(user.color,user.symbol));
 								int j = 0;
@@ -349,7 +349,7 @@ namespace Forays{
 					Actor first = user.FirstActorInLine(t);
 					B.Add(user.You("throw") + " the prismatic orb. ",user);
 					if(first != null){
-						t = first.Tile();
+						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
 					}
 					else{

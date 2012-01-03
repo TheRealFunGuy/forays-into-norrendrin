@@ -226,6 +226,25 @@ namespace Forays{
 			alltiles.Clear();
 			DungeonGen.Dungeon dungeon = new DungeonGen.Dungeon();
 			char[,] charmap = dungeon.Generate();
+			//
+			for(bool done=false;!done;){ //todo: update this. currently just generates one firepit
+				int rr = Global.Roll(ROWS-2);
+				int rc = Global.Roll(COLS-2);
+				if(charmap[rr,rc] == '.'){
+					bool floors = true;
+					Tile temp = new Tile(Tile.Prototype(TileType.FLOOR),rr,rc); //i wouldn't need this if my design was better =D
+					foreach(pos p in temp.PositionsAtDistance(1)){
+						if(charmap[p.row,p.col] != '.'){
+							floors = false;
+						}
+					}
+					if(floors){
+						charmap[rr,rc] = '0';
+						done = true;
+					}
+				}
+			}
+			//
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					switch(charmap[i,j]){
@@ -244,11 +263,21 @@ namespace Forays{
 					case '>':
 						Tile.Create(TileType.STAIRS,i,j);
 						break;
+					case '0':
+						Tile.Create(TileType.FIREPIT,i,j);
+						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
 						break;
 					}
 					alltiles.Add(tile[i,j]);
+				}
+			}
+			foreach(Tile t in AllTiles()){
+				if(t.type == TileType.FIREPIT){
+					foreach(Tile tt in t.TilesWithinDistance(1)){
+						tt.light_value++;
+					}
 				}
 			}
 			//update player for new level, including reset of player's target
