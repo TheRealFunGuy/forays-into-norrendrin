@@ -100,7 +100,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public int curhp{get; set;}
 		public int speed{get; set;}
 		public int xp{get; private set;}
-		public int level{get; private set;}
+		public int level{get;set;}
 		public int light_radius{get;set;}
 		public Actor target{get;set;}
 		public List<Item> inv{get; private set;}
@@ -128,42 +128,42 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public static Actor player{get;set;}
 		static Actor(){
 			//todo: currently, nothing has a value for level or xp.
-			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,0,0,0,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,5,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.LARGE_BAT,"large bat",'b',Color.DarkGray,20,60,0,0,0,AttrType.DARKVISION);
-			Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,40,90,0,0,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH,AttrType.IMMUNE_ARROWS,AttrType.DARKVISION);
-			Define(ActorType.SKELETON,"skeleton",'s',Color.White,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
-			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,50,60,0,0,0,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.FROSTLING,"frostling",'E',Color.Gray,60,100,0,0,0,AttrType.IMMUNE_COLD,AttrType.COLD_HIT);
-			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,50,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,0,1,0,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,0,1,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.LARGE_BAT,"large bat",'b',Color.DarkGray,20,60,0,1,0,AttrType.DARKVISION);
+			Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,40,90,0,1,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH,AttrType.IMMUNE_ARROWS,AttrType.DARKVISION);
+			Define(ActorType.SKELETON,"skeleton",'s',Color.White,50,100,0,2,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.CULTIST,"cultist",'p',Color.DarkRed,60,100,0,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.SMALL_GROUP);
+			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,40,90,0,2,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,75,150,0,3,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
+			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,50,60,0,3,0,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.FROSTLING,"frostling",'E',Color.Gray,60,100,0,3,0,AttrType.IMMUNE_COLD,AttrType.COLD_HIT);
+			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,50,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,50,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.GOBLIN_SHAMAN).GainSpell(SpellType.FORCE_PALM,SpellType.BURNING_HANDS,SpellType.SHOCK,SpellType.MAGIC_MISSILE,SpellType.IMMOLATE);
-			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,75,150,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD);
-			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,0,0,0,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.ROBED_ZEALOT,"robed zealot",'p',Color.Yellow,60,100,0,0,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Prototype(ActorType.ROBED_ZEALOT).GainSpell(SpellType.MINOR_HEAL,SpellType.BLESS,SpellType.HOLY_SHIELD);
-			Define(ActorType.WORG,"worg",'c',Color.White,55,60,0,0,0,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,50,100,0,0,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
-			Define(ActorType.OGRE,"ogre",'O',Color.Green,75,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION);
-			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,60,100,0,0,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,80,120,0,0,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
-			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.ARC_LIGHTNING,SpellType.BURNING_HANDS,SpellType.FORCE_BEAM,SpellType.SHOCK,SpellType.SONIC_BOOM,SpellType.IMMOLATE);
-			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,60,100,0,0,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH,AttrType.DARKVISION);
-			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,0,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
-			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,0,0,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
-			Define(ActorType.CULTIST,"cultist",'p',Color.DarkRed,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,40,90,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,45,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,60,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,0,5,0,AttrType.LOW_LIGHT_VISION,AttrType.LARGE_GROUP);
+			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,45,100,0,5,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.DREAM_CLONE,"dream warrior",'p',Color.Cyan,1,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.CONSTRUCT,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,50,80,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,50,100,0,0,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DIM_VISION_HIT,AttrType.DARKVISION);
-			Define(ActorType.BERSERKER,"berserker",'p',Color.Red,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,60,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,0,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
+			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,50,80,0,5,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.WARG,"warg",'c',Color.White,55,60,0,6,0,AttrType.LOW_LIGHT_VISION,AttrType.MEDIUM_GROUP);
+			Define(ActorType.ROBED_ZEALOT,"robed zealot",'p',Color.Yellow,60,100,0,6,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Prototype(ActorType.ROBED_ZEALOT).GainSpell(SpellType.MINOR_HEAL,SpellType.BLESS,SpellType.HOLY_SHIELD);
+			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,60,100,0,6,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,50,100,0,7,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
+			Define(ActorType.OGRE,"ogre",'O',Color.Green,75,100,0,7,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION,AttrType.SMALL_GROUP);
+			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,50,100,0,7,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DIM_VISION_HIT,AttrType.DARKVISION);
+			Define(ActorType.BERSERKER,"berserker",'p',Color.Red,60,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,60,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,60,100,0,8,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,80,120,0,9,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,60,100,0,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,9,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
+			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,60,100,0,10,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH,AttrType.DARKVISION);
+			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,60,100,0,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.ARC_LIGHTNING,SpellType.BURNING_HANDS,SpellType.FORCE_BEAM,SpellType.SHOCK,SpellType.SONIC_BOOM,SpellType.IMMOLATE);
+			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,10,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
+			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,10,0,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
 			//todo: make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
 		}
 		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
@@ -559,11 +559,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				attrs[AttrType.ON_FIRE]++;
 			}
 			if(HasAttr(AttrType.CATCHING_FIRE) && time_of_last_action < Q.turn){
-				if(light_radius == 0){
-					UpdateRadius(0,1);
-				}
 				attrs[AttrType.CATCHING_FIRE] = 0;
 				if(!HasAttr(AttrType.ON_FIRE)){
+					if(light_radius == 0){
+						UpdateRadius(0,1);
+					}
 					attrs[AttrType.ON_FIRE] = 1;
 				}
 			}
@@ -1200,11 +1200,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Check key names");
 				l.Add("Forget the map");
 				l.Add("Heal to full");
-				l.Add("Fire a beam");
+				l.Add("Become invulnerable");
 				l.Add("Test DirectionOf");
 				l.Add("Spawn a monster");
 				l.Add("Use a rune of passage");
-				l.Add("Create darkness");
+				l.Add("See the entire level");
 				l.Add("Generate new level");
 				l.Add("Create grenades!");
 				switch(Select("Activate which cheat? ",l)){
@@ -1252,8 +1252,15 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Q0();
 					break;
 				case 6:
-					Screen.AnimateBeam(GetBresenhamLine(11,33),new colorchar(Color.DarkGray,'%'));
-					Q1();
+					if(!HasAttr(AttrType.INVULNERABLE)){
+						attrs[AttrType.INVULNERABLE]++;
+						B.Add("On. ");
+					}
+					else{
+						attrs[AttrType.INVULNERABLE] = 0;
+						B.Add("Off. ");
+					}
+					Q0();
 					break;
 				case 7:
 					{
@@ -1293,7 +1300,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 8:
 					if(M.actor[18,50] == null){
-						Create(ActorType.STONE_GOLEM,18,50);
+						//Create(ActorType.CULTIST,18,50);
+						M.SpawnMob(ActorType.DIRE_RAT);
 					}
 					Q1();
 					break;
@@ -1302,10 +1310,15 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Q1();
 					break;
 				case 10:
-					foreach(Tile t in TilesWithinDistance(1)){
-						t.light_value--;
+					foreach(Tile t in M.AllTiles()){
+						t.seen = true;
 					}
-					Q1();
+					M.Draw();
+					foreach(Actor a in M.AllActors()){
+						Screen.WriteMapChar(a.row,a.col,new colorchar(a.color,Color.Black,a.symbol));
+					}
+					Console.ReadKey(true);
+					Q0();
 					break;
 				case 11:
 					M.GenerateLevel();
@@ -1864,8 +1877,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						List<Tile> tilelist = new List<Tile>();
 						for(int dir=1;dir<=9;++dir){
 							if(dir != 5){
-								if(TileInDirection(dir).passable && ActorInDirection(dir) == null){
-									tilelist.Add(TileInDirection(dir));
+								if(target.TileInDirection(dir).passable && target.ActorInDirection(dir) == null){
+									tilelist.Add(target.TileInDirection(dir));
 								}
 							}
 						}
@@ -2087,7 +2100,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(LightRadius() < 2){
 						UpdateRadius(LightRadius(),2);
 					}
-					attrs[AttrType.ON_FIRE] = 2;
+					attrs[AttrType.ON_FIRE] = Math.Max(attrs[AttrType.ON_FIRE],2);
 					foreach(Actor a in ActorsAtDistance(1)){
 						if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.IMMUNE_FIRE)){
 							a.attrs[AttrType.CATCHING_FIRE] = 1;
@@ -2206,6 +2219,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						target.speed += 50;
 						Q.Add(new Event(target,(Global.Roll(3)+4)*100,AttrType.SLOWED,target.YouAre() + " no longer slowed. ",target));
 						B.Add(target.YouAre() + " slowed by the bola. ",target);
+						Q1();
 					}
 					else{
 						AnimateProjectile(target,Color.Gray,'*');
@@ -2221,6 +2235,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							Q.Add(new Event(target,(Global.Roll(3)+4)*100,AttrType.STUNNED,target.YouAre() + " no longer stunned. ",target));
 							B.Add(target.YouAre() + " stunned. ",target);
 						}
+						Q1();
 					}
 				}
 				else{
@@ -2986,14 +3001,18 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				a.TakeDamage(info.damage.type,info.damage.damclass,dmg,this);
 				if(M.actor[r,c] != null){
 					if(HasAttr(AttrType.FIRE_HIT) || attrs[AttrType.ON_FIRE] >= 3){ //todo: a frostling's ranged attack shouldn't apply this
-						B.Add(a.YouAre() + " burned. ",this,a);
-						a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(1,6),this);
+						if(!a.HasAttr(AttrType.INVULNERABLE)){ //to prevent the message
+							B.Add(a.YouAre() + " burned. ",this,a);
+							a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(1,6),this);
+						}
 					}
 				}
 				if(HasAttr(AttrType.COLD_HIT) && attack_idx==0 && M.actor[r,c] != null){
 					//hack: only applies to attack 0
-					B.Add(a.YouAre() + " chilled. ",this,a);
-					a.TakeDamage(DamageType.COLD,DamageClass.PHYSICAL,Global.Roll(1,6),this);
+					if(!a.HasAttr(AttrType.INVULNERABLE)){ //to prevent the message
+						B.Add(a.YouAre() + " chilled. ",this,a);
+						a.TakeDamage(DamageType.COLD,DamageClass.PHYSICAL,Global.Roll(1,6),this);
+					}
 				}
 				if(HasAttr(AttrType.POISON_HIT) && M.actor[r,c] != null){
 					B.Add(a.YouAre() + " poisoned. ",this,a);
@@ -3356,8 +3375,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							CalculateDimming();
 						}
 					}
-					//todo: give xp here
-					Q.KillEvents(this,EventType.ANY_EVENT);
+					int divisor = 1;
+					if(HasAttr(AttrType.SMALL_GROUP)){ divisor = 2; }
+					if(HasAttr(AttrType.MEDIUM_GROUP)){ divisor = 3; }
+					if(HasAttr(AttrType.LARGE_GROUP)){ divisor = 5; }
+					player.GainXP(xp + (level*(10 + level - player.level))/divisor); //experimentally giving the player any
+					Q.KillEvents(this,EventType.ANY_EVENT);					// XP that the monster had collected.
 					M.RemoveTargets(this);
 					M.actor[row,col] = null;
 					return false;
@@ -3758,7 +3781,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						int c = a.col;
 						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(2+bonus,6),this);
 						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
-							B.Add(a.the_name + " is stunned. ",a);
+							B.Add(a.YouAre() + " stunned. ",a);
 							a.attrs[AttrType.STUNNED]++;
 							int duration = (Global.Roll(1,4)+2) * 100;
 							Q.Add(new Event(a,duration,AttrType.STUNNED,the_name + " is no longer stunned. ",a));
@@ -4512,6 +4535,89 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			Screen.ResetColors();
 		}
+		public void GainXP(int num){
+			if(num <= 0){
+				num = 1;
+			}
+			xp += num;
+			//here's the formula for gaining the next level:
+			// (standard experience is mlevel * (10 + mlevel - playerlevel) )
+			// the number of monsters of the CURRENT level you would need to slay in order to reach the next level is equal to
+			//  10 + (currentlevel-1)*2 / 3
+			// therefore you reach level 2 after defeating 10 level 1 foes, which give 10xp each,
+			// and you reach level 3 after defeating 11 level 2 foes, which give 20xp each.
+			// (and so on)
+			switch(level){
+			case 1:
+				if(xp >= 100){
+					LevelUp();
+				}
+				break;
+			case 2:
+				if(xp >= 320){
+					LevelUp();
+				}
+				break;
+			case 3:
+				if(xp >= 680){
+					LevelUp();
+				}
+				break;
+			case 4:
+				if(xp >= 1160){
+					LevelUp();
+				}
+				break;
+			case 5:
+				if(xp >= 1810){
+					LevelUp();
+				}
+				break;
+			case 6:
+				if(xp >= 2650){
+					LevelUp();
+				}
+				break;
+			case 7:
+				if(xp >= 3630){
+					LevelUp();
+				}
+				break;
+			case 8:
+				if(xp >= 4830){
+					LevelUp();
+				}
+				break;
+			case 9:
+				if(xp >= 6270){
+					LevelUp();
+				}
+				break;
+			}
+		}
+		public void LevelUp(){
+			++level;
+			if(level == 1){
+				B.Add("Welcome, adventurer! ");
+			}
+			else{
+				B.Add("Welcome to level " + level + ". ");
+			}
+			//display stats
+			//print(true) or printall or whatever.
+			//input char
+			//int number_of_skills_left_to_pick
+			//a <skilltype,bool> dictionary to track which have been increased? or just a list?
+			//a <skilltype,int> dictionary to track the original values of the feat points.
+			//a list of selected feats
+			//bool done
+			//while not done
+				//stuff
+			//when done...
+			//make the feat selections permanent
+			//make the skill increases permanent
+			//done!
+		}
 		public bool CanSee(int r,int c){ return CanSee(M.tile[r,c]); }
 		public bool CanSee(PhysicalObject o){
 			Actor a = o as Actor;
@@ -5207,7 +5313,7 @@ effect as standing still, if you're on fire or catching fire. */
 				return new AttackInfo(attack[1]);
 			case ActorType.ROBED_ZEALOT:
 				return new AttackInfo(attack[4]);
-			case ActorType.WORG:
+			case ActorType.WARG:
 				return new AttackInfo(attack[2]);
 			case ActorType.CARRION_CRAWLER:
 				switch(num){

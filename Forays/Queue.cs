@@ -423,7 +423,8 @@ namespace Forays{
 					if(value > 0 && target.actor() == null){
 						Actor.Create(ActorType.TROLL,target.row,target.col);
 						target.actor().curhp = value;
-						B.Add("The troll stands up! ",target); //todo: no exp
+						target.actor().level = 0;
+						B.Add("The troll stands up! ",target);
 						target.actor().player_visibility_duration = -1;
 						if(target.tile().type == TileType.DOOR_C){
 							target.tile().Toggle(target.actor());
@@ -447,13 +448,18 @@ namespace Forays{
 							B.Add("You hear sounds coming from the troll's corpse. ",target);
 							break;
 						case 5:
-							B.Add("The troll on the floor seems to be regenerating. ");
+							B.Add("The troll on the floor regenerates. ");
 							break;
 						default:
 							break;
 						}
 						Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
 					}
+					break;
+					}
+				case EventType.BOSS_ARRIVE:
+					{
+					//todo
 					break;
 					}
 				}

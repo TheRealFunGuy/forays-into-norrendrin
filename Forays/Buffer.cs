@@ -108,10 +108,12 @@ namespace Forays{
 				Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
 				Console.Write(str);
 				if(str2 != "" || special_message == true){
+					int cursor = Console.CursorLeft;
+					M.Draw();
+					Console.SetCursorPosition(cursor,1);
 					Screen.ForegroundColor = ConsoleColor.Yellow;
 					Console.Write("[more]");
 					Screen.ForegroundColor = ConsoleColor.Gray;
-					M.Draw();
 					Console.CursorVisible = true; //untested
 					Console.ReadKey();
 				}
