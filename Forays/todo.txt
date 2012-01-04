@@ -25,11 +25,22 @@ perhaps enemies that you sneak attack should have a chance of yelling in surpris
 
 consider making ranged attacks...not attacks at all, but generated straight from the AI routine
 
-Tab should enter lookmode and jump to the nearest interesting thing.
-
 all noise should alert monsters. you should REALLY need to be stealthy.
 
-use NO_EXP flag, or simply set xp to 0 for clones and summons?
+borrow 'you feel relatively safe' from doomRL?
+
+===
+noise vs stealth:
+things that should make noise:
+casting almost every spell
+mobs noticing you
+enemy attacks, but perhaps not your attacks?
+some traps
+many feats
+
+...these things should immediately alert nearby mobs (mobs that would otherwise be able to see you - this is the simplest way)
+===
+
 
 
 ...

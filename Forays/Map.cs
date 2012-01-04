@@ -205,6 +205,73 @@ namespace Forays{
 				}
 			}
 		}
+		public void SpawnMob(){
+			List<ActorType> types = new List<ActorType>();
+			while(types.Count == 0){
+				foreach(ActorType atype in Enum.GetValues(typeof(ActorType))){
+					if(atype != ActorType.PLAYER){
+						int i = 1 + Math.Abs(Actor.Prototype(atype).level - current_level);
+						if(i <= 4 && Global.Roll(i) == i){ //level-based check
+							if(Global.Roll(Actor.Rarity(atype)) == Actor.Rarity(atype)){
+								types.Add(atype);
+							}
+						}
+					}
+				}
+			}
+			SpawnMob(types[Global.Roll(types.Count)-1]);
+		}
+		public void SpawnMob(ActorType type){
+			int number = 1;
+			if(Actor.Prototype(type).HasAttr(AttrType.SMALL_GROUP)){
+				number = Global.Roll(2)+1;
+			}
+			if(Actor.Prototype(type).HasAttr(AttrType.MEDIUM_GROUP)){
+				number = Global.Roll(2)+2;
+			}
+			if(Actor.Prototype(type).HasAttr(AttrType.LARGE_GROUP)){
+				number = Global.Roll(3)+4;
+			}
+			List<Tile> group_tiles = new List<Tile>();
+			for(int i=0;i<number;++i){
+				if(i == 0){
+					for(int j=0;j<9999;++j){
+						int rr = Global.Roll(ROWS-2);
+						int rc = Global.Roll(COLS-2);
+						if(tile[rr,rc].passable && actor[rr,rc] == null){
+							Actor.Create(type,rr,rc);
+							if(number > 1){
+								group_tiles.Add(tile[rr,rc]);
+							}
+							break;
+						}
+					}
+				}
+				else{
+					for(int j=0;j<9999;++j){
+						if(group_tiles.Count == 0){ //no space left!
+							return;
+						}
+						Tile t = group_tiles[Global.Roll(group_tiles.Count)-1];
+						List<Tile> empty_neighbors = new List<Tile>();
+						foreach(Tile neighbor in t.TilesAtDistance(1)){
+							if(neighbor.passable && neighbor.actor() == null){
+								empty_neighbors.Add(neighbor);
+							}
+						}
+						if(empty_neighbors.Count > 0){
+							t = empty_neighbors[Global.Roll(empty_neighbors.Count)-1];
+							Actor.Create(type,t.row,t.col);
+							group_tiles.Add(t);
+							break;
+						}
+						else{
+							group_tiles.Remove(t);
+						}
+					}
+				}
+			}
+		}
 		public void GenerateLevel(){
 			if(current_level < 10){
 				++current_level;
@@ -215,6 +282,8 @@ namespace Forays{
 						if(actor[i,j] != player){
 							actor[i,j].inv.Clear();
 							actor[i,j].target = null;
+							Q.KillEvents(null,EventType.ANY_EVENT);
+							//
 							Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
 						}
 						actor[i,j] = null;
@@ -280,13 +349,15 @@ namespace Forays{
 					}
 				}
 			}
-			//update player for new level, including reset of player's target
 			player.ResetForNewLevel();
-			//spawn some items and mobs
+			//todo: spawn some items
+			for(int i=Global.Roll(2,2)+3;i>0;--i){
+				SpawnMob();
+			}
 			if(current_level == 10){
 				Q.Add(new Event(1000,EventType.BOSS_ARRIVE));
 			}
-			//find a spot for the player that no monsters can see
+			//todo: find a spot for the player that no monsters can see
 			//if there is no such spot, place the player randomly
 			for(bool done=false;!done;){
 				int rr = Global.Roll(ROWS-1);
