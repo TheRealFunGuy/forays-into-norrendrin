@@ -16,6 +16,9 @@ should dream warrior teleport straight to target_location in seekAI?
 
 shadow should reduce the light radius of zealots, too
 
+make 'w'alk interruptable
+
+make random colors work for things besides animations - make prismatic orb change.
 
 
 
@@ -28,6 +31,17 @@ consider making ranged attacks...not attacks at all, but generated straight from
 all noise should alert monsters. you should REALLY need to be stealthy.
 
 borrow 'you feel relatively safe' from doomRL?
+
+map 1-5 and 7-9 to switch armor and weapons
+
+levelup needs to prompt for spell selection afterward.
+
+'w'alk should allow waiting.
+
+
+
+
+
 
 ===
 noise vs stealth:

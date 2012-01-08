@@ -32,6 +32,7 @@ namespace Forays{
 			Console.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);
 		}
 		public int DistanceFrom(PhysicalObject o){ return DistanceFrom(o.row,o.col); }
+		public int DistanceFrom(pos p){ return DistanceFrom(p.row,p.col); }
 		public int DistanceFrom(int r,int c){
 			int dy = Math.Abs(r-row);
 			int dx = Math.Abs(c-col);

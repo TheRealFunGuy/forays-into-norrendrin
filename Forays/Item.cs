@@ -21,8 +21,19 @@ namespace Forays{
 		public static Buffer B{get;set;}
 		public static Actor player{get;set;}
 		static Item(){
-			proto[ConsumableType.HEALING] = new Item(ConsumableType.HEALING,"potion~ of healing",'!',Color.Magenta);
-			//todo: rest
+			proto[ConsumableType.HEALING] = new Item(ConsumableType.HEALING,"potion~ of healing",'!',Color.DarkMagenta);
+			proto[ConsumableType.REGENERATION] = new Item(ConsumableType.REGENERATION,"potion~ of regeneration",'!',Color.Green);
+			proto[ConsumableType.CURE_POISON] = new Item(ConsumableType.CURE_POISON,"potion~ of cure poison",'!',Color.Red);
+			proto[ConsumableType.RESISTANCE] = new Item(ConsumableType.RESISTANCE,"potion~ of resistance",'!',Color.Yellow);
+			proto[ConsumableType.CLARITY] = new Item(ConsumableType.CLARITY,"potion~ of clarity",'!',Color.Gray);
+			proto[ConsumableType.PHASING] = new Item(ConsumableType.PHASING,"rune~ of phasing",'&',Color.Cyan);
+			proto[ConsumableType.TELEPORTATION] = new Item(ConsumableType.TELEPORTATION,"rune~ of teleportation",'&',Color.DarkRed);
+			proto[ConsumableType.PASSAGE] = new Item(ConsumableType.PASSAGE,"rune~ of passage",'&',Color.Blue);
+			proto[ConsumableType.DETECT_MONSTERS] = new Item(ConsumableType.DETECT_MONSTERS,"scroll~ of detect monsters",'?',Color.White);
+			proto[ConsumableType.MAGIC_MAP] = new Item(ConsumableType.MAGIC_MAP,"scroll~ of magic map",'?',Color.Gray);
+			proto[ConsumableType.WIZARDS_LIGHT] = new Item(ConsumableType.WIZARDS_LIGHT,"orb~ of wizard's light",'*',Color.Yellow);
+			proto[ConsumableType.PRISMATIC_ORB] = new Item(ConsumableType.PRISMATIC_ORB,"prismatic orb~",'*',Color.White);
+			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'~',Color.White);
 		}
 		public Item(ConsumableType type_,string name_,char symbol_,Color color_){
 			type = type_;

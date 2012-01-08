@@ -302,7 +302,12 @@ namespace Forays{
 				case EventType.REMOVE_ATTR:
 					{
 					Actor temp = target as Actor;
-					temp.attrs[attr] -= value;
+					if(temp.type == ActorType.BERSERKER && attr == AttrType.COOLDOWN_2){ //hack
+						temp.attrs[attr] = 0;
+					}
+					else{
+						temp.attrs[attr] -= value;
+					}
 					if(attr == AttrType.IMMOBILIZED && temp.attrs[attr] < 0){ //check here for attrs that shouldn't drop below 0
 						temp.attrs[attr] = 0;
 					}

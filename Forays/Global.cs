@@ -53,6 +53,12 @@ namespace Forays{
 			}
 			return result;
 		}
+		public static bool BoundsCheck(int r,int c){
+			if(r>=0 && r<ROWS && c>=0 && c<COLS){
+				return true;
+			}
+			return false;
+		}
 	}
 	public class Dict<TKey,TValue>{
 		private Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
@@ -73,6 +79,29 @@ namespace Forays{
 		public pos(int r,int c){
 			row = r;
 			col = c;
+		}
+		public int DistanceFrom(PhysicalObject o){ return DistanceFrom(o.row,o.col); }
+		public int DistanceFrom(pos p){ return DistanceFrom(p.row,p.col); }
+		public int DistanceFrom(int r,int c){
+			int dy = Math.Abs(r-row);
+			int dx = Math.Abs(c-col);
+			if(dx > dy){
+				return dx;
+			}
+			else{
+				return dy;
+			}
+		}
+		public List<pos> PositionsAtDistance(int dist){
+			List<pos> result = new List<pos>();
+			for(int i=row-dist;i<=row+dist;++i){
+				for(int j=col-dist;j<=col+dist;++j){
+					if(DistanceFrom(i,j) == dist && Global.BoundsCheck(i,j)){
+						result.Add(new pos(i,j));
+					}
+				}
+			}
+			return result;
 		}
 	}
 }

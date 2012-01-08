@@ -30,6 +30,16 @@ namespace Forays{
 		public Color color;
 		public Color bgcolor;
 		public string s;
+		public colorstring(Color color_,Color bgcolor_,string s_){
+			color = color_;
+			bgcolor = bgcolor_;
+			s = s_;
+		}
+		public colorstring(Color color_,string s_){
+			color = color_;
+			bgcolor = Color.Black;
+			s = s_;
+		}
 	}
 	public static class Screen{
 		private static colorchar[,] memory;
@@ -176,15 +186,19 @@ namespace Forays{
 					BackgroundColor = co;
 				}
 				int i = 0;
+				bool changed = false;
 				foreach(char ch in s.s){
 					cch.c = ch;
 					if(!memory[r,c+i].Equals(cch)){
 						memory[r,c+i] = cch;
+						changed = true;
 					}
 					++i;
 				}
-				Console.SetCursorPosition(c,r);
-				Console.Write(s.s);
+				if(changed){
+					Console.SetCursorPosition(c,r);
+					Console.Write(s.s);
+				}
 			}
 		}
 		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r+1,c,ch); }
