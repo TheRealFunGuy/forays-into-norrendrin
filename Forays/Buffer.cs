@@ -76,7 +76,7 @@ namespace Forays{
 			//Console.SetCursorPosition(Global.MAP_OFFSET_COLS + str.Length,1);
 			//Console.CursorVisible = true;
 		}
-		public void DisplayLogtempfunction(){
+		public void DisplayLogtempfunction(){ //todo remove
 			for(int i=0;i<log.Length;++i){
 				Console.Error.Write("{0} ",log[i]);
 			}
@@ -151,6 +151,11 @@ namespace Forays{
 				result.Add(Printed(i));
 			}
 			return result;
+		}
+		public void AddDependingOnLastPartialMessage(string s){ //   =|
+			if(!str.EndsWith(s,true,null)){
+				Add(s);
+			}
 		}
 	}
 }

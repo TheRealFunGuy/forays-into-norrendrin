@@ -111,6 +111,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public Dict<SpellType,int> spells = new Dict<SpellType,int>();
 		private int time_of_last_action;
 		private int recover_time;
+		private List<pos> path = new List<pos>();
 		public Tile target_location;
 		public int player_visibility_duration;
 		public LinkedList<WeaponType> weapons = new LinkedList<WeaponType>();
@@ -127,7 +128,6 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public static Buffer B{get;set;}
 		public static Actor player{get;set;}
 		static Actor(){
-			//todo: currently, nothing has a value for level or xp.
 			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,0,1,0,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,0,1,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.LARGE_BAT,"large bat",'b',Color.DarkGray,20,60,0,1,0,AttrType.DARKVISION);
@@ -164,7 +164,6 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.ARC_LIGHTNING,SpellType.BURNING_HANDS,SpellType.FORCE_BEAM,SpellType.SHOCK,SpellType.SONIC_BOOM,SpellType.IMMOLATE);
 			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,10,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
 			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,10,0,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
-			//todo: make sure to assign all appropriate atts, especially HUMANOID_INT and MED_HUMANOID
 		}
 		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			proto[type_] = new Actor(type_,name_,symbol_,color_,maxhp_,speed_,xp_,level_,light_radius_,attrlist);
@@ -352,7 +351,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		public int DurationOfMagicalEffect(int original){ //intended to be used with whole turns, i.e. numbers below 50.
 			int diff = (original * TotalSkill(SkillType.SPIRIT)) / 20; //each point of Spirit takes off 1/20th of the duration
 			return original - diff; //therefore, maxed Spirit cuts durations in half
-		} //todo: use this method, duh.
+		}
 		public static int Rarity(ActorType type){
 			int result = 1;
 			if(((int)type)%3 == 2){
@@ -370,7 +369,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				for(int i=row-from;i<=row+from;++i){
 					for(int j=col-from;j<=col+from;++j){
 						if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
-							if(!M.tile[i,j].opaque && HasLOS(i,j)){ //for now, i'm keeping HasLOS here instead of HasBresenham
+							if(!M.tile[i,j].opaque && (HasBresenhamLine(i,j) || M.tile[i,j].HasBresenhamLine(row,col))){
 								M.tile[i,j].light_value--;
 							}
 						}
@@ -381,7 +380,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				for(int i=row-to;i<=row+to;++i){
 					for(int j=col-to;j<=col+to;++j){
 						if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
-							if(!M.tile[i,j].opaque && HasLOS(i,j)){
+							if(!M.tile[i,j].opaque && (HasBresenhamLine(i,j) || M.tile[i,j].HasBresenhamLine(row,col))){
 								M.tile[i,j].light_value++;
 							}
 						}
@@ -452,8 +451,11 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			if(HasAttr(AttrType.PARALYZED)){
 				attrs[AttrType.PARALYZED]--;
-				B.Add(the_name + " can't move! ",this);
-				if(type != ActorType.PLAYER){ //handled differently for the player: since the map still needs to be drawn,
+				if(type == ActorType.PLAYER){
+					B.AddDependingOnLastPartialMessage("You can't move! ");
+				}
+				else{ //handled differently for the player: since the map still needs to be drawn,
+					B.Add(the_name + " can't move! ",this);
 					Q1();						// this is handled in InputHuman().
 					return_before_input = true; //the message is still printed, of course.
 				}
@@ -467,14 +469,23 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						dist = DistanceFrom(a);
 					}
 				}
-				if(banshee != null){
-					B.Add(You("flee") + ". ",this);
-					AI_Step(banshee,true);
+				if(type == ActorType.PLAYER){
+					if(banshee != null){
+						B.AddDependingOnLastPartialMessage("You flee. ");
+						AI_Step(banshee,true);
+					}
+					else{
+						B.AddDependingOnLastPartialMessage("You feel unsettled. ");
+					}
 				}
-				else{
-					B.Add(YouFeel() + " unsettled. ");
-				}
-				if(type != ActorType.PLAYER){ //same story
+				else{ //same story
+					if(banshee != null){
+						B.Add(You("flee") + ". ",this);
+						AI_Step(banshee,true);
+					}
+					else{
+						B.Add(YouFeel() + " unsettled. ",this);
+					}
 					Q1();
 					return_before_input = true;
 				}
@@ -656,10 +667,16 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			else{
 				M.Draw();
 			}
-			B.Print(false);
+			if(!HasAttr(AttrType.AFRAID) && !HasAttr(AttrType.PARALYZED)){
+				B.Print(false);
+			}
+			else{
+				B.DisplayNow();
+			}
 			Cursor();
 			Console.CursorVisible = true;
 			if(HasAttr(AttrType.PARALYZED) || HasAttr(AttrType.AFRAID)){
+				Thread.Sleep(250);
 				Q1();
 				return;
 			}
@@ -926,13 +943,22 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				//todo: for now, this selects from 10 spells.
 				{
 				List<string> ls = new List<string>();
+				List<SpellType> sp = new List<SpellType>();
 				foreach(SpellType s in Enum.GetValues(typeof(SpellType))){
 					ls.Add(Spell.Name(s));
+					sp.Add(s);
 				}
-				ls.RemoveRange(10,15);
+				ls.RemoveRange(20,5);
+				sp.RemoveRange(20,5);
 				int i = Select("Cast which spell? ",ls);
-				B.Add("You almost cast spell " + i + ". ");
-				Q1();
+				if(i != -1){
+					if(!CastSpell(sp[i])){
+						Q0();
+					}
+				}
+				else{
+					Q0();
+				}
 				break;
 				}
 			case 'R':
@@ -1207,6 +1233,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("See the entire level");
 				l.Add("Generate new level");
 				l.Add("Create grenades!");
+				l.Add("Level up");
+				l.Add("PARALYZED!");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1354,6 +1382,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 					Q0();
 					break;
+				case 13:
+					LevelUp();
+					Q0();
+					break;
+				case 14:
+					attrs[AttrType.PARALYZED] = 10;
+					Q0();
+					break;
 				default:
 					Q0();
 					break;
@@ -1429,7 +1465,6 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 		}
 		public void InputAI(){
-			//bool path_step? am i using pathing for anybody?
 			if(CanSee(player)){
 				if(target_location == null && HasAttr(AttrType.DETECTING_MONSTERS)){ //orc warmages etc. when they first notice
 					player_visibility_duration = -1;
@@ -1488,6 +1523,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 		}
 		public void ActiveAI(){
+			if(path.Count > 0){
+				path.Clear();
+			}
 			switch(type){
 			case ActorType.LARGE_BAT:
 				if(DistanceFrom(target) == 1){
@@ -2103,6 +2141,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					attrs[AttrType.ON_FIRE] = Math.Max(attrs[AttrType.ON_FIRE],2);
 					foreach(Actor a in ActorsAtDistance(1)){
 						if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.IMMUNE_FIRE)){
+							if(a.name == "you"){
+								B.Add("You start to catch fire! ");
+							}
+							else{
+								B.Add(a.the_name + " starts to catch fire. ",a);
+							}
 							a.attrs[AttrType.CATCHING_FIRE] = 1;
 						}
 					}
@@ -2124,8 +2168,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case ActorType.SWORDSMAN:
 				if(DistanceFrom(target) == 1){
 					Attack(0,target);
-					B.Add(You("adopt") + " a more aggressive stance. "); //or 'the swordsman's stance becomes more aggressive'?
-					attrs[AttrType.BONUS_COMBAT] += 3;
+					if(!HasAttr(AttrType.COOLDOWN_1)){
+						B.Add(You("adopt") + " a more aggressive stance. ");
+						attrs[AttrType.BONUS_COMBAT] += 3;
+					}
 				}
 				else{
 					AI_Step(target);
@@ -2188,7 +2234,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					foreach(Actor actor in targets){
 						if(actor.TakeDamage(new Damage(1,true,DamageType.MAGIC,DamageClass.MAGICAL,this))){
 							actor.attrs[AttrType.AFRAID]++;
-							Q.Add(new Event(actor,(Global.Roll(3)+2)*100,AttrType.AFRAID));
+							Q.Add(new Event(actor,DurationOfMagicalEffect((Global.Roll(3)+2))*100,AttrType.AFRAID));
 						}
 					}
 					Q1();
@@ -2260,7 +2306,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case ActorType.BERSERKER:
 				if(HasAttr(AttrType.COOLDOWN_2)){
 					int dir = attrs[AttrType.COOLDOWN_2];
-					bool cw = Global.CoinFlip()? true : false;
+					bool cw = Global.CoinFlip();
 					if(TileInDirection(dir).passable && ActorInDirection(dir) == null){
 						if(HasAttr(AttrType.IMMOBILIZED)){
 							attrs[AttrType.IMMOBILIZED] = 0;
@@ -2318,7 +2364,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						if(target != null && Global.Roll(3) == 3){
 							B.Add(the_name + " screams with fury! ",this);
 							attrs[AttrType.COOLDOWN_2] = DirectionOf(target);
-							Q.Add(new Event(this,350,AttrType.COOLDOWN_2,DirectionOf(target),Your() + " rage diminishes. ",this));
+							Q.Add(new Event(this,350,AttrType.COOLDOWN_2,Your() + " rage diminishes. ",this));
 						}
 					}
 					else{
@@ -2528,6 +2574,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 		}
 		public void SeekAI(){
+			if(path.Count > 0){
+				AI_Step(M.tile[path[0].row,path[0].col]);
+				if(DistanceFrom(path[0]) == 0){
+					path.RemoveAt(0);
+				}
+				QS();
+				return;
+			}
 			switch(type){
 			case ActorType.PHASE_SPIDER:
 				if(DistanceFrom(target) <= 10){
@@ -2607,8 +2661,18 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				else{
-					if(DistanceFrom(target) <= 2){ //if close enough, you can still hear them. or at least that's the idea.
+/*					if(DistanceFrom(target) <= 2){ //if close enough, you can still hear them. or at least that's the idea.
 						AI_Step(target);
+						QS();
+					}*/
+					if(DistanceFrom(target) <= 5){
+						path = FindPath(target);
+						if(path.Count > 0){
+							AI_Step(M.tile[path[0].row,path[0].col]);
+							if(DistanceFrom(path[0]) == 0){
+								path.RemoveAt(0);
+							}
+						}
 						QS();
 					}
 					else{ //if they're too far away, forget them and end turn.
@@ -2620,6 +2684,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 		}
 		public void IdleAI(){ //todo: perhaps some more 'ambient' actions, like zombies moaning if you're close enough to hear
+			if(path.Count > 0){
+				AI_Step(M.tile[path[0].row,path[0].col]);
+				if(DistanceFrom(path[0]) == 0){
+					path.RemoveAt(0);
+				}
+				QS();
+				return;
+			}
 			switch(type){
 			case ActorType.LARGE_BAT: //flies around
 				QS();
@@ -2787,6 +2859,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					dirs.Add(3);
 				}
 			}
+			if(dirs.Count == 0){ return true; }
 			bool cw = Global.CoinFlip();
 			dirs.Add(RotateDirection(dirs[0],cw));
 			dirs.Add(RotateDirection(dirs[0],!cw)); //building a list of directions to try: first the primary direction,
@@ -2893,6 +2966,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			if(StunnedThisTurn()){
 				return false;
 			}
+			pos pos_of_target = new pos(a.row,a.col);
 			AttackInfo info = AttackList.Attack(type,attack_idx);
 			info.damage.source = this;
 			int plus_to_hit = TotalSkill(SkillType.COMBAT);
@@ -2906,14 +2980,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			if(a.HasAttr(AttrType.DEFENSIVE_STANCE) && Global.CoinFlip()){
 				hit = false;
 			}
-			//todo: handle neck snap here after figuring out how stealth/detection works. i think it'll work as long as you
-			// hit them - probably with a bonus to hit because they can't see you.
 			if(attack_idx==0 && (type==ActorType.FROSTLING || type==ActorType.FIRE_DRAKE)){
 				hit = true; //hack! these are the 2 'area' attacks that always hit
 			}
 			string s = info.desc + ". ";
 			if(hit){
-				if(HasFeat(FeatType.NECK_SNAP) && a.HasAttr(AttrType.MEDIUM_HUMANOID)){
+				if(HasFeat(FeatType.NECK_SNAP) && a.HasAttr(AttrType.MEDIUM_HUMANOID) && IsHiddenFrom(a)){
 					B.Add(You("quietly snap") + " " + a.Your() + " neck. ");
 					a.TakeDamage(DamageType.NORMAL,9001,this);
 					Q1();
@@ -2987,6 +3059,15 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						}
 					}
 				}
+				if(IsHiddenFrom(a)){
+					B.Add(You("strike") + " from the shadows! ");
+					if(type != ActorType.PLAYER){
+						attrs[AttrType.TURNS_VISIBLE] = -1;
+					}
+					else{
+						a.player_visibility_duration = -1;
+					}
+				}
 				B.Add(s,this,a);
 				int dmg;
 				if(crit){
@@ -3020,8 +3101,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				if(HasAttr(AttrType.PARALYSIS_HIT) && attack_idx==0 && M.actor[r,c] != null){
 					//hack: only applies to attack 0
-					B.Add(a.YouAre() + " paralyzed. ",this,a);
-					a.attrs[AttrType.PARALYZED]++; //todo: make sure this is how paralysis works
+					B.Add(a.YouAre() + " paralyzed. ",this,a); //todo: update to handle paralyzation resistance.
+					a.attrs[AttrType.PARALYZED] = Global.Roll(1,3)+3;
 				}
 				if(HasAttr(AttrType.FORCE_HIT) && M.actor[r,c] != null){
 					//todo: mace of force here
@@ -3034,7 +3115,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							str = "Your vision returns to normal. ";
 						}
 						a.attrs[AttrType.DIM_VISION]++;
-						Q.Add(new Event(a,(Global.Roll(2,20)+20)*100,AttrType.DIM_VISION,str));
+						Q.Add(new Event(a,DurationOfMagicalEffect((Global.Roll(2,20)+20))*100,AttrType.DIM_VISION,str));
 					}
 				}
 				if(HasAttr(AttrType.STALAGMITE_HIT)){
@@ -3056,9 +3137,13 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 					Q.Add(new Event(tiles,150,EventType.STALAGMITE));
 				}
-				if(M.actor[r,c] != null && a.type == ActorType.SWORDSMAN && a.attrs[AttrType.BONUS_COMBAT] > 0){
-					B.Add(a.the_name + " returns to a defensive stance. ",a);
-					a.attrs[AttrType.BONUS_COMBAT] = 0;
+				if(M.actor[r,c] != null && a.type == ActorType.SWORDSMAN){
+					if(a.attrs[AttrType.BONUS_COMBAT] > 0){
+						B.Add(a.the_name + " returns to a defensive stance. ",a);
+						a.attrs[AttrType.BONUS_COMBAT] = 0;
+					}
+					a.attrs[AttrType.COOLDOWN_1]++;
+					Q.Add(new Event(a,100,AttrType.COOLDOWN_1));
 				}
 			}
 			else{
@@ -3091,13 +3176,18 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				if(HasAttr(AttrType.DRIVE_BACK_ON)){
-					if(!a.HasAttr(AttrType.IMMOBILIZED)){
-						a.AI_Step(this,true); //todo: should you follow them after driving them back? i'm thinking yes.
+					if(!a.HasAttr(AttrType.IMMOBILIZED) && !HasAttr(AttrType.IMMOBILIZED)){
+						a.AI_Step(this,true);
+						AI_Step(a);
 					}
 				}
-				if(a.type == ActorType.SWORDSMAN && a.attrs[AttrType.BONUS_COMBAT] > 0){
-					B.Add(a.the_name + " returns to a defensive stance. ",a);
-					a.attrs[AttrType.BONUS_COMBAT] = 0;
+				if(a.type == ActorType.SWORDSMAN){
+					if(a.attrs[AttrType.BONUS_COMBAT] > 0){
+						B.Add(a.the_name + " returns to a defensive stance. ",a);
+						a.attrs[AttrType.BONUS_COMBAT] = 0;
+					}
+					a.attrs[AttrType.COOLDOWN_1]++;
+					Q.Add(new Event(a,100,AttrType.COOLDOWN_1));
 				}
 			}
 			Q.Add(new Event(this,info.cost));
@@ -3285,7 +3375,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				Interrupt();
 				if(dmg.source != null){
-					if(type != ActorType.PLAYER){
+					if(type != ActorType.PLAYER && dmg.source != this){
 						target = dmg.source;
 						if(light_radius > 0 && HasLOS(dmg.source.row,dmg.source.col)){//for enemies who can't see in darkness
 							target_location = M.tile[dmg.source.row,dmg.source.col];
@@ -3387,9 +3477,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 			}
 			else{
-				if(HasFeat(FeatType.FEEL_NO_PAIN) && damage_dealt && curhp < 20){ //todo: does this need a msg?
+				if(HasFeat(FeatType.FEEL_NO_PAIN) && damage_dealt && curhp < 20){
+					B.Add("You feel no pain! ");
 					attrs[AttrType.INVULNERABLE]++;
-					Q.Add(new Event(this,500,AttrType.INVULNERABLE));
+					Q.Add(new Event(this,500,AttrType.INVULNERABLE,"You can feel pain again. "));
 				}
 				if(magic_items.Contains(MagicItemType.CLOAK_OF_DISAPPEARANCE) && damage_dealt && dmg.amount >= curhp){
 					B.PrintAll();
@@ -3502,9 +3593,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			if(StunnedThisTurn()){ //todo: eventually this will be moved to the last possible second
 				return true; //returns true because turn was used up. 
 			}
-			if(!HasSpell(spell)){
-				return false;
-			}
+			//if(!HasSpell(spell)){
+		//		return false;
+		//	} todo uncomment this
 			Tile t = null;
 			if(obj != null){
 				t = M.tile[obj.row,obj.col];
@@ -3753,10 +3844,10 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						int c = a.col;
 						a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
 						if(M.actor[r,c] != null && !a.HasAttr(AttrType.IMMOBILIZED) && Global.Roll(1,10) <= 6){
-							B.Add(a.the_name + " is immobilized. ",a);
+							B.Add(a.YouAre() + " immobilized. ",a);
 							a.attrs[AttrType.IMMOBILIZED]++;
-							int duration = Global.Roll(1,3) * 100;
-							Q.Add(new Event(a,duration,AttrType.IMMOBILIZED,a.the_name + " is no longer immobilized. ",a));
+							int duration = DurationOfMagicalEffect(Global.Roll(1,3)) * 100;
+							Q.Add(new Event(a,duration,AttrType.IMMOBILIZED,a.YouAre() + " no longer immobilized. ",a));
 						}
 					}
 					else{
@@ -3783,7 +3874,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
 							B.Add(a.YouAre() + " stunned. ",a);
 							a.attrs[AttrType.STUNNED]++;
-							int duration = (Global.Roll(1,4)+2) * 100;
+							int duration = DurationOfMagicalEffect((Global.Roll(1,4)+2)) * 100;
 							Q.Add(new Event(a,duration,AttrType.STUNNED,the_name + " is no longer stunned. ",a));
 						}
 					}
@@ -3888,11 +3979,9 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					Screen.AnimateExplosion(t,2,new colorchar(Color.RandomFire,'*'));
 					B.Add("Fwoosh! ",this,t);
 					List<Actor> targets = new List<Actor>();
-					for(int i=t.row-2;i<=t.row+2;++i){
-						for(int j=t.col-2;j<=t.col+2;++j){
-							if(M.actor[i,j] != null && M.actor[i,j] != this){
-								targets.Add(M.actor[i,j]);
-							}
+					foreach(Actor ac in t.ActorsWithinDistance(2)){
+						if(ac != this){
+							targets.Add(ac);
 						}
 					}
 					while(targets.Count > 0){
@@ -4088,7 +4177,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					if(M.actor[r,c] != null && Global.Roll(1,10) <= 8){
 						B.Add(a.the_name + " is immobilized. ",a);
 						a.attrs[AttrType.IMMOBILIZED]++;
-						int duration = Global.Roll(1,3) * 100;
+						int duration = DurationOfMagicalEffect(Global.Roll(1,3)) * 100;
 						Q.Add(new Event(a,duration,AttrType.IMMOBILIZED,a.the_name + " is no longer immobilized. ",a));
 					}
 				}
@@ -4547,55 +4636,62 @@ effect as standing still, if you're on fire or catching fire. */
 			// therefore you reach level 2 after defeating 10 level 1 foes, which give 10xp each,
 			// and you reach level 3 after defeating 11 level 2 foes, which give 20xp each.
 			// (and so on)
+			List<FeatType> new_feats = null;
 			switch(level){
 			case 1:
 				if(xp >= 100){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 2:
 				if(xp >= 320){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 3:
 				if(xp >= 680){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 4:
 				if(xp >= 1160){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 5:
 				if(xp >= 1810){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 6:
 				if(xp >= 2650){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 7:
 				if(xp >= 3630){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 8:
 				if(xp >= 4830){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			case 9:
 				if(xp >= 6270){
-					LevelUp();
+					new_feats = LevelUp();
 				}
 				break;
 			}
+			if(new_feats != null){
+				foreach(FeatType feat in new_feats){
+					B.Add("You learn the " + Feat.Name(feat) + " feat. ");
+				}
+			}
 		}
-		public void LevelUp(){
+		public List<FeatType> LevelUp(){
+			List<FeatType> completed_feats = new List<FeatType>();
 			++level;
 			if(level == 1){
 				B.Add("Welcome, adventurer! ");
@@ -4603,20 +4699,183 @@ effect as standing still, if you're on fire or catching fire. */
 			else{
 				B.Add("Welcome to level " + level + ". ");
 			}
-			//display stats
-			//print(true) or printall or whatever.
-			//input char
-			//int number_of_skills_left_to_pick
-			//a <skilltype,bool> dictionary to track which have been increased? or just a list?
-			//a <skilltype,int> dictionary to track the original values of the feat points.
-			//a list of selected feats
-			//bool done
-			//while not done
-				//stuff
-			//when done...
-			//make the feat selections permanent
-			//make the skill increases permanent
-			//done!
+			DisplayStats();
+			B.PrintAll();
+			ConsoleKeyInfo command;
+			List<SkillType> skills_increased = new List<SkillType>();
+			List<FeatType> feats_increased = new List<FeatType>();
+			bool done = false;
+			while(!done){
+				Screen.ResetColors();
+				B.DisplayNow("Choose which skills you'll increase: ");
+				Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+				for(int i=0;i<5;++i){
+					SkillType sk = (SkillType)i;
+					Screen.WriteMapString(1+i*4,0,("["+(char)(i+97)+"] " + Skill.Name(sk)).PadRight(22));
+					Screen.WriteMapChar(1+i*4,1,new colorchar(Color.Cyan,(char)(i+97)));
+					Color levelcolor = skills_increased.Contains(sk)? Color.Green : Color.Gray;
+					int skill_level = skills_increased.Contains(sk)? skills[sk] + 1 : skills[sk];
+					Screen.WriteMapString(1+i*4,22,new colorstring(levelcolor,("Level " + skill_level).PadRight(70)));
+					FeatType ft = Feat.OfSkill(sk,0);
+					Color featcolor = feats_increased.Contains(ft)? Color.Green : Color.Gray;
+					int feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+					if(HasFeat(ft)){ featcolor = Color.Magenta; feat_level = Feat.MaxRank(ft); }
+					Screen.WriteMapString(2+i*4,0,new colorstring(featcolor,("    " + Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(35)));
+					ft = Feat.OfSkill(sk,1);
+					featcolor = feats_increased.Contains(ft)? Color.Green : Color.Gray;
+					feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+					if(HasFeat(ft)){ featcolor = Color.Magenta; feat_level = Feat.MaxRank(ft); }
+					Screen.WriteMapString(2+i*4,35,new colorstring(featcolor,(Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(70)));
+					ft = Feat.OfSkill(sk,2);
+					featcolor = feats_increased.Contains(ft)? Color.Green : Color.Gray;
+					feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+					if(HasFeat(ft)){ featcolor = Color.Magenta; feat_level = Feat.MaxRank(ft); }
+					Screen.WriteMapString(3+i*4,0,new colorstring(featcolor,("    " + Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(35)));
+					ft = Feat.OfSkill(sk,3);
+					featcolor = feats_increased.Contains(ft)? Color.Green : Color.Gray;
+					feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+					if(HasFeat(ft)){ featcolor = Color.Magenta; feat_level = Feat.MaxRank(ft); }
+					Screen.WriteMapString(3+i*4,35,new colorstring(featcolor,(Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(70)));
+					Screen.WriteMapString(4+i*4,0,"".PadRight(COLS));
+				}
+				if(skills_increased.Count == 3){
+					Screen.WriteMapString(21,0,"--Type [a-e] to choose a skill--[?] for help--[Enter] to accept---");
+					Screen.WriteMapChar(21,8,new colorchar(Color.Cyan,'a'));
+					Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'e'));
+					Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
+					Screen.WriteMapString(21,47,new colorstring(Color.Magenta,"Enter"));
+				}
+				else{
+					Screen.WriteMapString(21,0,"--Type [a-e] to choose a skill--[?] for help----------------------");
+					Screen.WriteMapChar(21,8,new colorchar(Color.Cyan,'a'));
+					Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'e'));
+					Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
+				}
+				Console.SetCursorPosition(37+Global.MAP_OFFSET_COLS,1);
+				Console.CursorVisible = true;
+				command = Console.ReadKey(true);
+				Console.CursorVisible = false;
+				char ch = ConvertInput(command);
+				switch(ch){
+				case 'a':
+				case 'b':
+				case 'c':
+				case 'd':
+				case 'e':
+					SkillType chosen_skill = (SkillType)(((int)ch)-97);
+					if(skills_increased.Count == 3 && !skills_increased.Contains(chosen_skill)){
+						break;
+					}
+					if(skills_increased.Contains(chosen_skill)){
+						skills_increased.Remove(chosen_skill);
+						for(int i=0;i<4;++i){
+							if(feats_increased.Contains(Feat.OfSkill(chosen_skill,i))){
+								feats_increased.Remove(Feat.OfSkill(chosen_skill,i));
+							}
+						}
+					}
+					else{
+						skills_increased.Add(chosen_skill);
+						bool done2 = false;
+						while(!done2){
+							Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+							for(int i=0;i<5;++i){
+								SkillType sk = (SkillType)i;
+								Color graycolor = Color.DarkGray;
+								Color greencolor = Color.DarkGreen;
+								Color magentacolor = Color.DarkMagenta;
+								if(sk == chosen_skill){
+									graycolor = Color.Gray;
+									greencolor = Color.Green;
+									magentacolor = Color.Magenta;
+								}
+								Screen.WriteMapString(1+i*4,0,new colorstring(graycolor,("    " + Skill.Name(sk)).PadRight(22)));
+								Color levelcolor = skills_increased.Contains(sk)? greencolor : graycolor;
+								int skill_level = skills_increased.Contains(sk)? skills[sk] + 1 : skills[sk];
+								Screen.WriteMapString(1+i*4,22,new colorstring(levelcolor,("Level " + skill_level).PadRight(70)));
+								FeatType ft = Feat.OfSkill(sk,0);
+								Color featcolor = feats_increased.Contains(ft)? greencolor : graycolor;
+								int feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+								if(HasFeat(ft)){ featcolor = magentacolor; feat_level = Feat.MaxRank(ft); }
+								Screen.WriteMapString(2+i*4,4,new colorstring(featcolor,(Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(31)));
+								ft = Feat.OfSkill(sk,1);
+								featcolor = feats_increased.Contains(ft)? greencolor : graycolor;
+								feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+								if(HasFeat(ft)){ featcolor = magentacolor; feat_level = Feat.MaxRank(ft); }
+								Screen.WriteMapString(2+i*4,35,new colorstring(featcolor,(Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(70)));
+								ft = Feat.OfSkill(sk,2);
+								featcolor = feats_increased.Contains(ft)? greencolor : graycolor;
+								feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+								if(HasFeat(ft)){ featcolor = magentacolor; feat_level = Feat.MaxRank(ft); }
+								Screen.WriteMapString(3+i*4,4,new colorstring(featcolor,(Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(31)));
+								ft = Feat.OfSkill(sk,3);
+								featcolor = feats_increased.Contains(ft)? greencolor : graycolor;
+								feat_level = feats_increased.Contains(ft)? (-feats[ft]) + 1 : (-feats[ft]);
+								if(HasFeat(ft)){ featcolor = magentacolor; feat_level = Feat.MaxRank(ft); }
+								Screen.WriteMapString(3+i*4,35,new colorstring(featcolor,(Feat.Name(ft) + " (" + feat_level + "/" + Feat.MaxRank(ft) + ")").PadRight(70)));
+								Screen.WriteMapString(4+i*4,0,"".PadRight(COLS));
+							}
+							Screen.WriteMapString(2+4*(int)chosen_skill,0,"[a]");
+							Screen.WriteMapString(2+4*(int)chosen_skill,31,"[b]");
+							Screen.WriteMapString(3+4*(int)chosen_skill,0,"[c]");
+							Screen.WriteMapString(3+4*(int)chosen_skill,31,"[d]");
+							Screen.WriteMapChar(2+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'a'));
+							Screen.WriteMapChar(2+4*(int)chosen_skill,32,new colorchar(Color.Cyan,'b'));
+							Screen.WriteMapChar(3+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'c'));
+							Screen.WriteMapChar(3+4*(int)chosen_skill,32,new colorchar(Color.Cyan,'d'));
+							Screen.WriteMapString(21,0,"--Type [a-d] to choose a feat---[?] for help----------------------");
+							Screen.WriteMapChar(21,8,new colorchar(Color.Cyan,'a'));
+							Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'d'));
+							Screen.ResetColors();
+							B.DisplayNow("Choose a " + Skill.Name(chosen_skill) + " feat: ");
+							Console.CursorVisible = true;
+							command = Console.ReadKey(true);
+							Console.CursorVisible = false;
+							ch = ConvertInput(command);
+							switch(ch){
+							case 'a':
+							case 'b':
+							case 'c':
+							case 'd':
+								{
+								FeatType feat = Feat.OfSkill(chosen_skill,((int)ch)-97);
+								if(!HasFeat(feat)){
+									feats_increased.Add(feat);
+									done2 = true;
+								}
+								break;
+								}
+							case ' ':
+							case (char)27:
+								skills_increased.Remove(chosen_skill);
+								done2 = true;
+								break;
+							default:
+								break;
+							}
+						}
+					}
+					break;
+				case (char)13:
+					if(skills_increased.Count == 3){
+						done = true;
+					}
+					break;
+				default:
+					break;
+				}
+			}
+			foreach(SkillType skill in skills_increased){
+				skills[skill]++;
+			}
+			foreach(FeatType feat in feats_increased){
+				feats[feat]--; //negative values are used until you've completely learned a feat
+				if(feats[feat] == -(Feat.MaxRank(feat))){
+					feats[feat] = 1;
+					completed_feats.Add(feat);
+				}
+			}
+			return completed_feats;
 		}
 		public bool CanSee(int r,int c){ return CanSee(M.tile[r,c]); }
 		public bool CanSee(PhysicalObject o){
@@ -4734,6 +4993,80 @@ effect as standing still, if you're on fire or catching fire. */
 				return false;
 			}
 		}
+		public List<pos> FindPath(PhysicalObject o){ return FindPath(o.row,o.col,Math.Max(ROWS,COLS)); }
+		public List<pos> FindPath(int r,int c){ return FindPath(r,c,Math.Max(ROWS,COLS)); }
+		public List<pos> FindPath(int r,int c,int max_distance){ //tiles past this distance are ignored entirely
+			List<pos> path = new List<pos>();
+			int[,] values = new int[ROWS,COLS];
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					if(M.tile[i,j].passable){
+						values[i,j] = 0;
+					}
+					else{
+						values[i,j] = -1;
+					}
+				}
+			}
+			int minrow = Math.Max(1,row-max_distance);
+			int maxrow = Math.Min(ROWS-2,row+max_distance);
+			int mincol = Math.Max(1,col-max_distance);
+			int maxcol = Math.Min(COLS-2,col+max_distance);
+			values[row,col] = 1;
+			int val = 1;
+			bool done = false;
+			while(!done){
+				for(int i=minrow;!done && i<=maxrow;++i){
+					for(int j=mincol;!done && j<=maxcol;++j){
+						if(values[i,j] == val){
+							for(int s=i-1;!done && s<=i+1;++s){
+								for(int t=j-1;!done && t<=j+1;++t){
+									if(s != i || t != j){
+										if(values[s,t] == 0){
+											values[s,t] = val + 1;
+											if(s == r && t == c){ //if we've found the target..
+												done = true;
+												path.Add(new pos(s,t));
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				++val;
+				if(val > 1000){//not sure what this value should be
+					path.Clear();
+					return path;
+				}
+			}
+			//val is now equal to the value of the target's position
+			pos p = path[0];
+			for(int i=val-1;i>1;--i){
+				pos? best = null;
+				foreach(pos neighbor in p.PositionsAtDistance(1)){
+					if(values[neighbor.row,neighbor.col] == i){
+						if(best == null){
+							best = neighbor;
+						}
+						else{
+							if(neighbor.DistanceFrom(r,c) < best.Value.DistanceFrom(r,c)){
+								best = neighbor;
+							}
+						}
+					}
+				}
+				if(best == null){//<--hope this doesn't happen
+					path.Clear();
+					return path;
+				}
+				p = best.Value;
+				path.Add(p);
+			}
+			path.Reverse();
+			return path;
+		}
 		public int DirectionOfOnly(TileType tiletype){ return DirectionOfOnly(tiletype,false); }
 		public int DirectionOfOnly(TileType tiletype,bool orth){//if there's only 1 unblocked tile of this kind, return its dir
 			int total=0;
@@ -4807,7 +5140,7 @@ effect as standing still, if you're on fire or catching fire. */
 		public Tile GetTarget(int max_distance){ return GetTarget(false,max_distance,true); }
 		public Tile GetTarget(bool lookmode,int max_distance){ return GetTarget(lookmode,max_distance,!lookmode); }
 		public Tile GetTarget(bool lookmode,int max_distance,bool start_at_interesting_target){
-			Tile result = null;  //todo: might need a M.Draw, to handle targeting from inventory or spell screen?
+			Tile result = null;
 			ConsoleKeyInfo command;
 			int r,c;
 			int minrow = 0;
@@ -4864,13 +5197,11 @@ effect as standing still, if you're on fire or catching fire. */
 				if(!start_at_interesting_target || interesting_targets.Count == 0){
 					r = row;
 					c = col;
-			//		Cursor();
 					target_idx = -1;
 				}
 				else{
 					r = interesting_targets[0].row;
 					c = interesting_targets[0].col;
-			//		interesting_targets[0].Cursor();
 				}
 			}
 			else{
@@ -4879,13 +5210,11 @@ effect as standing still, if you're on fire or catching fire. */
 					if(!start_at_interesting_target || interesting_targets.Count == 0){
 						r = row;
 						c = col;
-			//			Cursor();
 						target_idx = -1;
 					}
 					else{
 						r = interesting_targets[0].row;
 						c = interesting_targets[0].col;
-			//			interesting_targets[0].Cursor();
 					}
 				}
 				else{
@@ -4894,7 +5223,6 @@ effect as standing still, if you're on fire or catching fire. */
 					if(Global.Option(OptionType.LAST_TARGET)){
 						return M.tile[r,c];
 					}
-			//		target.Cursor();
 					target_idx = interesting_targets.IndexOf(target);
 				}
 			}
@@ -5140,14 +5468,16 @@ effect as standing still, if you're on fire or catching fire. */
 				case (char)27:
 					done = true;
 					break;
-				case (char)13: //todo: i'm pretty sure you can hit yourself with spells atm. check for self HERE to fix that.
-					if(HasBresenhamLine(r,c)){ //uses bresenham until i want symmetrical firing too
-						if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
-							target = M.actor[r,c];
+				case (char)13:
+					if(r != row || c != col){
+						if(HasBresenhamLine(r,c)){ //uses bresenham until i want symmetrical firing too
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+								target = M.actor[r,c];
+							}
+							result = M.tile[r,c];
 						}
-						result = M.tile[r,c];
+						done = true;
 					}
-					done = true;
 					break;
 				case ' ':
 					if(lookmode){
@@ -5387,6 +5717,120 @@ effect as standing still, if you're on fire or catching fire. */
 				return new AttackInfo(attack[17]);
 			default:
 				return null;
+			}
+		}
+	}
+	public static class Skill{
+		public static string Name(SkillType type){
+			switch(type){
+			case SkillType.COMBAT:
+				return "Combat";
+			case SkillType.DEFENSE:
+				return "Defense";
+			case SkillType.MAGIC:
+				return "Magic";
+			case SkillType.SPIRIT:
+				return "Spirit";
+			case SkillType.STEALTH:
+				return "Stealth";
+			default:
+				return "no skill";
+			}
+		}
+	}
+	public static class Feat{
+		public static int MaxRank(FeatType type){ //todo: update
+			switch(type){
+			case FeatType.CORNER_LOOK:
+				return 1;
+			case FeatType.QUICK_DRAW:
+			case FeatType.SILENT_CHAINMAIL:
+			case FeatType.DANGER_SENSE:
+				return 2;
+			case FeatType.FULL_DEFENSE:
+			case FeatType.ENDURING_SOUL:
+				return 4;
+			case FeatType.NECK_SNAP:
+				return 5;
+			case FeatType.FOCUSED_RAGE:
+				return 7;
+			case FeatType.SPIN_ATTACK:
+			case FeatType.LUNGE:
+			case FeatType.DRIVE_BACK:
+			case FeatType.ARMORED_MAGE:
+			case FeatType.TUMBLE:
+			case FeatType.MASTERS_EDGE:
+			case FeatType.STUDENTS_LUCK:
+			case FeatType.ARCANE_HEALING:
+			case FeatType.FORCE_OF_WILL:
+			case FeatType.WAR_SHOUT:
+			case FeatType.FEEL_NO_PAIN:
+			case FeatType.DISARM_TRAP:
+				return 3;
+			default:
+				return 0;
+			}
+		}
+		public static FeatType OfSkill(SkillType skill,int num){ // 0 through 3
+			switch(skill){
+			case SkillType.COMBAT:
+				return (FeatType)num;
+			case SkillType.DEFENSE:
+				return (FeatType)num+4;
+			case SkillType.MAGIC:
+				return (FeatType)num+8;
+			case SkillType.SPIRIT:
+				return (FeatType)num+12;
+			case SkillType.STEALTH:
+				return (FeatType)num+16;
+			default:
+				return FeatType.NO_FEAT;
+			}
+		}
+		public static string Name(FeatType type){
+			switch(type){
+			case FeatType.CORNER_LOOK:
+				return "Corner look";
+			case FeatType.QUICK_DRAW:
+				return "Quick draw";
+			case FeatType.SILENT_CHAINMAIL:
+				return "Silent chainmail";
+			case FeatType.DANGER_SENSE:
+				return "Danger sense";
+			case FeatType.FULL_DEFENSE:
+				return "Full defense";
+			case FeatType.ENDURING_SOUL:
+				return "Enduring soul";
+			case FeatType.NECK_SNAP:
+				return "Neck snap";
+			case FeatType.FOCUSED_RAGE:
+				return "Focused rage";
+			case FeatType.SPIN_ATTACK:
+				return "Spin attack";
+			case FeatType.LUNGE:
+				return "Lunge";
+			case FeatType.DRIVE_BACK:
+				return "Drive back";
+			case FeatType.ARMORED_MAGE:
+				return "Armored mage";
+			case FeatType.TUMBLE:
+				return "Tumble";
+			case FeatType.MASTERS_EDGE:
+				return "Master's edge";
+			case FeatType.STUDENTS_LUCK:
+				return "Student's luck";
+			case FeatType.ARCANE_HEALING:
+				return "Arcane healing";
+			case FeatType.FORCE_OF_WILL:
+				return "Force of will";
+			case FeatType.WAR_SHOUT:
+				return "War shout";
+			case FeatType.FEEL_NO_PAIN:
+				return "Feel no pain";
+			case FeatType.DISARM_TRAP:
+				return "Disarm trap";
+			default:
+				return "no feat";
 			}
 		}
 	}

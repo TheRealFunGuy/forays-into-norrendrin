@@ -210,8 +210,8 @@ namespace Forays{
 			while(types.Count == 0){
 				foreach(ActorType atype in Enum.GetValues(typeof(ActorType))){
 					if(atype != ActorType.PLAYER){
-						int i = 1 + Math.Abs(Actor.Prototype(atype).level - current_level);
-						if(i <= 4 && Global.Roll(i) == i){ //level-based check
+						int i = 1 + Math.Abs(Actor.Prototype(atype).level - (current_level+1)/2);
+						if(i <= 3 && Global.Roll(i) == i){ //level-based check
 							if(Global.Roll(Actor.Rarity(atype)) == Actor.Rarity(atype)){
 								types.Add(atype);
 							}
@@ -273,7 +273,7 @@ namespace Forays{
 			}
 		}
 		public void GenerateLevel(){
-			if(current_level < 10){
+			if(current_level < 20){
 				++current_level;
 			}
 			for(int i=0;i<ROWS;++i){
@@ -354,7 +354,7 @@ namespace Forays{
 			for(int i=Global.Roll(2,2)+3;i>0;--i){
 				SpawnMob();
 			}
-			if(current_level == 10){
+			if(current_level == 20){
 				Q.Add(new Event(1000,EventType.BOSS_ARRIVE));
 			}
 			//todo: find a spot for the player that no monsters can see
