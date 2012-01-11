@@ -1245,7 +1245,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Forget the map");
 				l.Add("Heal to full");
 				l.Add("Become invulnerable");
-				l.Add("Test DirectionOf");
+				l.Add("Set seed");
 				l.Add("Spawn a monster");
 				l.Add("Use a rune of passage");
 				l.Add("See the entire level");
@@ -1310,38 +1310,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 7:
 					{
-					char c = '!';
-					foreach(Tile t in M.AllTiles()){
-						switch(DirectionOf(t)){
-						case 7:
-						case 3:
-							c = '\\';
-							break;
-						case 8:
-						case 2:
-							c = '|';
-							break;
-						case 9:
-						case 1:
-							c = '/';
-							break;
-						case 4:
-						case 6:
-							c = '-';
-							break;
-						case 5:
-							c = '*';
-							break;
-						}
-						if(row == t.row || col == t.col || row+col == t.row+t.col || row-col == t.row-t.col){
-							Screen.WriteMapChar(t.row,t.col,new colorchar(Color.Red,'+'));
-						}
-						else{
-							Screen.WriteMapChar(t.row,t.col,c);
-						}
-					}
-					Console.ReadKey(true);
-					Q1();
+					Global.SetSeed(7);
+					Q0();
 					}
 					break;
 				case 8:
