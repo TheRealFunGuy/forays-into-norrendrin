@@ -583,42 +583,53 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		}
 		private char ConvertInput(ConsoleKeyInfo k){
 			switch(k.Key){
-			case ConsoleKey.UpArrow:
-			case ConsoleKey.D8:
-			case ConsoleKey.NumPad8:
+			case ConsoleKey.UpArrow: //notes: the existing design necessitated that I choose characters to assign to the toprow numbers.
+			case ConsoleKey.NumPad8: //Not being able to think of anything better, I went with '!' through ')' ...
 				return '8';
+			case ConsoleKey.D8: // (perhaps I'll redesign if needed)
+				return '*';
 			case ConsoleKey.DownArrow:
-			case ConsoleKey.D2:
 			case ConsoleKey.NumPad2:
 				return '2';
+			case ConsoleKey.D2:
+				return '@';
 			case ConsoleKey.LeftArrow:
-			case ConsoleKey.D4:
 			case ConsoleKey.NumPad4:
 				return '4';
+			case ConsoleKey.D4:
+				return '$';
 			case ConsoleKey.Clear:
-			case ConsoleKey.D5:
 			case ConsoleKey.NumPad5:
 				return '5';
+			case ConsoleKey.D5:
+				return '%';
 			case ConsoleKey.RightArrow:
-			case ConsoleKey.D6:
 			case ConsoleKey.NumPad6:
 				return '6';
+			case ConsoleKey.D6:
+				return '^';
 			case ConsoleKey.Home:
-			case ConsoleKey.D7:
 			case ConsoleKey.NumPad7:
 				return '7';
+			case ConsoleKey.D7:
+				return '&';
 			case ConsoleKey.PageUp:
-			case ConsoleKey.D9:
 			case ConsoleKey.NumPad9:
 				return '9';
+			case ConsoleKey.D9:
+				return '(';
 			case ConsoleKey.End:
-			case ConsoleKey.D1:
 			case ConsoleKey.NumPad1:
 				return '1';
+			case ConsoleKey.D1:
+				return '!';
 			case ConsoleKey.PageDown:
-			case ConsoleKey.D3:
 			case ConsoleKey.NumPad3:
 				return '3';
+			case ConsoleKey.D3:
+				return '#';
+			case ConsoleKey.D0:
+				return ')';
 			case ConsoleKey.Tab:
 				return (char)9;
 			case ConsoleKey.Escape:
@@ -743,7 +754,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			if(Global.Option(OptionType.VI_KEYS)){
 				ch = ConvertVIKeys(ch);
 			}
-			/*bool alt = false;
+			bool alt = false;
 			bool ctrl = false;
 			bool shift = false;
 			if((command.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt){
@@ -754,7 +765,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			}
 			if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
 				shift = true;
-			}*/
+			}
 			switch(ch){
 			case '7':
 			case '8':
@@ -762,11 +773,25 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case '4':
 			case '6':
 			case '1':
-			case '2'://maybe try alt-dir and shift-dir on windows?
+			case '2':
 			case '3':
 				{
 				int dir = ch - 48; //ascii 0-9 are 48-57
-				PlayerWalk(dir);
+				if(shift || alt || ctrl){
+					bool monsters_visible = false;
+					foreach(Actor a in M.AllActors()){
+						if(a!=this && CanSee(a) && HasLOS(a.row,a.col)){
+							monsters_visible = true;
+						}
+					}
+					PlayerWalk(dir);
+					if(!monsters_visible){
+						attrs[AttrType.RUNNING] = dir;
+					}
+				}
+				else{
+					PlayerWalk(dir);
+				}
 				break;
 				}
 			case '5':
@@ -1153,6 +1178,98 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				break;
 				}
+			case '!': //note that these are the top-row numbers, NOT the actual shifted versions
+			case '@': //<---this is the '2' above the 'w'    (not the '@')
+			case '#':
+			case '$':
+			case '%':
+				{
+				if(StunnedThisTurn()){
+					break;
+				}
+				WeaponType new_weapon = WeaponType.NO_WEAPON;
+				switch(ch){
+				case '!':
+					new_weapon = WeaponType.SWORD;
+					break;
+				case '@':
+					new_weapon = WeaponType.MACE;
+					break;
+				case '#':
+					new_weapon = WeaponType.DAGGER;
+					break;
+				case '$':
+					new_weapon = WeaponType.STAFF;
+					break;
+				case '%':
+					new_weapon = WeaponType.BOW;
+					break;
+				}
+				WeaponType old_weapon = weapons.First.Value;
+				if(new_weapon == Weapon.BaseWeapon(old_weapon)){
+					Q0();
+				}
+				else{
+					bool done=false;
+					while(!done){
+						WeaponType w = weapons.First.Value;
+						weapons.Remove(w);
+						weapons.AddLast(w);
+						if(new_weapon == Weapon.BaseWeapon(weapons.First.Value)){
+							done = true;
+						}
+					}
+					if(HasFeat(FeatType.QUICK_DRAW)){
+						B.Add("You quickly ready your " + Weapon.Name(weapons.First.Value) + ". ");
+						Q0();
+					}
+					else{
+						B.Add("You ready your " + Weapon.Name(weapons.First.Value) + ". ");
+						Q1();
+					}
+					UpdateOnEquip(old_weapon,weapons.First.Value);
+				}
+				break;
+				}
+			case '*': //these are toprow numbers, not shifted versions. see above.
+			case '(':
+			case ')':
+				{
+				if(StunnedThisTurn()){
+					break;
+				}
+				ArmorType new_armor = ArmorType.NO_ARMOR;
+				switch(ch){
+				case '*':
+					new_armor = ArmorType.LEATHER;
+					break;
+				case '(':
+					new_armor = ArmorType.CHAINMAIL;
+					break;
+				case ')':
+					new_armor = ArmorType.FULL_PLATE;
+					break;
+				}
+				ArmorType old_armor = armors.First.Value;
+				if(new_armor == Armor.BaseArmor(old_armor)){
+					Q0();
+				}
+				else{
+					bool done=false;
+					while(!done){
+						ArmorType a = armors.First.Value;
+						armors.Remove(a);
+						armors.AddLast(a);
+						if(new_armor == Armor.BaseArmor(armors.First.Value)){
+							done = true;
+						}
+					}
+					B.Add("You wear your " + Armor.Name(armors.First.Value) + ". ");
+					Q1();
+					UpdateOnEquip(old_armor,armors.First.Value);
+				}
+				break;
+				}
 			case 'l':
 				GetTarget(true);
 				Q0();
@@ -1245,7 +1362,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Forget the map");
 				l.Add("Heal to full");
 				l.Add("Become invulnerable");
-				l.Add("Set seed");
+				l.Add("test empty Select list");
 				l.Add("Spawn a monster");
 				l.Add("Use a rune of passage");
 				l.Add("See the entire level");
@@ -1310,15 +1427,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 7:
 					{
-					Global.SetSeed(7);
+					int selection = Select("Learn which spell? ",new List<string>(),false,true);
+					B.Add(selection.ToString());
 					Q0();
 					}
 					break;
 				case 8:
-					if(M.actor[18,50] == null){
-						//Create(ActorType.CULTIST,18,50);
-						M.SpawnMob(ActorType.DIRE_RAT);
-					}
+					//Create(ActorType.CULTIST,18,50);
+					M.SpawnMob(ActorType.DIRE_RAT);
 					Q1();
 					break;
 				case 9:
@@ -4867,7 +4983,8 @@ effect as standing still, if you're on fire or catching fire. */
 				List<SpellType> unknown = new List<SpellType>();
 				List<string> unknownstr = new List<string>();
 				foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
-					if(!HasSpell(spell)){
+					if(!HasSpell(spell) && spell != SpellType.BLESS && spell != SpellType.MINOR_HEAL
+					&& spell != SpellType.HOLY_SHIELD && spell != SpellType.NO_SPELL && spell != SpellType.NUM_SPELLS){
 						unknown.Add(spell);
 						unknownstr.Add(Spell.Name(spell));
 					}
@@ -5539,7 +5656,9 @@ cch.c = mem[t.row,t.col].c;
 				i++;
 			}
 			Screen.WriteMapString(i,0,"".PadRight(COLS,'-'));
-			Screen.WriteMapString(i+1,0,"".PadRight(COLS));
+			if(i < ROWS){
+				Screen.WriteMapString(i+1,0,"".PadRight(COLS));
+			}
 			if(no_ask){
 				B.DisplayNow(message);
 				return -1;
@@ -5551,7 +5670,9 @@ cch.c = mem[t.row,t.col].c;
 			}
 		}
 		public int GetSelection(string s,int count,bool no_cancel){
+			if(count == 0){ return -1; }
 			B.DisplayNow(s);
+			Console.CursorVisible = true;
 			ConsoleKeyInfo command;
 			char ch;
 			while(true){
