@@ -9,6 +9,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.IO;
 namespace Forays{
 	public class AttackInfo{
 		public int cost;
@@ -688,8 +689,20 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					}
 				}
 				if(!monsters_visible && TileInDirection(attrs[AttrType.RUNNING]).passable){
-					PlayerWalk(attrs[AttrType.RUNNING]);
-					return;
+					if(attrs[AttrType.RUNNING] == 5){
+						int hplimit = HasFeat(FeatType.ENDURING_SOUL)? 20 : 10;
+						if(curhp % hplimit == 0){
+							attrs[AttrType.RUNNING] = 0;
+						}
+						else{
+							Q1();
+							return;
+						}
+					}
+					else{
+						PlayerWalk(attrs[AttrType.RUNNING]);
+						return;
+					}
 				}
 				else{
 					attrs[AttrType.RUNNING] = 0;
@@ -807,7 +820,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				break;
 			case 'w':
 				{
-				int dir = GetDirection("Start walking in which direction? ");
+				int dir = GetDirection("Start walking in which direction? ",false,true);
 				if(dir != 0){
 					bool monsters_visible = false;
 					foreach(Actor a in M.AllActors()){
@@ -815,7 +828,12 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							monsters_visible = true;
 						}
 					}
-					PlayerWalk(dir);
+					if(dir != 5){
+						PlayerWalk(dir);
+					}
+					else{
+						Q1();
+					}
 					if(!monsters_visible){
 						attrs[AttrType.RUNNING] = dir;
 					}
@@ -4009,7 +4027,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				else{
 					if(i == -1){
-						i = GetDirection(true);
+						i = GetDirection(true,false);
 					}
 					t = TileInDirection(i);
 					if(t != null){
@@ -4875,6 +4893,18 @@ effect as standing still, if you're on fire or catching fire. */
 					completed_feats.Add(feat);
 				}
 			}
+			if(skills_increased.Contains(SkillType.MAGIC)){
+				List<SpellType> unknown = new List<SpellType>();
+				List<string> unknownstr = new List<string>();
+				foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
+					if(!HasSpell(spell)){
+						unknown.Add(spell);
+						unknownstr.Add(Spell.Name(spell));
+					}
+				}
+				int selection = Select("Learn which spell? ",unknownstr,false,true);
+				spells[unknown[selection]] = 1;
+			}
 			return completed_feats;
 		}
 		public bool CanSee(int r,int c){ return CanSee(M.tile[r,c]); }
@@ -5104,10 +5134,10 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			return count;
 		}
-		public int GetDirection(){ return GetDirection("Which direction? ",false); }
-		public int GetDirection(bool orth){ return GetDirection("Which direction? ",orth); }
-		public int GetDirection(string s){ return GetDirection(s,false); }
-		public int GetDirection(string s,bool orth){
+		public int GetDirection(){ return GetDirection("Which direction? ",false,false); }
+		public int GetDirection(bool orth,bool allow_self_targeting){ return GetDirection("Which direction? ",orth,allow_self_targeting); }
+		public int GetDirection(string s){ return GetDirection(s,false,false); }
+		public int GetDirection(string s,bool orth,bool allow_self_targeting){
 			B.DisplayNow(s);
 			ConsoleKeyInfo command;
 			char ch;
@@ -5115,14 +5145,25 @@ effect as standing still, if you're on fire or catching fire. */
 			while(true){
 				command = Console.ReadKey(true);
 				ch = ConvertInput(command);
+				if(command.KeyChar == '.'){
+					ch = '5';
+				}
 				if(Global.Option(OptionType.VI_KEYS)){
 					ch = ConvertVIKeys(ch);
 				}
 				int i = (int)Char.GetNumericValue(ch);
-				if(i>=1 && i<=9 && i!=5){
-					if(!orth || i%2==0){ //in orthogonal mode, return only even dirs
-						Console.CursorVisible = false;
-						return i;
+				if(i>=1 && i<=9){
+					if(i != 5){
+						if(!orth || i%2==0){ //in orthogonal mode, return only even dirs
+							Console.CursorVisible = false;
+							return i;
+						}
+					}
+					else{
+						if(allow_self_targeting){
+							Console.CursorVisible = false;
+							return i;
+						}
 					}
 				}
 				if(ch == (char)27){ //escape
@@ -5229,6 +5270,7 @@ effect as standing still, if you're on fire or catching fire. */
 			bool first_iteration = true;
 			bool done=false; //when done==true, we're ready to return 'result'
 			while(!done){
+//TextWriter file = new StreamWriter("targetoutput.txt",true);
 				if(!done){ //i moved this around, thus this relic.
 					Screen.ResetColors();
 					if(r == row && c == col){
@@ -5305,9 +5347,15 @@ effect as standing still, if you're on fire or catching fire. */
 						bool blocked=false;
 						Console.CursorVisible = false;
 						line = GetBresenhamLine(r,c);
+	//				file.Write("startline: "); //todo
 						foreach(Tile t in line){
+	//						file.Write("{0}-{1}  ",t.row,t.col); //todo
 							if(t.row != row || t.col != col){
-								colorchar cch = mem[t.row,t.col];
+//								colorchar cch = mem[t.row,t.col];
+colorchar cch;
+cch.color = mem[t.row,t.col].color;
+cch.bgcolor = mem[t.row,t.col].bgcolor;
+cch.c = mem[t.row,t.col].c;
 								if(t.row == r && t.col == c){
 									if(!blocked){
 										cch.bgcolor = Color.Green;
@@ -5315,7 +5363,10 @@ effect as standing still, if you're on fire or catching fire. */
 											cch.bgcolor = Color.DarkGreen;
 										}
 										if(cch.color == cch.bgcolor){
-											cch.color = Color.Black;
+											//cch.color = Color.Black;
+											cch.color = Color.Yellow;
+											cch.bgcolor = Color.DarkBlue;
+											cch.c = '!';
 										}
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
@@ -5325,7 +5376,10 @@ effect as standing still, if you're on fire or catching fire. */
 											cch.bgcolor = Color.DarkRed;
 										}
 										if(cch.color == cch.bgcolor){
-											cch.color = Color.Black;
+											//cch.color = Color.Black;
+											cch.color = Color.Yellow;
+							cch.bgcolor = Color.DarkBlue;
+					cch.c = '@';
 										}
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
@@ -5355,10 +5409,14 @@ effect as standing still, if you're on fire or catching fire. */
 							}
 							oldline.Remove(t);
 						}
+	//					file.Write("startoldline: "); //todo
 						foreach(Tile t in oldline){
+	//						file.Write("{0}+{1}  ",t.row,t.col); //todo
 							Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 						}
-						oldline = line;
+	//					file.WriteLine(); //todo
+				//		oldline = line;
+						oldline = new List<Tile>(line);
 					}
 					first_iteration = false;
 					M.tile[r,c].Cursor();
@@ -5494,10 +5552,12 @@ effect as standing still, if you're on fire or catching fire. */
 					}
 					Console.CursorVisible = true;
 				}
+	//			file.Close(); //todo
 			}
 			return result;
 		}
 		public int Select(string message,List<string> strings){ return Select(message,"".PadLeft(COLS,'-'),strings,false,false); }
+		public int Select(string message,List<string> strings,bool no_ask,bool no_cancel){ return Select(message,"".PadLeft(COLS,'-'),strings,no_ask,no_cancel); }
 		public int Select(string message,string top_border,List<string> strings,bool no_ask,bool no_cancel){
 			Screen.WriteMapString(0,0,top_border);
 			char letter = 'a';

@@ -36,7 +36,6 @@ map 1-5 and 7-9 to switch armor and weapons
 
 levelup needs to prompt for spell selection afterward.
 
-'w'alk should allow waiting.
 
 
 

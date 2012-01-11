@@ -255,7 +255,7 @@ namespace Forays{
 				}
 				else{
 					if(i == -1){
-						i = user.GetDirection(true);
+						i = user.GetDirection(true,false);
 					}
 					Tile t = user.TileInDirection(i);
 					if(t != null){
