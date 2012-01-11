@@ -32,13 +32,6 @@ all noise should alert monsters. you should REALLY need to be stealthy.
 
 borrow 'you feel relatively safe' from doomRL?
 
-map 1-5 and 7-9 to switch armor and weapons
-
-levelup needs to prompt for spell selection afterward.
-
-make sure that "You are paralyzed" / "You flee" is getting printed at all, in that buffer EndsWith thing.
-
-
 
 
 

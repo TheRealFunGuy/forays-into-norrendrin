@@ -442,6 +442,27 @@ namespace Forays{
 				return 0;
 			}
 		}
+		public static WeaponType BaseWeapon(WeaponType type){
+			switch(type){
+			case WeaponType.SWORD:
+			case WeaponType.FLAMEBRAND:
+				return WeaponType.SWORD;
+			case WeaponType.MACE:
+			case WeaponType.MACE_OF_FORCE:
+				return WeaponType.MACE;
+			case WeaponType.DAGGER:
+			case WeaponType.VENOMOUS_DAGGER:
+				return WeaponType.DAGGER;
+			case WeaponType.STAFF:
+			case WeaponType.STAFF_OF_MAGIC:
+				return WeaponType.STAFF;
+			case WeaponType.BOW:
+			case WeaponType.HOLY_LONGBOW:
+				return WeaponType.BOW;
+			default:
+				return WeaponType.NO_WEAPON;
+			}
+		}
 		public static string Name(WeaponType type){
 			switch(type){
 			case WeaponType.SWORD:
@@ -529,6 +550,21 @@ namespace Forays{
 				return 6;
 			default:
 				return 0;
+			}
+		}
+		public static ArmorType BaseArmor(ArmorType type){
+			switch(type){
+			case ArmorType.LEATHER:
+			case ArmorType.ELVEN_LEATHER:
+				return ArmorType.LEATHER;
+			case ArmorType.CHAINMAIL:
+			case ArmorType.CHAINMAIL_OF_ARCANA:
+				return ArmorType.CHAINMAIL;
+			case ArmorType.FULL_PLATE:
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				return ArmorType.FULL_PLATE;
+			default:
+				return ArmorType.NO_ARMOR;
 			}
 		}
 		public static int AddedFailRate(ArmorType type){ //todo: balance check: should these be higher?
