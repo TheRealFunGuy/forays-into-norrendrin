@@ -26,6 +26,7 @@ namespace Forays{
 			return result;
 		}
 		public static Random r = new Random();
+		public static void SetSeed(int seed){ r = new Random(seed); }
 		public static int Roll(int dice,int sides){
 			int total = 0;
 			for(int i=0;i<dice;++i){

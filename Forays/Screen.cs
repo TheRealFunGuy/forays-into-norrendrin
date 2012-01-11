@@ -136,7 +136,7 @@ namespace Forays{
 					ForegroundColor = co;
 				}
 				co = GetColor(ch.bgcolor);
-				if(co != Console.BackgroundColor || (Global.LINUX && ch.c == ' ' && ch.color == Color.Black && ch.bgcolor == Color.DarkGreen)){//voodoo here. not sure why this is needed.
+				if(co != Console.BackgroundColor || (Global.LINUX && ch.c == ' ' && ch.color == Color.Black)){//voodoo here. not sure why this is needed. (possible Mono bug)
 					BackgroundColor = co;
 				}
 				Console.SetCursorPosition(c,r);
