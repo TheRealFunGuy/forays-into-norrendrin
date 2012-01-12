@@ -982,20 +982,84 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				}
 				break;
 				}
+			case 'F':
+				{
+				List<FeatType> ft = new List<FeatType>();
+				List<char> charlist = new List<char>();
+				foreach(FeatType f in Enum.GetValues(typeof(FeatType))){
+					if(f != FeatType.NO_FEAT && f != FeatType.NUM_FEATS){
+						ft.Add(f);
+					}
+				}
+				Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+				char letter = 'a';
+				int i=1;
+				foreach(FeatType f in ft){
+					string s = "[" + letter + "] " + Feat.Name(f);
+					if(HasFeat(f)){
+						Screen.WriteMapString(i,0,new colorstring(Color.Cyan,s.PadRight(COLS)));
+						Screen.WriteMapString(i,0,new colorstring(Color.Gray,"[" + letter + "]"));
+						Screen.WriteMapChar(i,1,new colorchar(Color.Cyan,Screen.MapChar(i,1).c));
+						charlist.Add(letter);
+					}
+					else{
+						Screen.WriteMapString(i,0,new colorstring(Color.DarkGray,s.PadRight(COLS)));
+						Screen.WriteMapChar(i,1,new colorchar(Color.DarkRed,Screen.MapChar(i,1).c));
+					}
+					letter++;
+					i++;
+				}
+				Screen.WriteMapString(21,0,"".PadRight(COLS,'-'));
+				if(ft.Count > 0){
+					B.DisplayNow("Select a feat: ");
+				}
+				else{
+					B.DisplayNow("You haven't learned any feats yet: ");
+				}
+				Console.CursorVisible = true;
+				FeatType selected_feat = FeatType.NO_FEAT;
+				bool done = false;
+				while(!done){
+					command = Console.ReadKey(true);
+					ch = ConvertInput(command);
+					int ii = ch - 'a';
+					if(charlist.Contains(ch)){
+						selected_feat = (FeatType)ii;
+						done = true;
+					}
+					if(ch == (char)27 || ch == ' '){
+						done = true;
+					}
+				}
+				M.RedrawWithStrings();
+				if(selected_feat != FeatType.NO_FEAT){
+					if(!UseFeat(selected_feat)){
+						Q0();
+					}
+				}
+				else{
+					Q0();
+				}
+				break;
+				}
 			case 'Z':
-				//todo: for now, this selects from 10 spells.
 				{
 				List<string> ls = new List<string>();
 				List<SpellType> sp = new List<SpellType>();
 				foreach(SpellType s in Enum.GetValues(typeof(SpellType))){
-					ls.Add(Spell.Name(s));
-					sp.Add(s);
+					if(HasSpell(s)){
+						ls.Add(Spell.Name(s));
+						sp.Add(s);
+					}
 				}
-				ls.RemoveRange(20,5);
-				sp.RemoveRange(20,5);
-				int i = Select("Cast which spell? ",ls);
-				if(i != -1){
-					if(!CastSpell(sp[i])){
+				if(sp.Count > 0){
+					int i = Select("Cast which spell? ",ls);
+					if(i != -1){
+						if(!CastSpell(sp[i])){
+							Q0();
+						}
+					}
+					else{
 						Q0();
 					}
 				}
@@ -1348,10 +1412,6 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case 'Q':
 				Environment.Exit(0);
 				break;
-			case 'B':
-				B.DisplayLogtempfunction();
-				Q0();
-				break;
 			case 'C': //debug mode 
 				{
 				List<string> l = new List<string>();
@@ -1574,7 +1634,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					player_visibility_duration = -1;
 					target = player;
 					target_location = M.tile[player.row,player.col];
-					B.Add(the_name + " looks straight at you. ",this); //todo: rethink message
+					B.Add(Your() + " gaze meets your eyes! ",this); //better message?
 					//todo: possibly alert others here
 					Q1();
 					return;
@@ -4420,11 +4480,14 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			case FeatType.DRIVE_BACK:
 				if(HasAttr(AttrType.DRIVE_BACK_ON)){
 					attrs[AttrType.DRIVE_BACK_ON] = 0;
+					B.Add("You're no longer using your Drive back feat. ");
 				}
 				else{
 					attrs[AttrType.DRIVE_BACK_ON] = 1;
+					B.Add("You're now using your Drive back feat. ");
 				}
-				break;
+				Q0();
+				return true;
 			case FeatType.TUMBLE:
 				//todo:
 /*Tumble - (A, 200 energy) - You pick a tile within distance 2. If there is at least one passable tile between 
@@ -4559,11 +4622,14 @@ effect as standing still, if you're on fire or catching fire. */
 			case FeatType.DANGER_SENSE:
 				if(HasAttr(AttrType.DANGER_SENSE_ON)){
 					attrs[AttrType.DANGER_SENSE_ON] = 0;
+					B.Add("You're no longer using your Danger sense feat. ");
 				}
 				else{
 					attrs[AttrType.DANGER_SENSE_ON] = 1;
+					B.Add("You're now using your Danger sense feat. ");
 				}
-				break;
+				Q0();
+				return true;
 			default:
 				return false;
 			}
@@ -4742,6 +4808,11 @@ effect as standing still, if you're on fire or catching fire. */
 			// (and so on)
 			List<FeatType> new_feats = null;
 			switch(level){
+			case 0:
+				if(xp >= 0){
+					new_feats = LevelUp();
+				}
+				break;
 			case 1:
 				if(xp >= 100){
 					new_feats = LevelUp();
@@ -4923,10 +4994,30 @@ effect as standing still, if you're on fire or catching fire. */
 							Screen.WriteMapString(2+4*(int)chosen_skill,31,"[b]");
 							Screen.WriteMapString(3+4*(int)chosen_skill,0,"[c]");
 							Screen.WriteMapString(3+4*(int)chosen_skill,31,"[d]");
-							Screen.WriteMapChar(2+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'a'));
-							Screen.WriteMapChar(2+4*(int)chosen_skill,32,new colorchar(Color.Cyan,'b'));
-							Screen.WriteMapChar(3+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'c'));
-							Screen.WriteMapChar(3+4*(int)chosen_skill,32,new colorchar(Color.Cyan,'d'));
+							if(feats[Feat.OfSkill(chosen_skill,0)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,0))){
+								Screen.WriteMapChar(2+4*(int)chosen_skill,1,new colorchar(Color.DarkRed,'a'));
+							}
+							else{
+								Screen.WriteMapChar(2+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'a'));
+							}
+							if(feats[Feat.OfSkill(chosen_skill,1)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,1))){
+								Screen.WriteMapChar(2+4*(int)chosen_skill,32,new colorchar(Color.DarkRed,'b'));
+							}
+							else{
+								Screen.WriteMapChar(2+4*(int)chosen_skill,32,new colorchar(Color.Cyan,'b'));
+							}
+							if(feats[Feat.OfSkill(chosen_skill,2)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,2))){
+								Screen.WriteMapChar(3+4*(int)chosen_skill,1,new colorchar(Color.DarkRed,'c'));
+							}
+							else{
+								Screen.WriteMapChar(3+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'c'));
+							}
+							if(feats[Feat.OfSkill(chosen_skill,3)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,3))){
+								Screen.WriteMapChar(3+4*(int)chosen_skill,32,new colorchar(Color.DarkRed,'d'));
+							}
+							else{
+								Screen.WriteMapChar(3+4*(int)chosen_skill,32,new colorchar(Color.Cyan,'d'));
+							}
 							Screen.WriteMapString(21,0,"--Type [a-d] to choose a feat---[?] for help----------------------");
 							Screen.WriteMapChar(21,8,new colorchar(Color.Cyan,'a'));
 							Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'d'));
@@ -4988,6 +5079,9 @@ effect as standing still, if you're on fire or catching fire. */
 						unknown.Add(spell);
 						unknownstr.Add(Spell.Name(spell));
 					}
+				}
+				for(int i=unknown.Count+2;i<ROWS;++i){
+					Screen.WriteMapString(i,0,"".PadRight(COLS));
 				}
 				int selection = Select("Learn which spell? ",unknownstr,false,true);
 				spells[unknown[selection]] = 1;
@@ -5652,6 +5746,7 @@ cch.c = mem[t.row,t.col].c;
 			foreach(string s in strings){
 				string s2 = "[" + letter + "] " + s;
 				Screen.WriteMapString(i,0,s2.PadRight(COLS));
+				Screen.WriteMapChar(i,1,new colorchar(Color.Cyan,letter));
 				letter++;
 				i++;
 			}

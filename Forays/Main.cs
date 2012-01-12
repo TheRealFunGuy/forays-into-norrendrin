@@ -46,7 +46,7 @@ namespace Forays{
 			Console.TreatControlCAsInput = true;
 			//Console.CursorSize = 100;
 			Game game = new Game();
-			game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,0,1,0);
+			game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0);
 			game.player.weapons.Remove(WeaponType.NO_WEAPON);
 			game.player.weapons.AddLast(WeaponType.SWORD);
 			game.player.weapons.AddLast(WeaponType.MACE);
@@ -82,6 +82,7 @@ namespace Forays{
 			game.player.Q0();
 			game.player.Move(10,20); //this is why the voodoo was needed before: the player must be moved onto the map *before*
 			game.player.UpdateRadius(0,6,true); //gaining a light radius.
+			game.player.GainXP(1);
 			while(true){ game.Q.Pop(); }
 		}
 	}

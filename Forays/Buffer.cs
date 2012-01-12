@@ -76,12 +76,6 @@ namespace Forays{
 			//Console.SetCursorPosition(Global.MAP_OFFSET_COLS + str.Length,1);
 			//Console.CursorVisible = true;
 		}
-		public void DisplayLogtempfunction(){ //todo remove
-			for(int i=0;i<log.Length;++i){
-				Console.Error.Write("{0} ",log[i]);
-			}
-			Console.ReadKey();
-		}
 		public void Print(bool special_message){
 			Console.CursorVisible = false;
 			if(str != ""){
