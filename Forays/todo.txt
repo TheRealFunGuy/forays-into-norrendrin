@@ -1,7 +1,5 @@
 things to do between 0.5 and 1.0:
 
-20 dungeon levels, with an appropriate number of monsters and items
-
 at least 1 special level per game, with an appropriate number of different special levels
 
 animations should support the concept of a 'viewer' - cells outside viewer's FOV don't animate.
@@ -9,6 +7,8 @@ animations should support the concept of a 'viewer' - cells outside viewer's FOV
 if lashers happen to need balancing: their tentacles could miss adjacent targets more often, or deal less damage to them
 
 generate trolls with rocks they can throw, in a lair, and have them stay in that lair.
+
+consider making ranged attacks...not attacks at all, but generated straight from the AI routine
 
 should group monsters regroup when they can't see the player?
 
@@ -26,12 +26,25 @@ things to do somewhere between 0.1 and 1.0:
 
 perhaps enemies that you sneak attack should have a chance of yelling in surprise
 
-consider making ranged attacks...not attacks at all, but generated straight from the AI routine
-
 all noise should alert monsters. you should REALLY need to be stealthy.
 
 borrow 'you feel relatively safe' from doomRL?
 
+danger sense(on)
+	 -matters in map.draw...eesh.
+here's how this will work:
+Tile will gain a list(or other list-like data type) of integers that represent the chance of the player being seen if he steps
+there next turn.
+Move will gain another part: depending on LOS(just like the light check), visible tiles will have their lists updated.
+	-additional steps are required for distant lit tiles, as follows:
+		-it is not practical to check every tile to see whether it is lit. therefore, i will create a list of lit tiles in Map.
+		-this list will only be updated when the player has Danger Sense.
+		-perhaps light_value-- will become a method. this method will decrement, then, if light_value is 0, remove from list.
+		-same with light_value++ - if light_value is greater than 0, add to list. this should still be fairly quick.
+		-this, of course, only keeps track of passable tiles, but that's perfect anyway.
+		-so, each MOVING monster will check LOS to each LIT tile during its move. this is much, much better than
+			checking each monster's LOS to each tile on every turn.
+ultimately, during Map.Draw, the highest value in each tile's list will be used to find its danger level, & therefore its color
 
 
 

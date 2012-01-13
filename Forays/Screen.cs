@@ -293,9 +293,15 @@ namespace Forays{
 			Console.CursorVisible = true;
 		}
 		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch){
-			AnimateExplosion(obj,radius,ch,50);
+			AnimateExplosion(obj,radius,ch,50,false);
+		}
+		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch,bool single_frame){
+			AnimateExplosion(obj,radius,ch,50,single_frame);
 		}
 		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch,int duration){
+			AnimateExplosion(obj,radius,ch,duration,false);
+		}
+		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch,int duration,bool single_frame){
 			Console.CursorVisible = false;
 			colorchar[,] prev = new colorchar[radius*2+1,radius*2+1];
 			for(int i=0;i<=radius*2;++i){
@@ -305,8 +311,16 @@ namespace Forays{
 					}
 				}
 			}
-			for(int i=0;i<=radius;++i){
-				foreach(Tile t in obj.TilesAtDistance(i)){
+			if(!single_frame){
+				for(int i=0;i<=radius;++i){
+					foreach(Tile t in obj.TilesAtDistance(i)){
+						WriteMapChar(t.row,t.col,ch);
+					}
+					Thread.Sleep(duration);
+				}
+			}
+			else{
+				foreach(Tile t in obj.TilesWithinDistance(radius)){
 					WriteMapChar(t.row,t.col,ch);
 				}
 				Thread.Sleep(duration);

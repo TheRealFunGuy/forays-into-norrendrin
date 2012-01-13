@@ -15,6 +15,7 @@ namespace Forays{
 		public Tile[,] tile{get;set;} //note for dungeon generator overhaul: make sure there's something to hide behind.
 		public Actor[,] actor{get;set;} //i could make a tilearray/actorarray class if i wanted to use a pos as an index
 		public int current_level{get; private set;}
+		private bool[,] danger_sensed{get;set;}
 		private List<Tile> alltiles = new List<Tile>();
 		private static List<pos> allpositions = new List<pos>();
 		
@@ -55,6 +56,23 @@ namespace Forays{
 			return result;
 		}
 		public List<pos> AllPositions(){ return allpositions; }
+		public void UpdateDangerValues(){
+			danger_sensed = new bool[ROWS,COLS];
+			foreach(Actor a in AllActors()){
+				if(a != player){
+					foreach(Tile t in AllTiles()){
+						if(danger_sensed[t.row,t.col] == false && t.passable && !t.opaque){
+							if(a.CanSee(t)){
+								int value = (player.Stealth(t.row,t.col) * a.DistanceFrom(t) * 10) - 5 * a.player_visibility_duration;
+								if(value < 100 || a.player_visibility_duration < 0){
+									danger_sensed[t.row,t.col] = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		public void InitLevel(){ //creates an empty level surrounded by walls. used for testing purposes.
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -171,6 +189,10 @@ namespace Forays{
 							else{
 								ch.color = Color.DarkCyan;
 							}
+						}
+						if(player.HasFeat(FeatType.DANGER_SENSE) && danger_sensed != null
+						&& danger_sensed[r,c] && !tile[r,c].IsLit()){
+							ch.color = Color.Red;//todo this should check danger_sense_on, not the feat
 						}
 					}
 				}

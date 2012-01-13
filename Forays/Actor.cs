@@ -71,10 +71,6 @@ namespace Forays{
 		}
 	}
 	/*keen eyes -half check. still needs trap detection bonus.
-spirit skill
-	-matters in lots of places, i guess. perhaps a TotalDuration method that calculates this - it could even try to be smart
-		and treat values below 50 as 'number of turns' and 50+ as 'number of ticks'
-
 
 danger sense(on)
 	 -matters in map.draw...eesh.
@@ -315,12 +311,13 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 			total += Armor.Protection(armors.First.Value);
 			return total;
 		}
-		public int Stealth(){ //this method should probably become part of TotalSkill
+		public int Stealth(){ return Stealth(row,col); }
+		public int Stealth(int r,int c){ //this method should probably become part of TotalSkill
 			if(LightRadius() > 0){
 				return 0; //negative stealth is the same as zero stealth
 			}
 			int total = TotalSkill(SkillType.STEALTH);
-			if(!M.tile[row,col].IsLit()){
+			if(!M.tile[r,c].IsLit()){
 				total += 2;
 			}
 			if(!HasFeat(FeatType.ARMORED_MAGE)){
@@ -669,10 +666,13 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 		}
 		public void InputHuman(){
 			DisplayStats();
-			//temporary turn display:
+			//temporary turn display: todo remove
 			Console.SetCursorPosition(1,2);
 			Console.Write("{0} ",Q.turn / 100);
 			//end temporary turn display
+			if(HasFeat(FeatType.DANGER_SENSE)){
+				M.UpdateDangerValues();
+			}
 			if(Screen.MapChar(0,0).c == '-'){ //kinda hacky. there won't be an open door in the corner, so this looks for
 				M.RedrawWithStrings(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely)
 			}
@@ -1422,7 +1422,7 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 				l.Add("Forget the map");
 				l.Add("Heal to full");
 				l.Add("Become invulnerable");
-				l.Add("test empty Select list");
+				l.Add("blank");
 				l.Add("Spawn a monster");
 				l.Add("Use a rune of passage");
 				l.Add("See the entire level");
@@ -1487,8 +1487,6 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 					break;
 				case 7:
 					{
-					int selection = Select("Learn which spell? ",new List<string>(),false,true);
-					B.Add(selection.ToString());
 					Q0();
 					}
 					break;
@@ -3908,8 +3906,8 @@ ultimately, during Map.Draw, the highest value in each tile's list will be used 
 							if(M.BoundsCheck(a,b) && M.tile[a,b].passable && M.actor[a,b] == null){
 								B.Add(You("cast") + " blink. ",this);
 								B.Add(You("step") + " through a rip in reality. ",this);
-								Move(a,b);
-								break;
+								Move(a,b); //add a 'portal opening' animation to blink once there is support
+								break; // for 'combining' animations
 							}
 						}
 					}
@@ -5162,6 +5160,16 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 			}
 			return null;
+		}
+		public int SightRange(){
+			int divisor = HasAttr(AttrType.DIM_VISION)? 3 : 1;
+			if(HasAttr(AttrType.DARKVISION)){
+				return 12 / divisor;
+			}
+			if(HasAttr(AttrType.LOW_LIGHT_VISION)){
+				return 6 / divisor;
+			}
+			return 3 / divisor;
 		}
 		public bool IsWithinSightRangeOf(int r,int c){
 			int dist = DistanceFrom(r,c);
