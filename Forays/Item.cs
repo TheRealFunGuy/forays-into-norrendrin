@@ -86,6 +86,9 @@ namespace Forays{
 				i = new Item(proto[type],-1,-1);
 				a.inv.Add(i);
 			}
+			else{
+				i = Create(type,a.row,a.col);
+			}
 			return i;
 		}
 		public string AName(){
@@ -254,9 +257,7 @@ namespace Forays{
 					break;
 				}
 				else{
-					if(i == -1){
-						i = user.GetDirection(true,false);
-					}
+					i = user.GetDirection(true,false);
 					Tile t = user.TileInDirection(i);
 					if(t != null){
 						if(t.type == TileType.WALL){
@@ -642,6 +643,43 @@ namespace Forays{
 		}
 	}
 	public static class MagicItem{
+		public static colorstring StatsName(MagicItemType type){
+			colorstring cs;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.DarkGreen;
+			switch(type){
+			case MagicItemType.RING_OF_PROTECTION:
+				cs.s = "Ring (prot)";
+				break;
+			case MagicItemType.RING_OF_RESISTANCE:
+				cs.s = "Ring (res)";
+				break;
+			case MagicItemType.PENDANT_OF_LIFE:
+				cs.s = "Pendant";
+				break;
+			case MagicItemType.CLOAK_OF_DISAPPEARANCE:
+				cs.s = "Cloak";
+				break;
+			default:
+				cs.s = "No item";
+				break;
+			}
+			return cs;
+		}
+		public static string Name(MagicItemType type){
+			switch(type){
+			case MagicItemType.PENDANT_OF_LIFE:
+				return "pendant of life";
+			case MagicItemType.RING_OF_PROTECTION:
+				return "ring of protection";
+			case MagicItemType.RING_OF_RESISTANCE:
+				return "ring of resistance";
+			case MagicItemType.CLOAK_OF_DISAPPEARANCE:
+				return "cloak of disappearance";
+			default:
+				return "no item";
+			}
+		}
 	}
 }
 

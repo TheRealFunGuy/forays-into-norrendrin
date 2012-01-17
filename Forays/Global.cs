@@ -19,6 +19,7 @@ namespace Forays{
 		public const int MAP_OFFSET_COLS = 13;
 		public const int MAX_LIGHT_RADIUS = 12; //the maximum POSSIBLE light radius. used in light calculations.
 		public const int MAX_INVENTORY_SIZE = ROWS-2;
+		public static bool GAME_OVER = false;
 		public static Dictionary<OptionType,bool> Options = new Dictionary<OptionType, bool>();
 		public static bool Option(OptionType option){
 			bool result = false;

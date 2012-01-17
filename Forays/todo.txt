@@ -16,90 +16,98 @@ should dream warrior teleport straight to target_location in seekAI?
 
 shadow should reduce the light radius of zealots, too
 
-make 'w'alk interruptable
-
 make random colors work for things besides animations - make prismatic orb change.
+
+extend the "monster notices" sounds so that you can hear them even if you can't see them.
 
 
 
 things to do somewhere between 0.1 and 1.0:
 
-perhaps enemies that you sneak attack should have a chance of yelling in surprise
-
-all noise should alert monsters. you should REALLY need to be stealthy.
-
 borrow 'you feel relatively safe' from doomRL?
 
-danger sense(on)
-	 -matters in map.draw...eesh.
-here's how this will work:
-Tile will gain a list(or other list-like data type) of integers that represent the chance of the player being seen if he steps
-there next turn.
-Move will gain another part: depending on LOS(just like the light check), visible tiles will have their lists updated.
-	-additional steps are required for distant lit tiles, as follows:
-		-it is not practical to check every tile to see whether it is lit. therefore, i will create a list of lit tiles in Map.
-		-this list will only be updated when the player has Danger Sense.
-		-perhaps light_value-- will become a method. this method will decrement, then, if light_value is 0, remove from list.
-		-same with light_value++ - if light_value is greater than 0, add to list. this should still be fairly quick.
-		-this, of course, only keeps track of passable tiles, but that's perfect anyway.
-		-so, each MOVING monster will check LOS to each LIT tile during its move. this is much, much better than
-			checking each monster's LOS to each tile on every turn.
-ultimately, during Map.Draw, the highest value in each tile's list will be used to find its danger level, & therefore its color
+print messages for bash/slash resistance
+
+replace old spell?
+
+equipment screen should describe all upgrades, especially magic items.
+
+balancing hp should take resists into account.
 
 
 
-===
-noise vs stealth:
-things that should make noise:
-casting almost every spell
-mobs noticing you
-enemy attacks, but perhaps not your attacks?
-some traps
-many feats
+main menu, done (for now)
 
-...these things should immediately alert nearby mobs (mobs that would otherwise be able to see you - this is the simplest way)
-===
+walkmode and rest interruptable
+
+'F'eat screen working properly
 
 
 
-...
-...
+             Character information:                                                        
+             ------------------------------------------------------------------        
+HP: 66                                                                               
+Level: 2     Name: Tauskar                Turns played: 680                                            
+XP: 0                                                                               
+AC: 2                                                                          
+Sword        Trait: Magical blood                                                    
+Mace                                                                           
+Dagger                                                                               
+Staff        Skills:         Combat 4+5           Defense 3     
+Bow                Magic 1+1            Spirit 4+5             Stealth 0+2                             
+
+or
+
+Staff        Skills: Combat(10+5) Defense(10) Magic(10+1) Spirit(10+5) Stealth(10+2)  
+Bow                  Stealth(10+2) optionally               
+~~~                                                                                
+Leather      Feats: Spin attack, Full defense, Feel no pain, Some other, Yet another                                                                                                  |
+Chainmail                                                                      |         
+Full plate                                                   , silent chainmail          
+~~~          Spells: Detect monsters                                                   
+Ring of Res                                                                               
+Ring of Prot                                                                               
+Pendant                                                                               
+Cloak                                                                               
+                                                                               
+             ------------------------------------------------------------------     
+
+
+
+		Info:
+ 0		---
+HP: 100
+Level: 1
+XP: 0
+AC: 3
+~~~
+Sword
+Mace
+Dagger
+Staff
+Bow
+~~~
+Leather
+Chainmail
+Full plate
+~~~
+Ring (prot)
+Ring (res)
+Pendant
+Cloak		---
+---------
+
+
+
+
+
+
+
+
+
 
 
 --generate the list of monsters first, THEN generate the level. then verify that i.e. a troll has a proper lair.
-
-
-
-goblin bat scarecrow
-skeleton cultist poltergeist
-zombie wolf frostling
-archer shaman swordsman
-direrat dreamwarrior banshee
-worg zealot skulkingkiller
-crawler ogre shadow
-berserker grenadier spider
-golem necromancer troll
-lasher warmage behemoth
-
-attack info:
-
-cultist		- hit for 2
-poltergeist	- slimes you for 1 or pokes you for 2
-swordsman	- hit for 3
-dream warrior	- hit for 2 or 3
-banshee		- touch or hit for 2 probably. cold_hit?
-skulking killer	- hit for 3
-shadow		- touch for 2.
-berserker	- hit for 3
-orc grenadier	- hit for the orc default
-necromancer	- hit for 2 i guess
-troll		- claw for 3 i think
-
-
-cultist: appears in small groups(2-3)
-(normal ai, except..)
-if heavily damaged, will use special attack(probably taking out a small orb and smashing it on the ground, and screaming something appropriate)
-special attack sets the cultist and everything adjacent on fire, after which he continues to attack
 
 poltergeist: spawns as an event with a certain area, sometimes an entire room.
 effects:
@@ -111,19 +119,7 @@ if the player sticks around, it'll manifest, after which it occasionally laughs 
 	-this can be made much more complex
 		-it would also move away occasionally
 
-swordsman: improves combat skill each time he attacks, until you attack back.
-dream warrior: 
-banshee:
 
-
-
-
-
-
-
-20 monsters +
-troll
-necromancer
 cultist
 	-something for cultists to summon - this should be on a special level though, and it would be badass.
 		-summoning circles and all
@@ -134,76 +130,6 @@ poltergeist (uncommon)
 		-i want it to retain some of its annoying qualities. perhaps a short period of time where it moves randomly and
 			is hard to hit or damage for some reason. oh, it should laugh while doing this of course.
 
-dream warrior
-	-spawns several 'clones' with 1hp and a NO_EXP flag, and a 0-damage attack. maybe some kind of mental suggestion attack?
-
-skulking killer. dark blue 'p'. normal speed probably. stealthy. when it gets close enough, it will (once) throw either a bola to slow you, or (something else) to stun you and deal a small amount of damage. definitely prowls the level.
-
--next, i need to figure out how attacking/being attacked interacts with the 'turns seen' number.
-	-once you sneak attack them, their player_seen number is set to -1.
-	-once they sneak attack you, their TURNS_VISIBLE is set to -1.
-
-
-
-
-building offense shouldn't be the beat-all strategy: feats are pretty important.
-i already know that i need a few monsters that make Spirit more important. (and don't care a lot how much damage you do?)
-
-so, more early TACTICAL enemies. scarecrow, archer, zombie are probably acceptable for this, but i am actually lacking some.
-that is, more enemies that give the player choices. enemies that just dps you don't contribute to this at all.
-
-
-berserker. red or dark red 'p'. normal speed. two abilities:
-	-when brought below 0hp, does not die for 2-3 turns
-	-raging axe attack: each turn for 2-3 turns(?), takes a step forward and attacks the 3 spaces ahead.
-		-perhaps the first turn is the 'windup' turn, to avoid having another monster that lunges.
-(don't fight these guys in a corridor)
-
-
-swordsman. blue/white/gray 'p'. normal speed. each attack the swordsman makes boosts his bonus combat skill. this bonus is reset when you make a melee attack against him (or if he goes back to idle).
-(if you're not engaging him in swordplay, he'll cut you up)
-	-the swordsman's stance becomes more aggressive!
-		or
-	-the swordsman adopts a more aggressive stance!
-		or
-	-the swordsman switches to a more aggressive stance!
-	-...
-	-the swordsman returns to a defensive stance.
-
-
-shade/shadow/ shadow (foo). dark blue or dark gray or black...something... Two abilities:
-	- Reduces the light level in nearby tiles. Won't enter lit tiles. Takes damage while in lit tiles.
-		-could also simply reduce your light radius as it gets closer...at distance 10 it reduces by 1, at distance 7
-			by 2, at distance 5 by 3, at distance 3 by 4, and at distance 2 by 5. then BAM IT'S ON YOU.
-			-this actually seems better AND gives another use for Shine. better in the following ways:
-				-you don't know from which way it's coming
-				-better paranoia messages
-				-it looks better too
-	- some kind of supernatural effect, amirite?
-
-shadow. dark blue/dark gray 'G' probably. Three abilities:
-	-Regenerates while in darkness. (maybe!)
-	-Reduces the light radius of the player and other monsters as it approaches.
-	12		-1/12		6						11		or just *doubled*	12
-		10	-1/6		5						10(visible)				10
-	8		-3/12		5	.	.	.	.	.	9	.	.	.	.	10
-		7	-2/6		4						8					8
-	6		-5/12		4	.	.	.	.	.	7	.	.	.	.	8
-		5	-3/6		3						6					6
-	4		-7/12		3	.	.	.	.	.	5	.	.	.	.	6
-		3	-4/6		2(you now see it just outside your light rad)	4					4
-		2	-5/6		1						2					2
-	1		-11/12		1						1					2
-	-Its attack causes dimness of vision: natural sight range will be reduced to 1/3 of its normal value for 20 + 2d20 turns.
-
-
-
-a grenade throwing monster would be pretty interesting, wouldn't it? it would throw fairly inaccurate grenades at you, which would take 1 turn to explode. So, if they landed right on you, you'd get hurt on the next turn, but they'd hit pretty much any square near you.
-	-knockback? =-o
-	-orc grenadier perhaps?
-
--a ranged monster with an ability that is affected by Spirit(a magical, mental, or supernatural ability with a duration).
-	-banshee or something similar. screams in a cone, applies fear for a few turns. what else?
 
 room mimic
 	-how is this going to work? perhaps it's usually generated at the end of a longish corridor, so blinking out is harder to do.
@@ -236,10 +162,6 @@ room mimic
 		-'number of turns until next acid attack'
 		-'number of turns until next crushing attack'
 		-'membrane has been destroyed' - could also just mean it's dead, and remove the event.
-
-
-noise and stealth:
-
 
 
 

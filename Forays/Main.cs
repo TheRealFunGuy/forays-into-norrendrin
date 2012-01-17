@@ -12,7 +12,7 @@ using Forays;
 namespace Forays{
 	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,GRENADE,TRAP};
 	public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,LARGE_BAT,SHAMBLING_SCARECROW,SKELETON,CULTIST,POLTERGEIST,ZOMBIE,WOLF,FROSTLING,GOBLIN_ARCHER,GOBLIN_SHAMAN,SWORDSMAN,DIRE_RAT,DREAM_WARRIOR,BANSHEE,WARG,ROBED_ZEALOT,SKULKING_KILLER,CARRION_CRAWLER,OGRE,SHADOW,BERSERKER,ORC_GRENADIER,PHASE_SPIDER,STONE_GOLEM,NECROMANCER,TROLL,ORC_WARMAGE,LASHER_FUNGUS,CORPSETOWER_BEHEMOTH,DREAM_CLONE};
-	public enum AttrType{STEALTHY,UNDEAD,CONSTRUCT,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,ENHANCED_TORCH,MAGICAL_BLOOD,KEEN_EYES,TOUGH,LOW_LIGHT_VISION,DARKVISION,REGENERATING,REGENERATES_FROM_DEATH,STUNNED,PARALYZED,POISONED,IMMOBILIZED,ON_FIRE,CATCHING_FIRE,AFRAID,SLOWED,DETECTING_MONSTERS,DIM_VISION,DIM_LIGHT,FIRE_HIT,COLD_HIT,POISON_HIT,PARALYSIS_HIT,FORCE_HIT,DIM_VISION_HIT,STALAGMITE_HIT,RESIST_SLASH,RESIST_BASH,RESIST_FIRE,RESIST_COLD,RESIST_ELECTRICITY,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ARROWS,GLOBAL_FAIL_RATE,COOLDOWN_1,COOLDOWN_2,BLESSED,HOLY_SHIELDED,SPORE_BURST,TURNS_VISIBLE,RESTING,RUNNING,STUDENTS_LUCK_USED,DEFENSIVE_STANCE,DRIVE_BACK_ON,TUMBLING,DANGER_SENSE_ON,WAR_SHOUTED,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
+	public enum AttrType{STEALTHY,UNDEAD,CONSTRUCT,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,ENHANCED_TORCH,MAGICAL_BLOOD,KEEN_EYES,TOUGH,LONG_STRIDE,RUNIC_BIRTHMARK,LOW_LIGHT_VISION,DARKVISION,REGENERATING,REGENERATES_FROM_DEATH,STUNNED,PARALYZED,POISONED,IMMOBILIZED,ON_FIRE,CATCHING_FIRE,AFRAID,SLOWED,DETECTING_MONSTERS,DIM_VISION,DIM_LIGHT,FIRE_HIT,COLD_HIT,POISON_HIT,PARALYSIS_HIT,FORCE_HIT,DIM_VISION_HIT,STALAGMITE_HIT,RESIST_SLASH,RESIST_PIERCE,RESIST_BASH,RESIST_FIRE,RESIST_COLD,RESIST_ELECTRICITY,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ARROWS,GLOBAL_FAIL_RATE,COOLDOWN_1,COOLDOWN_2,BLESSED,HOLY_SHIELDED,SPORE_BURST,TURNS_VISIBLE,RESTING,RUNNING,STUDENTS_LUCK_USED,DEFENSIVE_STANCE,DRIVE_BACK_ON,TUMBLING,DANGER_SENSE_ON,WAR_SHOUTED,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
 	public enum SpellType{SHINE,MAGIC_MISSILE,DETECT_MONSTERS,FORCE_PALM,BLINK,IMMOLATE,ICY_BLAST,BURNING_HANDS,FREEZE,SONIC_BOOM,ARC_LIGHTNING,PLACEHOLDER,SHOCK,SHADOWSIGHT,RETREAT,FIREBALL,PASSAGE,FORCE_BEAM,DISINTEGRATE,BLIZZARD,BLESS,MINOR_HEAL,HOLY_SHIELD,NUM_SPELLS,NO_SPELL};
 	public enum SkillType{COMBAT,DEFENSE,MAGIC,SPIRIT,STEALTH,NUM_SKILLS,NO_SKILL};
 	public enum FeatType{QUICK_DRAW,SPIN_ATTACK,LUNGE,DRIVE_BACK,SILENT_CHAINMAIL,ARMORED_MAGE,FULL_DEFENSE,TUMBLE,MASTERS_EDGE,STUDENTS_LUCK,ARCANE_HEALING,FORCE_OF_WILL,WAR_SHOUT,ENDURING_SOUL,FEEL_NO_PAIN,FOCUSED_RAGE,CORNER_LOOK,DISARM_TRAP,NECK_SNAP,DANGER_SENSE,NUM_FEATS,NO_FEAT};
@@ -45,8 +45,12 @@ namespace Forays{
 			}
 			Console.TreatControlCAsInput = true;
 			//Console.CursorSize = 100;
+	//		while(true){
+	//			MainMenu();
+	//		}
 			Game game = new Game();
 			game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0);
+			game.player.inv = new List<Item>();
 			game.player.weapons.Remove(WeaponType.NO_WEAPON);
 			game.player.weapons.AddLast(WeaponType.SWORD);
 			game.player.weapons.AddLast(WeaponType.MACE);
@@ -78,12 +82,77 @@ namespace Forays{
 			Tile.B = game.B;
 			Tile.player = game.player;
 			//game.M.InitLevel();
+			Actor.player_name = "Doomguy";
+			game.player.attrs[AttrType.LONG_STRIDE]++;
 			game.M.LoadLevel("map.txt");
 			game.player.Q0();
 			game.player.Move(10,20); //this is why the voodoo was needed before: the player must be moved onto the map *before*
 			game.player.UpdateRadius(0,6,true); //gaining a light radius.
 			game.player.GainXP(1);
-			while(true){ game.Q.Pop(); }
+			while(!Global.GAME_OVER){ game.Q.Pop(); }
+		}
+		static void MainMenu(){
+			Screen.Blank();
+			Screen.WriteMapString(3,0,"[a] Start a new game ");
+			Screen.WriteMapString(4,0,"[b] Quit ");
+			ConsoleKeyInfo command;
+			bool done = false;
+			while(!done){
+				command = Console.ReadKey(true);
+				switch(command.KeyChar){
+				case 'a':
+				{
+					done = true;
+					Game game = new Game();
+					game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0);
+					game.player.inv = new List<Item>();
+					game.player.weapons.Remove(WeaponType.NO_WEAPON);
+					game.player.weapons.AddLast(WeaponType.SWORD);
+					game.player.weapons.AddLast(WeaponType.MACE);
+					game.player.weapons.AddLast(WeaponType.DAGGER);
+					game.player.weapons.AddLast(WeaponType.STAFF);
+					game.player.weapons.AddLast(WeaponType.BOW);
+					game.player.armors.Remove(ArmorType.NO_ARMOR);
+					game.player.armors.AddLast(ArmorType.LEATHER);
+					game.player.armors.AddLast(ArmorType.CHAINMAIL);
+					game.player.armors.AddLast(ArmorType.FULL_PLATE);
+					game.M = new Map(game);
+					game.B = new Buffer(game);
+					game.Q = new Queue(game);
+					Map.Q = game.Q;
+					PhysicalObject.M = game.M;
+					Actor.M = game.M;
+					Actor.Q = game.Q;
+					Actor.B = game.B;
+					Actor.player = game.player;
+					Item.M = game.M;
+					Item.Q = game.Q; //this part is so ugly
+					Item.B = game.B;
+					Item.player = game.player;
+					Event.Q = game.Q;
+					Event.B = game.B; //i want to change it somehow
+					Event.M = game.M;
+					Event.player = game.player;
+					Tile.M = game.M;
+					Tile.B = game.B;
+					Tile.player = game.player;
+					//game.M.InitLevel();
+					game.M.LoadLevel("map.txt");
+					Actor.player_name = "Doomguy"; //todo
+					game.player.Q0();
+					game.player.Move(10,20); //this is why the voodoo was needed before: the player must be moved onto the map *before*
+					game.player.UpdateRadius(0,6,true); //gaining a light radius.
+					game.player.GainXP(1);
+					while(!Global.GAME_OVER){ game.Q.Pop(); }
+					break;
+				}
+				case 'b':
+					Environment.Exit(0);
+					break;
+				default:
+					break;
+				}
+			}
 		}
 	}
 }
