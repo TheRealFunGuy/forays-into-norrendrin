@@ -61,6 +61,43 @@ namespace Forays{
 			}
 			return false;
 		}
+		public static int EnterInt(){ return EnterInt(4); }
+		public static int EnterInt(int max_size){
+			string s = "";
+			ConsoleKeyInfo command;
+			Console.CursorVisible = true;
+			bool done = false;
+			while(!done){
+				command = Console.ReadKey(true);
+				if(command.KeyChar >= '0' && command.KeyChar <= '9'){
+					if(s.Length < max_size){
+						s = s + command.KeyChar;
+						Screen.WriteChar(Console.CursorTop,Console.CursorLeft,command.KeyChar);
+					}
+				}
+				else{
+					if(command.Key == ConsoleKey.Backspace && s.Length > 0){
+						s = s.Substring(0,s.Length-1);
+						Screen.WriteChar(Console.CursorTop,Console.CursorLeft-1,' ');
+						Console.SetCursorPosition(Console.CursorLeft-1,Console.CursorTop);
+					}
+					else{
+						if(command.Key == ConsoleKey.Escape){
+							return 0;
+						}
+						else{
+							if(command.Key == ConsoleKey.Enter){
+								if(s.Length == 0){
+									return 0;
+								}
+								done = true;
+							}
+						}
+					}
+				}
+			}
+			return Convert.ToInt32(s);
+		}
 	}
 	public class Dict<TKey,TValue>{
 		private Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();

@@ -112,6 +112,36 @@ namespace Forays{
 			}
 			return t;
 		}
+		public bool GetItem(Item item){
+			if(inv == null){
+				inv = item;
+				item.row = row;
+				item.col = col;
+				return true;
+			}
+			else{
+				if(inv.type == item.type){
+					inv.quantity += item.quantity;
+					return true;
+				}
+				else{
+					for(int i=1;i<COLS;++i){
+						List<Tile> tiles = TilesAtDistance(i);
+						while(tiles.Count > 0){
+							Tile t = tiles[Global.Roll(tiles.Count)-1];
+							if(t.passable && t.inv == null){
+								t.inv = item;
+								item.row = t.row;
+								item.col = t.col;
+								return true;
+							}
+							tiles.Remove(t);
+						}
+					}
+				}
+			}
+			return false;
+		}
 		public void Toggle(PhysicalObject toggler){
 			if(toggles_into != null){
 				Toggle(toggler,toggles_into.Value);

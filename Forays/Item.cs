@@ -63,7 +63,7 @@ namespace Forays{
 		}
 		public Item(Item i,int r,int c){
 			type = i.type;
-			quantity = 1;
+			quantity = 4;
 			name = i.name;
 			a_name = i.a_name;
 			the_name = i.the_name;
@@ -184,7 +184,7 @@ namespace Forays{
 			case ConsumableType.REGENERATION:
 				{
 				user.attrs[AttrType.REGENERATING]++;
-				if(name == "you"){
+				if(user.name == "you"){
 					B.Add("Your blood tingles. ",user);
 				}
 				else{
@@ -208,7 +208,7 @@ namespace Forays{
 				}
 			case ConsumableType.CLARITY:
 				user.ResetSpells();
-				if(name == "you"){
+				if(user.name == "you"){
 					B.Add("Your mind clears. ");
 				}
 				else{
@@ -400,11 +400,11 @@ namespace Forays{
 				}
 			case ConsumableType.BANDAGE:
 				user.TakeDamage(DamageType.HEAL,1,null);
-				if(name == "you"){
+				if(user.name == "you"){
 					B.Add("You apply a bandage. ");
 				}
 				else{
-					B.Add(the_name + " applies a bandage. ",user);
+					B.Add(user.the_name + " applies a bandage. ",user);
 				}
 				break;
 			default:
@@ -416,7 +416,7 @@ namespace Forays{
 					--quantity;
 				}
 				else{
-					//todo: uncomment this line: user.inv.Remove(this);
+					user.inv.Remove(this);
 					//todo: make sure no references exist.
 				}
 			}

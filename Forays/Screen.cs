@@ -128,6 +128,9 @@ namespace Forays{
 			}
 			//Console.CursorVisible = true; //not turning it back on until i need it
 		}
+		public static void WriteChar(int r,int c,char ch){
+			WriteChar(r,c,new colorchar(Color.Gray,ch));
+		}
 		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
 				memory[r,c] = ch;

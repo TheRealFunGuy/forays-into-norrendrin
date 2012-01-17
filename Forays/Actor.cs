@@ -1165,26 +1165,128 @@ namespace Forays{
 				}
 				break;
 			case 'g':
-			case ';': //todo: check stun only if there's an item
-				if(StunnedThisTurn()){
-					break;
+			case ';':
+				if(tile().inv == null){
+					B.Add("There's nothing here to pick up. ");
+					Q0();
 				}
-				Q0();
+				else{
+					if(StunnedThisTurn()){
+						break;
+					}
+					Item i = tile().inv;
+					i.row = -1;
+					i.col = -1;
+					tile().inv = null;
+					B.Add("You pick up " + i.TheName() + ". ");
+					bool added = false;
+					foreach(Item item in inv){
+						if(item.type == i.type){
+							item.quantity += i.quantity;
+							added = true;
+							break;
+						}
+					}
+					if(!added){
+						inv.Add(i);
+					}
+					Q1();
+				}
 				break;
-			case 'd': //todo: check stun after item selection?
-				if(StunnedThisTurn()){
-					break;
+			case 'd':
+				if(inv.Count == 0){
+					B.Add("You have nothing to drop. ");
+					Q0();
 				}
-				Q0();
+				else{
+					int num = Select("Drop which item? ",InventoryList());
+					if(num != -1){
+						if(StunnedThisTurn()){
+							break;
+						}
+						Item i = inv[num];
+						if(i.quantity <= 1){
+							if(tile().GetItem(i)){
+								B.Add("You drop " + i.TheName() + ". ");
+								inv.Remove(i);
+								Q1();
+							}
+							else{
+								B.Add("There is no room. ");
+								Q0();
+							}
+						}
+						else{
+							B.DisplayNow("Drop how many? (1-" + i.quantity + "): ");
+							int count = Global.EnterInt();
+							if(count < 1){
+								Q0();
+							}
+							else{
+								if(count >= i.quantity){
+									if(tile().GetItem(i)){
+										B.Add("You drop " + i.TheName() + ". ");
+										inv.Remove(i);
+										Q1();
+									}
+									else{
+										B.Add("There is no room. ");
+										Q0();
+									}
+								}
+								else{
+									Item newitem = new Item(i,row,col);
+									newitem.quantity = count;
+									if(tile().GetItem(newitem)){
+										i.quantity -= count;
+										B.Add("You drop " + newitem.TheName() + ". ");
+										Q1();
+									}
+									else{
+										B.Add("There is no room. ");
+										Q0();
+									}
+								}
+							}
+						}
+					}
+					else{
+						Q0();
+					}
+				}
 				break;
 			case 'i':
-				Q0();
-				break;
-			case 'u': //todo: check stun after item selection?
-				if(StunnedThisTurn()){
-					break;
+				if(inv.Count == 0){
+					B.Add("You have nothing in your pack. ");
+				}
+				else{
+					Select("In your pack: ",InventoryList(),true,false);
+					Console.ReadKey(true);
 				}
 				Q0();
+				break;
+			case 'u':
+				if(inv.Count == 0){
+					B.Add("You have nothing to use. ");
+					Q0();
+				}
+				else{
+					int i = Select("Use which item? ",InventoryList());
+					if(i != -1){
+						if(StunnedThisTurn()){
+							break;
+						}
+						if(inv[i].Use(this)){
+							Q1();
+						}
+						else{
+							Q0();
+						}
+					}
+					else{
+						Q0();
+					}
+				}
 				break;
 			case 'W':
 				{
@@ -1658,7 +1760,7 @@ namespace Forays{
 						}
 						else{
 							if(TileInDirection(dir).inv != null){
-								B.Add("You see " + TileInDirection(dir).inv.a_name + ". ");
+								B.Add("You see " + TileInDirection(dir).inv.AName() + ". ");
 							}
 							Move(TileInDirection(dir).row,TileInDirection(dir).col);
 							QS();
@@ -4959,6 +5061,13 @@ effect as standing still, if you're on fire or catching fire. */
 				break;
 			}
 		}
+		public List<string> InventoryList(){
+			List<string> result = new List<string>();
+			foreach(Item i in inv){
+				result.Add(i.AName());
+			}
+			return result;
+		}
 		public void DisplayStats(){ DisplayStats(false,false); }
 		public void DisplayStats(bool expand_weapons,bool expand_armors){
 			Console.CursorVisible = false;
@@ -5023,8 +5132,11 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
 			Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
+			Color catcolor = Color.Green;
 			string s = ("Name: " + player_name).PadRight(COLS/2) + "Turns played: " + (Q.turn / 100);
 			Screen.WriteMapString(2,0,s);
+			Screen.WriteMapString(2,0,new colorstring(catcolor,"Name"));
+			Screen.WriteMapString(2,COLS/2,new colorstring(catcolor,"Turns played"));
 			s = "Trait: ";
 			if(HasAttr(AttrType.MAGICAL_BLOOD)){
 				s = s + "Magical blood";
@@ -5045,7 +5157,9 @@ effect as standing still, if you're on fire or catching fire. */
 				s = s + "Runic birthmark";
 			}
 			Screen.WriteMapString(5,0,s);
+			Screen.WriteMapString(5,0,new colorstring(catcolor,"Trait"));
 			Screen.WriteMapString(8,0,"Skills:");
+			Screen.WriteMapString(8,0,new colorstring(catcolor,"Skills"));
 			int pos = 7;
 			for(SkillType sk = SkillType.COMBAT;sk < SkillType.NUM_SKILLS;++sk){
 				if(sk == SkillType.STEALTH && pos > 50){
@@ -5093,6 +5207,7 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 			}
 			Screen.WriteMapString(11,0,"Feats: ");
+			Screen.WriteMapString(11,0,new colorstring(catcolor,"Feats"));
 			string featlist = "";
 			for(FeatType f = FeatType.QUICK_DRAW;f < FeatType.NUM_FEATS;++f){
 				if(HasFeat(f)){
@@ -5116,6 +5231,7 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			Screen.WriteMapString(currentrow,7,featlist);
 			Screen.WriteMapString(14,0,"Spells: ");
+			Screen.WriteMapString(14,0,new colorstring(catcolor,"Spells"));
 			string spelllist = "";
 			for(SpellType sp = SpellType.SHINE;sp < SpellType.NUM_SPELLS;++sp){
 				if(HasSpell(sp)){
@@ -5138,6 +5254,7 @@ effect as standing still, if you're on fire or catching fire. */
 				++currentrow;
 			}
 			Screen.WriteMapString(currentrow,8,spelllist);
+			Screen.ResetColors();
 			B.DisplayNow("Character information: ");
 			Console.CursorVisible = true;
 			Console.ReadKey(true);
