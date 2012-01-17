@@ -173,6 +173,10 @@ namespace Forays{
 				if(actor[r,c] != null && player.CanSee(actor[r,c])){
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
+					if(actor[r,c] == player && player.HasAttr(AttrType.DANGER_SENSE_ON)
+					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0){
+						ch.color = Color.Red;
+					}
 				}
 				else{
 					if(tile[r,c].inv != null){
@@ -190,9 +194,9 @@ namespace Forays{
 								ch.color = Color.DarkCyan;
 							}
 						}
-						if(player.HasFeat(FeatType.DANGER_SENSE) && danger_sensed != null
-						&& danger_sensed[r,c] && !tile[r,c].IsLit()){
-							ch.color = Color.Red;//todo this should check danger_sense_on, not the feat
+						if(player.HasAttr(AttrType.DANGER_SENSE_ON) && danger_sensed != null
+						&& danger_sensed[r,c] && player.LightRadius() == 0){
+							ch.color = Color.Red;
 						}
 					}
 				}
@@ -335,6 +339,26 @@ namespace Forays{
 					}
 				}
 			}
+//			for(bool done=false;!done;){ //todo: update this. currently just generates one chest
+			for(int i=0;i<20;++i){
+				int tries = 0;
+				for(bool done=false;!done && tries < 100;++tries){
+				int rr = Global.Roll(ROWS-2);
+				int rc = Global.Roll(COLS-2);
+				if(charmap[rr,rc] == '.'){
+					bool floors = true;
+					pos temp = new pos(rr,rc);
+					foreach(pos p in temp.PositionsAtDistance(1)){
+						if(charmap[p.row,p.col] != '.'){
+							floors = false;
+						}
+					}
+					if(floors){
+						charmap[rr,rc] = '~';
+						done = true;
+					}
+				}}
+			}
 			//
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -356,6 +380,9 @@ namespace Forays{
 						break;
 					case '0':
 						Tile.Create(TileType.FIREPIT,i,j);
+						break;
+					case '~':
+						Tile.Create(TileType.CHEST,i,j);
 						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
