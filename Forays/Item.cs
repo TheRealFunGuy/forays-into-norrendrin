@@ -424,23 +424,24 @@ namespace Forays{
 		}
 	}
 	public static class Weapon{
-		public static int Damage(WeaponType type){
+		public static Damage Damage(WeaponType type){
 			switch(type){
 			case WeaponType.SWORD:
 			case WeaponType.FLAMEBRAND:
+				return new Damage(3,false,DamageType.SLASHING,DamageClass.PHYSICAL,null);
 			case WeaponType.MACE:
 			case WeaponType.MACE_OF_FORCE:
-				return 3;
+				return new Damage(3,false,DamageType.BASHING,DamageClass.PHYSICAL,null);
 			case WeaponType.DAGGER:
 			case WeaponType.VENOMOUS_DAGGER:
-				return 2;
+				return new Damage(2,false,DamageType.PIERCING,DamageClass.PHYSICAL,null);
 			case WeaponType.STAFF:
 			case WeaponType.STAFF_OF_MAGIC:
 			case WeaponType.BOW: //bow's melee damage
 			case WeaponType.HOLY_LONGBOW:
-				return 1;
+				return new Damage(1,false,DamageType.BASHING,DamageClass.PHYSICAL,null);
 			default:
-				return 0;
+				return new Damage(0,false,DamageType.NONE,DamageClass.NO_TYPE,null);
 			}
 		}
 		public static WeaponType BaseWeapon(WeaponType type){
@@ -535,6 +536,78 @@ namespace Forays{
 				break;
 			}
 			return cs;
+		}
+		public static colorstring EquipmentScreenName(WeaponType type){
+			colorstring cs;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.Gray;
+			switch(type){
+			case WeaponType.SWORD:
+				cs.s = "Sword";
+				break;
+			case WeaponType.FLAMEBRAND:
+				cs.s = "Flamebrand";
+				cs.color = Color.Red;
+				break;
+			case WeaponType.MACE:
+				cs.s = "Mace";
+				break;
+			case WeaponType.MACE_OF_FORCE:
+				cs.s = "Mace of force";
+				cs.color = Color.Cyan;
+				break;
+			case WeaponType.DAGGER:
+				cs.s = "Dagger";
+				break;
+			case WeaponType.VENOMOUS_DAGGER:
+				cs.s = "Venomous dagger";
+				cs.color = Color.Green;
+				break;
+			case WeaponType.STAFF:
+				cs.s = "Staff";
+				break;
+			case WeaponType.STAFF_OF_MAGIC:
+				cs.s = "Staff of magic";
+				cs.color = Color.Magenta;
+				break;
+			case WeaponType.BOW:
+				cs.s = "Bow";
+				break;
+			case WeaponType.HOLY_LONGBOW:
+				cs.s = "Holy longbow";
+				cs.color = Color.Yellow;
+				break;
+			default:
+				cs.s = "no weapon";
+				break;
+			}
+			return cs;
+		}
+		public static string Description(WeaponType type){
+			switch(type){
+			case WeaponType.SWORD:
+				return "Sword -- A high-damage slashing weapon.";
+			case WeaponType.FLAMEBRAND:
+				return "Flamebrand -- Deals extra fire damage.";
+			case WeaponType.MACE:
+				return "Mace -- A high-damage bashing weapon.";
+			case WeaponType.MACE_OF_FORCE:
+				return "Mace of force -- Chance to knock back or stun.";
+			case WeaponType.DAGGER:
+				return "Dagger -- Medium damage. Extra chance for critical hits.";
+			case WeaponType.VENOMOUS_DAGGER:
+				return "Venomous dagger -- Chance to poison any foe it hits.";
+			case WeaponType.STAFF:
+				return "Staff -- Low damage. Grants a small bonus to defense.";
+			case WeaponType.STAFF_OF_MAGIC:
+				return "Staff of magic -- Grants a bonus to magic skill.";
+			case WeaponType.BOW:
+				return "Bow -- A high-damage ranged weapon.";
+			case WeaponType.HOLY_LONGBOW:
+				return "Holy longbow - Deals extra damage to undead and demons.";
+			default:
+				return "no weapon";
+			}
 		}
 	}
 	public static class Armor{
@@ -641,6 +714,56 @@ namespace Forays{
 			}
 			return cs;
 		}
+		public static colorstring EquipmentScreenName(ArmorType type){
+			colorstring cs;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.Gray;
+			switch(type){
+			case ArmorType.LEATHER:
+				cs.s = "Leather";
+				break;
+			case ArmorType.ELVEN_LEATHER:
+				cs.s = "Elven leather";
+				cs.color = Color.DarkCyan;
+				break;
+			case ArmorType.CHAINMAIL:
+				cs.s = "Chainmail";
+				break;
+			case ArmorType.CHAINMAIL_OF_ARCANA:
+				cs.s = "Chainmail of arcana";
+				cs.color = Color.Magenta;
+				break;
+			case ArmorType.FULL_PLATE:
+				cs.s = "Full plate";
+				break;
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				cs.s = "Full plate of resistance";
+				cs.color = Color.Blue;
+				break;
+			default:
+				cs.s = "no armor";
+				break;
+			}
+			return cs;
+		}
+		public static string Description(ArmorType type){
+			switch(type){
+			case ArmorType.LEATHER:
+				return "Leather -- Light armor. Provides some basic protection.";
+			case ArmorType.ELVEN_LEATHER:
+				return "Elven leather -- Grants a bonus to stealth skill.";
+			case ArmorType.CHAINMAIL:
+				return "Chainmail -- Good protection. Noisy and hard to cast in.";
+			case ArmorType.CHAINMAIL_OF_ARCANA:
+				return "Chainmail of arcana -- Bonus to magic. No cast penalty.";
+			case ArmorType.FULL_PLATE:
+				return "Full plate -- The thickest, noisiest, and bulkiest armor.";
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				return "Full plate of resistance -- Grants resistance to elements.";
+			default:
+				return "no armor";
+			}
+		}
 	}
 	public static class MagicItem{
 		public static colorstring StatsName(MagicItemType type){
@@ -678,6 +801,20 @@ namespace Forays{
 				return "cloak of disappearance";
 			default:
 				return "no item";
+			}
+		}
+		public static string[] Description(MagicItemType type){
+			switch(type){
+			case MagicItemType.PENDANT_OF_LIFE:
+				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but only works once."};
+			case MagicItemType.RING_OF_PROTECTION:
+				return new string[]{"Ring of protection -- Grants a small bonus to","defense."};
+			case MagicItemType.RING_OF_RESISTANCE:
+				return new string[]{"Ring of resistance -- Grants resistance to cold,","fire, and electricity."};
+			case MagicItemType.CLOAK_OF_DISAPPEARANCE:
+				return new string[]{"Cloak of disappearance -- When your health falls,","gives you a chance to escape to safety."};
+			default:
+				return new string[]{"no","item"};
 			}
 		}
 	}
