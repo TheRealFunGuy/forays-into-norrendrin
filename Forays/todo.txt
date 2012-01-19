@@ -14,11 +14,15 @@ should group monsters regroup when they can't see the player?
 
 should dream warrior teleport straight to target_location in seekAI?
 
+replace old spell?
+
 shadow should reduce the light radius of zealots, too
 
 make random colors work for things besides animations - make prismatic orb change.
 
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
+
+things other than the player should be able to call MakeNoise
 
 
 
@@ -26,13 +30,19 @@ things to do somewhere between 0.1 and 1.0:
 
 borrow 'you feel relatively safe' from doomRL?
 
-print messages for bash/slash resistance
-
-replace old spell?
-
 equipment screen should describe all upgrades, especially magic items.
 
 balancing hp should take resists into account.
+
+message when cloak is used up
+
+'e'quipment screen needs a prompt - at *least* "Enter to confirm"
+
+
+
+
+
+
 
 
 

@@ -45,9 +45,9 @@ namespace Forays{
 			}
 			Console.TreatControlCAsInput = true;
 			//Console.CursorSize = 100;
-	//		while(true){
-	//			MainMenu();
-	//		}
+		//	while(true){
+		//		MainMenu();
+		//	}
 			Game game = new Game();
 			game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0);
 			game.player.inv = new List<Item>();
