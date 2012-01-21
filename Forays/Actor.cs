@@ -1310,8 +1310,8 @@ namespace Forays{
 					B.Add("You have nothing in your pack. ");
 				}
 				else{
-					Console.CursorVisible = true;
 					Select("In your pack: ",InventoryList(),true,false);
+					Console.CursorVisible = true;
 					Console.ReadKey(true);
 				}
 				Q0();
@@ -5697,21 +5697,22 @@ effect as standing still, if you're on fire or catching fire. */
 				B.DisplayNow("Your equipment: ");
 				Console.CursorVisible = true;
 				command = Console.ReadKey(true);
-				switch(command.KeyChar){
+				char ch = ConvertInput(command);
+				switch(ch){
 				case 'a':
 				case 'b':
 				case 'c':
 				case 'd':
 				case 'e':
-					if((int)command.KeyChar - (int)'a' != (int)(Weapon.BaseWeapon(new_weapon))){
-						new_weapon = heldweapon[(WeaponType)((int)command.KeyChar - (int)'a')];
+					if((int)ch - (int)'a' != (int)(Weapon.BaseWeapon(new_weapon))){
+						new_weapon = heldweapon[(WeaponType)((int)ch - (int)'a')];
 					}
 					break;
 				case 'f':
 				case 'g':
 				case 'h':
-					if((int)command.KeyChar - (int)'f' != (int)(Armor.BaseArmor(new_armor))){
-						new_armor = heldarmor[(ArmorType)((int)command.KeyChar - (int)'f')];
+					if((int)ch - (int)'f' != (int)(Armor.BaseArmor(new_armor))){
+						new_armor = heldarmor[(ArmorType)((int)ch - (int)'f')];
 					}
 					break;
 				case (char)27:
@@ -6557,6 +6558,12 @@ cch.c = mem[t.row,t.col].c;
 					}
 					first_iteration = false;
 					M.tile[r,c].Cursor();
+				}
+				if(Screen.MapChar(r,c).c == ' ' && Screen.BackgroundColor == ConsoleColor.Black){
+					//testing for foregroundcolor == black does NOT work
+					//testing for backgroundcolor == black DOES work.
+					Screen.WriteMapChar(r,c,' ');
+					Console.SetCursorPosition(c+Global.MAP_OFFSET_COLS,r+Global.MAP_OFFSET_ROWS);
 				}
 				Console.CursorVisible = true;
 				command = Console.ReadKey(true);
