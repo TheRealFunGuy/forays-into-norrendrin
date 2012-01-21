@@ -79,6 +79,9 @@ namespace Forays{
 		public void Print(bool special_message){
 			Console.CursorVisible = false;
 			if(str != ""){
+				if(player.HasAttr(AttrType.RUNNING)){
+					player.attrs[AttrType.RUNNING] = 0;
+				}
 				int last = position-1;
 				if(last == -1){ last = 19; }
 				string prev = log[last];

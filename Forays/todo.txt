@@ -16,13 +16,16 @@ should dream warrior teleport straight to target_location in seekAI?
 
 replace old spell?
 
-shadow should reduce the light radius of zealots, too
+should fire effect items? (probably not)
 
-make random colors work for things besides animations - make prismatic orb change.
+shadow should reduce the light radius of zealots, too
 
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
 
 things other than the player should be able to call MakeNoise
+
+gaining resistance should extinguish fires.
+
 
 
 
@@ -30,15 +33,10 @@ things to do somewhere between 0.1 and 1.0:
 
 borrow 'you feel relatively safe' from doomRL?
 
-equipment screen should describe all upgrades, especially magic items.
-
 balancing hp should take resists into account.
 
-message when cloak is used up
-
-'e'quipment screen needs a prompt - at *least* "Enter to confirm"
-
-
+a trap at the end of the line results in 'm' at the far right, and 'ore]' just above HP.
+	-is it splitting the string incorrectly, or does it ignore line length entirely?
 
 
 

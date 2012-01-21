@@ -15,8 +15,8 @@ namespace Forays{
 		public string name{get;set;}
 		public string a_name{get;set;}
 		public string the_name{get;set;}
-		public char symbol{get; protected set;}
-		public Color color{get; protected set;}
+		public char symbol{get;set;}
+		public Color color{get;set;}
 		
 		public static Map M{get;set;}
 		public PhysicalObject(){
@@ -305,6 +305,15 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 			return result;
+		}
+		public bool IsAdjacentTo(TileType type){ return IsAdjacentTo(type,false); } //didn't need an Actor (or Item) version yet
+		public bool IsAdjacentTo(TileType type,bool consider_origin){
+			foreach(Tile t in TilesWithinDistance(1,!consider_origin)){
+				if(t.type == type){
+					return true;
+				}
+			}
+			return false;
 		}
 		public bool HasBresenhamLine(int r,int c){
 			List<Tile> line = GetBresenhamLine(r,c);

@@ -15,7 +15,8 @@ namespace Forays{
 		private static int ROWS = Global.ROWS;
 		private static int COLS = Global.COLS;
 		//public static Map M{get;set;} //inherited
-		public static Buffer B{get;set;} //needed here?
+		public static Buffer B{get;set;}
+		public static Queue Q{get;set;}
 		public static Actor player{get;set;}
 		static Tile(){
 			proto[TileType.FLOOR] = new Tile(TileType.FLOOR,"floor",'.',Color.White,true,false,null);
@@ -23,18 +24,20 @@ namespace Forays{
 			proto[TileType.DOOR_C] = new Tile(TileType.DOOR_C,"closed door",'+',Color.DarkYellow,false,true,TileType.DOOR_O);
 			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',Color.DarkYellow,true,false,TileType.DOOR_C);
 			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',Color.White,true,false,null);
-			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.Yellow,true,false,null);
+			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.DarkYellow,true,false,null);
 			proto[TileType.FIREPIT] = new Tile(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
 			proto[TileType.STALAGMITE] = new Tile(TileType.STALAGMITE,"stalagmite",'^',Color.White,false,true,TileType.FLOOR);
 			proto[TileType.GRENADE] = new Tile(TileType.GRENADE,"SPECIAL",',',Color.Red,true,false,null); //special treatment
-			//trap ideas: quickfire trap: burst of fire that ignites stuff, then expands(like quickfire) for several turns.
-				//you'll probably have to run while on fire, instead of putting it out
-			//not an actual trap, but room mimic will be awesome.
-			//also not an actual trap, but arena rooms will be cool too. perhaps you'll see the opponent, in stasis.
+			proto[TileType.QUICKFIRE] = new Tile(TileType.QUICKFIRE,"quickfire",'&',Color.RandomFire,true,false,TileType.FLOOR);
+			proto[TileType.QUICKFIRE_TRAP] = new Tile(TileType.QUICKFIRE_TRAP,"quickfire trap",'^',Color.RandomFire,true,false,TileType.FLOOR);
+			proto[TileType.LIGHT_TRAP] = new Tile(TileType.LIGHT_TRAP,"light trap",'^',Color.Yellow,true,false,TileType.FLOOR);
+			proto[TileType.TELEPORT_TRAP] = new Tile(TileType.TELEPORT_TRAP,"teleport trap",'^',Color.Magenta,true,false,TileType.FLOOR);
+			proto[TileType.UNDEAD_TRAP] = new Tile(TileType.UNDEAD_TRAP,"sliding wall trap",'^',Color.DarkCyan,true,false,TileType.FLOOR);
+			proto[TileType.GRENADE_TRAP] = new Tile(TileType.GRENADE_TRAP,"grenade trap",'^',Color.DarkGray,true,false,TileType.FLOOR);
+			proto[TileType.STUN_TRAP] = new Tile(TileType.STUN_TRAP,"stun trap",'^',Color.Red,true,false,TileType.FLOOR);
+			//mimic
+			//not an actual trap, but arena rooms, too. perhaps you'll see the opponent, in stasis.
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
-			//stun trap. much less nasty than paralysis or even confusion.
-			//definitely need braziers with radius 1 light
-			//orcish grenade trap. drops 1d2 grenades up to 1 tile away.
 		}
 		public Tile(Tile t,int r,int c){
 			type = t.type;
@@ -150,10 +153,12 @@ namespace Forays{
 		public void Toggle(PhysicalObject toggler,TileType toggle_to){
 			bool lighting_update = false; //todo: when a mob opens a seen door, it'll be visible, so add
 			List<Actor> actors = new List<Actor>(); // a message: "You hear a door opening. " - and that should be enough!
-			for(int i=row-1;i<=row+1;++i){
-				for(int j=col-1;j<=col+1;++j){
-					if(M.tile[i,j].IsLit()){
-						lighting_update = true;
+			if(opaque != Prototype(toggle_to).opaque){
+				for(int i=row-1;i<=row+1;++i){
+					for(int j=col-1;j<=col+1;++j){
+						if(M.tile[i,j].IsLit()){
+							lighting_update = true;
+						}
 					}
 				}
 			}
@@ -161,9 +166,9 @@ namespace Forays{
 				for(int i=row-Global.MAX_LIGHT_RADIUS;i<=row+Global.MAX_LIGHT_RADIUS;++i){
 					for(int j=col-Global.MAX_LIGHT_RADIUS;j<=col+Global.MAX_LIGHT_RADIUS;++j){
 						if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
-							if(M.actor[i,j] != null && M.actor[i,j].light_radius > 0){
+							if(M.actor[i,j] != null && M.actor[i,j].LightRadius() > 0){
 								actors.Add(M.actor[i,j]);
-								M.actor[i,j].UpdateRadius(M.actor[i,j].light_radius,0);
+								M.actor[i,j].UpdateRadius(M.actor[i,j].LightRadius(),0);
 							}
 						}
 					}
@@ -174,7 +179,7 @@ namespace Forays{
 
 			if(lighting_update){
 				foreach(Actor a in actors){
-					a.UpdateRadius(0,a.light_radius);
+					a.UpdateRadius(0,a.LightRadius());
 				}
 			}
 		}
@@ -223,6 +228,205 @@ namespace Forays{
 				foreach(Actor a in actors){
 					a.UpdateRadius(0,a.light_radius);
 				}
+			}
+		}
+		public void TriggerTrap(){
+			B.Add("*CLICK* ",this);
+			B.Print(true);
+			switch(type){
+			case TileType.GRENADE_TRAP:
+			{
+				B.Add("Grenades fall from the ceiling above " + actor().the_name + "! ",this);
+				bool nade_here = false;
+				List<Tile> valid = new List<Tile>();
+				foreach(Tile t in TilesWithinDistance(1)){
+					if(t.passable){
+						valid.Add(t);
+					}
+				}
+				int count = Global.Roll(10) == 10? 3 : 2;
+				for(;count>0 & valid.Count > 0;--count){
+					Tile t = valid[Global.Roll(valid.Count)-1];
+					if(t == this){
+						nade_here = true;
+					}
+					if(t.actor() != null){
+						if(t.actor() == player){
+							B.Add("One lands under you! ");
+						}
+						else{
+							B.Add("One lands under " + t.actor().the_name + ". ");
+						}
+					}
+					else{
+						if(t.inv != null){
+							B.Add("It lands under " + t.inv.the_name + ". ");
+						}
+					}
+					TileType oldtype = t.type;
+					t.TransformTo(TileType.GRENADE);
+					if(t == this){
+						t.toggles_into = TileType.FLOOR;
+						t.passable = true;
+						t.opaque = false;
+					}
+					else{
+						t.toggles_into = oldtype;
+						t.passable = Tile.Prototype(oldtype).passable;
+						t.opaque = Tile.Prototype(oldtype).opaque;
+					}
+					switch(oldtype){
+					case TileType.FLOOR:
+						t.the_name = "the grenade on the floor";
+						t.a_name = "a grenade on a floor";
+						break;
+					case TileType.STAIRS:
+						t.the_name = "the grenade on the stairway";
+						t.a_name = "a grenade on a stairway";
+						break;
+					case TileType.DOOR_O:
+						t.the_name = "the grenade in the open door";
+						t.a_name = "a grenade in an open door";
+						break;
+					default:
+						t.the_name = "the grenade and " + Tile.Prototype(oldtype).the_name;
+						t.a_name = "a grenade and " + Tile.Prototype(oldtype).a_name;
+						break;
+					}
+					valid.Remove(t);
+					if(actor() == player){ //this hack demonstrates the sort of tweak i might need to do to my timing system
+						Q.Add(new Event(t,101,EventType.GRENADE));
+					}
+					else{
+						Q.Add(new Event(t,100,EventType.GRENADE));
+					}
+				}
+				if(!nade_here){
+					Toggle(actor());
+				}
+				break;
+			}
+			case TileType.UNDEAD_TRAP:
+			{
+				List<int> dirs = new List<int>();
+				for(int i=2;i<=8;i+=2){
+					Tile t = this;
+					bool good = true;
+					while(t.type != TileType.WALL){
+						t = t.TileInDirection(i);
+						if(t.opaque && t.type != TileType.WALL){
+							good = false;
+							break;
+						}
+						if(DistanceFrom(t) > 6){
+							good = false;
+							break;
+						}
+					}
+					if(good && t.row > 0 && t.row < ROWS-1 && t.col > 0 && t.col < COLS-1){
+						t = t.TileInDirection(i);
+					}
+					else{
+						good = false;
+					}
+					if(good && t.row > 0 && t.row < ROWS-1 && t.col > 0 && t.col < COLS-1){
+						foreach(Tile tt in t.TilesWithinDistance(1)){
+							if(tt.type != TileType.WALL){
+								good = false;
+							}
+						}
+					}
+					else{
+						good = false;
+					}
+					if(good){
+						dirs.Add(i);
+					}
+				}
+				if(dirs.Count == 0){
+					B.Add("Nothing happens. ",this);
+				}
+				else{
+					int dir = dirs[Global.Roll(dirs.Count)-1];
+					Tile first = this;
+					while(first.type != TileType.WALL){
+						first = first.TileInDirection(dir);
+					}
+					first.TileInDirection(dir).TurnToFloor();
+					ActorType ac = Global.CoinFlip()? ActorType.SKELETON : ActorType.ZOMBIE;
+					Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col);
+					first.TurnToFloor();
+					//first.ActorInDirection(dir).target_location = this;
+					//first.ActorInDirection(dir).player_visibility_duration = -1;
+					first.ActorInDirection(dir).FindPath(TileInDirection(dir));
+					if(player.CanSee(first)){
+						B.Add("The wall slides away. ");
+					}
+					else{
+						if(DistanceFrom(player) <= 6){
+							B.Add("You hear rock sliding on rock. ");
+						}
+					}
+				}
+				Toggle(actor());
+				break;
+			}
+			case TileType.TELEPORT_TRAP:
+				B.Add("An unstable energy covers " + actor().the_name + ". ",actor());
+				actor().attrs[AttrType.TELEPORTING] = Global.Roll(4);
+				Q.KillEvents(actor(),AttrType.TELEPORTING);
+				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(10)+25)*100,AttrType.TELEPORTING,actor().YouFeel() + " more stable. ",actor()));
+				Toggle(actor());
+				break;
+			case TileType.STUN_TRAP:
+				B.Add("A disorienting flash assails " + actor().the_name + ". ");
+				actor().attrs[AttrType.STUNNED]++;
+				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(5)+7)*100,AttrType.STUNNED,actor().YouFeel() + " less disoriented. ",actor()));
+				Toggle(actor());
+				break;
+			case TileType.LIGHT_TRAP:
+				B.Add("You hear a high-pitched ringing sound. "); //was "high-pitched thrumming sound"
+				if(actor() == player || player.DistanceFrom(this) <= 4){ //kinda hacky until other things can MakeNoise
+					player.MakeNoise();
+				}
+				if(player.HasLOS(row,col)){
+					B.Add("A wave of light washes out from above " + actor().the_name + "! ");
+				}
+				else{
+					B.Add("A wave of light washes over the area! ");
+				}
+				Global.Options[OptionType.WIZLIGHT_CAST] = true;
+				Toggle(actor());
+				break;
+			case TileType.QUICKFIRE_TRAP:
+				B.Add("Fire pours over " + actor().the_name + " and starts to spread! ",this);
+				B.Add(actor().You("start") + " to catch fire. ",actor());
+				foreach(Actor a in ActorsWithinDistance(1)){
+					if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE) && !a.HasAttr(AttrType.ON_FIRE)
+					&& !a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
+						if(a == actor()){							// to work properly, 
+							a.attrs[AttrType.STARTED_CATCHING_FIRE_THIS_TURN] = 1; //this would need to determine what actor's turn it is
+						} //therefore, hack
+						else{
+							a.attrs[AttrType.CATCHING_FIRE] = 1;
+						}
+					}
+				}
+				TransformTo(TileType.QUICKFIRE);
+				toggles_into = TileType.FLOOR;
+				passable = true;
+				opaque = false;
+				List<Tile> newarea = new List<Tile>();
+				newarea.Add(this);
+				if(actor() == player){ //hack
+					Q.Add(new Event(this,newarea,101,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
+				}
+				else{
+					Q.Add(new Event(this,newarea,100,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
+				}
+				break;
+			default:
+				break;
 			}
 		}
 		public void OpenChest(){
@@ -349,7 +553,7 @@ namespace Forays{
 				else{
 					Item i = Item.Create(Item.RandomItem(),player);
 					if(i != null){
-						B.Add("You find " + i.AName() + ". ");
+						B.Add("You find " + Item.Prototype(i.type).AName() + ". ");
 					}
 				}
 				TurnToFloor();
@@ -359,6 +563,9 @@ namespace Forays{
 			return IsLit(player.row,player.col);
 		}
 		public bool IsLit(int viewer_row,int viewer_col){
+			if(Global.Option(OptionType.WIZLIGHT_CAST)){
+				return true;
+			}
 			if(light_value > 0){
 				return true;
 			}
@@ -377,6 +584,19 @@ namespace Forays{
 				}
 			}
 			return false;
+		}
+		public bool IsTrap(){
+			switch(type){
+			case TileType.QUICKFIRE_TRAP:
+			case TileType.GRENADE_TRAP:
+			case TileType.LIGHT_TRAP:
+			case TileType.UNDEAD_TRAP:
+			case TileType.TELEPORT_TRAP:
+			case TileType.STUN_TRAP:
+				return true;
+			default:
+				return false;
+			}
 		}
 		delegate int del(int i);
 		public List<Tile> NeighborsBetween(int r,int c){ //list of non-opaque tiles next to this one that are between you and it

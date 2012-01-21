@@ -31,12 +31,13 @@ namespace Forays{
 			proto[ConsumableType.PASSAGE] = new Item(ConsumableType.PASSAGE,"rune~ of passage",'&',Color.Blue);
 			proto[ConsumableType.DETECT_MONSTERS] = new Item(ConsumableType.DETECT_MONSTERS,"scroll~ of detect monsters",'?',Color.White);
 			proto[ConsumableType.MAGIC_MAP] = new Item(ConsumableType.MAGIC_MAP,"scroll~ of magic map",'?',Color.Gray);
-			proto[ConsumableType.WIZARDS_LIGHT] = new Item(ConsumableType.WIZARDS_LIGHT,"orb~ of wizard's light",'*',Color.Yellow);
-			proto[ConsumableType.PRISMATIC_ORB] = new Item(ConsumableType.PRISMATIC_ORB,"prismatic orb~",'*',Color.White);
+			proto[ConsumableType.WIZARDS_LIGHT] = new Item(ConsumableType.WIZARDS_LIGHT,"orb~ of wizard's light",'*',Color.White);
+			proto[ConsumableType.PRISMATIC_ORB] = new Item(ConsumableType.PRISMATIC_ORB,"prismatic orb~",'*',Color.RandomPrismatic);
 			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'~',Color.White);
 		}
 		public Item(ConsumableType type_,string name_,char symbol_,Color color_){
 			type = type_;
+			quantity = 1;
 			name = name_;
 			the_name = "the " + name;
 			switch(name[0]){
@@ -63,7 +64,7 @@ namespace Forays{
 		}
 		public Item(Item i,int r,int c){
 			type = i.type;
-			quantity = 4;
+			quantity = 1;
 			name = i.name;
 			a_name = i.a_name;
 			the_name = i.the_name;
@@ -78,10 +79,22 @@ namespace Forays{
 				i = new Item(proto[type],r,c);
 				M.tile[r,c].inv = i;
 			}
+			else{
+				if(M.tile[r,c].inv.type == type){
+					M.tile[r,c].inv.quantity++;
+					return M.tile[r,c].inv;
+				}
+			}
 			return i;
 		}
 		public static Item Create(ConsumableType type,Actor a){
 			Item i = null;
+			foreach(Item held in a.inv){
+				if(held.type == type){
+					held.quantity++;
+					return held;
+				}
+			}
 			if(a.inv.Count < Global.MAX_INVENTORY_SIZE){
 				i = new Item(proto[type],-1,-1);
 				a.inv.Add(i);
@@ -345,14 +358,13 @@ namespace Forays{
 				}
 				break;
 			case ConsumableType.WIZARDS_LIGHT:
-				foreach(Tile t in M.AllTiles()){
-					if(!t.opaque){
-						t.light_value++;
-					}
-					//todo: when you close and then open a door, it loses its light value. just need to track some kind of
-					//global state to fix this.
+				if(!Global.Option(OptionType.WIZLIGHT_CAST)){
+					Global.Options[OptionType.WIZLIGHT_CAST] = true;
+					B.Add("The air itself seems to shine. ");
 				}
-				B.Add("The air itself seems to shine. ");
+				else{
+					B.Add("Nothing happens. ");
+				}
 				break;
 			case ConsumableType.PRISMATIC_ORB:
 				{
