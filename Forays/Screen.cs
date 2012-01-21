@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning};
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomPrismatic};
 	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
@@ -133,6 +133,8 @@ namespace Forays{
 		}
 		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
+				ch.color = ResolveColor(ch.color);
+				ch.bgcolor = ResolveColor(ch.bgcolor);
 				memory[r,c] = ch;
 				ConsoleColor co = GetColor(ch.color);
 				if(co != ForegroundColor){
@@ -177,6 +179,8 @@ namespace Forays{
 			if(s.s.Length > 0){
 				r += Global.MAP_OFFSET_ROWS;
 				c += Global.MAP_OFFSET_COLS;
+				s.color = ResolveColor(s.color);
+				s.bgcolor = ResolveColor(s.bgcolor);
 				colorchar cch;
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;
@@ -222,6 +226,8 @@ namespace Forays{
 			if(s.s.Length > 0){
 				++r;
 				//++c;
+				s.color = ResolveColor(s.color);
+				s.bgcolor = ResolveColor(s.bgcolor);
 				colorchar cch;
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;
@@ -426,44 +432,66 @@ namespace Forays{
 			case Color.DarkCyan:
 				return ConsoleColor.DarkCyan;
 			case Color.RandomFire:
+			case Color.RandomIce:
+			case Color.RandomLightning:
+			case Color.RandomPrismatic:
+				return GetColor(ResolveColor(c));
+			default:
+				return ConsoleColor.Black;
+			}
+		}
+		public static Color ResolveColor(Color c){
+			switch(c){
+			case Color.RandomFire:
 				switch(Global.Roll(1,3)){
 				case 1:
-					return ConsoleColor.Red;
+					return Color.Red;
 				case 2:
-					return ConsoleColor.DarkRed;
+					return Color.DarkRed;
 				case 3:
-					return ConsoleColor.Yellow;
+					return Color.Yellow;
 				default:
-					return ConsoleColor.Black;
+					return Color.Black;
 				}
 			case Color.RandomIce:
 				switch(Global.Roll(1,4)){
 				case 1:
-					return ConsoleColor.White;
+					return Color.White;
 				case 2:
-					return ConsoleColor.Cyan;
+					return Color.Cyan;
 				case 3:
-					return ConsoleColor.Blue;
+					return Color.Blue;
 				case 4:
-					return ConsoleColor.DarkBlue;
+					return Color.DarkBlue;
 				default:
-					return ConsoleColor.Black;
+					return Color.Black;
 				}
 			case Color.RandomLightning:
 				switch(Global.Roll(1,4)){
 				case 1:
-					return ConsoleColor.White;
+					return Color.White;
 				case 2:
-					return ConsoleColor.Yellow;
+					return Color.Yellow;
 				case 3:
-					return ConsoleColor.Yellow;
+					return Color.Yellow;
 				case 4:
-					return ConsoleColor.DarkYellow;
+					return Color.DarkYellow;
 				default:
-					return ConsoleColor.Black;
+					return Color.Black;
+				}
+			case Color.RandomPrismatic:
+				switch(Global.Roll(3)){
+				case 1:
+					return Color.Red;
+				case 2:
+					return Color.Blue;
+				case 3:
+					return Color.Yellow;
+				default:
+					return Color.Black;
 				}
 			default:
-				return ConsoleColor.Black;
+				return c;
 			}
 		}
 	}

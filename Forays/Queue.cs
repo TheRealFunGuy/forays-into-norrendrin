@@ -308,6 +308,9 @@ namespace Forays{
 					else{
 						temp.attrs[attr] -= value;
 					}
+					if(attr == AttrType.TELEPORTING){
+						temp.attrs[attr] = 0;
+					}
 					if(attr == AttrType.IMMOBILIZED && temp.attrs[attr] < 0){ //check here for attrs that shouldn't drop below 0
 						temp.attrs[attr] = 0;
 					}
@@ -462,6 +465,64 @@ namespace Forays{
 					}
 					break;
 					}
+				case EventType.QUICKFIRE:
+				{
+					List<Actor> actors = new List<Actor>();
+					if(value >= 0){
+						foreach(Tile t in area){
+							if(t.actor() != null){
+								actors.Add(t.actor());
+							}
+						}
+					}
+					if(value > 0){
+						int radius = 4 - value;
+						List<Tile> added = new List<Tile>();
+						foreach(Tile t in target.TilesWithinDistance(radius)){
+							if(t.passable && t.type != TileType.QUICKFIRE && t.type != TileType.GRENADE
+							&& t.IsAdjacentTo(TileType.QUICKFIRE) && !area.Contains(t)){ //the interaction between grenades and
+								added.Add(t);		//				quickfire is hacky
+							}
+						}
+						foreach(Tile t in added){
+							area.Add(t);
+							TileType oldtype = t.type;
+							t.TransformTo(TileType.QUICKFIRE);
+							t.toggles_into = oldtype;
+							t.passable = Tile.Prototype(oldtype).passable;
+							t.opaque = Tile.Prototype(oldtype).opaque;
+						}
+					}
+					if(value < 0){
+						int radius = 4 + value;
+						List<Tile> removed = new List<Tile>();
+						foreach(Tile t in area){
+							if(t.DistanceFrom(target) == radius){
+								removed.Add(t);
+							}
+							else{
+								if(t.actor() != null){
+									actors.Add(t.actor());
+								}
+							}
+						}
+						foreach(Tile t in removed){
+							area.Remove(t);
+							t.Toggle(null);
+						}
+					}
+					foreach(Actor a in actors){
+						if(!a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.INVULNERABLE)){
+							B.Add("The quickfire burns " + a.the_name + ". ",a);
+							a.TakeDamage(DamageType.FIRE,Global.Roll(6),null);
+						}
+					}
+					--value;
+					if(value > -5){
+						Q.Add(new Event(target,area,100,EventType.QUICKFIRE,AttrType.NO_ATTR,value,""));
+					}
+					break;
+				}
 				case EventType.BOSS_ARRIVE:
 					{
 					//todo

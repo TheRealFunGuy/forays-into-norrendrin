@@ -230,7 +230,8 @@ namespace Forays{
 			}
 			return a;
 		}
-		public void Move(int r,int c){
+		public void Move(int r,int c){ Move(r,c,true); }
+		public void Move(int r,int c,bool trigger_traps){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
 				if(M.actor[r,c] == null){
 					bool torch=false;
@@ -246,6 +247,9 @@ namespace Forays{
 					col = c;
 					if(torch){
 						UpdateRadius(0,LightRadius());
+					}
+					if(trigger_traps && tile().IsTrap()){
+						tile().TriggerTrap();
 					}
 				}
 				else{ //default is now to swap places, rather than do nothing, since everything checks anyway.
@@ -431,6 +435,38 @@ namespace Forays{
 			if(HasAttr(AttrType.DEFENSIVE_STANCE)){
 				attrs[AttrType.DEFENSIVE_STANCE] = 0;
 			}
+			if(HasAttr(AttrType.TELEPORTING) && time_of_last_action < Q.turn){
+				attrs[AttrType.TELEPORTING]--;
+				if(!HasAttr(AttrType.TELEPORTING)){
+					for(int i=0;i<9999;++i){
+						int rr = Global.Roll(1,Global.ROWS-2);
+						int rc = Global.Roll(1,Global.COLS-2);
+						if(M.BoundsCheck(rr,rc) && M.tile[rr,rc].passable && M.actor[rr,rc] == null){
+							if(type == ActorType.PLAYER){
+								B.Add("You are suddenly somewhere else. ");
+								Interrupt();
+								Move(rr,rc);
+							}
+							else{
+								bool seen = false;
+								if(player.CanSee(this)){
+									seen = true;
+								}
+								B.Add(the_name + " suddenly disappears. ",this);
+								Move(rr,rc);
+								if(seen){
+									B.Add(the_name + " reappears. ",this);
+								}
+								else{
+									B.Add(a_name + " suddenly appears! ",this);
+								}
+							}
+							break;
+						}
+					}
+					attrs[AttrType.TELEPORTING] = Global.Roll(2,10) + 5;
+				}
+			}
 			if(HasAttr(AttrType.PARALYZED)){
 				attrs[AttrType.PARALYZED]--;
 				if(type == ActorType.PLAYER){
@@ -566,6 +602,12 @@ namespace Forays{
 					attrs[AttrType.ON_FIRE] = 1;
 				}
 			}
+			if(HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN) && time_of_last_action < Q.turn){ //this hack is necessary because of
+				if(!HasAttr(AttrType.CATCHING_FIRE)){ //  the timing involved - 
+					attrs[AttrType.CATCHING_FIRE] = 1;	// anything that catches fire on its own turn would immediately be on fire.
+				}
+				attrs[AttrType.STARTED_CATCHING_FIRE_THIS_TURN] = 0;
+			}
 			time_of_last_action = Q.turn; //this might eventually need a slight rework for 0-time turns
 		}
 		private char ConvertInput(ConsoleKeyInfo k){
@@ -674,7 +716,9 @@ namespace Forays{
 			Cursor();
 			Console.CursorVisible = true;
 			if(HasAttr(AttrType.PARALYZED) || HasAttr(AttrType.AFRAID)){
-				Thread.Sleep(250);
+				if(HasAttr(AttrType.AFRAID)){
+					Thread.Sleep(250);
+				}
 				Q1();
 				return;
 			}
@@ -840,7 +884,7 @@ namespace Forays{
 					break;
 				}
 				if(M.tile[row,col].inv != null){
-					B.Add("You see " + M.tile[row,col].inv.a_name + ". ");
+					B.Add("You see " + M.tile[row,col].inv.AName() + ". ");
 				}
 				QS();
 				break;
@@ -1266,6 +1310,7 @@ namespace Forays{
 					B.Add("You have nothing in your pack. ");
 				}
 				else{
+					Console.CursorVisible = true;
 					Select("In your pack: ",InventoryList(),true,false);
 					Console.ReadKey(true);
 				}
@@ -1637,20 +1682,21 @@ namespace Forays{
 				{
 				List<string> l = new List<string>();
 				l.Add("Throw a prismatic orb");
-				l.Add("Ice explosion animation");
+				l.Add("create chests");
 				l.Add("Toggle low light vision");
 				l.Add("Check key names");
 				l.Add("Forget the map");
 				l.Add("Heal to full");
 				l.Add("Become invulnerable");
-				l.Add("blank");
+				l.Add("get items!");
 				l.Add("Spawn a monster");
 				l.Add("Use a rune of passage");
 				l.Add("See the entire level");
 				l.Add("Generate new level");
 				l.Add("Create grenades!");
 				l.Add("Level up");
-				l.Add("PARALYZED!");
+				l.Add("create trap");
+				l.Add("create door");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1659,9 +1705,15 @@ namespace Forays{
 					break;
 					}
 				case 1:
-					Screen.AnimateExplosion(this,5,new colorchar(Color.RandomIce,'*'),25);
-					Q1();
+				{
+					foreach(Tile t in TilesWithinDistance(3)){
+						t.TransformTo(TileType.CHEST);
+					}
+					Q0();
+					//Screen.AnimateExplosion(this,5,new colorchar(Color.RandomIce,'*'),25);
+					//Q1();
 					break;
+				}
 				case 2:
 					if(HasAttr(AttrType.LOW_LIGHT_VISION)){
 						attrs[AttrType.LOW_LIGHT_VISION] = 0;
@@ -1708,6 +1760,9 @@ namespace Forays{
 					break;
 				case 7:
 					{
+					for(int i=0;i<50;++i){
+						Item.Create(Item.RandomItem(),this);
+					}
 					Q0();
 					}
 					break;
@@ -1736,6 +1791,7 @@ namespace Forays{
 					Q0();
 					break;
 				case 12:
+				{
 					Tile t = GetTarget();
 					if(t != null){
 						TileType oldtype = t.type;
@@ -1765,14 +1821,28 @@ namespace Forays{
 					}
 					Q0();
 					break;
+				}
 				case 13:
 					LevelUp();
 					Q0();
 					break;
 				case 14:
-					attrs[AttrType.PARALYZED] = 10;
+				{
+					foreach(Tile t in TilesAtDistance(1)){
+						t.TransformTo((TileType)Global.Roll(6)+9);
+					}
 					Q0();
 					break;
+				}
+				case 15:
+				{
+					Tile t = GetTarget();
+					if(t != null){
+						t.TransformTo(TileType.DOOR_O);
+					}
+					Q0();
+					break;
+				}
 				default:
 					Q0();
 					break;
@@ -2164,16 +2234,22 @@ namespace Forays{
 				break;
 			case ActorType.SHAMBLING_SCARECROW:
 				if(DistanceFrom(target) == 1){
-					if(HasAttr(AttrType.ON_FIRE)){
-						attrs[AttrType.FIRE_HIT]++;
+					if(curhp < maxhp || Global.CoinFlip()){
+						if(HasAttr(AttrType.ON_FIRE)){
+							attrs[AttrType.FIRE_HIT]++;
+						}
+						Attack(0,target);
+						if(HasAttr(AttrType.ON_FIRE)){
+							attrs[AttrType.FIRE_HIT]--;
+						}
 					}
-					Attack(0,target);
-					if(HasAttr(AttrType.ON_FIRE)){
-						attrs[AttrType.FIRE_HIT]--;
+					else{
+						B.Add(the_name + " stares at you silently. ",this);
+						Q1();
 					}
 				}
 				else{
-					if(speed == 75){
+					if(speed == 90){
 						if(curhp < maxhp){
 							AI_Step(target);
 							QS();
@@ -2286,7 +2362,7 @@ namespace Forays{
 					}
 				}
 				else{
-					if(FirstActorInLine(target) == target && !HasAttr(AttrType.COOLDOWN_1) && DistanceFrom(target) <= 8){
+					if(FirstActorInLine(target) == target && !HasAttr(AttrType.COOLDOWN_1) && DistanceFrom(target) <= 6){
 						int cooldown = Global.Roll(1,4);
 						if(cooldown != 1){
 							attrs[AttrType.COOLDOWN_1]++;
@@ -2811,7 +2887,7 @@ namespace Forays{
 						openspaces.Add(tile());
 						Tile newtile = openspaces[Global.Roll(openspaces.Count)-1];
 						if(newtile != tile()){
-							Move(newtile.row,newtile.col);
+							Move(newtile.row,newtile.col,false);
 						}
 						if(openspaces.Count > 1){
 							B.Add(the_name + " is suddenly standing all around " + target.the_name + ". ");
@@ -3338,6 +3414,9 @@ namespace Forays{
 			}
 		}
 		public void CalculateDimming(){
+			if(Global.Option(OptionType.WIZLIGHT_CAST)){
+				return;
+			}
 			int dist = 100;
 			Actor closest_shadow = null;
 			foreach(Actor a in player.ActorsWithinDistance(10,true)){
@@ -4227,8 +4306,9 @@ namespace Forays{
 								for(int i=0;i<9999;++i){
 									int rr = Global.Roll(1,ROWS-2);
 									int rc = Global.Roll(1,COLS-2);
-									if(M.tile[rr,rc].passable && M.actor[rr,rc] == null && DistanceFrom(rr,rc) >= 6){
+									if(M.tile[rr,rc].passable && M.actor[rr,rc] == null && DistanceFrom(rr,rc) >= 6 && !M.tile[rr,rc].IsTrap()){
 										Move(rr,rc);
+										break;
 									}
 								}
 							}
@@ -4238,6 +4318,7 @@ namespace Forays{
 							break;
 						}
 					}
+					B.Add("Your cloak vanishes completely! ");
 					magic_items.Remove(MagicItemType.CLOAK_OF_DISAPPEARANCE);
 				}
 			}
@@ -4963,6 +5044,7 @@ namespace Forays{
 			if(attrs[AttrType.RESTING] == -1){
 				attrs[AttrType.RESTING] = 0;
 			}
+			ResetSpells();
 		}
 		public bool UseFeat(FeatType feat){
 			switch(feat){
@@ -5002,9 +5084,9 @@ namespace Forays{
 					bool moved = false;
 					foreach(Tile neighbor in t.NeighborsBetween(row,col)){
 						if(neighbor.passable && neighbor.actor() == null){
-							Move(neighbor.row,neighbor.col);
 							moved = true;
 							B.Add("You lunge! ");
+							Move(neighbor.row,neighbor.col);
 							attrs[AttrType.BONUS_COMBAT] += 3;
 							Attack(0,t.actor());
 							attrs[AttrType.BONUS_COMBAT] -= 3;
@@ -5192,7 +5274,9 @@ effect as standing still, if you're on fire or catching fire. */
 			return true;
 		}
 		public void Interrupt(){
-			attrs[AttrType.RESTING] = 0;
+			if(HasAttr(AttrType.RESTING)){
+				attrs[AttrType.RESTING] = 0;
+			}
 			attrs[AttrType.RUNNING] = 0;
 		}
 		public bool StunnedThisTurn(){
@@ -5518,19 +5602,34 @@ effect as standing still, if you're on fire or catching fire. */
 		public int[] DisplayEquipment(){
 			WeaponType new_weapon = weapons.First.Value;
 			ArmorType new_armor = armors.First.Value;
+			Dict<WeaponType,WeaponType> heldweapon = new Dict<WeaponType, WeaponType>();
+			Dict<ArmorType,ArmorType> heldarmor = new Dict<ArmorType, ArmorType>();
+			for(WeaponType w = WeaponType.SWORD;w <= WeaponType.BOW;++w){
+				foreach(WeaponType wt in weapons){
+					if(Weapon.BaseWeapon(wt) == w){
+						heldweapon[w] = wt;
+					}
+				}
+			}
+			for(ArmorType a = ArmorType.LEATHER;a <= ArmorType.FULL_PLATE;++a){
+				foreach(ArmorType at in armors){
+					if(Armor.BaseArmor(at) == a){
+						heldarmor[a] = at;
+					}
+				}
+			}
 			Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
 			for(int i=1;i<ROWS-1;++i){
 				Screen.WriteMapString(i,0,"".PadRight(COLS));
 			}
-			Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
 			int line = 2;
 			for(WeaponType w = WeaponType.SWORD;w <= WeaponType.BOW;++w){
-				Screen.WriteMapString(line,11,Weapon.EquipmentScreenName(w));
+				Screen.WriteMapString(line,11,Weapon.EquipmentScreenName(heldweapon[w]));
 				++line;
 			}
 			line = 2;
 			for(ArmorType a = ArmorType.LEATHER;a <= ArmorType.FULL_PLATE;++a){
-				Screen.WriteMapString(line,COLS-24,Armor.EquipmentScreenName(a));
+				Screen.WriteMapString(line,COLS-24,Armor.EquipmentScreenName(heldarmor[a]));
 				++line;
 			}
 			Screen.WriteMapString(9,1,new colorstring(Color.DarkRed,"Weapon: "));
@@ -5551,7 +5650,7 @@ effect as standing still, if you're on fire or catching fire. */
 			while(!done){
 				line = 2;
 				for(WeaponType w = WeaponType.SWORD;w <= WeaponType.BOW;++w){
-					if(new_weapon == w){
+					if(new_weapon == heldweapon[w]){
 						Screen.WriteMapChar(line,5,'>');
 						Screen.WriteMapString(line,7,new colorstring(Color.Red,"[" + (char)(w+(int)'a') + "]"));
 					}
@@ -5563,7 +5662,7 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 				line = 2;
 				for(ArmorType a = ArmorType.LEATHER;a <= ArmorType.FULL_PLATE;++a){
-					if(new_armor == a){
+					if(new_armor == heldarmor[a]){
 						Screen.WriteMapChar(line,36,'>');
 						Screen.WriteMapString(line,38,new colorstring(Color.Red,"[" + (char)(a+(int)'f') + "]"));
 					}
@@ -5577,10 +5676,24 @@ effect as standing still, if you're on fire or catching fire. */
 				if(new_weapon != Weapon.BaseWeapon(new_weapon)){
 					Screen.WriteMapString(10,9,Weapon.Description(new_weapon).PadRight(COLS));
 				}
+				else{
+					Screen.WriteMapString(10,9,"".PadRight(COLS));
+				}
 				Screen.WriteMapString(11,8,Armor.Description(Armor.BaseArmor(new_armor)).PadRight(COLS));
 				if(new_armor != Armor.BaseArmor(new_armor)){
 					Screen.WriteMapString(12,8,Armor.Description(new_armor).PadRight(COLS));
 				}
+				else{
+					Screen.WriteMapString(12,8,"".PadRight(COLS));
+				}
+				if(new_weapon == weapons.First.Value && new_armor == armors.First.Value){
+					Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
+				}
+				else{
+					Screen.WriteMapString(ROWS-1,0,"[Enter] to confirm-----".PadLeft(43,'-'));
+					Screen.WriteMapString(ROWS-1,21,new colorstring(Color.Magenta,"Enter"));
+				}
+				Screen.ResetColors();
 				B.DisplayNow("Your equipment: ");
 				Console.CursorVisible = true;
 				command = Console.ReadKey(true);
@@ -5591,14 +5704,14 @@ effect as standing still, if you're on fire or catching fire. */
 				case 'd':
 				case 'e':
 					if((int)command.KeyChar - (int)'a' != (int)(Weapon.BaseWeapon(new_weapon))){
-						new_weapon = (WeaponType)((int)command.KeyChar - (int)'a');
+						new_weapon = heldweapon[(WeaponType)((int)command.KeyChar - (int)'a')];
 					}
 					break;
 				case 'f':
 				case 'g':
 				case 'h':
 					if((int)command.KeyChar - (int)'f' != (int)(Armor.BaseArmor(new_armor))){
-						new_armor = (ArmorType)((int)command.KeyChar - (int)'f');
+						new_armor = heldarmor[(ArmorType)((int)command.KeyChar - (int)'f')];
 					}
 					break;
 				case (char)27:

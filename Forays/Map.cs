@@ -142,7 +142,7 @@ namespace Forays{
 				c = 0;
 				for(int j=0;j<COLS;++j){
 					colorchar ch = VisibleColorChar(i,j);
-					if(ch.color != s.color){
+					if(Screen.ResolveColor(ch.color) != s.color){
 						if(s.s.Length > 0){
 							Screen.WriteMapString(r,c,s);
 							s.s = "";
@@ -340,7 +340,7 @@ namespace Forays{
 				}
 			}
 //			for(bool done=false;!done;){ //todo: update this. currently just generates one chest
-			for(int i=0;i<20;++i){
+			for(int i=0;i<10;++i){
 				int tries = 0;
 				for(bool done=false;!done && tries < 100;++tries){
 				int rr = Global.Roll(ROWS-2);
@@ -354,7 +354,17 @@ namespace Forays{
 						}
 					}
 					if(floors){
-						charmap[rr,rc] = '~';
+						if(i == 0){
+							charmap[rr,rc] = '~';
+						}
+						else{
+							if(i == 1){
+								charmap[rr,rc] = '>';
+							}
+							else{
+								charmap[rr,rc] = '^';
+							}
+						}
 						done = true;
 					}
 				}}
@@ -383,6 +393,14 @@ namespace Forays{
 						break;
 					case '~':
 						Tile.Create(TileType.CHEST,i,j);
+						break;
+					case '^':
+						Tile.Create((TileType)(Global.Roll(6)+9),i,j);
+						tile[i,j].name = "floor";
+						tile[i,j].the_name = "the floor";
+						tile[i,j].a_name = "a floor";
+						tile[i,j].symbol = '.';
+						tile[i,j].color = Color.White;
 						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
