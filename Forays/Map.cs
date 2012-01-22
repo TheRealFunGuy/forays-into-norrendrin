@@ -470,12 +470,71 @@ namespace Forays{
 							//todo: remove some directions randomly
 							foreach(int i in dirs){
 								Tile t = tile[rr,rc].TileInDirection(i);
+								int distance = -2; //distance of the corridor between traps and secret door
 								while(t.type == TileType.WALL){
-									t.TransformTo(TileType.FLOOR); //todo: make some of these traps, too
+									++distance;
 									t = t.TileInDirection(i);
 								}
-								t.TileInDirection(t.RotateDirection(i,true,4)).TransformTo(TileType.HIDDEN_DOOR);
-								hidden.Add(t.TileInDirection(t.RotateDirection(i,true,4)));
+								t = tile[rr,rc].TileInDirection(i);
+								while(t.type == TileType.WALL){
+									if(distance >= 4){
+										TileType tt = TileType.FLOOR;
+										if(Global.Roll(3) >= 2){
+											tt = TileType.GRENADE_TRAP;
+											hidden.Add(t);
+										}
+										t.TransformTo(tt);
+										t.name = "floor";
+										t.the_name = "the floor";
+										t.a_name = "a floor";
+										t.symbol = '.';
+										t.color = Color.White;
+										if(t.DistanceFrom(tile[rr,rc]) < distance+2){
+											tt = TileType.FLOOR;
+											if(Global.Roll(3) >= 2){
+												tt = TileType.GRENADE_TRAP;
+											}
+											Tile neighbor = t.TileInDirection(t.RotateDirection(i,false,2));
+											neighbor.TransformTo(tt);
+											if(tt == TileType.GRENADE_TRAP){
+												neighbor.name = "floor";
+												neighbor.the_name = "the floor";
+												neighbor.a_name = "a floor";
+												neighbor.symbol = '.';
+												neighbor.color = Color.White;
+												hidden.Add(neighbor);
+											}
+											tt = TileType.FLOOR;
+											if(Global.Roll(3) >= 2){
+												tt = TileType.GRENADE_TRAP;
+											}
+											neighbor = t.TileInDirection(t.RotateDirection(i,true,2));
+											neighbor.TransformTo(tt);
+											if(tt == TileType.GRENADE_TRAP){
+												neighbor.name = "floor";
+												neighbor.the_name = "the floor";
+												neighbor.a_name = "a floor";
+												neighbor.symbol = '.';
+												neighbor.color = Color.White;
+												hidden.Add(neighbor);
+											}
+										}
+									}
+									else{
+										TileType tt = TileType.FLOOR;
+										if(Global.CoinFlip()){
+											tt = (TileType)(Global.Roll(6)+9);
+											hidden.Add(t);
+										}
+										t.TransformTo(tt);
+									}
+									t = t.TileInDirection(i);
+								}
+								t = t.TileInDirection(t.RotateDirection(i,true,4));
+								t.TransformTo(TileType.HIDDEN_DOOR);
+								if(!hidden.Contains(t)){
+									hidden.Add(t);
+								}
 							}
 							foreach(Tile t in tile[rr,rc].TilesAtDistance(1)){
 								t.TransformTo((TileType)(Global.Roll(6)+9));
