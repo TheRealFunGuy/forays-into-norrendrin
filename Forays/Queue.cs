@@ -204,7 +204,11 @@ namespace Forays{
 		}
 		public Event(List<Tile> area_,int delay_,EventType type_){
 			target=null;
-			area=area_;
+			area = new List<Tile>();
+			foreach(Tile t in area_){
+				area.Add(t);
+			}
+			//area=area_;
 			delay=delay_;
 			type=type_;
 			attr=AttrType.NO_ATTR;
@@ -275,6 +279,9 @@ namespace Forays{
 				}
 				dead = true;
 			}
+			if(type_ == EventType.CHECK_FOR_HIDDEN && type == EventType.CHECK_FOR_HIDDEN){
+				dead = true;
+			}
 		}
 		public void Kill(PhysicalObject target_,AttrType attr_){
 			if(target==target_ && type==EventType.REMOVE_ATTR && attr==attr_){
@@ -335,6 +342,52 @@ namespace Forays{
 					}
 					break;
 					}
+				case EventType.CHECK_FOR_HIDDEN:
+				{
+					List<Tile> removed = new List<Tile>();
+					foreach(Tile t in area){
+						if(player.CanSee(t)){
+							int exponent = player.DistanceFrom(t) + 2; //todo: test this value a bit more
+							if(player.HasAttr(AttrType.KEEN_EYES)){
+								--exponent;
+							}
+							if(!t.IsLit()){
+								++exponent;
+							}
+							if(exponent > 8){
+								exponent = 8; //because 1 in 256 is enough.
+							}
+							int difficulty = 1;
+							for(int i=exponent;i>0;--i){
+								difficulty = difficulty * 2;
+							}
+							if(Global.Roll(difficulty) == difficulty){
+								if(t.IsTrap()){
+									t.name = Tile.Prototype(t.type).name;
+									t.a_name = Tile.Prototype(t.type).a_name;
+									t.the_name = Tile.Prototype(t.type).the_name;
+									t.symbol = Tile.Prototype(t.type).symbol;
+									t.color = Tile.Prototype(t.type).color;
+									B.Add("You notice " + t.a_name + ". ");
+								}
+								else{
+									if(t.type == TileType.HIDDEN_DOOR){
+										t.Toggle(null);
+										B.Add("You notice a hidden door. ");
+									}
+								}
+								removed.Add(t);
+							}
+						}
+					}
+					foreach(Tile t in removed){
+						area.Remove(t);
+					}
+					if(area.Count > 0){
+						Q.Add(new Event(area,100,EventType.CHECK_FOR_HIDDEN));
+					}
+					break;
+				}
 				case EventType.POLTERGEIST:
 					{
 					if(Global.CoinFlip()){

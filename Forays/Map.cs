@@ -89,6 +89,7 @@ namespace Forays{
 		public void LoadLevel(string filename){
 			TextReader file = new StreamReader(filename);
 			char ch;
+			List<Tile> hidden = new List<Tile>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					ch = (char)file.Read();
@@ -108,6 +109,15 @@ namespace Forays{
 					case '>':
 						Tile.Create(TileType.STAIRS,i,j);
 						break;
+					case 'H':
+						Tile.Create(TileType.HIDDEN_DOOR,i,j);
+						hidden.Add(tile[i,j]);
+						//todo: change this
+						//List<Tile> area = new List<Tile>();
+						//area.Add(tile[i,j]);
+						//Q.Add(new Event(area,100,EventType.CHECK_FOR_HIDDEN));
+						//
+						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
 						break;
@@ -117,6 +127,9 @@ namespace Forays{
 				file.ReadLine();
 			}
 			file.Close();
+			if(hidden.Count > 0){
+				Q.Add(new Event(hidden,100,EventType.CHECK_FOR_HIDDEN));
+			}
 		}
 		public void Draw(){
 			Console.CursorVisible = false;
@@ -370,6 +383,7 @@ namespace Forays{
 				}}
 			}
 			//
+			List<Tile> hidden = new List<Tile>(); //todo make sure this is right
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					switch(charmap[i,j]){
@@ -401,6 +415,11 @@ namespace Forays{
 						tile[i,j].a_name = "a floor";
 						tile[i,j].symbol = '.';
 						tile[i,j].color = Color.White;
+						hidden.Add(tile[i,j]);
+						break;
+					case 'H':
+						Tile.Create(TileType.HIDDEN_DOOR,i,j);
+						hidden.Add(tile[i,j]);
 						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
@@ -409,6 +428,7 @@ namespace Forays{
 					alltiles.Add(tile[i,j]);
 				}
 			}
+			player.ResetForNewLevel();
 			foreach(Tile t in AllTiles()){
 				if(t.type == TileType.FIREPIT){
 					foreach(Tile tt in t.TilesWithinDistance(1)){
@@ -416,7 +436,65 @@ namespace Forays{
 					}
 				}
 			}
-			player.ResetForNewLevel();
+			if(true){ //todo will become if(coinflip) or something, i dunno
+				bool done = false;
+				for(int tries=0;!done && tries<9999;++tries){
+					int rr = Global.Roll(ROWS-4) + 1;
+					int rc = Global.Roll(COLS-4) + 1;
+					bool good = true;
+					foreach(Tile t in tile[rr,rc].TilesWithinDistance(2)){
+						if(t.type != TileType.WALL){
+							good = false;
+							break;
+						}
+					}
+					if(good){
+						List<int> dirs = new List<int>();
+						for(int i=2;i<=8;i+=2){
+							Tile t = tile[rr,rc].TileInDirection(i).TileInDirection(i);
+							bool good_dir = true;
+							while(good_dir && t != null && t.type == TileType.WALL){
+								if(t.TileInDirection(t.RotateDirection(i,false,2)).type != TileType.WALL){
+									good_dir = false;
+								}
+								if(t.TileInDirection(t.RotateDirection(i,true,2)).type != TileType.WALL){
+									good_dir = false;
+								}
+								t = t.TileInDirection(i);
+							}
+							if(good_dir && t != null){
+								dirs.Add(i);
+							}
+						}
+						if(dirs.Count > 0){
+							//todo: remove some directions randomly
+							foreach(int i in dirs){
+								Tile t = tile[rr,rc].TileInDirection(i);
+								while(t.type == TileType.WALL){
+									t.TransformTo(TileType.FLOOR); //todo: make some of these traps, too
+									t = t.TileInDirection(i);
+								}
+								t.TileInDirection(t.RotateDirection(i,true,4)).TransformTo(TileType.HIDDEN_DOOR);
+								hidden.Add(t.TileInDirection(t.RotateDirection(i,true,4)));
+							}
+							foreach(Tile t in tile[rr,rc].TilesAtDistance(1)){
+								t.TransformTo((TileType)(Global.Roll(6)+9));
+								t.name = "floor";
+								t.the_name = "the floor";
+								t.a_name = "a floor";
+								t.symbol = '.';
+								t.color = Color.White;
+								hidden.Add(t);
+							}
+							tile[rr,rc].TransformTo(TileType.CHEST);
+							done = true;
+						}
+					}
+				}
+			}
+			if(hidden.Count > 0){
+				Q.Add(new Event(hidden,100,EventType.CHECK_FOR_HIDDEN));
+			}
 			//todo: spawn some items
 			for(int i=Global.Roll(2,2)+3;i>0;--i){
 				SpawnMob();
@@ -427,8 +505,8 @@ namespace Forays{
 			//todo: find a spot for the player that no monsters can see
 			//if there is no such spot, place the player randomly
 			for(bool done=false;!done;){
-				int rr = Global.Roll(ROWS-1);
-				int rc = Global.Roll(COLS-1);
+				int rr = Global.Roll(ROWS-2);
+				int rc = Global.Roll(COLS-2);
 				if(tile[rr,rc].passable && actor[rr,rc] == null){
 					int light = player.light_radius;
 					player.light_radius = 0;

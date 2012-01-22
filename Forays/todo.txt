@@ -16,7 +16,7 @@ should dream warrior teleport straight to target_location in seekAI?
 
 replace old spell?
 
-should fire effect items? (probably not)
+should fire affect items? (probably not)
 
 shadow should reduce the light radius of zealots, too
 
@@ -34,10 +34,6 @@ things to do somewhere between 0.1 and 1.0:
 borrow 'you feel relatively safe' from doomRL?
 
 balancing hp should take resists into account.
-
-a trap at the end of the line results in 'm' at the far right, and 'ore]' just above HP.
-	-is it splitting the string incorrectly, or does it ignore line length entirely?
-
 
 
 

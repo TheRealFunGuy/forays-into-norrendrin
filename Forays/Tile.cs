@@ -35,6 +35,7 @@ namespace Forays{
 			proto[TileType.UNDEAD_TRAP] = new Tile(TileType.UNDEAD_TRAP,"sliding wall trap",'^',Color.DarkCyan,true,false,TileType.FLOOR);
 			proto[TileType.GRENADE_TRAP] = new Tile(TileType.GRENADE_TRAP,"grenade trap",'^',Color.DarkGray,true,false,TileType.FLOOR);
 			proto[TileType.STUN_TRAP] = new Tile(TileType.STUN_TRAP,"stun trap",'^',Color.Red,true,false,TileType.FLOOR);
+			proto[TileType.HIDDEN_DOOR] = new Tile(TileType.HIDDEN_DOOR,"wall",'#',Color.Gray,false,true,TileType.DOOR_C);
 			//mimic
 			//not an actual trap, but arena rooms, too. perhaps you'll see the opponent, in stasis.
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
@@ -232,7 +233,7 @@ namespace Forays{
 		}
 		public void TriggerTrap(){
 			B.Add("*CLICK* ",this);
-			B.Print(true);
+			B.PrintAll();
 			switch(type){
 			case TileType.GRENADE_TRAP:
 			{
@@ -400,7 +401,6 @@ namespace Forays{
 				break;
 			case TileType.QUICKFIRE_TRAP:
 				B.Add("Fire pours over " + actor().the_name + " and starts to spread! ",this);
-				B.Add(actor().You("start") + " to catch fire. ",actor());
 				foreach(Actor a in ActorsWithinDistance(1)){
 					if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE) && !a.HasAttr(AttrType.ON_FIRE)
 					&& !a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
@@ -410,6 +410,7 @@ namespace Forays{
 						else{
 							a.attrs[AttrType.CATCHING_FIRE] = 1;
 						}
+						B.Add(a.You("start") + " to catch fire. ",a);
 					}
 				}
 				TransformTo(TileType.QUICKFIRE);
