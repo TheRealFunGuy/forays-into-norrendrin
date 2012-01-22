@@ -46,50 +46,143 @@ namespace Forays{
 		public Actor ActorInDirection(int dir){
 			switch(dir){
 			case 7:
-				return M.actor[row-1,col-1];
+				if(M.BoundsCheck(row-1,col-1)){
+					return M.actor[row-1,col-1];
+				}
+				break;
 			case 8:
-				return M.actor[row-1,col];
+				if(M.BoundsCheck(row-1,col)){
+					return M.actor[row-1,col];
+				}
+				break;
 			case 9:
-				return M.actor[row-1,col+1];
+				if(M.BoundsCheck(row-1,col+1)){
+					return M.actor[row-1,col+1];
+				}
+				break;
 			case 4:
-				return M.actor[row,col-1];
+				if(M.BoundsCheck(row,col-1)){
+					return M.actor[row,col-1];
+				}
+				break;
 			case 5:
-				return M.actor[row,col];
+				if(M.BoundsCheck(row,col)){
+					return M.actor[row,col];
+				}
+				break;
 			case 6:
-				return M.actor[row,col+1];
+				if(M.BoundsCheck(row,col+1)){
+					return M.actor[row,col+1];
+				}
+				break;
 			case 1:
-				return M.actor[row+1,col-1];
+				if(M.BoundsCheck(row+1,col-1)){
+					return M.actor[row+1,col-1];
+				}
+				break;
 			case 2:
-				return M.actor[row+1,col];
+				if(M.BoundsCheck(row+1,col)){
+					return M.actor[row+1,col];
+				}
+				break;
 			case 3:
-				return M.actor[row+1,col+1];
+				if(M.BoundsCheck(row+1,col+1)){
+					return M.actor[row+1,col+1];
+				}
+				break;
 			default:
 				return null;
 			}
+			return null;
 		}
 		public Tile TileInDirection(int dir){
 			switch(dir){
 			case 7:
-				return M.tile[row-1,col-1];
+				if(M.BoundsCheck(row-1,col-1)){
+					return M.tile[row-1,col-1];
+				}
+				break;
 			case 8:
-				return M.tile[row-1,col];
+				if(M.BoundsCheck(row-1,col)){
+					return M.tile[row-1,col];
+				}
+				break;
 			case 9:
-				return M.tile[row-1,col+1];
+				if(M.BoundsCheck(row-1,col+1)){
+					return M.tile[row-1,col+1];
+				}
+				break;
 			case 4:
-				return M.tile[row,col-1];
+				if(M.BoundsCheck(row,col-1)){
+					return M.tile[row,col-1];
+				}
+				break;
 			case 5:
-				return M.tile[row,col];
+				if(M.BoundsCheck(row,col)){
+					return M.tile[row,col];
+				}
+				break;
 			case 6:
-				return M.tile[row,col+1];
+				if(M.BoundsCheck(row,col+1)){
+					return M.tile[row,col+1];
+				}
+				break;
 			case 1:
-				return M.tile[row+1,col-1];
+				if(M.BoundsCheck(row+1,col-1)){
+					return M.tile[row+1,col-1];
+				}
+				break;
 			case 2:
-				return M.tile[row+1,col];
+				if(M.BoundsCheck(row+1,col)){
+					return M.tile[row+1,col];
+				}
+				break;
 			case 3:
-				return M.tile[row+1,col+1];
+				if(M.BoundsCheck(row+1,col+1)){
+					return M.tile[row+1,col+1];
+				}
+				break;
 			default:
 				return null;
 			}
+			return null;
+		}
+		public int RotateDirection(int dir,bool clockwise){ return RotateDirection(dir,clockwise,1); }
+		public int RotateDirection(int dir,bool clockwise,int num){
+			for(int i=0;i<num;++i){
+				switch(dir){
+				case 7:
+					dir = clockwise?8:4;
+					break;
+				case 8:
+					dir = clockwise?9:7;
+					break;
+				case 9:
+					dir = clockwise?6:8;
+					break;
+				case 4:
+					dir = clockwise?7:1;
+					break;
+				case 5:
+					break;
+				case 6:
+					dir = clockwise?3:9;
+					break;
+				case 1:
+					dir = clockwise?4:2;
+					break;
+				case 2:
+					dir = clockwise?1:3;
+					break;
+				case 3:
+					dir = clockwise?2:6;
+					break;
+				default:
+					dir = 0;
+					break;
+				}
+			}
+			return dir;
 		}
 		public int DirectionOf(PhysicalObject obj){
 			int dy = Math.Abs(obj.row - row);

@@ -1693,7 +1693,7 @@ namespace Forays{
 				l.Add("Use a rune of passage");
 				l.Add("See the entire level");
 				l.Add("Generate new level");
-				l.Add("Create grenades!");
+				l.Add("move up and print long msg");
 				l.Add("Level up");
 				l.Add("create trap");
 				l.Add("create door");
@@ -1792,7 +1792,7 @@ namespace Forays{
 					break;
 				case 12:
 				{
-					Tile t = GetTarget();
+					/*Tile t = GetTarget();
 					if(t != null){
 						TileType oldtype = t.type;
 						t.TransformTo(TileType.GRENADE);
@@ -1818,8 +1818,9 @@ namespace Forays{
 							break;
 						}
 						Q.Add(new Event(t,100,EventType.GRENADE));
-					}
-					Q0();
+					}*/
+					B.Add("".PadRight(56,'%') + " ");
+					PlayerWalk(8);
 					break;
 				}
 				case 13:
@@ -3579,43 +3580,6 @@ namespace Forays{
 			}
 			return false;
 		}
-		public int RotateDirection(int dir,bool clockwise){ return RotateDirection(dir,clockwise,1); }
-		public int RotateDirection(int dir,bool clockwise,int num){
-			for(int i=0;i<num;++i){
-				switch(dir){
-				case 7:
-					dir = clockwise?8:4;
-					break;
-				case 8:
-					dir = clockwise?9:7;
-					break;
-				case 9:
-					dir = clockwise?6:8;
-					break;
-				case 4:
-					dir = clockwise?7:1;
-					break;
-				case 5:
-					break;
-				case 6:
-					dir = clockwise?3:9;
-					break;
-				case 1:
-					dir = clockwise?4:2;
-					break;
-				case 2:
-					dir = clockwise?1:3;
-					break;
-				case 3:
-					dir = clockwise?2:6;
-					break;
-				default:
-					dir = 0;
-					break;
-				}
-			}
-			return dir;
-		}
 		public bool AI_MoveOrOpen(int dir){
 			return AI_MoveOrOpen(TileInDirection(dir).row,TileInDirection(dir).col);
 		}
@@ -3912,13 +3876,18 @@ namespace Forays{
 					a.attrs[AttrType.TUMBLING] = 0;
 				}
 				if(hit){
-					if(Global.Roll(1,20) == 20){
-						B.Add("The arrow critically hits " + a.the_name + ". ",this,a);
-						a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,18,this); //max(3d6)
+					if(a.HasAttr(AttrType.IMMUNE_ARROWS)){
+						B.Add("The arrow protrudes ineffectively from " + a.the_name + ". ",this,a);
 					}
 					else{
-						B.Add("The arrow hits " + a.the_name + ". ",this,a);
-						a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+						if(Global.Roll(1,20) == 20){
+							B.Add("The arrow critically hits " + a.the_name + ". ",this,a);
+							a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,18,this); //max(3d6)
+						}
+						else{
+							B.Add("The arrow hits " + a.the_name + ". ",this,a);
+							a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,Global.Roll(3,6),this);
+						}
 					}
 				}
 				else{
@@ -5045,6 +5014,7 @@ namespace Forays{
 				attrs[AttrType.RESTING] = 0;
 			}
 			ResetSpells();
+			Q.KillEvents(null,EventType.CHECK_FOR_HIDDEN);
 		}
 		public bool UseFeat(FeatType feat){
 			switch(feat){
@@ -6485,9 +6455,9 @@ effect as standing still, if you're on fire or catching fire. */
 						bool blocked=false;
 						Console.CursorVisible = false;
 						line = GetBresenhamLine(r,c);
-	//				file.Write("startline: "); //todo
+	//				file.Write("startline: ");
 						foreach(Tile t in line){
-	//						file.Write("{0}-{1}  ",t.row,t.col); //todo
+	//						file.Write("{0}-{1}  ",t.row,t.col);
 							if(t.row != row || t.col != col){
 //								colorchar cch = mem[t.row,t.col];
 colorchar cch;
@@ -6501,10 +6471,10 @@ cch.c = mem[t.row,t.col].c;
 											cch.bgcolor = Color.DarkGreen;
 										}
 										if(cch.color == cch.bgcolor){
-											//cch.color = Color.Black;
-											cch.color = Color.Yellow;
-											cch.bgcolor = Color.DarkBlue;
-											cch.c = '!';
+											cch.color = Color.Black;
+											//cch.color = Color.Yellow;
+											//cch.bgcolor = Color.DarkBlue;
+											//cch.c = '!';
 										}
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
@@ -6514,10 +6484,10 @@ cch.c = mem[t.row,t.col].c;
 											cch.bgcolor = Color.DarkRed;
 										}
 										if(cch.color == cch.bgcolor){
-											//cch.color = Color.Black;
-											cch.color = Color.Yellow;
-							cch.bgcolor = Color.DarkBlue;
-					cch.c = '@';
+											cch.color = Color.Black;
+											//cch.color = Color.Yellow;
+											//cch.bgcolor = Color.DarkBlue;
+											//cch.c = '@';
 										}
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
