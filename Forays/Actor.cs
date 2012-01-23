@@ -1,4 +1,4 @@
-/*Copyright (c) 2011  Derrick Creamer
+/*Copyright (c) 2011-2012  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -144,7 +144,7 @@ namespace Forays{
 			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,60,100,0,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.ARC_LIGHTNING,SpellType.BURNING_HANDS,SpellType.FORCE_BEAM,SpellType.SHOCK,SpellType.SONIC_BOOM,SpellType.IMMOLATE);
 			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,10,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
-			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,10,0,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
+			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,10,3,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
 		}
 		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			proto[type_] = new Actor(type_,name_,symbol_,color_,maxhp_,speed_,xp_,level_,light_radius_,attrlist);
@@ -1632,7 +1632,7 @@ namespace Forays{
 						if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
 						|| t.type == TileType.STAIRS || t.type == TileType.CHEST
 						|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
-						|| t.type == TileType.STALAGMITE //todo: traps here
+						|| t.type == TileType.STALAGMITE || t.IsTrap()
 						|| t.inv != null){
 							if(CanSee(t)){
 								interesting_targets.Add(t);
@@ -2856,7 +2856,7 @@ namespace Forays{
 				}
 				break;
 			case ActorType.POLTERGEIST: //after it materializes, of course
-				//
+				//todo
 				break;
 			case ActorType.SWORDSMAN:
 				if(DistanceFrom(target) == 1){
@@ -3083,12 +3083,12 @@ namespace Forays{
 							B.Add("It lands under you! ");
 						}
 						else{
-							B.Add("It lands under " + t.actor().the_name + ". ");
+							B.Add("It lands under " + t.actor().the_name + ". ",t.actor());
 						}
 					}
 					else{
 						if(t.inv != null){
-							B.Add("It lands under " + t.inv.the_name + ". ");
+							B.Add("It lands under " + t.inv.the_name + ". ",t);
 						}
 					}
 					TileType oldtype = t.type;
@@ -3276,6 +3276,9 @@ namespace Forays{
 				return;
 			}
 			switch(type){
+			case ActorType.SHAMBLING_SCARECROW:
+				Q1(); //todo: don't follow, just wander as usual
+				break;
 			case ActorType.PHASE_SPIDER:
 				if(DistanceFrom(target) <= 10){
 					if(Global.Roll(1,4) == 4){ //teleport into target's LOS somewhere nearby
@@ -3312,7 +3315,7 @@ namespace Forays{
 				QS();
 				break;
 			case ActorType.FIRE_DRAKE:
-				//todo: needs to hunt player down
+				FindPath(player);
 				QS();
 				break;
 			default:
@@ -3392,7 +3395,7 @@ namespace Forays{
 				QS();
 				break;
 			case ActorType.SHAMBLING_SCARECROW:
-				QS();
+				QS(); //wanders, might make noise if the player is close.
 				break;
 			case ActorType.POLTERGEIST:
 				QS();
@@ -3407,6 +3410,7 @@ namespace Forays{
 				QS();
 				break;
 			case ActorType.FIRE_DRAKE:
+				FindPath(player);
 				QS();
 				break;
 			default: //simply end turn
@@ -5223,9 +5227,30 @@ effect as standing still, if you're on fire or catching fire. */
 				//todo: rename? need a feat here.
 				break;
 			case FeatType.DISARM_TRAP:
-				//todo: traps, yeah..
-				B.Add("You disarm all traps. Forever. ");
-				break;
+			{
+				int dir = GetDirection("Disarm which trap? ");
+				if(dir != -1 && TileInDirection(dir).IsTrap()){
+					if(ActorInDirection(dir) != null){
+						B.Add("There is " + ActorInDirection(dir).a_name + " in the way. ");
+					}
+					else{
+						if(Global.Roll(5) <= 4){
+							B.Add("You disarm " + Tile.Prototype(TileInDirection(dir).type).the_name + ". ");
+							TileInDirection(dir).Toggle(this);
+							Q1();
+						}
+						else{
+							B.Add("You set off " + Tile.Prototype(TileInDirection(dir).type).the_name + "! ");
+							Move(TileInDirection(dir).row,TileInDirection(dir).col);
+							Q1();
+						}
+					}
+				}
+				else{
+					Q0();
+				}
+				return true;
+			}
 			case FeatType.DANGER_SENSE:
 				if(HasAttr(AttrType.DANGER_SENSE_ON)){
 					attrs[AttrType.DANGER_SENSE_ON] = 0;
@@ -5264,8 +5289,8 @@ effect as standing still, if you're on fire or catching fire. */
 							B.Add(You("stagger") + " into " + ActorInDirection(dir).the_name + ". ",this);
 						}
 						else{
-							Move(TileInDirection(dir).row,TileInDirection(dir).col);
 							B.Add(You("stagger") + ". ",this);
+							Move(TileInDirection(dir).row,TileInDirection(dir).col);
 						}
 					}
 				}
@@ -6317,7 +6342,7 @@ effect as standing still, if you're on fire or catching fire. */
 						if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
 						|| t.type == TileType.STAIRS || t.type == TileType.CHEST
 						|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
-						|| t.type == TileType.STALAGMITE //todo: traps here
+						|| t.type == TileType.STALAGMITE || t.IsTrap()
 						|| t.inv != null){
 							if(CanSee(t)){
 								interesting_targets.Add(t);
@@ -6517,12 +6542,12 @@ cch.c = mem[t.row,t.col].c;
 							}
 							oldline.Remove(t);
 						}
-	//					file.Write("startoldline: "); //todo
+	//					file.Write("startoldline: ");
 						foreach(Tile t in oldline){
-	//						file.Write("{0}+{1}  ",t.row,t.col); //todo
+	//						file.Write("{0}+{1}  ",t.row,t.col);
 							Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 						}
-	//					file.WriteLine(); //todo
+	//					file.WriteLine();
 				//		oldline = line;
 						oldline = new List<Tile>(line);
 					}
@@ -6666,7 +6691,7 @@ cch.c = mem[t.row,t.col].c;
 					}
 					Console.CursorVisible = true;
 				}
-	//			file.Close(); //todo
+	//			file.Close();
 			}
 			return result;
 		}

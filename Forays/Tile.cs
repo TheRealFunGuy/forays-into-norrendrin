@@ -1,3 +1,11 @@
+/*Copyright (c) 2011-2012  Derrick Creamer
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
 using System.Collections.Generic;
 namespace Forays{
@@ -27,7 +35,7 @@ namespace Forays{
 			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.DarkYellow,true,false,null);
 			proto[TileType.FIREPIT] = new Tile(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
 			proto[TileType.STALAGMITE] = new Tile(TileType.STALAGMITE,"stalagmite",'^',Color.White,false,true,TileType.FLOOR);
-			proto[TileType.GRENADE] = new Tile(TileType.GRENADE,"SPECIAL",',',Color.Red,true,false,null); //special treatment
+			proto[TileType.GRENADE] = new Tile(TileType.GRENADE,"grenade(dud)",',',Color.Red,true,false,null); //special treatment
 			proto[TileType.QUICKFIRE] = new Tile(TileType.QUICKFIRE,"quickfire",'&',Color.RandomFire,true,false,TileType.FLOOR);
 			proto[TileType.QUICKFIRE_TRAP] = new Tile(TileType.QUICKFIRE_TRAP,"quickfire trap",'^',Color.RandomFire,true,false,TileType.FLOOR);
 			proto[TileType.LIGHT_TRAP] = new Tile(TileType.LIGHT_TRAP,"light trap",'^',Color.Yellow,true,false,TileType.FLOOR);
@@ -152,8 +160,8 @@ namespace Forays{
 			}
 		}
 		public void Toggle(PhysicalObject toggler,TileType toggle_to){
-			bool lighting_update = false; //todo: when a mob opens a seen door, it'll be visible, so add
-			List<Actor> actors = new List<Actor>(); // a message: "You hear a door opening. " - and that should be enough!
+			bool lighting_update = false;
+			List<Actor> actors = new List<Actor>();
 			if(opaque != Prototype(toggle_to).opaque){
 				for(int i=row-1;i<=row+1;++i){
 					for(int j=col-1;j<=col+1;++j){
@@ -181,6 +189,28 @@ namespace Forays{
 			if(lighting_update){
 				foreach(Actor a in actors){
 					a.UpdateRadius(0,a.LightRadius());
+				}
+			}
+			if(toggler != null && toggler != player){
+				if(type == TileType.DOOR_C){
+					if(player.CanSee(this)){
+						B.Add(toggler.the_name + " closes " + the_name + ". ");
+					}
+					else{
+						if(seen || player.DistanceFrom(this) <= 12){
+							B.Add("You hear a door closing. ");
+						}
+					}
+				}
+				if(type == TileType.DOOR_O){
+					if(player.CanSee(this)){
+						B.Add(toggler.the_name + " opens " + the_name + ". ");
+					}
+					else{
+						if(seen || player.DistanceFrom(this) <= 12){
+							B.Add("You hear a door opening. ");
+						}
+					}
 				}
 			}
 		}
@@ -223,7 +253,7 @@ namespace Forays{
 				}
 			}
 			
-			TransformTo(TileType.FLOOR); //todo: recalculate pathing? what else?
+			TransformTo(TileType.FLOOR);
 			
 			if(lighting_update){
 				foreach(Actor a in actors){
@@ -232,6 +262,11 @@ namespace Forays{
 			}
 		}
 		public void TriggerTrap(){
+			if(actor().type == ActorType.FIRE_DRAKE){
+				B.Add(actor().the_name + " smashes " + the_name + ". ",this);
+				TransformTo(TileType.FLOOR);
+				return;
+			}
 			B.Add("*CLICK* ",this);
 			B.PrintAll();
 			switch(type){
@@ -241,7 +276,7 @@ namespace Forays{
 				bool nade_here = false;
 				List<Tile> valid = new List<Tile>();
 				foreach(Tile t in TilesWithinDistance(1)){
-					if(t.passable){
+					if(t.passable && t.type != TileType.GRENADE){
 						valid.Add(t);
 					}
 				}
@@ -256,12 +291,12 @@ namespace Forays{
 							B.Add("One lands under you! ");
 						}
 						else{
-							B.Add("One lands under " + t.actor().the_name + ". ");
+							B.Add("One lands under " + t.actor().the_name + ". ",t.actor());
 						}
 					}
 					else{
 						if(t.inv != null){
-							B.Add("It lands under " + t.inv.the_name + ". ");
+							B.Add("It lands under " + t.inv.the_name + ". ",t);
 						}
 					}
 					TileType oldtype = t.type;

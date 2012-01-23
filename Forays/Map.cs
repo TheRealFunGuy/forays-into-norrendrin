@@ -1,4 +1,4 @@
-/*Copyright (c) 2011  Derrick Creamer
+/*Copyright (c) 2011-2012  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -43,7 +43,15 @@ namespace Forays{
 			}
 			return false;
 		}
-		public List<Tile> AllTiles(){ return alltiles; }
+		public List<Tile> AllTiles(){ //possible speed issues? is there anywhere that I should be using 'alltiles' directly?
+			List<Tile> result = new List<Tile>(); //should i have one method that allows modification and one that doesn't?
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					result.Add(tile[i,j]);
+				}
+			}
+			return result;
+		}
 		public List<Actor> AllActors(){
 			List<Actor> result = new List<Actor>();
 			for(int i=0;i<ROWS;++i){
@@ -112,11 +120,6 @@ namespace Forays{
 					case 'H':
 						Tile.Create(TileType.HIDDEN_DOOR,i,j);
 						hidden.Add(tile[i,j]);
-						//todo: change this
-						//List<Tile> area = new List<Tile>();
-						//area.Add(tile[i,j]);
-						//Q.Add(new Event(area,100,EventType.CHECK_FOR_HIDDEN));
-						//
 						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
@@ -139,7 +142,6 @@ namespace Forays{
 				}
 			}
 			Screen.ResetColors();
-			//Console.CursorVisible = true;
 		}
 		public void RedrawWithStrings(){
 			Console.CursorVisible = false;
@@ -176,7 +178,6 @@ namespace Forays{
 				Screen.WriteMapString(r,c,s);
 			}
 			Screen.ResetColors();
-			//Console.CursorVisible = true;
 		}
 		public colorchar VisibleColorChar(int r,int c){
 			colorchar ch;
@@ -261,6 +262,22 @@ namespace Forays{
 			SpawnMob(types[Global.Roll(types.Count)-1]);
 		}
 		public void SpawnMob(ActorType type){
+			if(type == ActorType.POLTERGEIST){
+				while(true){
+					int rr = Global.Roll(ROWS-4) + 1;
+					int rc = Global.Roll(COLS-4) + 1;
+					List<Tile> tiles = new List<Tile>();
+					foreach(Tile t in tile[rr,rc].TilesWithinDistance(5)){
+						if(t.passable){
+							tiles.Add(t);
+						}
+					}
+					if(tiles.Count >= 30){
+						Q.Add(new Event(null,tiles,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,"")); //todo duration check
+						return;
+					}
+				}
+			}
 			int number = 1;
 			if(Actor.Prototype(type).HasAttr(AttrType.SMALL_GROUP)){
 				number = Global.Roll(2)+1;
@@ -277,7 +294,13 @@ namespace Forays{
 					for(int j=0;j<9999;++j){
 						int rr = Global.Roll(ROWS-2);
 						int rc = Global.Roll(COLS-2);
-						if(tile[rr,rc].passable && actor[rr,rc] == null){
+						bool good = true;
+						foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){
+							if(t.IsTrap()){
+								good = false;
+							}
+						}
+						if(good && tile[rr,rc].passable && actor[rr,rc] == null){
 							Actor.Create(type,rr,rc);
 							if(number > 1){
 								group_tiles.Add(tile[rr,rc]);
@@ -294,7 +317,7 @@ namespace Forays{
 						Tile t = group_tiles[Global.Roll(group_tiles.Count)-1];
 						List<Tile> empty_neighbors = new List<Tile>();
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
-							if(neighbor.passable && neighbor.actor() == null){
+							if(neighbor.passable && !neighbor.IsTrap() && neighbor.actor() == null){
 								empty_neighbors.Add(neighbor);
 							}
 						}
@@ -383,7 +406,7 @@ namespace Forays{
 				}}
 			}
 			//
-			List<Tile> hidden = new List<Tile>(); //todo make sure this is right
+			List<Tile> hidden = new List<Tile>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					switch(charmap[i,j]){
@@ -400,7 +423,12 @@ namespace Forays{
 						Tile.Create(TileType.DOOR_O,i,j);
 						break;
 					case '>':
-						Tile.Create(TileType.STAIRS,i,j);
+						if(current_level < 20){
+							Tile.Create(TileType.STAIRS,i,j);
+						}
+						else{
+							Tile.Create(TileType.FLOOR,i,j);
+						}
 						break;
 					case '0':
 						Tile.Create(TileType.FIREPIT,i,j);
@@ -436,6 +464,61 @@ namespace Forays{
 					}
 				}
 			}
+			//todo: spawn some items
+			for(int i=Global.Roll(2,2)+3;i>0;--i){
+				SpawnMob();
+			}
+			bool[,] nogood = new bool[ROWS,COLS];
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					nogood[i,j] = false;
+				}
+			}
+			foreach(Actor a in AllActors()){
+				if(a != player){
+					for(int i=0;i<ROWS;++i){
+						for(int j=0;j<COLS;++j){
+							if(!tile[i,j].passable || tile[i,j].IsTrap() || a.CanSee(i,j)){
+								nogood[i,j] = true;
+							}
+						}
+					}
+				}
+			}
+			List<Tile> goodtiles = new List<Tile>();
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					if(!nogood[i,j]){
+						goodtiles.Add(tile[i,j]);
+					}
+				}
+			}
+			if(goodtiles.Count > 0){
+				Tile t = goodtiles[Global.Roll(goodtiles.Count)-1];
+				int light = player.light_radius;
+				player.light_radius = 0;
+				player.Move(t.row,t.col);
+				player.UpdateRadius(0,light,true);
+			}
+			else{
+				for(bool done=false;!done;){
+					int rr = Global.Roll(ROWS-2);
+					int rc = Global.Roll(COLS-2);
+					bool good = true;
+					foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){
+						if(t.IsTrap()){
+							good = false;
+						}
+					}
+					if(good && tile[rr,rc].passable && actor[rr,rc] == null){
+						int light = player.light_radius;
+						player.light_radius = 0;
+						player.Move(rr,rc);
+						player.UpdateRadius(0,light,true);
+						done = true;
+					}
+				}
+			}
 			if(true){ //todo will become if(coinflip) or something, i dunno
 				bool done = false;
 				for(int tries=0;!done && tries<9999;++tries){
@@ -450,9 +533,12 @@ namespace Forays{
 					}
 					if(good){
 						List<int> dirs = new List<int>();
+						bool long_corridor = false;
+						int connections = 0;
 						for(int i=2;i<=8;i+=2){
 							Tile t = tile[rr,rc].TileInDirection(i).TileInDirection(i);
 							bool good_dir = true;
+							int distance = -1;
 							while(good_dir && t != null && t.type == TileType.WALL){
 								if(t.TileInDirection(t.RotateDirection(i,false,2)).type != TileType.WALL){
 									good_dir = false;
@@ -461,19 +547,26 @@ namespace Forays{
 									good_dir = false;
 								}
 								t = t.TileInDirection(i);
+								++distance;
 							}
 							if(good_dir && t != null){
 								dirs.Add(i);
+								++connections;
+								if(distance >= 4){
+									long_corridor = true;
+								}
 							}
 						}
 						if(dirs.Count > 0){
-							//todo: remove some directions randomly
 							foreach(int i in dirs){
 								Tile t = tile[rr,rc].TileInDirection(i);
 								int distance = -2; //distance of the corridor between traps and secret door
 								while(t.type == TileType.WALL){
 									++distance;
 									t = t.TileInDirection(i);
+								}
+								if(long_corridor && distance < 4){
+									continue;
 								}
 								t = tile[rr,rc].TileInDirection(i);
 								while(t.type == TileType.WALL){
@@ -490,33 +583,41 @@ namespace Forays{
 										t.symbol = '.';
 										t.color = Color.White;
 										if(t.DistanceFrom(tile[rr,rc]) < distance+2){
-											tt = TileType.FLOOR;
-											if(Global.Roll(3) >= 2){
-												tt = TileType.GRENADE_TRAP;
-											}
 											Tile neighbor = t.TileInDirection(t.RotateDirection(i,false,2));
-											neighbor.TransformTo(tt);
-											if(tt == TileType.GRENADE_TRAP){
-												neighbor.name = "floor";
-												neighbor.the_name = "the floor";
-												neighbor.a_name = "a floor";
-												neighbor.symbol = '.';
-												neighbor.color = Color.White;
-												hidden.Add(neighbor);
-											}
-											tt = TileType.FLOOR;
-											if(Global.Roll(3) >= 2){
-												tt = TileType.GRENADE_TRAP;
+											if(neighbor.TileInDirection(t.RotateDirection(i,false,1)).type == TileType.WALL
+											&& neighbor.TileInDirection(t.RotateDirection(i,false,2)).type == TileType.WALL
+											&& neighbor.TileInDirection(t.RotateDirection(i,false,3)).type == TileType.WALL){
+												tt = TileType.FLOOR;
+												if(Global.Roll(3) >= 2){
+													tt = TileType.GRENADE_TRAP;
+												}
+												neighbor.TransformTo(tt);
+												if(tt == TileType.GRENADE_TRAP){
+													neighbor.name = "floor";
+													neighbor.the_name = "the floor";
+													neighbor.a_name = "a floor";
+													neighbor.symbol = '.';
+													neighbor.color = Color.White;
+													hidden.Add(neighbor);
+												}
 											}
 											neighbor = t.TileInDirection(t.RotateDirection(i,true,2));
-											neighbor.TransformTo(tt);
-											if(tt == TileType.GRENADE_TRAP){
-												neighbor.name = "floor";
-												neighbor.the_name = "the floor";
-												neighbor.a_name = "a floor";
-												neighbor.symbol = '.';
-												neighbor.color = Color.White;
-												hidden.Add(neighbor);
+											if(neighbor.TileInDirection(t.RotateDirection(i,true,1)).type == TileType.WALL
+											&& neighbor.TileInDirection(t.RotateDirection(i,true,2)).type == TileType.WALL
+											&& neighbor.TileInDirection(t.RotateDirection(i,true,3)).type == TileType.WALL){
+												tt = TileType.FLOOR;
+												if(Global.Roll(3) >= 2){
+													tt = TileType.GRENADE_TRAP;
+												}
+												neighbor.TransformTo(tt);
+												if(tt == TileType.GRENADE_TRAP){
+													neighbor.name = "floor";
+													neighbor.the_name = "the floor";
+													neighbor.a_name = "a floor";
+													neighbor.symbol = '.';
+													neighbor.color = Color.White;
+													hidden.Add(neighbor);
+												}
 											}
 										}
 									}
@@ -527,6 +628,13 @@ namespace Forays{
 											hidden.Add(t);
 										}
 										t.TransformTo(tt);
+										if(tt != TileType.FLOOR){
+											t.name = "floor";
+											t.the_name = "the floor";
+											t.a_name = "a floor";
+											t.symbol = '.';
+											t.color = Color.White;
+										}
 									}
 									t = t.TileInDirection(i);
 								}
@@ -536,16 +644,30 @@ namespace Forays{
 									hidden.Add(t);
 								}
 							}
-							foreach(Tile t in tile[rr,rc].TilesAtDistance(1)){
-								t.TransformTo((TileType)(Global.Roll(6)+9));
-								t.name = "floor";
-								t.the_name = "the floor";
-								t.a_name = "a floor";
-								t.symbol = '.';
-								t.color = Color.White;
-								hidden.Add(t);
+							if(long_corridor && connections == 1){
+								foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){
+									t.TransformTo(TileType.GRENADE_TRAP);
+									t.name = "floor";
+									t.the_name = "the floor";
+									t.a_name = "a floor";
+									t.symbol = '.';
+									t.color = Color.White;
+									hidden.Add(t);
+								}
+								tile[rr,rc].TileInDirection(tile[rr,rc].RotateDirection(dirs[0],true,4)).TransformTo(TileType.CHEST);
 							}
-							tile[rr,rc].TransformTo(TileType.CHEST);
+							else{
+								foreach(Tile t in tile[rr,rc].TilesAtDistance(1)){
+									t.TransformTo((TileType)(Global.Roll(6)+9));
+									t.name = "floor";
+									t.the_name = "the floor";
+									t.a_name = "a floor";
+									t.symbol = '.';
+									t.color = Color.White;
+									hidden.Add(t);
+								}
+								tile[rr,rc].TransformTo(TileType.CHEST);
+							}
 							done = true;
 						}
 					}
@@ -554,26 +676,10 @@ namespace Forays{
 			if(hidden.Count > 0){
 				Q.Add(new Event(hidden,100,EventType.CHECK_FOR_HIDDEN));
 			}
-			//todo: spawn some items
-			for(int i=Global.Roll(2,2)+3;i>0;--i){
-				SpawnMob();
-			}
 			if(current_level == 20){
-				Q.Add(new Event(1000,EventType.BOSS_ARRIVE));
+				Q.Add(new Event(1099,EventType.BOSS_ARRIVE));
 			}
-			//todo: find a spot for the player that no monsters can see
-			//if there is no such spot, place the player randomly
-			for(bool done=false;!done;){
-				int rr = Global.Roll(ROWS-2);
-				int rc = Global.Roll(COLS-2);
-				if(tile[rr,rc].passable && actor[rr,rc] == null){
-					int light = player.light_radius;
-					player.light_radius = 0;
-					player.Move(rr,rc);
-					player.UpdateRadius(0,light,true);
-					done = true;
-				}
-			}
+			Q.Add(new Event(10000,EventType.RELATIVELY_SAFE));
 		}
 	}
 }

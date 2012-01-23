@@ -1,4 +1,4 @@
-/*Copyright (c) 2011  Derrick Creamer
+/*Copyright (c) 2011-2012  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -22,7 +22,7 @@ namespace Forays{
 	public enum MagicItemType{PENDANT_OF_LIFE,RING_OF_RESISTANCE,RING_OF_PROTECTION,CLOAK_OF_DISAPPEARANCE,NUM_MAGIC_ITEMS,NO_MAGIC_ITEM};
 	public enum DamageType{NORMAL,FIRE,COLD,ELECTRIC,POISON,HEAL,SLASHING,BASHING,PIERCING,MAGIC,NONE};
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
-	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,POLTERGEIST,REGENERATING_FROM_DEATH,GRENADE,STALAGMITE,QUICKFIRE,BOSS_ARRIVE};
+	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,REGENERATING_FROM_DEATH,GRENADE,STALAGMITE,QUICKFIRE,BOSS_ARRIVE};
 	public enum OptionType{LAST_TARGET,VI_KEYS,OPEN_CHESTS,ITEMS_AND_TILES_ARE_INTERESTING,WIZLIGHT_CAST};
 	public class Game{
 		public Map M;

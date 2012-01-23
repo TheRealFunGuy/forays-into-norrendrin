@@ -31,9 +31,12 @@ gaining resistance should extinguish fires.
 
 things to do somewhere between 0.1 and 1.0:
 
-borrow 'you feel relatively safe' from doomRL?
-
 balancing hp should take resists into account.
+
+player immobility check upon walking?
+
+animation for fire breath, frostling attacks, maybe even lasher.
+
 
 
 
