@@ -113,6 +113,83 @@ namespace Forays{
 				return "an unknown spell";
 			}
 		}
+		public static string Description(SpellType spell){
+			switch(spell){
+			case SpellType.SHINE:
+				return "Light radius is doubled.";
+			case SpellType.MAGIC_MISSILE:
+				return "Basic offensive spell.  ";
+			case SpellType.DETECT_MONSTERS:
+				return "Sense nearby enemies.   ";
+			case SpellType.FORCE_PALM:
+				return "Can knock foes back.    ";
+			case SpellType.BLINK:
+				return "Teleport a few spaces.  ";
+			case SpellType.IMMOLATE:
+				return "Ignites an enemy.       ";
+			case SpellType.ICY_BLAST:
+				return "Cold attack spell.      ";
+			case SpellType.BURNING_HANDS:
+				return "Range 1 attack spell.   ";
+			case SpellType.FREEZE:
+				return "Immobilizes an enemy.   ";
+			case SpellType.SONIC_BOOM:
+				return "Can stun an enemy.      ";
+			case SpellType.ARC_LIGHTNING:
+				return "Radius 1 attack spell.  ";
+			case SpellType.PLACEHOLDER:
+				return "????????????????????????";
+			case SpellType.SHOCK:
+				return "Electric attack spell.  ";
+			case SpellType.SHADOWSIGHT:
+				return "Grants darkvision.      ";
+			case SpellType.RETREAT:
+				return "Return to a safe place. ";
+			case SpellType.FIREBALL:
+				return "Ranged radius 2 spell.  ";
+			case SpellType.PASSAGE:
+				return "Move through a wall.    ";
+			case SpellType.FORCE_BEAM:
+				return "Knocks foes back.       ";
+			case SpellType.DISINTEGRATE:
+				return "Can destroy terrain.    ";
+			case SpellType.BLIZZARD:
+				return "Radius 5. Immobilizes.  ";
+			case SpellType.BLESS:
+				return "Increases Combat skill. ";
+			case SpellType.MINOR_HEAL:
+				return "Heals minor wounds.     ";
+			case SpellType.HOLY_SHIELD:
+				return "Attackers take damage.  ";
+			default:
+				return "Unknown.                ";
+			}
+		}
+		public static string Damage(SpellType spell){
+			switch(spell){
+			case SpellType.MAGIC_MISSILE:
+			case SpellType.FORCE_PALM:
+			case SpellType.FREEZE:
+				return "1d6";
+			case SpellType.ICY_BLAST:
+			case SpellType.SONIC_BOOM:
+				return "2d6";
+			case SpellType.BURNING_HANDS:
+			case SpellType.ARC_LIGHTNING:
+			case SpellType.SHOCK:
+			case SpellType.FIREBALL:
+			case SpellType.FORCE_BEAM:
+				return "3d6";
+			case SpellType.PLACEHOLDER:
+				return "???";
+			case SpellType.DISINTEGRATE:
+				return "8d6";
+			case SpellType.BLIZZARD:
+				return "5d6";
+			default:
+				return "   ";
+			}
+		}
 	}
 }
 
