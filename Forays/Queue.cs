@@ -346,6 +346,14 @@ namespace Forays{
 							temp.speed = 100;
 						}
 					}
+					if(attr==AttrType.POISONED && temp == player){
+						if(temp.HasAttr(AttrType.POISONED)){
+							B.Add("The poison begins to subside. ");
+						}
+						else{
+							B.Add("You are no longer poisoned. ");
+						}
+					}
 					if(attr==AttrType.COOLDOWN_1 && temp.type == ActorType.BERSERKER){
 						B.Add(temp.Your() + " rage diminishes. ",temp);
 						B.Add(temp.the_name + " dies. ",temp);
@@ -651,6 +659,9 @@ namespace Forays{
 						if(t.actor() != null){
 							int dir = Global.RandomDirection();
 							t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
+						}
+						if(player.DistanceFrom(t) <= 3){
+							player.MakeNoise(); //hacky
 						}
 					}
 					break;

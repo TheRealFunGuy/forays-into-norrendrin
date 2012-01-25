@@ -429,7 +429,6 @@ namespace Forays{
 				}
 				else{
 					user.inv.Remove(this);
-					//todo: make sure no references exist.
 				}
 			}
 			return used;

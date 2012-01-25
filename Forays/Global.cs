@@ -62,7 +62,7 @@ namespace Forays{
 			return false;
 		}
 		public static int EnterInt(){ return EnterInt(4); }
-		public static int EnterInt(int max_size){
+		public static int EnterInt(int max_length){
 			string s = "";
 			ConsoleKeyInfo command;
 			Console.CursorVisible = true;
@@ -70,7 +70,7 @@ namespace Forays{
 			while(!done){
 				command = Console.ReadKey(true);
 				if(command.KeyChar >= '0' && command.KeyChar <= '9'){
-					if(s.Length < max_size){
+					if(s.Length < max_length){
 						s = s + command.KeyChar;
 						Screen.WriteChar(Console.CursorTop,Console.CursorLeft,command.KeyChar);
 					}
@@ -97,6 +97,47 @@ namespace Forays{
 				}
 			}
 			return Convert.ToInt32(s);
+		}
+		public static string EnterString(){ return EnterString(COLS-1); }
+		public static string EnterString(int max_length){
+			string s = "";
+			ConsoleKeyInfo command;
+			Console.CursorVisible = true;
+			bool done = false;
+			int pos = Console.CursorLeft;
+			while(!done){
+				Console.SetCursorPosition(pos,Console.CursorTop);
+				command = Console.ReadKey(true);
+				if((command.KeyChar >= '!' && command.KeyChar <= '~') || command.KeyChar == ' '){
+					if(s.Length < max_length){
+						s = s + command.KeyChar;
+						Screen.WriteChar(Console.CursorTop,pos,command.KeyChar);
+						++pos;
+					}
+				}
+				else{
+					if(command.Key == ConsoleKey.Backspace && s.Length > 0){
+						s = s.Substring(0,s.Length-1);
+						--pos;
+						Screen.WriteChar(Console.CursorTop,pos,' ');
+						Console.SetCursorPosition(pos,Console.CursorTop);
+					}
+					else{
+						if(command.Key == ConsoleKey.Escape){
+							return "";
+						}
+						else{
+							if(command.Key == ConsoleKey.Enter){
+								if(s.Length == 0){
+									return "";
+								}
+								done = true;
+							}
+						}
+					}
+				}
+			}
+			return s;
 		}
 	}
 	public class Dict<TKey,TValue>{

@@ -26,19 +26,29 @@ things other than the player should be able to call MakeNoise
 
 gaining resistance should extinguish fires.
 
+colorize 'active' / 'passive' in feats
+
+should immolate deal 1d6?
+
+add color to spell selection screen
+
 
 
 
 things to do somewhere between 0.1 and 1.0:
 
-balancing hp should take resists into account.
+remove debug cheats
 
-player immobility check upon walking?
+balancing hp should take resists into account.
 
 animation for fire breath, frostling attacks, maybe even lasher.
 
+PLACEHOLDER should become a combat-enhancing spell.
 
-
+using lunge on an aware goblin archer a knight's move away. the archer appears normal, when it should have a green background from the targeting.
+	-i believe this is another form of the other background color bug.
+	-linux or win?
+	-does not happen every time. this one might be a pain to track down.
 
 
 

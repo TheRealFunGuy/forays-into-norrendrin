@@ -47,6 +47,7 @@ namespace Forays{
 			//mimic
 			//not an actual trap, but arena rooms, too. perhaps you'll see the opponent, in stasis.
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
+			//poison gas
 		}
 		public Tile(Tile t,int r,int c){
 			type = t.type;

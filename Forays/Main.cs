@@ -45,9 +45,9 @@ namespace Forays{
 			}
 			Console.TreatControlCAsInput = true;
 			//Console.CursorSize = 100;
-		//	while(true){
-		//		MainMenu();
-		//	}
+			while(true){
+				MainMenu();
+			}
 			Game game = new Game();
 			game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0);
 			game.player.inv = new List<Item>();
@@ -136,10 +136,18 @@ namespace Forays{
 					Event.player = game.player;
 					Tile.M = game.M;
 					Tile.B = game.B;
+					Tile.Q = game.Q;
 					Tile.player = game.player;
 					//game.M.InitLevel();
 					game.M.LoadLevel("map.txt");
-					Actor.player_name = "Doomguy"; //todo
+					Actor.player_name = "";
+					while(Actor.player_name == ""){
+						Console.CursorVisible = false;
+						game.B.DisplayNow("".PadRight(Global.COLS));
+						game.B.DisplayNow("Enter name: ");
+						Actor.player_name = Global.EnterString(26);
+					}
+					game.player.attrs[AttrType.LONG_STRIDE]++; //todo
 					game.player.Q0();
 					game.player.Move(10,20,false); //this is why the voodoo was needed before: the player must be moved onto the map *before*
 					game.player.UpdateRadius(0,6,true); //gaining a light radius.

@@ -533,8 +533,8 @@ namespace Forays{
 				}
 					
 			}
-			if(HasAttr(AttrType.POISONED) && time_of_last_action < Q.turn){
-				if(!TakeDamage(DamageType.POISON,Global.Roll(1,3)-1,null)){
+			if(HasAttr(AttrType.POISONED) && time_of_last_action < Q.turn){ //normal poison is 1d3-1
+				if(!TakeDamage(DamageType.POISON,Global.Roll(1,attrs[AttrType.POISONED]+2)-1,null)){
 					return;
 				}
 			}
@@ -729,11 +729,12 @@ namespace Forays{
 						monsters_visible = true;
 					}
 				}
-				if(!monsters_visible && TileInDirection(attrs[AttrType.RUNNING]).passable && !Console.KeyAvailable){
+				if(!monsters_visible && TileInDirection(attrs[AttrType.RUNNING]).passable
+					&& !TileInDirection(attrs[AttrType.RUNNING]).IsTrap() && !Console.KeyAvailable){
 					if(attrs[AttrType.RUNNING] == 5){
 						int hplimit = HasFeat(FeatType.ENDURING_SOUL)? 20 : 10;
 						if(curhp % hplimit == 0){
-							attrs[AttrType.RUNNING] = 0;
+							attrs[AttrType.RUNNING] = 0; //todo: this is where i'll implement 'wait here for a while'
 						}
 						else{
 							Q1();
@@ -880,7 +881,7 @@ namespace Forays{
 				if(HasAttr(AttrType.IMMOBILIZED)){
 					attrs[AttrType.IMMOBILIZED] = 0;
 					B.Add("You break free. ");
-					QS();
+					Q1();
 					break;
 				}
 				if(M.tile[row,col].inv != null){
@@ -1148,14 +1149,24 @@ namespace Forays{
 				{
 				List<string> ls = new List<string>();
 				List<SpellType> sp = new List<SpellType>();
-				foreach(SpellType s in Enum.GetValues(typeof(SpellType))){
-					if(HasSpell(s)){
-						ls.Add(Spell.Name(s));
-						sp.Add(s);
+				foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
+					if(HasSpell(spell)){
+						string s = Spell.Name(spell).PadRight(15) + Spell.Level(spell).ToString().PadLeft(3);
+						s = s + FailRate(spell).ToString().PadLeft(9) + "%";
+						s = s + Spell.Damage(spell).PadLeft(8);
+						s = s + Spell.Description(spell).PadLeft(26);
+						ls.Add(s);
+						sp.Add(spell);
 					}
 				}
 				if(sp.Count > 0){
-					int i = Select("Cast which spell? ",ls);
+					string topborder = "------------------Level--Fail rate--Damage--Description-----------";
+					int basefail = attrs[AttrType.GLOBAL_FAIL_RATE]*25;
+					if(!HasFeat(FeatType.ARMORED_MAGE)){
+						basefail += Armor.AddedFailRate(armors.First.Value);
+					}
+					string bottomborder = "-------------Base fail rate: " + (basefail.ToString().PadLeft(2) + "%").PadRight(37,'-');
+					int i = Select("Cast which spell? ",topborder,bottomborder,ls);
 					if(i != -1){
 						if(!CastSpell(sp[i])){
 							Q0();
@@ -1693,10 +1704,11 @@ namespace Forays{
 				l.Add("Use a rune of passage");
 				l.Add("See the entire level");
 				l.Add("Generate new level");
-				l.Add("move up and print long msg");
+				l.Add("Gain all skills and feats");
 				l.Add("Level up");
 				l.Add("create trap");
 				l.Add("create door");
+				l.Add("spawn lots of goblins and lose neck snap");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -1819,8 +1831,20 @@ namespace Forays{
 						}
 						Q.Add(new Event(t,100,EventType.GRENADE));
 					}*/
-					B.Add("".PadRight(56,'%') + " ");
-					PlayerWalk(8);
+					xp = 9999;
+					level = 10;
+					skills[SkillType.COMBAT] = 10;
+					skills[SkillType.DEFENSE] = 10;
+					skills[SkillType.MAGIC] = 10;
+					skills[SkillType.SPIRIT] = 10;
+					skills[SkillType.STEALTH] = 10;
+					foreach(FeatType f in Enum.GetValues(typeof(FeatType))){
+						if(f != FeatType.NO_FEAT && f != FeatType.NUM_FEATS){
+							feats[f] = 1;
+						}
+					}
+					Q0();
+					B.Add("\"I HAVE THE POWERRRR!\" ");
 					break;
 				}
 				case 13:
@@ -1840,6 +1864,17 @@ namespace Forays{
 					Tile t = GetTarget();
 					if(t != null){
 						t.TransformTo(TileType.DOOR_O);
+					}
+					Q0();
+					break;
+				}
+				case 16:
+				{
+					for(int i=0;i<100;++i){
+						M.SpawnMob(ActorType.GOBLIN);
+					}
+					if(HasFeat(FeatType.NECK_SNAP)){
+						feats[FeatType.NECK_SNAP] = 0;
 					}
 					Q0();
 					break;
@@ -1892,6 +1927,12 @@ namespace Forays{
 							Q1();
 						}
 						else{
+							if(HasAttr(AttrType.IMMOBILIZED)){
+								attrs[AttrType.IMMOBILIZED] = 0;
+								B.Add("You break free. ");
+								Q1();
+								return;
+							}
 							if(TileInDirection(dir).inv != null){
 								B.Add("You see " + TileInDirection(dir).inv.AName() + ". ");
 							}
@@ -2917,7 +2958,7 @@ namespace Forays{
 					List<Actor> targets = new List<Actor>();
 					for(bool done=false;!done;++i){
 						a = FirstActorInLine(target,i);
-						if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) && !a.HasAttr(AttrType.PLANTLIKE)){
+						if(a != null && !a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) && !a.HasAttr(AttrType.PLANTLIKE)){
 							targets.Add(a);
 						}
 						if(a == target){
@@ -3758,8 +3799,16 @@ namespace Forays{
 					}
 				}
 				if(HasAttr(AttrType.POISON_HIT) && M.actor[r,c] != null){
-					B.Add(a.YouAre() + " poisoned. ",this,a);
-					a.attrs[AttrType.POISONED]++; //todo: make sure this is how poison works
+					if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) && !a.HasAttr(AttrType.POISON_HIT)){
+						if(a.HasAttr(AttrType.POISONED)){
+							B.Add(a.YouAre() + " more poisoned. ",this,a);
+						}
+						else{
+							B.Add(a.YouAre() + " poisoned. ",this,a);
+						}
+						a.attrs[AttrType.POISONED]++;
+						Q.Add(new Event(a,(Global.Roll(6)+6)*100,AttrType.POISONED)); //todo balance check on phase spiders (they're probably okay)
+					}
 				}
 				if(HasAttr(AttrType.PARALYSIS_HIT) && attack_idx==0 && M.actor[r,c] != null){
 					//hack: only applies to attack 0
@@ -3917,6 +3966,7 @@ namespace Forays{
 		}
 		public bool TakeDamage(Damage dmg){ //returns true if still alive
 			bool damage_dealt = false;
+			int old_hp = curhp;
 			if(HasAttr(AttrType.INVULNERABLE)){
 				dmg.amount = 0;
 			}
@@ -4219,8 +4269,8 @@ namespace Forays{
 				}
 			}
 			else{
-				if(HasFeat(FeatType.FEEL_NO_PAIN) && damage_dealt && curhp < 20){
-					B.Add("You feel no pain! ");
+				if(HasFeat(FeatType.FEEL_NO_PAIN) && damage_dealt && curhp < 20 && old_hp >= 20){
+					B.Add("You can feel no pain! ");
 					attrs[AttrType.INVULNERABLE]++;
 					Q.Add(new Event(this,500,AttrType.INVULNERABLE,"You can feel pain again. "));
 				}
@@ -5023,30 +5073,33 @@ namespace Forays{
 		public bool UseFeat(FeatType feat){
 			switch(feat){
 			case FeatType.SPIN_ATTACK:
-				{
+			{
 				B.Add("You perform a spin attack. ");
 				Damage dam = Weapon.Damage(weapons.First.Value);
-				dam.source = this;
 				foreach(Tile t in TilesAtDistance(1)){
 					if(t.actor() != null){
 						Actor a = t.actor();
-						B.Add("You hit " + a.the_name + ". ",a);
-//						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(dice,6),this);
-						a.TakeDamage(dam);
+						if(a.IsHit(TotalSkill(SkillType.COMBAT))){
+							B.Add("You hit " + a.the_name + ". ",a);
+							a.TakeDamage(dam.type,dam.damclass,Global.Roll(dam.dice,6)+TotalSkill(SkillType.COMBAT),this);
+						}
+						else{
+							B.Add("You miss " + a.the_name + ". ",a);
+						}
 					}
 				}
 				if(TotalSkill(SkillType.MAGIC) > 0){
 					foreach(Tile t in TilesAtDistance(2)){
 						if(t.actor() != null){
 							Actor a = t.actor();
-							B.Add("Your magically charged attack hits " + a.the_name + ". ",a);
+							B.Add("Your charged attack hits " + a.the_name + ". ",a);
 							a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,TotalSkill(SkillType.MAGIC),this);
 						}
 					}
 				}
 				MakeNoise();
 				break;
-				}
+			}
 			case FeatType.LUNGE:
 				{
 				if(HasAttr(AttrType.IMMOBILIZED)){
@@ -5061,9 +5114,16 @@ namespace Forays{
 							moved = true;
 							B.Add("You lunge! ");
 							Move(neighbor.row,neighbor.col);
-							attrs[AttrType.BONUS_COMBAT] += 3;
+							/*bool spin = HasFeat(FeatType.SPIN_ATTACK);
+							if(spin){
+								feats[FeatType.SPIN_ATTACK] = 0;
+							}*/
+							attrs[AttrType.BONUS_COMBAT] += 5;
 							Attack(0,t.actor());
-							attrs[AttrType.BONUS_COMBAT] -= 3;
+							attrs[AttrType.BONUS_COMBAT] -= 5;
+							/*if(spin){
+								feats[FeatType.SPIN_ATTACK] = 1;
+							}*/
 							break;
 						}
 					}
@@ -5499,7 +5559,7 @@ effect as standing still, if you're on fire or catching fire. */
 			for(SkillType sk = SkillType.COMBAT;sk < SkillType.NUM_SKILLS;++sk){
 				if(sk == SkillType.STEALTH && pos > 50){
 					Screen.WriteMapString(9,8,"Stealth(" + skills[SkillType.STEALTH].ToString());
-					pos = 8 + skills[SkillType.STEALTH].ToString().Length;
+					pos = 16 + skills[SkillType.STEALTH].ToString().Length;
 					if(HasAttr(AttrType.BONUS_STEALTH)){
 						Screen.WriteMapString(9,pos,new colorstring(Color.Yellow,"+" + attrs[AttrType.BONUS_STEALTH].ToString()));
 						pos += attrs[AttrType.BONUS_STEALTH].ToString().Length + 1;
@@ -5925,25 +5985,25 @@ effect as standing still, if you're on fire or catching fire. */
 							Screen.WriteMapString(2+4*(int)chosen_skill,31,"[b]");
 							Screen.WriteMapString(3+4*(int)chosen_skill,0,"[c]");
 							Screen.WriteMapString(3+4*(int)chosen_skill,31,"[d]");
-							if(feats[Feat.OfSkill(chosen_skill,0)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,0))){
+							if(feats[Feat.OfSkill(chosen_skill,0)] == 1){
 								Screen.WriteMapChar(2+4*(int)chosen_skill,1,new colorchar(Color.DarkRed,'a'));
 							}
 							else{
 								Screen.WriteMapChar(2+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'a'));
 							}
-							if(feats[Feat.OfSkill(chosen_skill,1)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,1))){
+							if(feats[Feat.OfSkill(chosen_skill,1)] == 1){
 								Screen.WriteMapChar(2+4*(int)chosen_skill,32,new colorchar(Color.DarkRed,'b'));
 							}
 							else{
 								Screen.WriteMapChar(2+4*(int)chosen_skill,32,new colorchar(Color.Cyan,'b'));
 							}
-							if(feats[Feat.OfSkill(chosen_skill,2)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,2))){
+							if(feats[Feat.OfSkill(chosen_skill,2)] == 1){
 								Screen.WriteMapChar(3+4*(int)chosen_skill,1,new colorchar(Color.DarkRed,'c'));
 							}
 							else{
 								Screen.WriteMapChar(3+4*(int)chosen_skill,1,new colorchar(Color.Cyan,'c'));
 							}
-							if(feats[Feat.OfSkill(chosen_skill,3)] == Feat.MaxRank(Feat.OfSkill(chosen_skill,3))){
+							if(feats[Feat.OfSkill(chosen_skill,3)] == 1){
 								Screen.WriteMapChar(3+4*(int)chosen_skill,32,new colorchar(Color.DarkRed,'d'));
 							}
 							else{
@@ -6014,13 +6074,22 @@ effect as standing still, if you're on fire or catching fire. */
 					if(!HasSpell(spell) && spell != SpellType.BLESS && spell != SpellType.MINOR_HEAL
 					&& spell != SpellType.HOLY_SHIELD && spell != SpellType.NO_SPELL && spell != SpellType.NUM_SPELLS){
 						unknown.Add(spell);
-						unknownstr.Add(Spell.Name(spell));
+						string s = Spell.Name(spell).PadRight(15) + Spell.Level(spell).ToString().PadLeft(3);
+						int failrate = Spell.Level(spell) - TotalSkill(SkillType.MAGIC)*5;
+						if(failrate < 0){
+							failrate = 0;
+						}
+						s = s + failrate.ToString().PadLeft(9) + "%";
+						s = s + Spell.Damage(spell).PadLeft(8);
+						s = s + Spell.Description(spell).PadLeft(26);
+						unknownstr.Add(s);
 					}
 				}
 				for(int i=unknown.Count+2;i<ROWS;++i){
 					Screen.WriteMapString(i,0,"".PadRight(COLS));
 				}
-				int selection = Select("Learn which spell? ",unknownstr,false,true);
+				string topborder = "------------------Level--Fail rate--Damage--Description-----------";
+				int selection = Select("Learn which spell? ",topborder,unknownstr,false,true);
 				spells[unknown[selection]] = 1;
 			}
 			return completed_feats;
@@ -6663,6 +6732,7 @@ cch.c = mem[t.row,t.col].c;
 					}
 					break;
 				case (char)27:
+				case ' ':
 					done = true;
 					break;
 				case (char)13:
@@ -6676,11 +6746,11 @@ cch.c = mem[t.row,t.col].c;
 						done = true;
 					}
 					break;
-				case ' ':
+/*				case ' ':
 					if(lookmode){
 						done = true;
 					}
-					break;
+					break;*/
 				default:
 					break;
 				}
@@ -6695,9 +6765,12 @@ cch.c = mem[t.row,t.col].c;
 			}
 			return result;
 		}
-		public int Select(string message,List<string> strings){ return Select(message,"".PadLeft(COLS,'-'),strings,false,false); }
-		public int Select(string message,List<string> strings,bool no_ask,bool no_cancel){ return Select(message,"".PadLeft(COLS,'-'),strings,no_ask,no_cancel); }
-		public int Select(string message,string top_border,List<string> strings,bool no_ask,bool no_cancel){
+		public int Select(string message,List<string> strings){ return Select(message,"".PadLeft(COLS,'-'),"".PadLeft(COLS,'-'),strings,false,false); }
+		public int Select(string message,List<string> strings,bool no_ask,bool no_cancel){ return Select(message,"".PadLeft(COLS,'-'),"".PadLeft(COLS,'-'),strings,no_ask,no_cancel); }
+		public int Select(string message,string top_border,List<string> strings){ return Select(message,top_border,"".PadLeft(COLS,'-'),strings,false,false); }
+		public int Select(string message,string top_border,List<string> strings,bool no_ask,bool no_cancel){ return Select(message,top_border,"".PadLeft(COLS,'-'),strings,no_ask,no_cancel); }
+		public int Select(string message,string top_border,string bottom_border,List<string> strings){ return Select(message,top_border,bottom_border,strings,false,false); }
+		public int Select(string message,string top_border,string bottom_border,List<string> strings,bool no_ask,bool no_cancel){
 			Screen.WriteMapString(0,0,top_border);
 			char letter = 'a';
 			int i=1;
@@ -6708,7 +6781,7 @@ cch.c = mem[t.row,t.col].c;
 				letter++;
 				i++;
 			}
-			Screen.WriteMapString(i,0,"".PadRight(COLS,'-'));
+			Screen.WriteMapString(i,0,bottom_border);
 			if(i < ROWS){
 				Screen.WriteMapString(i+1,0,"".PadRight(COLS));
 			}
@@ -6952,6 +7025,7 @@ cch.c = mem[t.row,t.col].c;
 			case FeatType.SILENT_CHAINMAIL:
 			case FeatType.DANGER_SENSE:
 				return 2;
+			case FeatType.LUNGE:
 			case FeatType.FULL_DEFENSE:
 			case FeatType.ENDURING_SOUL:
 				return 4;
@@ -6960,7 +7034,6 @@ cch.c = mem[t.row,t.col].c;
 			case FeatType.FOCUSED_RAGE:
 				return 7;
 			case FeatType.SPIN_ATTACK:
-			case FeatType.LUNGE:
 			case FeatType.ARMORED_MAGE:
 			case FeatType.TUMBLE:
 			case FeatType.MASTERS_EDGE:
@@ -6987,17 +7060,17 @@ cch.c = mem[t.row,t.col].c;
 			case FeatType.DISARM_TRAP:
 			case FeatType.DANGER_SENSE:
 				return true;
-			case FeatType.CORNER_LOOK:
 			case FeatType.QUICK_DRAW:
 			case FeatType.SILENT_CHAINMAIL:
-			case FeatType.FULL_DEFENSE:
-			case FeatType.ENDURING_SOUL:
-			case FeatType.NECK_SNAP:
-			case FeatType.FOCUSED_RAGE:
 			case FeatType.ARMORED_MAGE:
+			case FeatType.FULL_DEFENSE:
 			case FeatType.MASTERS_EDGE:
 			case FeatType.STUDENTS_LUCK:
+			case FeatType.ENDURING_SOUL:
 			case FeatType.FEEL_NO_PAIN:
+			case FeatType.FOCUSED_RAGE:
+			case FeatType.CORNER_LOOK:
+			case FeatType.NECK_SNAP:
 			default:
 				return false;
 			}

@@ -188,7 +188,8 @@ namespace Forays{
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
 					if(actor[r,c] == player && player.HasAttr(AttrType.DANGER_SENSE_ON)
-					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0){
+					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
+					&& !Global.Option(OptionType.WIZLIGHT_CAST)){
 						ch.color = Color.Red;
 					}
 				}
@@ -242,6 +243,17 @@ namespace Forays{
 					if(actor[i,j]!=null){
 						actor[i,j].RemoveTarget(a);
 					}
+				}
+			}
+		}
+		public void SpawnItem(){
+			for(bool done=false;!done;){
+				int rr = Global.Roll(ROWS-2);
+				int rc = Global.Roll(COLS-2);
+				Tile t = tile[rr,rc];
+				if(t.passable && t.inv == null && t.type != TileType.CHEST && t.type != TileType.FIREPIT && t.type != TileType.STAIRS){
+					Item.Create(Item.RandomItem(),rr,rc);
+					done = true;
 				}
 			}
 		}
@@ -344,8 +356,7 @@ namespace Forays{
 						if(actor[i,j] != player){
 							actor[i,j].inv.Clear();
 							actor[i,j].target = null;
-							Q.KillEvents(null,EventType.ANY_EVENT);
-							//
+							//Q.KillEvents(null,EventType.ANY_EVENT);
 							Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
 						}
 						actor[i,j] = null;
@@ -357,30 +368,10 @@ namespace Forays{
 			alltiles.Clear();
 			DungeonGen.Dungeon dungeon = new DungeonGen.Dungeon();
 			char[,] charmap = dungeon.Generate();
-			//
-			for(bool done=false;!done;){ //todo: update this. currently just generates one firepit
-				int rr = Global.Roll(ROWS-2);
-				int rc = Global.Roll(COLS-2);
-				if(charmap[rr,rc] == '.'){
-					bool floors = true;
-					Tile temp = new Tile(Tile.Prototype(TileType.FLOOR),rr,rc); //i wouldn't need this if my design was better =D
-					foreach(pos p in temp.PositionsAtDistance(1)){
-						if(charmap[p.row,p.col] != '.'){
-							floors = false;
-						}
-					}
-					if(floors){
-						charmap[rr,rc] = '0';
-						done = true;
-					}
-				}
-			}
-//			for(bool done=false;!done;){ //todo: update this. currently just generates one chest
-			for(int i=0;i<10;++i){
-				int tries = 0;
-				for(bool done=false;!done && tries < 100;++tries){
-				int rr = Global.Roll(ROWS-2);
-				int rc = Global.Roll(COLS-2);
+			int attempts = 0;
+			for(bool done=false;!done;++attempts){
+				int rr = Global.Roll(ROWS-4) + 1;
+				int rc = Global.Roll(COLS-4) + 1;
 				if(charmap[rr,rc] == '.'){
 					bool floors = true;
 					pos temp = new pos(rr,rc);
@@ -390,22 +381,70 @@ namespace Forays{
 						}
 					}
 					if(floors){
-						if(i == 0){
-							charmap[rr,rc] = '~';
-						}
-						else{
-							if(i == 1){
-								charmap[rr,rc] = '>';
-							}
-							else{
-								charmap[rr,rc] = '^';
-							}
-						}
+						charmap[rr,rc] = '>';
 						done = true;
 					}
-				}}
+				}
+				if(attempts > 500){ Actor.B.Add("Trying to place stairs.... "); }
 			}
-			//
+			int num_chests = Global.Roll(2);
+			if(Global.Roll(50) == 50){
+				num_chests = 3;
+			}
+			for(int i=0;i<num_chests;++i){
+				int tries = 0;
+				for(bool done=false;!done;++tries){
+					int rr = Global.Roll(ROWS-4) + 1;
+					int rc = Global.Roll(COLS-4) + 1;
+					if(charmap[rr,rc] == '.'){
+						bool floors = true;
+						pos temp = new pos(rr,rc);
+						foreach(pos p in temp.PositionsAtDistance(1)){
+							if(charmap[p.row,p.col] != '.'){
+								floors = false;
+							}
+						}
+						if(floors){
+							charmap[rr,rc] = '~';
+							done = true;
+						}
+					}
+					if(tries > 500){ Actor.B.Add("Trying to place chests.... "); }
+				}
+			}
+			int num_firepits = 0; //
+			for(int i=0;i<num_firepits;++i){
+				int tries = 0;
+				for(bool done=false;!done && tries < 100;++tries){
+					int rr = Global.Roll(ROWS-4) + 1;
+					int rc = Global.Roll(COLS-4) + 1;
+					if(charmap[rr,rc] == '.'){
+						bool floors = true;
+						pos temp = new pos(rr,rc);
+						foreach(pos p in temp.PositionsAtDistance(1)){
+							if(charmap[p.row,p.col] != '.'){
+								floors = false;
+							}
+						}
+						if(floors){
+							charmap[rr,rc] = '0';
+							done = true;
+						}
+					}
+				}
+			}
+			int num_traps = Global.Roll(2,3);
+			for(int i=0;i<num_traps;++i){
+				int tries = 0;
+				for(bool done=false;!done && tries < 100;++tries){
+					int rr = Global.Roll(ROWS-2);
+					int rc = Global.Roll(COLS-2);
+					if(charmap[rr,rc] == '.'){
+						charmap[rr,rc] = '^';
+						done = true;
+					}
+				}
+			}
 			List<Tile> hidden = new List<Tile>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -464,7 +503,9 @@ namespace Forays{
 					}
 				}
 			}
-			//todo: spawn some items
+			for(int i=Global.Roll(2,2);i>0;--i){
+				SpawnItem();
+			}
 			for(int i=Global.Roll(2,2)+3;i>0;--i){
 				SpawnMob();
 			}
@@ -519,7 +560,7 @@ namespace Forays{
 					}
 				}
 			}
-			if(true){ //todo will become if(coinflip) or something, i dunno
+			if(Global.CoinFlip()){ //is 50% the best rate for hidden areas? hmm
 				bool done = false;
 				for(int tries=0;!done && tries<9999;++tries){
 					int rr = Global.Roll(ROWS-4) + 1;
