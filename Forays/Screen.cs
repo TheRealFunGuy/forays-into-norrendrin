@@ -148,6 +148,38 @@ namespace Forays{
 				Console.Write(ch.c);
 			}
 		}
+		public static void WriteString(int r,int c,string s){ WriteString(r,c,new colorstring(Color.Gray,s)); }
+		public static void WriteString(int r,int c,colorstring s){
+			if(s.s.Length > 0){
+				s.color = ResolveColor(s.color);
+				s.bgcolor = ResolveColor(s.bgcolor);
+				colorchar cch;
+				cch.color = s.color;
+				cch.bgcolor = s.bgcolor;
+				ConsoleColor co = GetColor(s.color);
+				if(ForegroundColor != co){
+					ForegroundColor = co;
+				}
+				co = GetColor(s.bgcolor);
+				if(BackgroundColor != co){
+					BackgroundColor = co;
+				}
+				int i = 0;
+				bool changed = false;
+				foreach(char ch in s.s){
+					cch.c = ch;
+					if(!memory[r,c+i].Equals(cch)){
+						memory[r,c+i] = cch;
+						changed = true;
+					}
+					++i;
+				}
+				if(changed){
+					Console.SetCursorPosition(c,r);
+					Console.Write(s.s);
+				}
+			}
+		}
 		public static void ResetColors(){
 			if(ForegroundColor != ConsoleColor.Gray){
 				ForegroundColor = ConsoleColor.Gray;

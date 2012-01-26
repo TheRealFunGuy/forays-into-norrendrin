@@ -416,7 +416,7 @@ namespace Forays{
 				Toggle(actor());
 				break;
 			case TileType.STUN_TRAP:
-				B.Add("A disorienting flash assails " + actor().the_name + ". ");
+				B.Add("A disorienting flash assails " + actor().the_name + ". ",this);
 				actor().attrs[AttrType.STUNNED]++;
 				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(5)+7)*100,AttrType.STUNNED,actor().YouFeel() + " less disoriented. ",actor()));
 				Toggle(actor());

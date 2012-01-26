@@ -356,7 +356,6 @@ namespace Forays{
 						if(actor[i,j] != player){
 							actor[i,j].inv.Clear();
 							actor[i,j].target = null;
-							//Q.KillEvents(null,EventType.ANY_EVENT);
 							Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
 						}
 						actor[i,j] = null;
@@ -365,6 +364,8 @@ namespace Forays{
 					tile[i,j] = null;
 				}
 			}
+			Q.KillEvents(null,EventType.RELATIVELY_SAFE);
+			Q.KillEvents(null,EventType.POLTERGEIST);
 			alltiles.Clear();
 			DungeonGen.Dungeon dungeon = new DungeonGen.Dungeon();
 			char[,] charmap = dungeon.Generate();

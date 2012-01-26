@@ -293,6 +293,12 @@ namespace Forays{
 			if(target_ == null && type_ == EventType.REGENERATING_FROM_DEATH && type == EventType.REGENERATING_FROM_DEATH){
 				dead = true;
 			}
+			if(target_ == null && type_ == EventType.POLTERGEIST && type == EventType.POLTERGEIST){
+				dead = true;
+			}
+			if(target_ == null && type_ == EventType.RELATIVELY_SAFE && type == EventType.RELATIVELY_SAFE){
+				dead = true;
+			}
 		}
 		public void Kill(PhysicalObject target_,AttrType attr_){
 			if(target==target_ && type==EventType.REMOVE_ATTR && attr==attr_){
@@ -422,7 +428,7 @@ namespace Forays{
 				case EventType.POLTERGEIST:
 					{
 					if(true){ //relic
-						if(value < 10){ //todo check
+						if(value < 4){
 							switch(Global.Roll(4)){
 							case 1: //doors
 								List<Tile> doors = new List<Tile>();
@@ -490,7 +496,7 @@ namespace Forays{
 										List<Tile> line = t.GetExtendedBresenhamLine(player.row,player.col);
 										t = line[0];
 										int i = 1;
-										while(t.passable && t.DistanceFrom(line[0]) <= 9){
+										while(t.passable && t.DistanceFrom(line[0]) <= 9 && line[i].passable){
 											if(t.actor() != null && t.actor().IsHit(0)){
 												break;
 											}
@@ -502,12 +508,7 @@ namespace Forays{
 												B.Add("The orb bobs up and down in the air for a moment. ",line[0]);
 											}
 											else{
-												if(t.actor() != null){
-													B.Add("The orb rises into the air and sails toward " + t.actor().the_name + "! ",line[0],t);
-												}
-												else{
-													B.Add("The orb rises into the air and sails toward " + t.the_name + "! ",line[0],t);
-												}
+												B.Add("The orb rises into the air and sails toward you! ",line[0],t);
 												Item item = line[0].inv;
 												line[0].inv = null;
 												List<Tile> anim_line = line[0].GetBresenhamLine(t.row,t.col);
@@ -515,39 +516,40 @@ namespace Forays{
 												string qhit = item.quantity > 1? "shatter " : "shatters ";
 												if(t.actor() != null){
 													B.Add(item.TheName() + " " + qhit + "on " + t.actor().the_name + ". ",line[0],t);
-													List<DamageType> dmg = new List<DamageType>();
-													dmg.Add(DamageType.FIRE);
-													dmg.Add(DamageType.COLD);
-													dmg.Add(DamageType.ELECTRIC);
-													while(dmg.Count > 0){
-														DamageType damtype = dmg[Global.Roll(dmg.Count)-1];
-														colorchar ch = new colorchar(Color.Black,'*');
-														switch(damtype){
-														case DamageType.FIRE:
-															ch.color = Color.RandomFire;
-															break;
-														case DamageType.COLD:
-															ch.color = Color.RandomIce;
-															break;
-														case DamageType.ELECTRIC:
-															ch.color = Color.RandomLightning;
-															break;
-														}
-														B.DisplayNow();
-														Screen.AnimateExplosion(t,1,ch,100);
-														foreach(Actor a in t.ActorsWithinDistance(1)){
-															a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),null);
-														}
-														dmg.Remove(damtype);
-													}
 												}
 												else{
 													B.Add(item.TheName() + " " + qhit + "on " + t.the_name + ". ",line[0],t);
+												}
+												List<DamageType> dmg = new List<DamageType>();
+												dmg.Add(DamageType.FIRE);
+												dmg.Add(DamageType.COLD);
+												dmg.Add(DamageType.ELECTRIC);
+												while(dmg.Count > 0){
+													DamageType damtype = dmg[Global.Roll(dmg.Count)-1];
+													colorchar ch = new colorchar(Color.Black,'*');
+													switch(damtype){
+													case DamageType.FIRE:
+														ch.color = Color.RandomFire;
+														break;
+													case DamageType.COLD:
+														ch.color = Color.RandomIce;
+														break;
+													case DamageType.ELECTRIC:
+														ch.color = Color.RandomLightning;
+														break;
+													}
+													B.DisplayNow();
+													Screen.AnimateExplosion(t,1,ch,100);
+													foreach(Actor a in t.ActorsWithinDistance(1)){
+														a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),null);
+													}
+													dmg.Remove(damtype);
 												}
 											}
 										}
 										else{
 											Item item = line[0].inv;
+											B.Add(item.TheName() + " rises into the air and sails toward you! ",line[0],t);
 											line[0].inv = null;
 											List<Tile> anim_line = line[0].GetBresenhamLine(t.row,t.col);
 											Screen.AnimateProjectile(anim_line,new colorchar(item.color,item.symbol));
@@ -598,11 +600,11 @@ namespace Forays{
 											distance = t.DistanceFrom(player);
 										}
 									}
-									if(distance <= 3){
+									if(distance == 0){
 										B.Add("You hear mocking laughter from nearby. ");
 									}
 									else{
-										if(distance <= 9){
+										if(distance <= 3){
 											B.Add("You hear laughter from somewhere. ");
 										}
 									}
@@ -624,7 +626,7 @@ namespace Forays{
 						else{
 							for(int tries=0;tries<999;++tries){
 								Tile t = area[Global.Roll(area.Count)-1];
-								if(t.actor() == null && player.CanSee(t)){
+								if(t.passable && t.actor() == null && player.CanSee(t)){
 									Actor.Create(ActorType.POLTERGEIST,t.row,t.col);
 									t.actor().player_visibility_duration = -1;
 									B.Add("A poltergeist manifests in front of you! ");
