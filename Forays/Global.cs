@@ -67,19 +67,24 @@ namespace Forays{
 			ConsoleKeyInfo command;
 			Console.CursorVisible = true;
 			bool done = false;
+			int pos = Console.CursorLeft;
+			Screen.WriteString(Console.CursorTop,pos,"".PadRight(max_length));
 			while(!done){
+				Console.SetCursorPosition(pos,Console.CursorTop);
 				command = Console.ReadKey(true);
 				if(command.KeyChar >= '0' && command.KeyChar <= '9'){
 					if(s.Length < max_length){
 						s = s + command.KeyChar;
-						Screen.WriteChar(Console.CursorTop,Console.CursorLeft,command.KeyChar);
+						Screen.WriteChar(Console.CursorTop,pos,command.KeyChar);
+						++pos;
 					}
 				}
 				else{
 					if(command.Key == ConsoleKey.Backspace && s.Length > 0){
 						s = s.Substring(0,s.Length-1);
-						Screen.WriteChar(Console.CursorTop,Console.CursorLeft-1,' ');
-						Console.SetCursorPosition(Console.CursorLeft-1,Console.CursorTop);
+						--pos;
+						Screen.WriteChar(Console.CursorTop,pos,' ');
+						Console.SetCursorPosition(pos,Console.CursorTop);
 					}
 					else{
 						if(command.Key == ConsoleKey.Escape){
@@ -105,6 +110,7 @@ namespace Forays{
 			Console.CursorVisible = true;
 			bool done = false;
 			int pos = Console.CursorLeft;
+			Screen.WriteString(Console.CursorTop,pos,"".PadRight(max_length));
 			while(!done){
 				Console.SetCursorPosition(pos,Console.CursorTop);
 				command = Console.ReadKey(true);

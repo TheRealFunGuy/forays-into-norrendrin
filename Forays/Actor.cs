@@ -112,39 +112,39 @@ namespace Forays{
 			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,0,1,0,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,0,1,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.LARGE_BAT,"large bat",'b',Color.DarkGray,20,60,0,1,0,AttrType.DARKVISION);
-			Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,40,90,0,1,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH,AttrType.RESIST_PIERCE,AttrType.IMMUNE_ARROWS,AttrType.DARKVISION);
-			Define(ActorType.SKELETON,"skeleton",'s',Color.White,50,100,0,2,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
-			Define(ActorType.CULTIST,"cultist",'p',Color.DarkRed,60,100,0,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.SMALL_GROUP);
+			Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,30,90,0,1,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH,AttrType.RESIST_PIERCE,AttrType.IMMUNE_ARROWS,AttrType.DARKVISION);
+			Define(ActorType.SKELETON,"skeleton",'s',Color.White,30,100,0,2,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.CULTIST,"cultist",'p',Color.DarkRed,35,100,0,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.SMALL_GROUP);
 			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,40,90,0,2,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,75,150,0,3,0,AttrType.UNDEAD,AttrType.RESIST_PIERCE,AttrType.RESIST_COLD);
-			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,50,60,0,3,0,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.FROSTLING,"frostling",'E',Color.Gray,60,100,0,3,0,AttrType.IMMUNE_COLD,AttrType.COLD_HIT);
-			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,50,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,50,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,50,150,0,3,0,AttrType.UNDEAD,AttrType.RESIST_PIERCE,AttrType.RESIST_COLD);
+			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,30,60,0,3,0,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.FROSTLING,"frostling",'E',Color.Gray,35,100,0,3,0,AttrType.IMMUNE_COLD,AttrType.COLD_HIT);
+			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,25,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,25,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.GOBLIN_SHAMAN).GainSpell(SpellType.FORCE_PALM,SpellType.BURNING_HANDS,SpellType.SHOCK,SpellType.MAGIC_MISSILE,SpellType.IMMOLATE);
-			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,60,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,40,100,0,4,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
 			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,0,5,0,AttrType.LOW_LIGHT_VISION,AttrType.LARGE_GROUP);
-			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,45,100,0,5,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,40,100,0,5,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.DREAM_CLONE,"dream warrior",'p',Color.Cyan,1,100,0,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.CONSTRUCT,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,50,80,0,5,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.WARG,"warg",'c',Color.White,55,60,0,6,0,AttrType.LOW_LIGHT_VISION,AttrType.MEDIUM_GROUP);
-			Define(ActorType.ROBED_ZEALOT,"robed zealot",'p',Color.Yellow,60,100,0,6,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,40,80,0,5,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.WARG,"warg",'c',Color.White,40,60,0,6,0,AttrType.LOW_LIGHT_VISION,AttrType.MEDIUM_GROUP);
+			Define(ActorType.ROBED_ZEALOT,"robed zealot",'p',Color.Yellow,40,100,0,6,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
 			Prototype(ActorType.ROBED_ZEALOT).GainSpell(SpellType.MINOR_HEAL,SpellType.BLESS,SpellType.HOLY_SHIELD);
-			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,60,100,0,6,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,50,100,0,7,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
-			Define(ActorType.OGRE,"ogre",'O',Color.Green,75,100,0,7,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION,AttrType.SMALL_GROUP);
-			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,50,100,0,7,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DIM_VISION_HIT,AttrType.DARKVISION);
-			Define(ActorType.BERSERKER,"berserker",'p',Color.Red,60,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,60,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,60,100,0,8,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,80,120,0,9,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
-			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,60,100,0,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,60,100,0,9,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
-			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,60,100,0,10,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH,AttrType.RESIST_FIRE,AttrType.DARKVISION);
-			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,60,100,0,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,40,100,0,6,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,35,100,0,7,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
+			Define(ActorType.OGRE,"ogre",'O',Color.Green,50,100,0,7,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION,AttrType.SMALL_GROUP);
+			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,40,100,0,7,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DIM_VISION_HIT,AttrType.DARKVISION);
+			Define(ActorType.BERSERKER,"berserker",'p',Color.Red,40,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,45,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,40,100,0,8,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,55,120,0,9,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,40,100,0,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,50,100,0,9,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
+			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,45,100,0,10,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH,AttrType.RESIST_FIRE,AttrType.DARKVISION);
+			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,45,100,0,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.ARC_LIGHTNING,SpellType.BURNING_HANDS,SpellType.FORCE_BEAM,SpellType.SHOCK,SpellType.SONIC_BOOM,SpellType.IMMOLATE);
-			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,100,120,0,10,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
-			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,150,90,0,10,3,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
+			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,75,120,0,10,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD);
+			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,120,90,0,10,3,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.FIRE_HIT,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
 		}
 		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int xp_,int level_,int light_radius_,params AttrType[] attrlist){
 			proto[type_] = new Actor(type_,name_,symbol_,color_,maxhp_,speed_,xp_,level_,light_radius_,attrlist);
@@ -730,7 +730,8 @@ namespace Forays{
 					}
 				}
 				if(!monsters_visible && TileInDirection(attrs[AttrType.RUNNING]).passable
-					&& !TileInDirection(attrs[AttrType.RUNNING]).IsTrap() && !Console.KeyAvailable){
+				&& (!TileInDirection(attrs[AttrType.RUNNING]).IsTrap() || TileInDirection(attrs[AttrType.RUNNING]).name == "floor")
+				&& !Console.KeyAvailable){
 					if(attrs[AttrType.RUNNING] == 5){
 						int hplimit = HasFeat(FeatType.ENDURING_SOUL)? 20 : 10;
 						if(curhp % hplimit == 0){
@@ -1136,6 +1137,9 @@ namespace Forays{
 				}
 				M.RedrawWithStrings();
 				if(selected_feat != FeatType.NO_FEAT){
+					if(StunnedThisTurn()){
+						break;
+					}
 					if(!UseFeat(selected_feat)){
 						Q0();
 					}
@@ -2387,6 +2391,7 @@ namespace Forays{
 						attrs[AttrType.COOLDOWN_2]++;
 						int cooldown = 100 * (Global.Roll(1,3) + 8);
 						Q.Add(new Event(this,cooldown,AttrType.COOLDOWN_2));
+						AnimateExplosion(this,1,Color.RandomIce,'*'); //todo testing
 						Attack(2,target);
 					}
 					else{
@@ -2411,6 +2416,7 @@ namespace Forays{
 							cooldown *= 100;
 							Q.Add(new Event(this,cooldown,AttrType.COOLDOWN_1));
 						}
+						AnimateBoltProjectile(target,Color.RandomIce);
 						Attack(1,target);
 					}
 					else{
@@ -2503,7 +2509,7 @@ namespace Forays{
 			case ActorType.ROBED_ZEALOT:
 				switch(DistanceFrom(target)){
 				case 1:
-					if(curhp <= 20){
+					if(curhp <= 13){
 						CastSpell(SpellType.MINOR_HEAL);
 					}
 					else{
@@ -2526,7 +2532,7 @@ namespace Forays{
 					}
 					break;
 				case 2:
-					if(curhp <= 30){
+					if(curhp <= 20){
 						CastSpell(SpellType.MINOR_HEAL);
 					}
 					else{
@@ -2560,7 +2566,7 @@ namespace Forays{
 					}
 					break;
 				default:
-					if(curhp <= 40){
+					if(curhp <= 26){
 						CastSpell(SpellType.MINOR_HEAL);
 					}
 					else{
@@ -2793,6 +2799,9 @@ namespace Forays{
 					}
 					else{
 						if(FirstActorInLine(target) == target){
+							List<Tile> line = GetBresenhamLine(target.row,target.col);
+							line.Remove(line[line.Count-1]);
+							Screen.AnimateBoltBeam(line,Color.DarkGreen);
 							if(Global.Roll(1,4) == 4){
 								Attack(0,target);
 							}
@@ -2838,7 +2847,13 @@ namespace Forays{
 								}
 							}
 						}
+						else{
+							Q1();
+						}
 					}
+				}
+				else{
+					Q1();
 				}
 				break;
 			case ActorType.CULTIST:
@@ -3278,6 +3293,7 @@ namespace Forays{
 							attrs[AttrType.COOLDOWN_1]++;
 							int cooldown = (Global.Roll(1,4)+1) * 100;
 							Q.Add(new Event(this,cooldown,AttrType.COOLDOWN_1));
+							AnimateBeam(target,Color.RandomFire,'*');
 							Attack(2,target);
 						}
 						else{
@@ -3308,7 +3324,7 @@ namespace Forays{
 			}
 		}
 		public void SeekAI(){
-			if(path.Count > 0){
+			if(path.Count > 0 && type != ActorType.LASHER_FUNGUS){
 				AI_Step(M.tile[path[0].row,path[0].col]);
 				if(DistanceFrom(path[0]) == 0){
 					path.RemoveAt(0);
@@ -3683,7 +3699,7 @@ namespace Forays{
 			if(a.HasAttr(AttrType.DEFENSIVE_STANCE) && Global.CoinFlip()){
 				hit = false;
 			}
-			if(attack_idx==0 && (type==ActorType.FROSTLING || type==ActorType.FIRE_DRAKE)){
+			if(attack_idx==2 && (type==ActorType.FROSTLING || type==ActorType.FIRE_DRAKE)){
 				hit = true; //hack! these are the 2 'area' attacks that always hit
 			}
 			string s = info.desc + ". ";
@@ -3881,7 +3897,12 @@ namespace Forays{
 								B.Add(the_name + " misses " + a.the_name + " with a tentacle. ");
 							}
 							else{
-								B.Add(You("miss",true) + " " + a.the_name + ". ");
+								if(HasAttr(AttrType.DRIVE_BACK_ON)){
+									B.Add(You("drive") + " " + a.the_name + " back. ");
+								}
+								else{
+									B.Add(You("miss",true) + " " + a.the_name + ". ");
+								}
 							}
 						}
 					}
@@ -4182,16 +4203,18 @@ namespace Forays{
 							if(HasLOS(a.row,a.col)){
 								B.Add("The spores hit " + a.the_name + ". ",a);
 								int duration = Global.Roll(2,4);
-								a.attrs[AttrType.POISONED] += duration;
+								a.attrs[AttrType.POISONED]++;
+								Q.Add(new Event(a,duration*100,AttrType.POISONED));
 								if(a.name == "you"){
 									B.Add("You are poisoned. ");
 								}
 								if(!a.HasAttr(AttrType.STUNNED)){
 									a.attrs[AttrType.STUNNED]++;
-									Q.Add(new Event(a,duration*100,AttrType.STUNNED));
-									if(a.name == "you"){
-										B.Add("You are stunned. ");
-									}
+									Q.Add(new Event(a,duration*100,AttrType.STUNNED,a.YouAre() + " no longer stunned. ",a));
+									//if(a.name == "you"){
+									//	B.Add("You are stunned. ");
+									//}
+									B.Add(a.YouAre() + " stunned. ",a);
 								}
 							}
 						}
@@ -4215,7 +4238,9 @@ namespace Forays{
 					}
 					else{
 						M.Draw();
-						B.Add("You die. ");
+						if(Global.GAME_OVER == false){
+							B.Add("You die. ");
+						}
 						B.PrintAll();
 						Global.GAME_OVER = true;
 						//Environment.Exit(0);
@@ -4383,24 +4408,30 @@ namespace Forays{
 			}
 			return true;
 		}
-		public bool CastSpell(SpellType spell){ return CastSpell(spell,null); }
-		public bool CastSpell(SpellType spell,PhysicalObject obj){ //returns false if targeting is canceled.
-			if(StunnedThisTurn()){ //todo: eventually this will be moved to the last possible second
+		public bool CastSpell(SpellType spell){ return CastSpell(spell,null,false); }
+		public bool CastSpell(SpellType spell,bool force_of_will){ return CastSpell(spell,null,force_of_will); }
+		public bool CastSpell(SpellType spell,PhysicalObject obj){ return CastSpell(spell,obj,false); }
+		public bool CastSpell(SpellType spell,PhysicalObject obj,bool force_of_will){ //returns false if targeting is canceled.
+			if(StunnedThisTurn() && !force_of_will){ //eventually this will be moved to the last possible second
 				return true; //returns true because turn was used up. 
 			}
-			//if(!HasSpell(spell)){
-		//		return false;
-		//	} todo uncomment this
+			if(!HasSpell(spell)){
+				return false;
+			}
 			Tile t = null;
 			if(obj != null){
 				t = M.tile[obj.row,obj.col];
 			}
 			int bonus = 0; //used for bonus damage on spells - currently, only Master's Edge adds bonus damage.
 			if(FailRate(spell) > 0){
-				if(Global.Roll(1,100) - FailRate(spell) <= 0){
+				int fail = FailRate(spell);
+				if(force_of_will){
+					fail = attrs[AttrType.GLOBAL_FAIL_RATE]*25;
+				}
+				if(Global.Roll(1,100) - fail <= 0){
 					if(HasFeat(FeatType.STUDENTS_LUCK) && !HasAttr(AttrType.STUDENTS_LUCK_USED)){
 						attrs[AttrType.STUDENTS_LUCK_USED]++;
-						if(Global.Roll(1,100) - FailRate(spell) <= 0){
+						if(Global.Roll(1,100) - fail <= 0){
 							B.Add("Sparks fly from " + Your() + " fingers. ",this);
 							Q1();
 							return true;
@@ -4411,15 +4442,15 @@ namespace Forays{
 					}
 					else{
 						if(player.CanSee(this)){
-							B.Add("Sparks fly from " + Your() + " fingers. ",this); //or 'you fail to concentrate hard enough'
+							B.Add("Sparks fly from " + Your() + " fingers. ",this);
 						}
 						else{
 							if(player.DistanceFrom(this) <= 4 || (player.DistanceFrom(this) <= 12 && player.HasLOS(row,col))){
 								B.Add("You hear words of magic, but nothing happens. ");
 							}
 						}
-						Q1(); //or 'the shaman's mouth and fingers move, but nothing happens'
-						return true; //or 'the shaman seems to concentrate hard, but nothing happens'
+						Q1();
+						return true;
 					}
 				}
 			}
@@ -5018,7 +5049,9 @@ namespace Forays{
 			if(type == ActorType.PLAYER){
 				MakeNoise();
 			}
-			spells[spell]++;
+			if(!force_of_will){
+				spells[spell]++;
+			}
 			Q1();
 			return true;
 		}
@@ -5037,6 +5070,9 @@ namespace Forays{
 			failrate += attrs[AttrType.GLOBAL_FAIL_RATE]*25;
 			if(!HasFeat(FeatType.ARMORED_MAGE)){
 				failrate += Armor.AddedFailRate(armors.First.Value);
+			}
+			if(failrate > 100){
+				failrate = 100;
 			}
 			return failrate;
 		}
@@ -5114,16 +5150,16 @@ namespace Forays{
 							moved = true;
 							B.Add("You lunge! ");
 							Move(neighbor.row,neighbor.col);
-							/*bool spin = HasFeat(FeatType.SPIN_ATTACK);
+							bool spin = HasFeat(FeatType.SPIN_ATTACK);
 							if(spin){
 								feats[FeatType.SPIN_ATTACK] = 0;
-							}*/
+							}
 							attrs[AttrType.BONUS_COMBAT] += 5;
 							Attack(0,t.actor());
 							attrs[AttrType.BONUS_COMBAT] -= 5;
-							/*if(spin){
+							if(spin){
 								feats[FeatType.SPIN_ATTACK] = 1;
-							}*/
+							}
 							break;
 						}
 					}
@@ -5166,7 +5202,7 @@ effect as standing still, if you're on fire or catching fire. */
 					return false;
 				}
 				Tile t = GetTarget(2);
-				if(t != null && t.actor() != null){
+				if(t != null && t.passable && t.actor() == null){
 					List<Actor> actors_moved_past = new List<Actor>();
 					bool moved = false;
 					foreach(Tile neighbor in t.NeighborsBetween(row,col)){
@@ -5174,37 +5210,43 @@ effect as standing still, if you're on fire or catching fire. */
 							actors_moved_past.Add(neighbor.actor());
 						}
 						if(neighbor.passable && !moved){
+							B.Add("You tumble. ");
 							Move(t.row,t.col);
 							moved = true;
 							attrs[AttrType.TUMBLING]++;
-							B.Add("You tumble. ");
 							if(HasAttr(AttrType.CATCHING_FIRE)){ //copy&paste happened here:
 								attrs[AttrType.CATCHING_FIRE] = 0;
 								B.Add("You stop the flames from spreading. ");
 							}
 							else{
-								if(HasAttr(AttrType.ON_FIRE)){
-									bool update = false;
-									int oldradius = LightRadius();
-									if(attrs[AttrType.ON_FIRE] > light_radius){
-										update = true;
-									}
-									int i = 2;
-									if(Global.Roll(1,3) == 3){ // 1 in 3 times, you don't make progress against the fire
-										i = 1;
-									}
-									attrs[AttrType.ON_FIRE] -= i;
-									if(attrs[AttrType.ON_FIRE] < 0){
-										attrs[AttrType.ON_FIRE] = 0;
-									}
-									if(update){
-										UpdateRadius(oldradius,LightRadius());
-									}
+								if(HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
+									attrs[AttrType.STARTED_CATCHING_FIRE_THIS_TURN] = 0;
+									B.Add("You stop the flames from spreading. ");
+								}
+								else{
 									if(HasAttr(AttrType.ON_FIRE)){
-										B.Add("You put out some of the fire. ");
-									}
-									else{
-										B.Add("You put out the fire. ");
+										bool update = false;
+										int oldradius = LightRadius();
+										if(attrs[AttrType.ON_FIRE] > light_radius){
+											update = true;
+										}
+										int i = 2;
+										if(Global.Roll(1,3) == 3){ // 1 in 3 times, you don't make progress against the fire
+											i = 1;
+										}
+										attrs[AttrType.ON_FIRE] -= i;
+										if(attrs[AttrType.ON_FIRE] < 0){
+											attrs[AttrType.ON_FIRE] = 0;
+										}
+										if(update){
+											UpdateRadius(oldradius,LightRadius());
+										}
+										if(HasAttr(AttrType.ON_FIRE)){
+											B.Add("You put out some of the fire. ");
+										}
+										else{
+											B.Add("You put out the fire. ");
+										}
 									}
 								}
 							}
@@ -5212,8 +5254,14 @@ effect as standing still, if you're on fire or catching fire. */
 					}
 					if(moved){
 						foreach(Actor a in actors_moved_past){
-							//todo: stealthy stuff here
+							int i = 10 - Global.Roll(Stealth());
+							if(i < 0){
+								i = 0;
+							}
+							a.player_visibility_duration = i;
 						}
+						Q.Add(new Event(this,200,EventType.MOVE));
+						return true;
 					}
 					else{
 						B.Add("The way is blocked! ");
@@ -5223,7 +5271,7 @@ effect as standing still, if you're on fire or catching fire. */
 				else{
 					return false;
 				}
-				break;
+				//break;
 				}
 			case FeatType.ARCANE_HEALING: //25% fail rate for the 'failrate' feats
 				if(attrs[AttrType.GLOBAL_FAIL_RATE] < 4){
@@ -5251,7 +5299,47 @@ effect as standing still, if you're on fire or catching fire. */
 				break;
 			case FeatType.FORCE_OF_WILL:
 				if(attrs[AttrType.GLOBAL_FAIL_RATE] < 4){
-					//todo:selectspell and whatnot
+					List<string> ls = new List<string>();
+					List<SpellType> sp = new List<SpellType>();
+					foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
+						if(HasSpell(spell)){
+							string s = Spell.Name(spell).PadRight(15) + Spell.Level(spell).ToString().PadLeft(3);
+							s = s + FailRate(spell).ToString().PadLeft(9) + "%";
+							s = s + Spell.Damage(spell).PadLeft(8);
+							s = s + Spell.Description(spell).PadLeft(26);
+							ls.Add(s);
+							sp.Add(spell);
+						}
+					}
+					if(sp.Count > 0){
+						string topborder = "------------------Level--Fail rate--Damage--Description-----------";
+						int basefail = attrs[AttrType.GLOBAL_FAIL_RATE]*25;
+						if(!HasFeat(FeatType.ARMORED_MAGE)){
+							basefail += Armor.AddedFailRate(armors.First.Value);
+						}
+						string bottomborder = "-------------Base fail rate: " + (basefail.ToString().PadLeft(2) + "%").PadRight(37,'-');
+						int i = Select("Use force of will to cast which spell? ",topborder,bottomborder,ls);
+						if(i != -1){
+							if(!CastSpell(sp[i],true)){
+								Q0();
+								return true;
+							}
+							else{
+								attrs[AttrType.GLOBAL_FAIL_RATE]++;
+								B.Add("You drain your magic reserves. ");
+								return true;
+							}
+						}
+						else{
+							Q0();
+							return true;
+						}
+					}
+					else{
+						Q0();
+						return true;
+					}
+					//
 				}
 				else{
 					B.Add("Your magic reserves are empty! ");
@@ -6844,6 +6932,31 @@ cch.c = mem[t.row,t.col].c;
 		private static AttackInfo[] attack = new AttackInfo[25];
 		static AttackList(){
 			attack[0] = new AttackInfo(100,1,DamageType.PIERCING,"& ^bites *");
+			attack[1] = new AttackInfo(100,1,DamageType.PIERCING,"& ^bites *"); //was 2
+			attack[2] = new AttackInfo(100,2,DamageType.PIERCING,"& ^bites *"); //was 3
+			attack[3] = new AttackInfo(100,2,DamageType.NORMAL,"& ^hits *");
+			attack[4] = new AttackInfo(100,3,DamageType.NORMAL,"& ^hits *");
+			attack[5] = new AttackInfo(100,1,DamageType.SLASHING,"& ^scratches *");
+			attack[6] = new AttackInfo(100,2,DamageType.COLD,"& hits * with a blast of cold");
+			attack[7] = new AttackInfo(100,4,DamageType.COLD,"& releases a burst of cold");
+			attack[8] = new AttackInfo(200,2,DamageType.NORMAL,"& lunges forward and ^hits *");
+			attack[9] = new AttackInfo(100,3,DamageType.PIERCING,"& ^bites *"); //was 4
+			attack[10] = new AttackInfo(100,0,DamageType.NONE,"& lashes * with a tentacle");
+			attack[11] = new AttackInfo(100,4,DamageType.NORMAL,"& ^hits *"); //todo scarecrow's damage should be lowered, zealot's too.
+			attack[12] = new AttackInfo(100,4,DamageType.BASHING,"& ^slams *");//probably also warmage
+			attack[13] = new AttackInfo(120,3,DamageType.NORMAL,"& extends a tentacle and ^hits *");
+			attack[14] = new AttackInfo(120,1,DamageType.NORMAL,"& extends a tentacle and drags * closer");
+			attack[15] = new AttackInfo(100,5,DamageType.BASHING,"& ^slams *"); //was 6
+			attack[16] = new AttackInfo(100,3,DamageType.PIERCING,"& ^bites *");
+			attack[17] = new AttackInfo(100,3,DamageType.SLASHING,"& ^claws *");
+			attack[18] = new AttackInfo(150,4,DamageType.FIRE,"& breathes fire");
+			attack[19] = new AttackInfo(100,1,DamageType.NORMAL,"& ^hit *"); //the player's default attack
+			attack[20] = new AttackInfo(100,2,DamageType.NORMAL,"& ^pokes *");
+			attack[21] = new AttackInfo(100,1,DamageType.NORMAL,"& slimes *");
+			attack[22] = new AttackInfo(100,2,DamageType.SLASHING,"& ^claws *");
+			attack[23] = new AttackInfo(100,2,DamageType.NORMAL,"& touches *");
+			attack[24] = new AttackInfo(100,0,DamageType.NONE,"& ^hits *");
+/*oldvalues	attack[0] = new AttackInfo(100,1,DamageType.PIERCING,"& ^bites *");
 			attack[1] = new AttackInfo(100,2,DamageType.PIERCING,"& ^bites *");
 			attack[2] = new AttackInfo(100,3,DamageType.PIERCING,"& ^bites *");
 			attack[3] = new AttackInfo(100,2,DamageType.NORMAL,"& ^hits *");
@@ -6868,6 +6981,7 @@ cch.c = mem[t.row,t.col].c;
 			attack[22] = new AttackInfo(100,2,DamageType.SLASHING,"& ^claws *");
 			attack[23] = new AttackInfo(100,2,DamageType.NORMAL,"& touches *");
 			attack[24] = new AttackInfo(100,0,DamageType.NONE,"& ^hits *");
+*/
 		}
 		public static AttackInfo Attack(ActorType type,int num){
 			switch(type){

@@ -103,6 +103,7 @@ namespace Forays{
 				switch(command.KeyChar){
 				case 'a':
 				{
+					Global.GAME_OVER = false;
 					done = true;
 					Game game = new Game();
 					game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0);

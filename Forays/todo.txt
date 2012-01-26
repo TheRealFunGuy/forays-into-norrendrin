@@ -1,6 +1,7 @@
 things to do between 0.5 and 1.0:
 
 at least 1 special level per game, with an appropriate number of different special levels
+	-cave of bats
 
 animations should support the concept of a 'viewer' - cells outside viewer's FOV don't animate.
 
@@ -16,8 +17,6 @@ should dream warrior teleport straight to target_location in seekAI?
 
 replace old spell?
 
-should fire affect items? (probably not)
-
 shadow should reduce the light radius of zealots, too
 
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
@@ -31,8 +30,15 @@ colorize 'active' / 'passive' in feats
 should immolate deal 1d6?
 
 add color to spell selection screen
+	-anything above 50% fail: dark red.  anything above 20%: red. anything above 0%: yellow. 0%: white(?)
 
+if you target past an enemy to hit them, like one often does in doomRL, the animation usually still goes past them.
 
+if the line is blocked while targeting, perhaps the alternate line could be considered.
+
+when starting a 2nd+ game, the screen isn't properly cleared first, it seems.
+
+tumble shouldn't start at the nearest enemy. special classification for non-offensive things like this?
 
 
 things to do somewhere between 0.1 and 1.0:
@@ -41,14 +47,32 @@ remove debug cheats
 
 balancing hp should take resists into account.
 
-animation for fire breath, frostling attacks, maybe even lasher.
-
 PLACEHOLDER should become a combat-enhancing spell.
 
+title screen
+
+overview of game
+
+spell help
+
+feat help, with all descriptions
+
+item help and/or item descriptions
+
+move poltergeists down a few levels?
+
+
+
+
+known bugs: 
 using lunge on an aware goblin archer a knight's move away. the archer appears normal, when it should have a green background from the targeting.
 	-i believe this is another form of the other background color bug.
 	-linux or win?
 	-does not happen every time. this one might be a pain to track down.
+related: targeting cursor is STILL sometimes invisible. just the targeted tile, on windows.
+	-a possible hint at the cause? (or did my 'fix' just break something else?): on windows, targeting past walls to the edge of the map. target tile is at the top of the map, and pressing up causes the bright red highlight to TOGGLE on and off! also, if I move the cursor quickly enough, it FLASHES bright red and then goes black.
+
+
 
 
 
