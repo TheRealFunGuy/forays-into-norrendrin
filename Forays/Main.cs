@@ -220,7 +220,7 @@ namespace Forays{
 						}
 					}
 					game.player.Q0();
-					game.player.Move(10,20,false); //this is why the voodoo was needed before: the player must be moved onto the map *before*
+					//game.player.Move(10,20,false); //this is why the voodoo was needed before: the player must be moved onto the map *before*
 					game.player.UpdateRadius(0,6,true); //gaining a light radius.
 					Item.Create(ConsumableType.HEALING,game.player);
 					Item.Create(ConsumableType.PHASING,game.player);
