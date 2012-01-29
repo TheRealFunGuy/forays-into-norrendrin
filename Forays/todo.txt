@@ -40,26 +40,19 @@ when starting a 2nd+ game, the screen isn't properly cleared first, it seems.
 
 tumble shouldn't start at the nearest enemy. special classification for non-offensive things like this?
 
+drive back should give 100% accuracy against cornered enemies.
+
+disarm trap should have Defense bonus.
+
+generate rats at start.
+
 
 things to do somewhere between 0.1 and 1.0:
 
-remove debug cheats
-
-balancing hp should take resists into account.
-
-PLACEHOLDER should become a combat-enhancing spell.
-
-title screen
-
-overview of game
-
-spell help
-
-feat help, with all descriptions
-
 item help and/or item descriptions
 
-move poltergeists down a few levels?
+move poltergeists down a few levels? (and/or restrict them to level 2+, and/or restrict them to 1 per level)
+
 
 
 

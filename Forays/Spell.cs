@@ -23,19 +23,19 @@ namespace Forays{
 				return 20;
 			case SpellType.IMMOLATE:
 				return 20;
-			case SpellType.ICY_BLAST:
+			case SpellType.SHOCK:
 				return 25;
 			case SpellType.BURNING_HANDS:
 				return 25;
 			case SpellType.FREEZE:
 				return 30;
+			case SpellType.NIMBUS:
+				return 30;
 			case SpellType.SONIC_BOOM:
 				return 35;
 			case SpellType.ARC_LIGHTNING:
 				return 40;
-			case SpellType.PLACEHOLDER:
-				return 42;
-			case SpellType.SHOCK:
+			case SpellType.ICY_BLAST:
 				return 45;
 			case SpellType.SHADOWSIGHT:
 				return 50;
@@ -75,20 +75,20 @@ namespace Forays{
 				return "Blink";
 			case SpellType.IMMOLATE:
 				return "Immolate";
-			case SpellType.ICY_BLAST:
-				return "Icy blast";
+			case SpellType.SHOCK:
+				return "Shock";
 			case SpellType.BURNING_HANDS:
 				return "Burning hands";
 			case SpellType.FREEZE:
 				return "Freeze";
+			case SpellType.NIMBUS:
+				return "Nimbus";
 			case SpellType.SONIC_BOOM:
 				return "Sonic boom";
 			case SpellType.ARC_LIGHTNING:
 				return "Arc lightning";
-			case SpellType.PLACEHOLDER:
-				return "Placeholder";
-			case SpellType.SHOCK:
-				return "Shock";
+			case SpellType.ICY_BLAST:
+				return "Icy blast";
 			case SpellType.SHADOWSIGHT:
 				return "Shadowsight";
 			case SpellType.RETREAT:
@@ -127,20 +127,20 @@ namespace Forays{
 				return "Teleport a few spaces.  ";
 			case SpellType.IMMOLATE:
 				return "Ignites an enemy.       ";
-			case SpellType.ICY_BLAST:
-				return "Cold attack spell.      ";
+			case SpellType.SHOCK:
+				return "Electric attack spell.  ";
 			case SpellType.BURNING_HANDS:
 				return "Range 1 attack spell.   ";
 			case SpellType.FREEZE:
 				return "Immobilizes an enemy.   ";
+			case SpellType.NIMBUS:
+				return "Range 1 damage each turn";
 			case SpellType.SONIC_BOOM:
 				return "Can stun an enemy.      ";
 			case SpellType.ARC_LIGHTNING:
 				return "Radius 1 attack spell.  ";
-			case SpellType.PLACEHOLDER:
-				return "????????????????????????";
-			case SpellType.SHOCK:
-				return "Electric attack spell.  ";
+			case SpellType.ICY_BLAST:
+				return "Cold attack spell.      ";
 			case SpellType.SHADOWSIGHT:
 				return "Grants darkvision.      ";
 			case SpellType.RETREAT:
@@ -170,18 +170,17 @@ namespace Forays{
 			case SpellType.MAGIC_MISSILE:
 			case SpellType.FORCE_PALM:
 			case SpellType.FREEZE:
+			case SpellType.NIMBUS:
 				return "1d6";
-			case SpellType.ICY_BLAST:
+			case SpellType.SHOCK:
 			case SpellType.SONIC_BOOM:
 				return "2d6";
 			case SpellType.BURNING_HANDS:
 			case SpellType.ARC_LIGHTNING:
-			case SpellType.SHOCK:
+			case SpellType.ICY_BLAST:
 			case SpellType.FIREBALL:
 			case SpellType.FORCE_BEAM:
 				return "3d6";
-			case SpellType.PLACEHOLDER:
-				return "???";
 			case SpellType.DISINTEGRATE:
 				return "8d6";
 			case SpellType.BLIZZARD:

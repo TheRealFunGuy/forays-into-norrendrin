@@ -1,0 +1,72 @@
+(Forays into Norrendrin is a roguelike game. Don't know what a roguelike is?    
+    Visit roguebasin.roguelikedevelopment.org for more info.)                   
+                                                                                
+How to play:                                                                    
+                                                                                
+After choosing New Game, follow the instructions to pick your name, trait,      
+skills, and feats. Every time your experience level increases, you'll choose 3  
+of the 5 skills to increase, and put a point toward mastering one of that       
+skill's associated feats. Press [b] to read more about the skills and their     
+feats.                                                                          
+	(If you increase your Magic skill, you'll also choose one new spell.)   
+                                                                                
+Important commands to remember are 'e' to examine and change your equipment, and
+ 'i' to view and use your consumable items. If your health drops, press 'R' to  
+rest - but only once per level!                                                 
+                                                                                
+Your torch illuminates your surroundings, but also gives away your position. If 
+you wish to avoid notice, deactivate your torch with 'T'.                       
+                                                                                
+Press 'l' to look at your surroundings. (Pressing escape or space will exit     
+most menus and selections.)                                                     
+                                                                                
+		Press the space bar to continue to the next page.               
+
+If you've learned a spell, you can cast it by pressing 'Z'. If your magic skill 
+isn't high enough compared to the spell's level, you'll have trouble casting it 
+repeatedly. (Heavy armor also makes casting harder.)                            
+                                                                                
+You can view and activate feats by pressing 'F'. (Some feats are activated,     
+while some are entirely passive. Certain feats can be toggled on and off.)      
+                                                                                
+Try switching to your bow and firing some arrows('e' to switch, 'f' to fire).   
+                                                                                
+Remember: If you catch on fire, stand still with '.' (or '5' on the numpad) to  
+put it out. When you find stairs, you can walk down them with '>'. (It's a      
+one-way trip, so don't leave anything behind!)                                  
+                                                                                
+The full list of commands is on the next page. (The command list can be         
+accessed directly by pressing '-'.)                                             
+                                                                                
+		Press the space bar to continue to the next page.               
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+Command list:                                                                   
+l : look around						Z : cast a spell        
+R : rest to recover health and spells			F : use a feat          
+T : turn your torch on/off				f : fire an arrow       
+e : view and change equipment                                                   
+                                                                                
+i : view and use consumable items                                               
+g : pick up an item                                                             
+d : drop an item                                                                
+                                                                                
+> : take stairs to next level				o : open a door or chest
+w : start walking automatically in one direction	c : close a door        
+                                                                                
+C : view character information                                                  
+P : view previous messages                                                      
+                                                                                
+= : change options                                                              
+Q : quit game (does not save your progress)                                     
+? : view the help screen                                                        
+- : view this command list                                                      
+                                                                                
+(You can also switch weapons with 1-5 on the top row of the keyboard, and armor 
+ with 8-0. You can press Tab to jump between interesting targets.)              
+			Press any key to exit.                                  

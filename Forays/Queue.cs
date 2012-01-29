@@ -352,6 +352,9 @@ namespace Forays{
 							temp.speed = 100;
 						}
 					}
+					if(attr==AttrType.BLOOD_BOILED){
+						temp.speed += 10;
+					}
 					if(attr==AttrType.POISONED && temp == player){
 						if(temp.HasAttr(AttrType.POISONED)){
 							B.Add("The poison begins to subside. ");
@@ -372,7 +375,7 @@ namespace Forays{
 					List<Tile> removed = new List<Tile>();
 					foreach(Tile t in area){
 						if(player.CanSee(t)){
-							int exponent = player.DistanceFrom(t) + 1; //todo: test this value a bit more
+							int exponent = player.DistanceFrom(t) + 1;
 							if(player.HasAttr(AttrType.KEEN_EYES)){
 								--exponent;
 							}
@@ -642,10 +645,10 @@ namespace Forays{
 						}
 					}
 					if(player_present){
-						Q.Add(new Event(null,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,value+1,"")); //todo check duration
+						Q.Add(new Event(null,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,value+1,""));
 					}
 					else{
-						Q.Add(new Event(null,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,"")); //todo
+						Q.Add(new Event(null,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
 					}
 					break;
 					}

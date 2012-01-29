@@ -145,6 +145,56 @@ namespace Forays{
 			}
 			return s;
 		}
+		public static string[] titlescreen =  new string[]{
+"                                                                                ",
+"                                                                                ",
+"        #######                                                                 ",
+"        #######                                                                 ",
+"        ##    #                                                                 ",
+"        ##                                                                      ",
+"        ##  #                                                                   ",
+"        #####                                                                   ",
+"        #####                                                                   ",
+"        ##  #   ###   # ##   ###    #   #   ###                                 ",
+"        ##     #   #  ##    #   #   #   #  #                                    ",
+"        ##     #   #  #     #   #    # #    ##                                  ",
+"        ##     #   #  #     #   #     #       #                                 ",
+"        ##      ###   #      ### ##   #    ###                                  ",
+"                                     #                                          ",
+"                                    #                                           ",
+"                                                                                ",
+"                                                                                ",
+"                         I N T O     N O R R E N D R I N                        ",
+"                                                                                ",
+"                                                                                ",
+"                                                                                ",
+"                                                                  version 0.5.0 ",
+"                                                             by Derrick Creamer "};
+		public static string[] titlescreen2 =  new string[]{
+"                                                                                ",
+"                                                                                ",
+"                                                                                ",
+"         ######                                                                 ",
+"         #                                                                      ",
+"         #                                                                      ",
+"         #                                                                      ",
+"         #                                                                      ",
+"         ####                                                                   ",
+"         #      ###   # ##   ###    #   #   ###                                 ",
+"         #     #   #  ##    #   #   #   #  #                                    ",
+"         #     #   #  #     #   #    # #    ##                                  ",
+"         #     #   #  #     #   #     #       #                                 ",
+"         #      ###   #      ### ##   #    ###                                  ",
+"                                     #                                          ",
+"                                    #                                           ",
+"                                                                                ",
+"                                                                                ",
+"                         I N T O     N O R R E N D R I N                        ",
+"                                                                                ",
+"                                                                                ",
+"                                                                                ",
+"                                                                  version 0.5.0 ",
+"                                                             by Derrick Creamer "};
 	}
 	public class Dict<TKey,TValue>{
 		private Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
