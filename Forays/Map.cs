@@ -285,7 +285,7 @@ namespace Forays{
 						}
 					}
 					if(tiles.Count >= 30){
-						Q.Add(new Event(null,tiles,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,"")); //todo duration check
+						Q.Add(new Event(null,tiles,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
 						return;
 					}
 				}
@@ -360,7 +360,9 @@ namespace Forays{
 						}
 						actor[i,j] = null;
 					}
-					tile[i,j].inv = null;
+					if(tile[i,j] != null){
+						tile[i,j].inv = null;
+					}
 					tile[i,j] = null;
 				}
 			}

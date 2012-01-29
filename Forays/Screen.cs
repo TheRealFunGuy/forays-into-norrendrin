@@ -125,6 +125,11 @@ namespace Forays{
 			for(int i=0;i<Global.SCREEN_H;++i){
 				Console.SetCursorPosition(0,i);
 				Console.Write("".PadRight(Global.SCREEN_W));
+				for(int j=0;j<Global.SCREEN_W;++j){
+					memory[i,j].c = ' ';
+					memory[i,j].color = Color.Black;
+					memory[i,j].bgcolor = Color.Black;
+				}
 			}
 			//Console.CursorVisible = true; //not turning it back on until i need it
 		}
