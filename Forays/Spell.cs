@@ -169,6 +169,7 @@ namespace Forays{
 			switch(spell){
 			case SpellType.MAGIC_MISSILE:
 			case SpellType.FORCE_PALM:
+			case SpellType.IMMOLATE:
 			case SpellType.FREEZE:
 			case SpellType.NIMBUS:
 				return "1d6";

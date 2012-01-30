@@ -20,8 +20,8 @@ you wish to avoid notice, deactivate your torch with 'T'.
 Press 'l' to look at your surroundings. (Pressing escape or space will exit     
 most menus and selections.)                                                     
                                                                                 
-		Press the space bar to continue to the next page.               
-
+                          Press any key to continue.                            
+                                                                                
 If you've learned a spell, you can cast it by pressing 'Z'. If your magic skill 
 isn't high enough compared to the spell's level, you'll have trouble casting it 
 repeatedly. (Heavy armor also makes casting harder.)                            
@@ -38,7 +38,7 @@ one-way trip, so don't leave anything behind!)
 The full list of commands is on the next page. (The command list can be         
 accessed directly by pressing '-'.)                                             
                                                                                 
-		Press the space bar to continue to the next page.               
+                          Press any key to continue.                            
                                                                                 
                                                                                 
                                                                                 
@@ -48,6 +48,30 @@ accessed directly by pressing '-'.)
                                                                                 
 Command list:                                                                   
 l : look around						Z : cast a spell        
+R : rest to recover health and spells			F : use a feat          
+T : turn your torch on/off				f : fire an arrow       
+e : view and change equipment                                                   
+                                                                                
+i : view and use consumable items                                               
+g : pick up an item                                                             
+d : drop an item                                                                
+                                                                                
+> : take stairs to next level				o : open a door or chest
+w : start walking automatically in one direction	c : close a door        
+                                                                                
+C : view character information                                                  
+P : view previous messages                                                      
+                                                                                
+= : change options                                                              
+Q : quit game (does not save your progress)                                     
+? : view the help screen                                                        
+- : view this command list                                                      
+                                                                                
+(You can also switch weapons with 1-5 on the top row of the keyboard, and armor 
+ with 8-0. You can press Tab to jump between interesting targets.)              
+			Press any key to exit.                                  
+Vi-keys command list:                                                           
+x : look around						Z : cast a spell        
 R : rest to recover health and spells			F : use a feat          
 T : turn your torch on/off				f : fire an arrow       
 e : view and change equipment                                                   

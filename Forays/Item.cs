@@ -217,6 +217,17 @@ namespace Forays{
 				Q.Add(new Event(user,duration*100,AttrType.RESIST_FIRE));
 				Q.Add(new Event(user,duration*100,AttrType.RESIST_COLD));
 				Q.Add(new Event(user,duration*100,AttrType.RESIST_ELECTRICITY,user.YouFeel() + " less insulated. ",user));
+				if(user.HasAttr(AttrType.ON_FIRE) || user.HasAttr(AttrType.CATCHING_FIRE)
+				|| user.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
+					B.Add(user.YouAre() + " no longer on fire. ",user);
+					int oldradius = user.LightRadius();
+					user.attrs[AttrType.ON_FIRE] = 0;
+					user.attrs[AttrType.CATCHING_FIRE] = 0;
+					user.attrs[AttrType.STARTED_CATCHING_FIRE_THIS_TURN] = 0;
+					if(oldradius != user.LightRadius()){
+						user.UpdateRadius(oldradius,user.LightRadius());
+					}
+				}
 				break;
 				}
 			case ConsumableType.CLARITY:
@@ -344,7 +355,7 @@ namespace Forays{
 			case ConsumableType.MAGIC_MAP:
 				B.Add("The scroll reveals the layout of this level. ");
 				foreach(Tile t in M.AllTiles()){
-					if(t.type != TileType.FLOOR){
+					if(t.type != TileType.FLOOR && !t.IsTrap()){
 						bool good = false;
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
 							if(neighbor.type != TileType.WALL){

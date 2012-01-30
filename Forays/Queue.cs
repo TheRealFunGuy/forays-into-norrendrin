@@ -431,7 +431,7 @@ namespace Forays{
 				case EventType.POLTERGEIST:
 					{
 					if(true){ //relic
-						if(value < 4){
+						if(value < 3){
 							switch(Global.Roll(4)){
 							case 1: //doors
 								List<Tile> doors = new List<Tile>();

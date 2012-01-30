@@ -6,6 +6,10 @@ Magic - Increases your ability to cast spells.
 Spirit - Increases your resistance to magical and supernatural effects.
 Stealth - Increases your ability to avoid notice.
 
+
+
+
+
 Combat feats:
 Quick draw - Instantly swap between weapons. (2 points, passive)
 Spin attack - Damage all adjacent foes. (If you have skill in Magic, deals bonus
@@ -17,11 +21,7 @@ Drive back - Enemies must yield ground in order to avoid your
 
 
 
-
-
-
-
-                          Press the space bar to continue.
+                          Press any key to continue.
 Defense feats:
 Silent chainmail - Removes chainmail's stealth penalty. (2 points, passive)
 Armored mage - Cast spells with no penalty from your armor. (3 points, passive)
@@ -29,6 +29,8 @@ Full defense - Stand still to ready yourself for attack. Enemies that try to hit
                 you might hit other adjacent enemies. (4 points, passive)
 Tumble - Move up to 2 spaces while avoiding arrows. (Also useful for slipping
           behind enemies and putting out fires.) (3 points, active)
+
+
 
 Magic feats:
 Master's edge - Spells you've mastered deal extra damage. (3 points, passive)
@@ -38,14 +40,12 @@ Arcane healing - Drain your magic reserves to heal some of your
                   wounds. (3 points, active)
 Force of will - Drain your magic reserves to flawlessly cast a spell. (Draining
                  your magic reserves still decreases your chance of success, but
-                 nothing else does.) (3 points, active)
+                 nothing else does. If you have skill in Spirit, your chances
+                 are increased. ) (3 points, active)
 
 
 
-
-
-
-                          Press the space bar to continue.
+                          Press any key to continue.
 Spirit feats:
 War shout - Your challenge brings foes to you and boosts your Combat and Spirit
              skills. (3 points, active)
@@ -55,18 +55,18 @@ Feel no pain - When your health is very low, you briefly enter a state of
                 invulnerability. (3 points, passive)
 Boiling blood - Taking damage briefly increases your speed. (2 points, passive)
 
+
+
 Stealth feats:
 Corner look - You can peek around corners if you extinguish your light
                sources. (1 point, passive)
 Disarm trap - Attempt to disable a trap without setting it
-               off. (3 points, active)
+               off. (If you have skill in Defense, you're more likely to avoid
+               damage.) (3 points, active)
 Neck snap - Perform a stealth kill against a medium
              humanoid. (5 points, passive)
 Danger sense - You see where it's safe and where enemies might detect you, if
                 you extinguish your light sources. (2 points, toggle)
 
 
-
-
-
-                          Press any key to continue.
+                          Press any key to exit.
