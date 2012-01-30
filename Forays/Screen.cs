@@ -434,6 +434,19 @@ namespace Forays{
 			}
 			Console.CursorVisible = true;
 		}
+		public static void DrawMapBorder(colorchar ch){
+			for(int i=0;i<Global.ROWS;i+=Global.ROWS-1){
+				for(int j=0;j<Global.COLS;++j){
+					WriteMapChar(i,j,ch);
+				}
+			}
+			for(int j=0;j<Global.COLS;j+=Global.COLS-1){
+				for(int i=0;i<Global.ROWS;++i){
+					WriteMapChar(i,j,ch);
+				}
+			}
+			ResetColors();
+		}
 		public static ConsoleColor GetColor(Color c){
 			switch(c){
 			case Color.Black:

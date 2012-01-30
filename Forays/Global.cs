@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 namespace Forays{
 	public static class Global{
+		public const string VERSION = "version 0.5.1 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -168,32 +169,7 @@ namespace Forays{
 "                                                                                ",
 "                                                                                ",
 "                                                                                ",
-"                                                                  version 0.5.0 ",
-"                                                             by Derrick Creamer "};
-		public static string[] titlescreen2 =  new string[]{
-"                                                                                ",
-"                                                                                ",
-"                                                                                ",
-"         ######                                                                 ",
-"         #                                                                      ",
-"         #                                                                      ",
-"         #                                                                      ",
-"         #                                                                      ",
-"         ####                                                                   ",
-"         #      ###   # ##   ###    #   #   ###                                 ",
-"         #     #   #  ##    #   #   #   #  #                                    ",
-"         #     #   #  #     #   #    # #    ##                                  ",
-"         #     #   #  #     #   #     #       #                                 ",
-"         #      ###   #      ### ##   #    ###                                  ",
-"                                     #                                          ",
-"                                    #                                           ",
-"                                                                                ",
-"                                                                                ",
-"                         I N T O     N O R R E N D R I N                        ",
-"                                                                                ",
-"                                                                                ",
-"                                                                                ",
-"                                                                  version 0.5.0 ",
+"                                                                  " + VERSION,
 "                                                             by Derrick Creamer "};
 	}
 	public class Dict<TKey,TValue>{

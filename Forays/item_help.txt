@@ -1,0 +1,25 @@
+Items:
+Potions:
+Healing - Instantly heals some of your wounds.
+Regeneration - Healing over time. Stronger than Healing in the long run.
+Cure poison - Neutralizes poison in your system.
+Resistance - Grants temporary resistance to fire, cold, and electricity.
+Clarity - Restores your ability to cast difficult spells.
+
+Runes:
+Phasing - Magically transports you a few spaces away.
+Teleportation - Magically transports you far away.
+Passage - You travel through an adjacent wall.
+
+Scrolls:
+Detect monsters - You automatically know about nearby enemies for a while.
+Magic map - Shows the layout of the current level.
+
+Orbs:
+Wizard's light - Lights the entire level.
+Prismatic - An elemental burst weapon. Deals fire, cold, and electrical damage.
+
+Other:
+Bandage - Restores one hit point. Use it with natural recovery.
+                             Press any key to exit.
+

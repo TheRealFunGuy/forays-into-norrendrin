@@ -33,7 +33,7 @@ namespace Forays{
 		public Map(Game g){
 			tile = new Tile[ROWS,COLS];
 			actor = new Actor[ROWS,COLS];
-			current_level = 1;
+			current_level = 0;
 			Map.player = g.player;
 			Map.Q = g.Q;
 		}
@@ -135,13 +135,28 @@ namespace Forays{
 			}
 		}
 		public void Draw(){
-			Console.CursorVisible = false;
-			for(int i=0;i<ROWS;++i){ //if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; }
-				for(int j=0;j<COLS;++j){ //^--top secret, mostly because it doesn't work well - 
-					Screen.WriteMapChar(i,j,VisibleColorChar(i,j)); //redrawing leaves gaps for some reason.
-				}
+			if(Screen.MapChar(0,0).c == '-'){ //kinda hacky. there won't be an open door in the corner, so this looks for
+				RedrawWithStrings(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely)
 			}
-			Screen.ResetColors();
+			else{
+				Console.CursorVisible = false;
+				if(player.HasAttr(AttrType.ON_FIRE) || player.HasAttr(AttrType.CATCHING_FIRE)){
+					Screen.DrawMapBorder(new colorchar(Color.RandomFire,'&'));
+					for(int i=1;i<ROWS-1;++i){
+						for(int j=1;j<COLS-1;++j){
+							Screen.WriteMapChar(i,j,VisibleColorChar(i,j));
+						}
+					}
+				}
+				else{
+					for(int i=0;i<ROWS;++i){ //if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; }
+						for(int j=0;j<COLS;++j){ //^--top secret, mostly because it doesn't work well - 
+							Screen.WriteMapChar(i,j,VisibleColorChar(i,j)); //redrawing leaves gaps for some reason.
+						}
+					}
+				}
+				Screen.ResetColors();
+			}
 		}
 		public void RedrawWithStrings(){
 			Console.CursorVisible = false;
@@ -151,31 +166,62 @@ namespace Forays{
 			s.color = Color.Black;
 			int r = 0;
 			int c = 0;
-			for(int i=0;i<ROWS;++i){
-				s.s = "";
-				r = i;
-				c = 0;
-				for(int j=0;j<COLS;++j){
-					colorchar ch = VisibleColorChar(i,j);
-					if(Screen.ResolveColor(ch.color) != s.color){
-						if(s.s.Length > 0){
-							Screen.WriteMapString(r,c,s);
-							s.s = "";
-							s.s += ch.c;
-							s.color = ch.color;
-							r = i;
-							c = j;
+			if(player.HasAttr(AttrType.ON_FIRE) || player.HasAttr(AttrType.CATCHING_FIRE)){
+				Screen.DrawMapBorder(new colorchar(Color.RandomFire,'&'));
+				for(int i=1;i<ROWS-1;++i){
+					s.s = "";
+					r = i;
+					c = 1;
+					for(int j=1;j<COLS-1;++j){
+						colorchar ch = VisibleColorChar(i,j);
+						if(Screen.ResolveColor(ch.color) != s.color){
+							if(s.s.Length > 0){
+								Screen.WriteMapString(r,c,s);
+								s.s = "";
+								s.s += ch.c;
+								s.color = ch.color;
+								r = i;
+								c = j;
+							}
+							else{
+								s.s += ch.c;
+								s.color = ch.color;
+							}
 						}
 						else{
 							s.s += ch.c;
-							s.color = ch.color;
 						}
 					}
-					else{
-						s.s += ch.c;
-					}
+					Screen.WriteMapString(r,c,s);
 				}
-				Screen.WriteMapString(r,c,s);
+			}
+			else{
+				for(int i=0;i<ROWS;++i){
+					s.s = "";
+					r = i;
+					c = 0;
+					for(int j=0;j<COLS;++j){
+						colorchar ch = VisibleColorChar(i,j);
+						if(Screen.ResolveColor(ch.color) != s.color){
+							if(s.s.Length > 0){
+								Screen.WriteMapString(r,c,s);
+								s.s = "";
+								s.s += ch.c;
+								s.color = ch.color;
+								r = i;
+								c = j;
+							}
+							else{
+								s.s += ch.c;
+								s.color = ch.color;
+							}
+						}
+						else{
+							s.s += ch.c;
+						}
+					}
+					Screen.WriteMapString(r,c,s);
+				}
 			}
 			Screen.ResetColors();
 		}
@@ -210,7 +256,8 @@ namespace Forays{
 							}
 						}
 						if(player.HasAttr(AttrType.DANGER_SENSE_ON) && danger_sensed != null
-						&& danger_sensed[r,c] && player.LightRadius() == 0){
+						&& danger_sensed[r,c] && player.LightRadius() == 0
+						&& !Global.Option(OptionType.WIZLIGHT_CAST)){
 							ch.color = Color.Red;
 						}
 					}
@@ -246,18 +293,20 @@ namespace Forays{
 				}
 			}
 		}
-		public void SpawnItem(){
+		public ConsumableType SpawnItem(){
+			ConsumableType result = Item.RandomItem();
 			for(bool done=false;!done;){
 				int rr = Global.Roll(ROWS-2);
 				int rc = Global.Roll(COLS-2);
 				Tile t = tile[rr,rc];
 				if(t.passable && t.inv == null && t.type != TileType.CHEST && t.type != TileType.FIREPIT && t.type != TileType.STAIRS){
-					Item.Create(Item.RandomItem(),rr,rc);
+					Item.Create(result,rr,rc);
 					done = true;
 				}
 			}
+			return result;
 		}
-		public void SpawnMob(){
+		public ActorType MobType(){
 			List<ActorType> types = new List<ActorType>();
 			while(types.Count == 0){
 				foreach(ActorType atype in Enum.GetValues(typeof(ActorType))){
@@ -271,22 +320,23 @@ namespace Forays{
 					}
 				}
 			}
-			SpawnMob(types[Global.Roll(types.Count)-1]);
+			return types[Global.Roll(types.Count)-1];
 		}
-		public void SpawnMob(ActorType type){
+		public ActorType SpawnMob(){ return SpawnMob(MobType()); }
+		public ActorType SpawnMob(ActorType type){
 			if(type == ActorType.POLTERGEIST){
 				while(true){
 					int rr = Global.Roll(ROWS-4) + 1;
 					int rc = Global.Roll(COLS-4) + 1;
 					List<Tile> tiles = new List<Tile>();
-					foreach(Tile t in tile[rr,rc].TilesWithinDistance(5)){
+					foreach(Tile t in tile[rr,rc].TilesWithinDistance(3)){
 						if(t.passable){
 							tiles.Add(t);
 						}
 					}
-					if(tiles.Count >= 30){
+					if(tiles.Count >= 15){
 						Q.Add(new Event(null,tiles,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
-						return;
+						return type;
 					}
 				}
 			}
@@ -324,7 +374,7 @@ namespace Forays{
 				else{
 					for(int j=0;j<9999;++j){
 						if(group_tiles.Count == 0){ //no space left!
-							return;
+							return type;
 						}
 						Tile t = group_tiles[Global.Roll(group_tiles.Count)-1];
 						List<Tile> empty_neighbors = new List<Tile>();
@@ -345,6 +395,7 @@ namespace Forays{
 					}
 				}
 			}
+			return type;
 		}
 		public void GenerateLevel(){
 			if(current_level < 20){
@@ -509,8 +560,21 @@ namespace Forays{
 			for(int i=Global.Roll(2,2);i>0;--i){
 				SpawnItem();
 			}
+			bool poltergeist_spawned = false;
 			for(int i=Global.Roll(2,2)+3;i>0;--i){
-				SpawnMob();
+				ActorType type = MobType();
+				if(type == ActorType.POLTERGEIST){
+					if(!poltergeist_spawned){
+						SpawnMob(type);
+						poltergeist_spawned = true;
+					}
+					else{
+						++i; //try again..
+					}
+				}
+				else{
+					SpawnMob(type);
+				}
 			}
 			bool[,] nogood = new bool[ROWS,COLS];
 			for(int i=0;i<ROWS;++i){
