@@ -7,10 +7,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
+using System.IO;
 using System.Collections.Generic;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.5.1 ";
+		public const string VERSION = "version 0.5.2 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -171,6 +172,63 @@ namespace Forays{
 "                                                                                ",
 "                                                                  " + VERSION,
 "                                                             by Derrick Creamer "};
+		public static void DisplayHelp(){
+			Console.CursorVisible = false;
+			Screen.Blank();
+			StreamReader file = new StreamReader("help.txt");
+			for(int i=0;i<24;++i){
+				Screen.WriteString(i,0,file.ReadLine());
+			}
+			Console.ReadKey(true);
+			for(int i=0;i<24;++i){
+				Screen.WriteString(i,0,file.ReadLine());
+			}
+			Console.ReadKey(true);
+			if(Global.Option(OptionType.VI_KEYS)){
+				for(int i=0;i<24;++i){
+					file.ReadLine();
+				}
+			}
+			for(int i=0;i<24;++i){
+				Screen.WriteString(i,0,file.ReadLine());
+			}
+			Console.ReadKey(true);
+			file.Close();
+			Screen.Blank();
+		}
+		public static void DisplayFeatHelp(){
+			Console.CursorVisible = false;
+			Screen.Blank();
+			StreamReader file = new StreamReader("feat_help.txt");
+			Screen.Blank();
+			for(int s=0;s<24;++s){
+				Screen.WriteString(s,0,file.ReadLine());
+			}
+			Console.ReadKey(true);
+			Screen.Blank();
+			for(int s=0;s<24;++s){
+				Screen.WriteString(s,0,file.ReadLine());
+			}
+			Console.ReadKey(true);
+			Screen.Blank();
+			for(int s=0;s<24;++s){
+				Screen.WriteString(s,0,file.ReadLine());
+			}
+			Console.ReadKey(true);
+			file.Close();
+			Screen.Blank();
+		}
+		public static void DisplayItemHelp(){
+			Console.CursorVisible = false;
+			Screen.Blank();
+			StreamReader file = new StreamReader("item_help.txt");
+			for(int i=0;i<24;++i){
+				Screen.WriteString(i,0,file.ReadLine());
+			}
+			Console.ReadKey(true);
+			file.Close();
+			Screen.Blank();
+		}
 	}
 	public class Dict<TKey,TValue>{
 		private Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();

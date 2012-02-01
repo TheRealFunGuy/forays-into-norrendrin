@@ -1116,8 +1116,8 @@ namespace Forays{
 					letter++;
 					i++;
 				}
-				Screen.WriteMapString(21,0,("".PadRight(32,'-') + "[?] for help").PadRight(COLS,'-'));
-				Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
+				Screen.WriteMapString(21,0,("".PadRight(25,'-') + "[?] for help").PadRight(COLS,'-'));
+				Screen.WriteMapChar(21,26,new colorchar(Color.Cyan,'?'));
 				Screen.ResetColors();
 				if(feat_learned){
 					B.DisplayNow("Select a feat: ");
@@ -1138,7 +1138,7 @@ namespace Forays{
 					}
 					else{
 						if(ch == '?'){
-							DisplayFeatHelp();
+							Global.DisplayFeatHelp();
 							done = true;
 						}
 						else{
@@ -1243,11 +1243,32 @@ namespace Forays{
 					if(StunnedThisTurn()){
 						break;
 					}
-					//todo: check for RESTING == -1 && curhp<maxhp here?
+					bool can_recover_spells = false;
+					foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
+						if(spells[spell] > 1){
+							can_recover_spells = true;
+						}
+					}
+					if(attrs[AttrType.RESTING] != -1 && curhp < maxhp || can_recover_spells){
+						B.DisplayNow("Really take the stairs without resting first?(Y/N): ");
+						Console.CursorVisible = true;
+						bool done = false;
+						while(!done){
+							command = Console.ReadKey(true);
+							switch(command.KeyChar){
+							case 'y':
+							case 'Y':
+								done = true;
+								break;
+							default:
+								Q0();
+								return;
+							}
+						}
+					}
 					B.Add("You walk down the stairs. ");
 					B.PrintAll();
 					M.GenerateLevel();
-					//todo: heal or reset spells here? hmm
 					Q0();
 				}
 				else{
@@ -1318,15 +1339,7 @@ namespace Forays{
 						}
 						else{
 							if(ch == '?'){
-								Console.CursorVisible = false;
-								Screen.Blank();
-								StreamReader file = new StreamReader("item_help.txt");
-								for(int i=0;i<24;++i){
-									Screen.WriteString(i,0,file.ReadLine());
-								}
-								Console.ReadKey(true);
-								file.Close();
-								Screen.Blank();
+								Global.DisplayItemHelp();
 								num = -1;
 								break;
 							}
@@ -1826,27 +1839,7 @@ namespace Forays{
 			}
 			case '?':
 			{
-				Console.CursorVisible = false;
-				StreamReader file = new StreamReader("help.txt");
-				for(int i=0;i<24;++i){
-					Screen.WriteString(i,0,file.ReadLine());
-				}
-				command = Console.ReadKey(true);
-				for(int i=0;i<24;++i){
-					Screen.WriteString(i,0,file.ReadLine());
-				}
-				command = Console.ReadKey(true);
-				if(Global.Option(OptionType.VI_KEYS)){
-					for(int i=0;i<24;++i){
-						file.ReadLine();
-					}
-				}
-				for(int i=0;i<24;++i){
-					Screen.WriteString(i,0,file.ReadLine());
-				}
-				Console.ReadKey(true);
-				file.Close();
-				Screen.Blank();
+				Global.DisplayHelp();
 				Q0();
 				break;
 			}
@@ -3183,7 +3176,7 @@ namespace Forays{
 				if(!HasAttr(AttrType.COOLDOWN_1)){
 					attrs[AttrType.COOLDOWN_1]++;
 					Q.Add(new Event(this,(Global.Roll(5)+5)*100,AttrType.COOLDOWN_1));
-					B.Add(You("scream") + ". ");
+					B.Add(You("scream") + ". ",this);
 					int i = 1;
 					Actor a;
 					List<Actor> targets = new List<Actor>();
@@ -3194,6 +3187,11 @@ namespace Forays{
 						}
 						if(a == target){
 							done = true;
+						}
+						if(i > 100){
+							B.Add(target.You("resist") + " the scream. ",target,this);
+							Q1();
+							return;
 						}
 					}
 					foreach(Actor actor in targets){
@@ -6287,28 +6285,6 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			return new int[]{(int)Weapon.BaseWeapon(new_weapon),(int)Armor.BaseArmor(new_armor)};
 		}
-		public void DisplayFeatHelp(){
-			ConsoleKeyInfo command = new ConsoleKeyInfo('a',ConsoleKey.A,false,false,false);
-			Console.CursorVisible = false;
-			StreamReader file = new StreamReader("feat_help.txt");
-			Screen.Blank();
-			for(int s=0;s<24;++s){
-				Screen.WriteString(s,0,file.ReadLine());
-			}
-			command = Console.ReadKey(true);
-			Screen.Blank();
-			for(int s=0;s<24;++s){
-				Screen.WriteString(s,0,file.ReadLine());
-			}
-			command = Console.ReadKey(true);
-			Screen.Blank();
-			for(int s=0;s<24;++s){
-				Screen.WriteString(s,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			file.Close();
-			Screen.Blank();
-		}
 		public void GainXP(int num){
 			if(num <= 0){
 				num = 1;
@@ -6558,7 +6534,7 @@ effect as standing still, if you're on fire or catching fire. */
 								break;
 								}
 							case '?':
-								DisplayFeatHelp();
+								Global.DisplayFeatHelp();
 								DisplayStats();
 								break;
 							case ' ':
@@ -6573,7 +6549,7 @@ effect as standing still, if you're on fire or catching fire. */
 					}
 					break;
 				case '?':
-					DisplayFeatHelp();
+					Global.DisplayFeatHelp();
 					DisplayStats();
 					break;
 				case (char)13:

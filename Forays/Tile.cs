@@ -32,7 +32,7 @@ namespace Forays{
 			proto[TileType.DOOR_C] = new Tile(TileType.DOOR_C,"closed door",'+',Color.DarkYellow,false,true,TileType.DOOR_O);
 			proto[TileType.DOOR_O] = new Tile(TileType.DOOR_O,"open door",'-',Color.DarkYellow,true,false,TileType.DOOR_C);
 			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',Color.White,true,false,null);
-			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'~',Color.DarkYellow,true,false,null);
+			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'=',Color.DarkYellow,true,false,null);
 			proto[TileType.FIREPIT] = new Tile(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
 			proto[TileType.STALAGMITE] = new Tile(TileType.STALAGMITE,"stalagmite",'^',Color.White,false,true,TileType.FLOOR);
 			proto[TileType.GRENADE] = new Tile(TileType.GRENADE,"grenade(dud)",',',Color.Red,true,false,null); //special treatment
@@ -418,7 +418,7 @@ namespace Forays{
 			case TileType.STUN_TRAP:
 				B.Add("A disorienting flash assails " + actor().the_name + ". ",this);
 				actor().attrs[AttrType.STUNNED]++;
-				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(5)+7)*100,AttrType.STUNNED,actor().YouFeel() + " less disoriented. ",actor()));
+				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(5)+7)*100,AttrType.STUNNED,(actor().YouFeel() + " less disoriented. "),(this.actor())));
 				Toggle(actor());
 				break;
 			case TileType.LIGHT_TRAP:
