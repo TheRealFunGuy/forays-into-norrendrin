@@ -232,24 +232,12 @@ namespace Forays{
 				}
 				case 'b':
 				{
-					Console.CursorVisible = false;
-					StreamReader file = new StreamReader("help.txt");
-					for(int i=0;i<24;++i){
-						Screen.WriteString(i,0,file.ReadLine());
-					}
-					command = Console.ReadKey(true);
-					for(int i=0;i<24;++i){
-						Screen.WriteString(i,0,file.ReadLine());
-					}
-					command = Console.ReadKey(true);
-					for(int i=0;i<24;++i){
-						Screen.WriteString(i,0,file.ReadLine());
-					}
-					Console.ReadKey(true);
-					file.Close();
+					Global.DisplayHelp();
 					break;
 				}
 				case 'c':
+					Screen.ResetColors();
+					Console.CursorVisible = true;
 					Environment.Exit(0);
 					break;
 				default:
