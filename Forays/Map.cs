@@ -160,7 +160,7 @@ namespace Forays{
 		}
 		public void RedrawWithStrings(){
 			Console.CursorVisible = false;
-			colorstring s;
+			cstr s;
 			s.s = "";
 			s.bgcolor = Color.Black;
 			s.color = Color.Black;
@@ -466,7 +466,15 @@ namespace Forays{
 					if(tries > 500){ Actor.B.Add("Trying to place chests.... "); }
 				}
 			}
-			int num_firepits = 0; //
+			int num_firepits = 0;
+			switch(Global.Roll(4)){
+			case 1:
+				num_firepits = 1;
+				break;
+			case 2:
+				num_firepits = Global.Roll(4)+1;
+				break;
+			}
 			for(int i=0;i<num_firepits;++i){
 				int tries = 0;
 				for(bool done=false;!done && tries < 100;++tries){

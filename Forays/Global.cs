@@ -11,7 +11,7 @@ using System.IO;
 using System.Collections.Generic;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.5.2 ";
+		public const string VERSION = "version 0.5.3 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -22,6 +22,7 @@ namespace Forays{
 		public const int MAX_LIGHT_RADIUS = 12; //the maximum POSSIBLE light radius. used in light calculations.
 		public const int MAX_INVENTORY_SIZE = ROWS-2;
 		public static bool GAME_OVER = false;
+		public static bool BOSS_KILLED = false;
 		public static Dictionary<OptionType,bool> Options = new Dictionary<OptionType, bool>();
 		public static bool Option(OptionType option){
 			bool result = false;

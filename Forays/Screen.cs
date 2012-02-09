@@ -11,10 +11,20 @@ using System.Collections.Generic;
 using System.Threading;
 namespace Forays{
 	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomPrismatic};
-	public struct colorchar{
+	public struct colorchar{ //todo: engine code version should be char,color
 		public Color color;
 		public Color bgcolor;
 		public char c;
+		public colorchar(char c_,Color color_,Color bgcolor_){
+			color = color_;
+			bgcolor = bgcolor_;
+			c = c_;
+		}
+		public colorchar(char c_,Color color_){
+			color = color_;
+			bgcolor = Color.Black;
+			c = c_;
+		}
 		public colorchar(Color color_,Color bgcolor_,char c_){
 			color = color_;
 			bgcolor = bgcolor_;
@@ -26,19 +36,64 @@ namespace Forays{
 			c = c_;
 		}
 	}
-	public struct colorstring{
+	public struct cstr{ //todo: engine code version should be string,color
 		public Color color;
 		public Color bgcolor;
 		public string s;
-		public colorstring(Color color_,Color bgcolor_,string s_){
+		public cstr(string s_,Color color_){
+			color = color_;
+			bgcolor = Color.Black;
+			s = s_;
+		}
+		public cstr(string s_,Color color_,Color bgcolor_){
 			color = color_;
 			bgcolor = bgcolor_;
 			s = s_;
 		}
-		public colorstring(Color color_,string s_){
+		public cstr(Color color_,string s_){
 			color = color_;
 			bgcolor = Color.Black;
 			s = s_;
+		}
+		public cstr(Color color_,Color bgcolor_,string s_){
+			color = color_;
+			bgcolor = bgcolor_;
+			s = s_;
+		}
+	}
+	public class colorstring{
+		public List<cstr> strings = new List<cstr>();
+		public int Length(){
+			int total = 0;
+			foreach(cstr s in strings){
+				total += s.s.Length;
+			}
+			return total;
+		}
+		public colorstring(string s1,Color c1){
+			strings.Add(new cstr(s1,c1));
+		}
+		public colorstring(string s1,Color c1,string s2,Color c2){
+			strings.Add(new cstr(s1,c1));
+			strings.Add(new cstr(s2,c2));
+		}
+		public colorstring(string s1,Color c1,string s2,Color c2,string s3,Color c3){
+			strings.Add(new cstr(s1,c1));
+			strings.Add(new cstr(s2,c2));
+			strings.Add(new cstr(s3,c3));
+		}
+		public colorstring(string s1,Color c1,string s2,Color c2,string s3,Color c3,string s4,Color c4){
+			strings.Add(new cstr(s1,c1));
+			strings.Add(new cstr(s2,c2));
+			strings.Add(new cstr(s3,c3));
+			strings.Add(new cstr(s4,c4));
+		}
+		public colorstring(params cstr[] cstrs){
+			if(cstrs != null && cstrs.Length > 0){
+				foreach(cstr cs in cstrs){
+					strings.Add(cs);
+				}
+			}
 		}
 	}
 	public static class Screen{
@@ -99,6 +154,15 @@ namespace Forays{
 			ForegroundColor = Console.ForegroundColor;
 		}
 		public static colorchar BlankChar(){ return new colorchar(Color.Black,' '); }
+		public static colorchar[,] GetCurrentScreen(){
+			colorchar[,] result = new colorchar[Global.SCREEN_H,Global.SCREEN_W];
+			for(int i=0;i<Global.SCREEN_H;++i){
+				for(int j=0;j<Global.SCREEN_W;++j){
+					result[i,j] = Char(i,j);
+				}
+			}
+			return result;
+		}
 		public static colorchar[,] GetCurrentMap(){
 			colorchar[,] result = new colorchar[Global.ROWS,Global.COLS];
 			for(int i=0;i<Global.ROWS;++i){
@@ -153,8 +217,14 @@ namespace Forays{
 				Console.Write(ch.c);
 			}
 		}
-		public static void WriteString(int r,int c,string s){ WriteString(r,c,new colorstring(Color.Gray,s)); }
-		public static void WriteString(int r,int c,colorstring s){
+		public static void WriteString(int r,int c,string s){ WriteString(r,c,new cstr(Color.Gray,s)); }
+		public static void WriteString(int r,int c,cstr s){
+			if(Global.SCREEN_W - c > s.s.Length){
+				//s.s = s.s.Substring(0,; //don't move down to the next line
+			}
+			else{
+				s.s = s.s.Substring(0,Global.SCREEN_W - c);
+			}
 			if(s.s.Length > 0){
 				s.color = ResolveColor(s.color);
 				s.bgcolor = ResolveColor(s.bgcolor);
@@ -185,6 +255,40 @@ namespace Forays{
 				}
 			}
 		}
+		public static void WriteString(int r,int c,colorstring cs){
+			if(cs.Length() > 0){
+				foreach(cstr s1 in cs.strings){
+					cstr s = new cstr(s1.s,s1.color,s1.bgcolor);
+					s.color = ResolveColor(s.color);
+					s.bgcolor = ResolveColor(s.bgcolor);
+					colorchar cch;
+					cch.color = s.color;
+					cch.bgcolor = s.bgcolor;
+					ConsoleColor co = GetColor(s.color);
+					if(ForegroundColor != co){
+						ForegroundColor = co;
+					}
+					co = GetColor(s.bgcolor);
+					if(BackgroundColor != co){
+						BackgroundColor = co;
+					}
+					int i = 0;
+					bool changed = false;
+					foreach(char ch in s.s){
+						cch.c = ch;
+						if(!memory[r,c+i].Equals(cch)){
+							memory[r,c+i] = cch;
+							changed = true;
+						}
+						++i;
+					}
+					if(changed){
+						Console.SetCursorPosition(c,r);
+						Console.Write(s.s);
+					}
+				}
+			}
+		}
 		public static void ResetColors(){
 			if(ForegroundColor != ConsoleColor.Gray){
 				ForegroundColor = ConsoleColor.Gray;
@@ -200,15 +304,15 @@ namespace Forays{
 			WriteChar(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch);
 		}
 		public static void WriteMapString(int r,int c,string s){
-			colorstring cs;
+			cstr cs;
 			cs.color = Color.Gray;
 			cs.bgcolor = Color.Black;
 			cs.s = s;
 			WriteMapString(r,c,cs);
 		}
-		public static void WriteMapString(int r,int c,colorstring s){
+		public static void WriteMapString(int r,int c,cstr s){
 			if(Global.COLS - c > s.s.Length){
-				s.s = s.s.Substring(0); //don't move down to the next line
+				//s.s = s.s.Substring(0); //don't move down to the next line
 			}
 			else{
 				s.s = s.s.Substring(0,Global.COLS - c);
@@ -245,17 +349,61 @@ namespace Forays{
 				}
 			}
 		}
+		public static void WriteMapString(int r,int c,colorstring cs){
+			if(cs.Length() > 0){
+				r += Global.MAP_OFFSET_ROWS;
+				c += Global.MAP_OFFSET_COLS;
+				int cpos = c;
+				foreach(cstr s1 in cs.strings){
+					cstr s = new cstr(s1.s,s1.color,s1.bgcolor);
+					if(cpos-Global.MAP_OFFSET_COLS + s.s.Length > Global.COLS){
+						s.s = s.s.Substring(0,Global.COLS-(cpos-Global.MAP_OFFSET_COLS));
+					}
+					s.color = ResolveColor(s.color);
+					s.bgcolor = ResolveColor(s.bgcolor);
+					colorchar cch;
+					cch.color = s.color;
+					cch.bgcolor = s.bgcolor;
+					ConsoleColor co = GetColor(s.color);
+					if(ForegroundColor != co){
+						ForegroundColor = co;
+					}
+					co = GetColor(s.bgcolor);
+					if(BackgroundColor != co){
+						BackgroundColor = co;
+					}
+					int i = 0;
+					bool changed = false;
+					foreach(char ch in s.s){
+						cch.c = ch;
+						if(!memory[r,cpos+i].Equals(cch)){
+							memory[r,cpos+i] = cch;
+							changed = true;
+						}
+						++i;
+					}
+					if(changed){
+						Console.SetCursorPosition(cpos,r);
+						Console.Write(s.s);
+					}
+					cpos += s.s.Length;
+				}
+				if(cpos-Global.MAP_OFFSET_COLS < Global.COLS){
+					WriteMapString(r,cpos,"".PadRight(Global.COLS-(cpos-Global.MAP_OFFSET_COLS)));
+				}
+			}
+		}
 		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r+1,c,ch); }
 		public static void WriteStatsString(int r,int c,string s){
-			colorstring cs;
+			cstr cs;
 			cs.color = Color.Gray;
 			cs.bgcolor = Color.Black;
 			cs.s = s;
 			WriteStatsString(r,c,cs);
 		}
-		public static void WriteStatsString(int r,int c,colorstring s){
+		public static void WriteStatsString(int r,int c,cstr s){
 			if(12 - c > s.s.Length){
-				s.s = s.s.Substring(0); //don't move down to the next line - 12 is the width of the stats area
+				//s.s = s.s.Substring(0); //don't move down to the next line - 12 is the width of the stats area
 			}
 			else{
 				s.s = s.s.Substring(0,12 - c);
