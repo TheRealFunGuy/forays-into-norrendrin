@@ -79,7 +79,7 @@ namespace Forays{
 		public void Print(bool special_message){
 			Console.CursorVisible = false;
 			if(str != ""){
-				if(player.HasAttr(AttrType.RUNNING)){
+				if(str != "You regenerate. " && player.HasAttr(AttrType.RUNNING)){
 					player.attrs[AttrType.RUNNING] = 0;
 				}
 				int last = position-1;
@@ -129,6 +129,7 @@ namespace Forays{
 			//Console.CursorVisible = true;
 		}
 		public void PrintAll(){
+			Screen.ResetColors();
 			if(str != ""){
 				if(str.Length > max_length-7){
 					for(int i=max_length-7;i>=0;--i){

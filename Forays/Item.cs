@@ -390,6 +390,7 @@ namespace Forays{
 					else{
 						B.Add("It shatters on " + t.the_name + "! ",t);
 					}
+					Screen.AnimateProjectile(user.GetBresenhamLine(t.row,t.col),new colorchar(Color.RandomPrismatic,'*'));
 					List<DamageType> dmg = new List<DamageType>();
 					dmg.Add(DamageType.FIRE);
 					dmg.Add(DamageType.COLD);
@@ -513,8 +514,8 @@ namespace Forays{
 				return "no weapon";
 			}
 		}
-		public static colorstring StatsName(WeaponType type){
-			colorstring cs;
+		public static cstr StatsName(WeaponType type){
+			cstr cs;
 			cs.bgcolor = Color.Black;
 			cs.color = Color.Gray;
 			switch(type){
@@ -559,8 +560,8 @@ namespace Forays{
 			}
 			return cs;
 		}
-		public static colorstring EquipmentScreenName(WeaponType type){
-			colorstring cs;
+		public static cstr EquipmentScreenName(WeaponType type){
+			cstr cs;
 			cs.bgcolor = Color.Black;
 			cs.color = Color.Gray;
 			switch(type){
@@ -704,8 +705,8 @@ namespace Forays{
 				return "no armor";
 			}
 		}
-		public static colorstring StatsName(ArmorType type){
-			colorstring cs;
+		public static cstr StatsName(ArmorType type){
+			cstr cs;
 			cs.bgcolor = Color.Black;
 			cs.color = Color.Gray;
 			switch(type){
@@ -736,8 +737,8 @@ namespace Forays{
 			}
 			return cs;
 		}
-		public static colorstring EquipmentScreenName(ArmorType type){
-			colorstring cs;
+		public static cstr EquipmentScreenName(ArmorType type){
+			cstr cs;
 			cs.bgcolor = Color.Black;
 			cs.color = Color.Gray;
 			switch(type){
@@ -788,8 +789,8 @@ namespace Forays{
 		}
 	}
 	public static class MagicItem{
-		public static colorstring StatsName(MagicItemType type){
-			colorstring cs;
+		public static cstr StatsName(MagicItemType type){
+			cstr cs;
 			cs.bgcolor = Color.Black;
 			cs.color = Color.DarkGreen;
 			switch(type){
