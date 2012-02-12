@@ -432,7 +432,7 @@ namespace Forays{
 				else{
 					B.Add("A wave of light washes over the area! ");
 				}
-				Global.Options[OptionType.WIZLIGHT_CAST] = true;
+				M.wiz_lite = true;
 				Toggle(actor());
 				break;
 			case TileType.QUICKFIRE_TRAP:
@@ -600,7 +600,7 @@ namespace Forays{
 			return IsLit(player.row,player.col);
 		}
 		public bool IsLit(int viewer_row,int viewer_col){
-			if(Global.Option(OptionType.WIZLIGHT_CAST)){
+			if(M.wiz_lite){
 				return true;
 			}
 			if(light_value > 0){

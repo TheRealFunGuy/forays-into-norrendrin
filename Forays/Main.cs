@@ -24,7 +24,7 @@ namespace Forays{
 	public enum DamageType{NORMAL,FIRE,COLD,ELECTRIC,POISON,HEAL,SLASHING,BASHING,PIERCING,MAGIC,NONE};
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
 	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,REGENERATING_FROM_DEATH,GRENADE,STALAGMITE,QUICKFIRE,BOSS_ARRIVE};
-	public enum OptionType{LAST_TARGET,VI_KEYS,OPEN_CHESTS,ITEMS_AND_TILES_ARE_INTERESTING,NO_BLOOD_BOIL_MESSAGE,AUTOPICKUP,WIZLIGHT_CAST};
+	public enum OptionType{LAST_TARGET,VI_KEYS,OPEN_CHESTS,ITEMS_AND_TILES_ARE_INTERESTING,NO_BLOOD_BOIL_MESSAGE,AUTOPICKUP,NO_ROMAN_NUMERALS};
 	public class Game{
 		public Map M;
 		public Queue Q;
@@ -82,10 +82,10 @@ namespace Forays{
 		}
 		static void MainMenu(){
 			ConsoleKeyInfo command;
-			string recentname = "".PadRight(30); //too long to match names
+			string recentname = "".PadRight(30);
 			int recentdepth = -1;
 			int recentxp = -1;
-			bool recentwin = false; //todo use this for last game highlighting
+			char recentwin = '-';
 			while(true){
 				Screen.Blank();
 				Screen.WriteMapString(1,0,new cstr(Color.Yellow,"Forays into Norrendrin " + Global.VERSION));
@@ -104,6 +104,7 @@ namespace Forays{
 				{
 					Global.GAME_OVER = false;
 					Global.BOSS_KILLED = false;
+					Global.LoadOptions();
 					Game game = new Game();
 					game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0);
 					game.player.inv = new List<Item>();
@@ -142,6 +143,25 @@ namespace Forays{
 					//game.M.LoadLevel("map.txt");
 					game.M.GenerateLevel();
 					Actor.player_name = "";
+					if(File.Exists("name.txt")){
+						StreamReader file = new StreamReader("name.txt");
+						string base_name = file.ReadLine();
+						Actor.player_name = base_name;
+						int num = 1;
+						if(!Global.Option(OptionType.NO_ROMAN_NUMERALS) && file.Peek() != -1){
+							num = Convert.ToInt32(file.ReadLine());
+							if(num > 1){
+								Actor.player_name = Actor.player_name + " " + Global.RomanNumeral(num);
+							}
+						}
+						file.Close();
+						StreamWriter fileout = new StreamWriter("name.txt",false);
+						fileout.WriteLine(base_name);
+						if(!Global.Option(OptionType.NO_ROMAN_NUMERALS)){
+							fileout.WriteLine(num+1);
+						}
+						fileout.Close();
+					}
 					while(Actor.player_name == ""){
 						Console.CursorVisible = false;
 						game.B.DisplayNow("".PadRight(Global.COLS));
@@ -154,36 +174,97 @@ namespace Forays{
 					Screen.WriteMapString(2,0,"[b] Magical blood - Your natural recovery is faster than normal.");
 					Screen.WriteMapString(3,0,"[c] Low-light vision - You can see farther in darkness.");
 					Screen.WriteMapString(4,0,"[d] Keen eyes - You're better at spotting traps and aiming arrows.");
-					Screen.WriteMapString(5,0,"[e] Long stride - You are slightly faster than normal.");
+					Screen.WriteMapString(5,0,"[e] Long stride - You are slightly faster than normal.");//todo previous char/use name
 					Screen.WriteMapString(6,0,"".PadRight(Global.COLS,'-'));
+					if(File.Exists("quickstart.txt")){
+						Screen.WriteMapString(16,5,"[ ] Repeat previous choices and start immediately.");
+						Screen.WriteMapChar(16,6,new colorchar('p',Color.Cyan));
+					}
+					if(!File.Exists("name.txt")){
+						Screen.WriteMapString(18,5,"[ ] Automatically name future characters after this one.");
+						Screen.WriteMapChar(18,6,new colorchar('n',Color.Cyan));
+					}
 					for(int i=0;i<5;++i){
 						Screen.WriteMapChar(i+1,1,new colorchar(Color.Cyan,(char)(i+'a')));
 					}
 					Screen.WriteMapString(-1,0,"Select a trait: "); //haha, it works
 					Console.CursorVisible = true;
+					bool quickstarted = false;
+					Global.quickstartinfo = new List<string>();
 					for(bool good=false;!good;){
 						command = Console.ReadKey(true);
 						switch(command.KeyChar){
 						case 'a':
 							good = true;
 							game.player.attrs[AttrType.TOUGH]++;
+							Global.quickstartinfo.Add("tough");
 							break;
 						case 'b':
 							good = true;
 							game.player.attrs[AttrType.MAGICAL_BLOOD]++;
+							Global.quickstartinfo.Add("magical_blood");
 							break;
 						case 'c':
 							good = true;
 							game.player.attrs[AttrType.LOW_LIGHT_VISION]++;
+							Global.quickstartinfo.Add("low_light_vision");
 							break;
 						case 'd':
 							good = true;
 							game.player.attrs[AttrType.KEEN_EYES]++;
+							Global.quickstartinfo.Add("keen_eyes");
 							break;
 						case 'e':
 							good = true;
 							game.player.attrs[AttrType.LONG_STRIDE]++;
 							game.player.speed = 90;
+							Global.quickstartinfo.Add("long_stride");
+							break;
+						case 'p':
+						{
+							if(File.Exists("quickstart.txt")){
+								quickstarted = true;
+								good = true;
+								StreamReader file = new StreamReader("quickstart.txt");
+								AttrType attr = (AttrType)Enum.Parse(typeof(AttrType),file.ReadLine(),true);
+								game.player.attrs[attr]++;
+								bool magic = false;
+								for(int i=0;i<3;++i){
+									SkillType skill = (SkillType)Enum.Parse(typeof(SkillType),file.ReadLine(),true);
+									if(skill == SkillType.MAGIC){
+										magic = true;
+									}
+									game.player.skills[skill]++;
+								}
+								for(int i=0;i<3;++i){
+									FeatType feat = (FeatType)Enum.Parse(typeof(FeatType),file.ReadLine(),true);
+									game.player.feats[feat]--;
+									if(game.player.feats[feat] == -(Feat.MaxRank(feat))){
+										game.player.feats[feat] = 1;
+										game.B.Add("You learn the " + Feat.Name(feat) + " feat. ");
+									}
+								}
+								if(magic){
+									SpellType spell = (SpellType)Enum.Parse(typeof(SpellType),file.ReadLine(),true);
+									game.player.spells[spell]++;
+									game.B.Add("You learn " + Spell.Name(spell) + ". ");
+								}
+								file.Close();
+							}
+							break;
+						}
+						case 'n':
+							if(!File.Exists("name.txt")){
+								StreamWriter fileout = new StreamWriter("name.txt",false);
+								fileout.WriteLine(Actor.player_name);
+								if(!Global.Option(OptionType.NO_ROMAN_NUMERALS)){
+									fileout.WriteLine("2");
+								}
+								fileout.Close();
+								//Screen.WriteMapString(18,5,"                                                        ");
+								Screen.WriteMapString(18,5,"(to stop automatically naming characters, delete name.txt)");
+								Console.SetCursorPosition(16+Global.MAP_OFFSET_COLS,1);
+							}
 							break;
 						default:
 							break;
@@ -196,8 +277,26 @@ namespace Forays{
 					Item.Create(ConsumableType.PHASING,game.player);
 					Item.Create(ConsumableType.BANDAGE,game.player);
 					Item.Create(ConsumableType.BANDAGE,game.player);
-					game.player.GainXP(1);
+					if(quickstarted){
+						game.player.xp = 0;
+						game.player.level = 1;
+					}
+					else{
+						game.player.GainXP(1);
+						var fileout = new StreamWriter("quickstart.txt",false);
+						foreach(string s in Global.quickstartinfo){
+							fileout.WriteLine(s.ToLower());
+						}
+						fileout.Close();
+						Global.quickstartinfo = null;
+					}
 					while(!Global.GAME_OVER){ game.Q.Pop(); }
+					Console.CursorVisible = false;
+					Global.SaveOptions();
+					recentdepth = game.M.current_level;
+					recentxp = game.player.xp;
+					recentname = Actor.player_name;
+					recentwin = Global.BOSS_KILLED? 'W' : '-';
 					{
 						List<string> newhighscores = new List<string>();
 						int num_scores = 0;
@@ -317,141 +416,143 @@ namespace Forays{
 						}
 						fileout.Close();
 					}
-					List<string> ls = new List<string>();
-					ls.Add("See the map");
-					ls.Add("See last messages");
-					ls.Add("Examine your equipment");
-					ls.Add("Examine your inventory");
-					ls.Add("See character info");
-					ls.Add("Write this information to a file");
-					ls.Add("Done");
-					for(bool done=false;!done;){
-						game.player.Select("Would you like to examine your character! ","".PadRight(Global.COLS),"".PadRight(Global.COLS),ls,true,false,false);
-						int sel = game.player.GetSelection("Would you like to examine your character? ",7,true,false);
-						switch(sel){
-						case 0:
-							foreach(Tile t in game.M.AllTiles()){
-								if(t.type != TileType.FLOOR && !t.IsTrap()){
-									bool good = false;
-									foreach(Tile neighbor in t.TilesAtDistance(1)){
-										if(neighbor.type != TileType.WALL){
-											good = true;
+					if(!Global.QUITTING){
+						List<string> ls = new List<string>();
+						ls.Add("See the map");
+						ls.Add("See last messages");
+						ls.Add("Examine your equipment");
+						ls.Add("Examine your inventory");
+						ls.Add("See character info");
+						ls.Add("Write this information to a file");
+						ls.Add("Done");
+						for(bool done=false;!done;){
+							game.player.Select("Would you like to examine your character! ","".PadRight(Global.COLS),"".PadRight(Global.COLS),ls,true,false,false);
+							int sel = game.player.GetSelection("Would you like to examine your character? ",7,true,false);
+							switch(sel){
+							case 0:
+								foreach(Tile t in game.M.AllTiles()){
+									if(t.type != TileType.FLOOR && !t.IsTrap()){
+										bool good = false;
+										foreach(Tile neighbor in t.TilesAtDistance(1)){
+											if(neighbor.type != TileType.WALL){
+												good = true;
+											}
+										}
+										if(good){
+											t.seen = true;
 										}
 									}
-									if(good){
-										t.seen = true;
-									}
 								}
-							}
-							game.B.DisplayNow("Press any key to continue. ");
-							Console.CursorVisible = true;
-							Screen.WriteMapChar(0,0,'-');
-							game.M.Draw();
-							Console.ReadKey(true);
-							break;
-						case 1:
-						{
-							Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
-							int i = 1;
-							foreach(string s in game.B.GetMessages()){
-								Screen.WriteMapString(i,0,s.PadRight(Global.COLS));
-								++i;
-							}
-							Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
-							game.B.DisplayNow("Previous messages: ");
-							Console.CursorVisible = true;
-							Console.ReadKey(true);
-							break;
-						}
-						case 2:
-							game.player.DisplayEquipment();
-							break;
-						case 3:
-							for(int i=1;i<8;++i){
-								Screen.WriteMapString(i,0,"".PadRight(Global.COLS));
-							}
-							game.player.Select("In your pack: ",game.player.InventoryList(),true,false,false);
-							Console.ReadKey(true);
-							break;
-						case 4:
-							game.player.DisplayCharacterInfo();
-							break;
-						case 5:
-						{
-							game.B.DisplayNow("Enter file name: ");
-							Console.CursorVisible = true;
-							string filename = Global.EnterString(40);
-							if(filename == ""){
+								game.B.DisplayNow("Press any key to continue. ");
+								Console.CursorVisible = true;
+								Screen.WriteMapChar(0,0,'-');
+								game.M.Draw();
+								Console.ReadKey(true);
+								break;
+							case 1:
+							{
+								Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
+								int i = 1;
+								foreach(string s in game.B.GetMessages()){
+									Screen.WriteMapString(i,0,s.PadRight(Global.COLS));
+									++i;
+								}
+								Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
+								game.B.DisplayNow("Previous messages: ");
+								Console.CursorVisible = true;
+								Console.ReadKey(true);
 								break;
 							}
-							StreamWriter file = new StreamWriter(filename,true);
-							game.player.DisplayCharacterInfo(false);
-							file.WriteLine("             Character information: ");
-							colorchar[,] screen = Screen.GetCurrentScreen();
-							for(int i=2;i<Global.SCREEN_H;++i){
-								for(int j=0;j<Global.SCREEN_W;++j){
-									file.Write(screen[i,j].c);
+							case 2:
+								game.player.DisplayEquipment();
+								break;
+							case 3:
+								for(int i=1;i<8;++i){
+									Screen.WriteMapString(i,0,"".PadRight(Global.COLS));
+								}
+								game.player.Select("In your pack: ",game.player.InventoryList(),true,false,false);
+								Console.ReadKey(true);
+								break;
+							case 4:
+								game.player.DisplayCharacterInfo();
+								break;
+							case 5:
+							{
+								game.B.DisplayNow("Enter file name: ");
+								Console.CursorVisible = true;
+								string filename = Global.EnterString(40);
+								if(filename == ""){
+									break;
+								}
+								StreamWriter file = new StreamWriter(filename,true);
+								game.player.DisplayCharacterInfo(false);
+								file.WriteLine("             Character information: ");
+								colorchar[,] screen = Screen.GetCurrentScreen();
+								for(int i=2;i<Global.SCREEN_H;++i){
+									for(int j=0;j<Global.SCREEN_W;++j){
+										file.Write(screen[i,j].c);
+									}
+									file.WriteLine();
 								}
 								file.WriteLine();
-							}
-							file.WriteLine();
-							file.WriteLine("Inventory: ");
-							foreach(string s in game.player.InventoryList()){
-								file.WriteLine(s);
-							}
-							file.WriteLine();
-							file.WriteLine();
-							foreach(Tile t in game.M.AllTiles()){
-								if(t.type != TileType.FLOOR && !t.IsTrap()){
-									bool good = false;
-									foreach(Tile neighbor in t.TilesAtDistance(1)){
-										if(neighbor.type != TileType.WALL){
-											good = true;
+								file.WriteLine("Inventory: ");
+								foreach(string s in game.player.InventoryList()){
+									file.WriteLine(s);
+								}
+								file.WriteLine();
+								file.WriteLine();
+								foreach(Tile t in game.M.AllTiles()){
+									if(t.type != TileType.FLOOR && !t.IsTrap()){
+										bool good = false;
+										foreach(Tile neighbor in t.TilesAtDistance(1)){
+											if(neighbor.type != TileType.WALL){
+												good = true;
+											}
+										}
+										if(good){
+											t.seen = true;
 										}
 									}
-									if(good){
-										t.seen = true;
+								}
+								Screen.WriteMapChar(0,0,'-');
+								game.M.Draw();
+								int col = 0;
+								foreach(colorchar cch in Screen.GetCurrentMap()){
+									file.Write(cch.c);
+									++col;
+									if(col == Global.COLS){
+										file.WriteLine();
+										col = 0;
 									}
 								}
-							}
-							Screen.WriteMapChar(0,0,'-');
-							game.M.Draw();
-							int col = 0;
-							foreach(colorchar cch in Screen.GetCurrentMap()){
-								file.Write(cch.c);
-								++col;
-								if(col == Global.COLS){
-									file.WriteLine();
-									col = 0;
+								file.WriteLine();
+								Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
+								int line = 1;
+								foreach(string s in game.B.GetMessages()){
+									Screen.WriteMapString(line,0,s.PadRight(Global.COLS));
+									++line;
 								}
-							}
-							file.WriteLine();
-							Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
-							int line = 1;
-							foreach(string s in game.B.GetMessages()){
-								Screen.WriteMapString(line,0,s.PadRight(Global.COLS));
-								++line;
-							}
-							Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
-							file.WriteLine("Last messages: ");
-							col = 0;
-							foreach(colorchar cch in Screen.GetCurrentMap()){
-								file.Write(cch.c);
-								++col;
-								if(col == Global.COLS){
-									file.WriteLine();
-									col = 0;
+								Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
+								file.WriteLine("Last messages: ");
+								col = 0;
+								foreach(colorchar cch in Screen.GetCurrentMap()){
+									file.Write(cch.c);
+									++col;
+									if(col == Global.COLS){
+										file.WriteLine();
+										col = 0;
+									}
 								}
+								file.WriteLine();
+								file.Close();
+								break;
 							}
-							file.WriteLine();
-							file.Close();
-							break;
-						}
-						case 6:
-							done = true;
-							break;
-						default:
-							break;
+							case 6:
+								done = true;
+								break;
+							default:
+								break;
+							}
 						}
 					}
 					break;
@@ -468,6 +569,7 @@ namespace Forays{
 					Color title = Color.Red;
 					Color primary = Color.Green;
 					Color secondary = Color.DarkGreen;
+					Color recent = Color.Cyan;
 					Screen.WriteString(0,34,new cstr("HIGH SCORES",Color.Magenta));
 					Screen.WriteString(1,34,new cstr("-----------",Color.Blue));
 					Screen.WriteString(2,11,new cstr("Most experienced:",title));
@@ -476,6 +578,7 @@ namespace Forays{
 					Screen.WriteString(3,33,new cstr("Depth",secondary));
 					Screen.WriteString(3,68,new cstr("Depth",primary));
 					Screen.WriteString(3,75,new cstr("Level",secondary));
+					bool written_recent = false;
 					string s = "";
 					while(s.Length < 2 || s.Substring(0,2) != "--"){
 						s = file.ReadLine();
@@ -493,10 +596,16 @@ namespace Forays{
 						string[] tokens = s.Split(' ');
 						int clev = Convert.ToInt32(tokens[0]);
 						int dlev = Convert.ToInt32(tokens[1]);
-						//int xp = Convert.ToInt32(tokens[2]); //not used yet
+						int xp = Convert.ToInt32(tokens[2]);
 						char winning = tokens[3][0];
 						string name = s.Substring(tokens[0].Length + tokens[1].Length + tokens[2].Length + 5);
-						Screen.WriteString(line,0,new cstr(name,Color.White));
+						if(!written_recent && xp == recentxp && name == recentname && dlev == recentdepth && winning == recentwin){
+							Screen.WriteString(line,0,new cstr(name,recent));
+							written_recent = true;
+						}
+						else{
+							Screen.WriteString(line,0,new cstr(name,Color.White));
+						}
 						Screen.WriteString(line,27,new cstr(clev.ToString().PadLeft(2),Color.White));
 						Screen.WriteString(line,34,new cstr(dlev.ToString().PadLeft(2),Color.DarkGray));
 						if(winning == 'W'){
@@ -504,6 +613,7 @@ namespace Forays{
 						}
 						++line;
 					}
+					written_recent = false;
 					line = 4;
 					s = "!!";
 					while(s.Substring(0,2) != "--"){
@@ -517,10 +627,16 @@ namespace Forays{
 						string[] tokens = s.Split(' ');
 						int dlev = Convert.ToInt32(tokens[0]);
 						int clev = Convert.ToInt32(tokens[1]);
-						//int xp = Convert.ToInt32(tokens[2]);
+						int xp = Convert.ToInt32(tokens[2]);
 						char winning = tokens[3][0];
 						string name = s.Substring(tokens[0].Length + tokens[1].Length + tokens[2].Length + 5);
-						Screen.WriteString(line,42,new cstr(name,Color.White));
+						if(!written_recent && xp == recentxp && name == recentname && dlev == recentdepth && winning == recentwin){
+							Screen.WriteString(line,42,new cstr(name,recent));
+							written_recent = true;
+						}
+						else{
+							Screen.WriteString(line,42,new cstr(name,Color.White));
+						}
 						Screen.WriteString(line,69,new cstr(dlev.ToString().PadLeft(2),Color.White));
 						Screen.WriteString(line,76,new cstr(clev.ToString().PadLeft(2),Color.DarkGray));
 						if(winning == 'W'){
@@ -533,12 +649,13 @@ namespace Forays{
 					break;
 				}
 				case 'd':
-					Screen.ResetColors();
-					Console.CursorVisible = true;
-					Environment.Exit(0);
+					Global.Quit();
 					break;
 				default:
 					break;
+				}
+				if(Global.QUITTING){
+					Global.Quit();
 				}
 			}
 		}

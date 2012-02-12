@@ -23,6 +23,8 @@ namespace Forays{
 		public const int MAX_INVENTORY_SIZE = ROWS-2;
 		public static bool GAME_OVER = false;
 		public static bool BOSS_KILLED = false;
+		public static bool QUITTING = false;
+		public static List<string> quickstartinfo = null;
 		public static Dictionary<OptionType,bool> Options = new Dictionary<OptionType, bool>();
 		public static bool Option(OptionType option){
 			bool result = false;
@@ -173,6 +175,43 @@ namespace Forays{
 "                                                                                ",
 "                                                                  " + VERSION,
 "                                                             by Derrick Creamer "};
+		public static string RomanNumeral(int num){
+			string result = "";
+			while(num > 1000){
+				result = result + "M";
+				num -= 1000;
+			}
+			result = result + RomanPattern(num/100,'C','D','M');
+			num -= (num/100)*100;
+			result = result + RomanPattern(num/10,'X','L','C');
+			num -= (num/10)*10;
+			result = result + RomanPattern(num,'I','V','X');
+			return result;
+		}
+		private static string RomanPattern(int num,char one,char five,char ten){
+			switch(num){
+			case 1:
+				return "" + one;
+			case 2:
+				return "" + one + one;
+			case 3:
+				return "" + one + one + one;
+			case 4:
+				return "" + one + five;
+			case 5:
+				return "" + five;
+			case 6:
+				return "" + five + one;
+			case 7:
+				return "" + five + one + one;
+			case 8:
+				return "" + five + one + one + one;
+			case 9:
+				return "" + one + ten;
+			default: //0
+				return "";
+			}
+		}
 		public static void DisplayHelp(){
 			Console.CursorVisible = false;
 			Screen.Blank();
@@ -229,6 +268,55 @@ namespace Forays{
 			Console.ReadKey(true);
 			file.Close();
 			Screen.Blank();
+		}
+		public static void LoadOptions(){
+			StreamReader file = new StreamReader("options.txt");
+			string s = "";
+			while(s.Length < 2 || s.Substring(0,2) != "--"){
+				s = file.ReadLine();
+				if(s.Length >= 2 && s.Substring(0,2) == "--"){
+					break;
+				}
+				string[] tokens = s.Split(' ');
+				if(tokens[0].Length == 1){
+					char c = Char.ToUpper(tokens[0][0]);
+					if(c == 'F' || c == 'T'){
+						OptionType option = (OptionType)Enum.Parse(typeof(OptionType),tokens[1],true);
+						if(c == 'F'){
+							Options[option] = false;
+						}
+						else{
+							Options[option] = true;
+						}
+					}
+				}
+			}
+		}
+		public static void SaveOptions(){
+			StreamWriter file = new StreamWriter("options.txt",false);
+			file.WriteLine("Options:");
+			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options:");
+			file.WriteLine("last_target vi_keys open_chests items_and_tiles_are_interesting no_blood_boil_message autopickup no_roman_numerals");
+			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
+				if(Options[op]){
+					file.Write("t ");
+				}
+				else{
+					file.Write("f ");
+				}
+				file.WriteLine(Enum.GetName(typeof(OptionType),op).ToLower());
+			}
+			file.WriteLine("--");
+			file.Close();
+		}
+		public static void Quit(){
+			if(LINUX){
+				Screen.Blank();
+				Screen.ResetColors();
+				Console.SetCursorPosition(0,0);
+				Console.CursorVisible = true;
+			}
+			Environment.Exit(0);
 		}
 	}
 	public class Dict<TKey,TValue>{

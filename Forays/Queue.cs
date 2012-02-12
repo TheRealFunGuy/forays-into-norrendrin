@@ -366,7 +366,7 @@ namespace Forays{
 					if(attr==AttrType.COOLDOWN_1 && temp.type == ActorType.BERSERKER){
 						B.Add(temp.Your() + " rage diminishes. ",temp);
 						B.Add(temp.the_name + " dies. ",temp);
-						temp.TakeDamage(DamageType.NORMAL,8888,null);
+						temp.TakeDamage(DamageType.NORMAL,DamageClass.NO_TYPE,8888,null);
 					}
 					break;
 					}
@@ -560,7 +560,7 @@ namespace Forays{
 											string qhit = item.quantity > 1? "hit " : "hits ";
 											if(t.actor() != null){
 												B.Add(item.TheName() + " " + qhit + t.actor().the_name + ". ",line[0],t);
-												t.actor().TakeDamage(DamageType.NORMAL,Global.Roll(6),null);
+												t.actor().TakeDamage(DamageType.NORMAL,DamageClass.NO_TYPE,Global.Roll(6),null);
 											}
 											else{
 												B.Add(item.TheName() + " " + qhit + t.the_name + ". ",line[0],t);
@@ -783,7 +783,7 @@ namespace Forays{
 					foreach(Actor a in actors){
 						if(!a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.INVULNERABLE)){
 							B.Add("The quickfire burns " + a.the_name + ". ",a);
-							a.TakeDamage(DamageType.FIRE,Global.Roll(6),null);
+							a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(6),null);
 						}
 					}
 					--value;
