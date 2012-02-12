@@ -1,0 +1,11 @@
+Options:
+Any line that starts with [TtFf] and a space MUST be one of the valid options:
+last_target vi_keys open_chests items_and_tiles_are_interesting no_blood_boil_message autopickup no_roman_numerals
+f last_target
+f vi_keys
+f open_chests
+f items_and_tiles_are_interesting
+f no_blood_boil_message
+f autopickup
+f no_roman_numerals
+--
