@@ -225,6 +225,7 @@ namespace Forays{
 							if(File.Exists("quickstart.txt")){
 								quickstarted = true;
 								good = true;
+								game.B.Add("Welcome, " + Actor.player_name + "! ");
 								StreamReader file = new StreamReader("quickstart.txt");
 								AttrType attr = (AttrType)Enum.Parse(typeof(AttrType),file.ReadLine(),true);
 								game.player.attrs[attr]++;
