@@ -15,6 +15,7 @@ namespace Forays{
 		public Tile[,] tile{get;set;} //note for dungeon generator overhaul: make sure there's something to hide behind.
 		public Actor[,] actor{get;set;} //i could make a tilearray/actorarray class if i wanted to use a pos as an index
 		public int current_level{get; private set;}
+		public bool wiz_lite{get;set;}
 		private bool[,] danger_sensed{get;set;}
 		private List<Tile> alltiles = new List<Tile>();
 		private static List<pos> allpositions = new List<pos>();
@@ -235,7 +236,7 @@ namespace Forays{
 					ch.color = actor[r,c].color;
 					if(actor[r,c] == player && player.HasAttr(AttrType.DANGER_SENSE_ON)
 					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
-					&& !Global.Option(OptionType.WIZLIGHT_CAST)){
+					&& !wiz_lite){
 						ch.color = Color.Red;
 					}
 				}
@@ -257,7 +258,7 @@ namespace Forays{
 						}
 						if(player.HasAttr(AttrType.DANGER_SENSE_ON) && danger_sensed != null
 						&& danger_sensed[r,c] && player.LightRadius() == 0
-						&& !Global.Option(OptionType.WIZLIGHT_CAST)){
+						&& !wiz_lite){
 							ch.color = Color.Red;
 						}
 					}
@@ -417,6 +418,7 @@ namespace Forays{
 					tile[i,j] = null;
 				}
 			}
+			wiz_lite = false;
 			Q.KillEvents(null,EventType.RELATIVELY_SAFE);
 			Q.KillEvents(null,EventType.POLTERGEIST);
 			alltiles.Clear();

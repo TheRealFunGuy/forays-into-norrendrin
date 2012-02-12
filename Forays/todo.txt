@@ -21,11 +21,11 @@ shadow should reduce the light radius of zealots, too
 
 if the line is blocked while targeting, perhaps the alternate line could be considered.
 
+do doomRL/infra arcana style saves! no need to save the dungeon!
 
 0.7.0 should have: (focus on gameplay)
 things other than the player should be able to call MakeNoise
 generate rats at start.
-drive back should give 100% accuracy against cornered enemies.
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
 	-this would make a good candidate for generalization: printing a message if the player can see an object OR if that object is within a certain distance. perhaps a distance that implies that the message is a sound, not a visual.
 generate some doors
@@ -33,22 +33,16 @@ make stun traps nastier. add at LEAST one more damaging trap. make light trap ra
 killers should search for you
 another round of balancing.
 	-potion of cure poison should be rarity 2
+	-freeze should have a chance of holding enemies for more than one turn.
 kills list
 
 
 0.6.0 should have: (focus on UI and user friendliness)
 turn cheats back off you noob
 reset high scores
+test autonaming on linux - specifically file.exists()
 fully implement help system.
-perhaps 'Q'uit should bring up a menu: quit to main menu, exit immediately, cancel.
-lower range of scarecrows being annoying.
-autopickup
-make item commands other than 'd'rop offer help.
-allow use of previous skill choice to start.
-&&
-allow saving of options
-&&
-mark most recent game
+
 
 
 bugs: 
@@ -65,7 +59,7 @@ there still might be a bug related to being on fire and catching fire at the sam
 		-theory: it died and the message was still printed. rework removal from msg_obj list.
 stalagmites, because they are solid, leave UNLIT tiles next to fire pits. simple enough to check as a one-off hack.
 lashers can still move somehow, probably by pathing.
-	-drive back shouldn't work on them
+	-not reproduced
 "You fire an arrow. The arrow hits the cultist. The cultist [more]
 dies."
 	-note that the [more] takes up exactly as much space as "dies. " - what gives?
@@ -73,6 +67,7 @@ dies."
 
 
 --generate the list of monsters first, THEN generate the level. then verify that i.e. a troll has a proper lair.
+	-now i'm not sure i want trolls to be confined
 
 poltergeist: spawns as an event with a certain area, sometimes an entire room.
 effects:

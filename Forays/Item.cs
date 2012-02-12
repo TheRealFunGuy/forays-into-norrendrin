@@ -182,7 +182,7 @@ namespace Forays{
 			bool used = true;
 			switch(type){
 			case ConsumableType.HEALING:
-				user.TakeDamage(DamageType.HEAL,Global.Roll(8,6),null);
+				user.TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,Global.Roll(8,6),null);
 				B.Add("A blue glow surrounds " + user.the_name + ". ",user);
 				break;
 			case ConsumableType.CURE_POISON:
@@ -369,8 +369,8 @@ namespace Forays{
 				}
 				break;
 			case ConsumableType.WIZARDS_LIGHT:
-				if(!Global.Option(OptionType.WIZLIGHT_CAST)){
-					Global.Options[OptionType.WIZLIGHT_CAST] = true;
+				if(!M.wiz_lite){
+					M.wiz_lite = true;
 					B.Add("The air itself seems to shine. ");
 				}
 				else{
@@ -423,7 +423,7 @@ namespace Forays{
 				break;
 				}
 			case ConsumableType.BANDAGE:
-				user.TakeDamage(DamageType.HEAL,1,null);
+				user.TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,1,null);
 				if(user.name == "you"){
 					B.Add("You apply a bandage. ");
 				}
@@ -451,20 +451,20 @@ namespace Forays{
 			switch(type){
 			case WeaponType.SWORD:
 			case WeaponType.FLAMEBRAND:
-				return new Damage(3,false,DamageType.SLASHING,DamageClass.PHYSICAL,null);
+				return new Damage(3,DamageType.SLASHING,DamageClass.PHYSICAL,null);
 			case WeaponType.MACE:
 			case WeaponType.MACE_OF_FORCE:
-				return new Damage(3,false,DamageType.BASHING,DamageClass.PHYSICAL,null);
+				return new Damage(3,DamageType.BASHING,DamageClass.PHYSICAL,null);
 			case WeaponType.DAGGER:
 			case WeaponType.VENOMOUS_DAGGER:
-				return new Damage(2,false,DamageType.PIERCING,DamageClass.PHYSICAL,null);
+				return new Damage(2,DamageType.PIERCING,DamageClass.PHYSICAL,null);
 			case WeaponType.STAFF:
 			case WeaponType.STAFF_OF_MAGIC:
 			case WeaponType.BOW: //bow's melee damage
 			case WeaponType.HOLY_LONGBOW:
-				return new Damage(1,false,DamageType.BASHING,DamageClass.PHYSICAL,null);
+				return new Damage(1,DamageType.BASHING,DamageClass.PHYSICAL,null);
 			default:
-				return new Damage(0,false,DamageType.NONE,DamageClass.NO_TYPE,null);
+				return new Damage(0,DamageType.NONE,DamageClass.NO_TYPE,null);
 			}
 		}
 		public static WeaponType BaseWeapon(WeaponType type){
