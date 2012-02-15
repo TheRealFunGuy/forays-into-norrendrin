@@ -11,7 +11,7 @@ using System.IO;
 using System.Collections.Generic;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.5.3 ";
+		public const string VERSION = "version 0.6.0 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -212,7 +212,7 @@ namespace Forays{
 				return "";
 			}
 		}
-		public static void DisplayHelp(){
+/*		public static void DisplayHelp(){
 			Console.CursorVisible = false;
 			Screen.Blank();
 			StreamReader file = new StreamReader("help.txt");
@@ -269,6 +269,224 @@ namespace Forays{
 			file.Close();
 			Screen.Blank();
 		}
+		public static void Test(){
+			string[] topics = {"Overview","Skills","Feats","Items","Commands","Advanced","Quit"};
+			Screen.WriteString(5,4,"Topics:",Color.Yellow);
+			int line = 7;
+			foreach(string s in topics){
+				Screen.WriteString(line,0,"[ ] ");
+				Screen.WriteString(line,4,s);
+				if(line == 10){
+					Screen.WriteString(line,4,s,Color.Yellow);
+				}
+				Screen.WriteChar(line,1,new colorchar((char)('a'+line-7),Color.Cyan));
+				++line;
+			}
+			Screen.WriteString(0,16,new colorstring("".PadRight(61,'-'),Color.Gray,"[",Color.Yellow,"-",Color.Cyan,"]",Color.Yellow));
+			Screen.WriteString(23,16,new colorstring("".PadRight(61,'-'),Color.Gray,"[",Color.Yellow,"+",Color.Cyan,"]",Color.Yellow));
+			line = 1;
+			while(line < 23){
+				if(line % 2 == 1){
+				}else{}
+				++line;
+			}
+			Console.ReadKey(true);
+			Screen.Blank();
+		}*/
+		public static void DisplayHelp(){ DisplayHelp(Help.Overview); }
+		public static void DisplayHelp(Help h){
+			Console.CursorVisible = false;
+			Screen.Blank();
+			int num_topics = Enum.GetValues(typeof(Help)).Length;
+			Screen.WriteString(5,4,"Topics:",Color.Yellow);
+			for(int i=0;i<num_topics+1;++i){
+				Screen.WriteString(i+7,0,"[ ]");
+				Screen.WriteChar(i+7,1,(char)(i+'a'),Color.Cyan);
+			}
+			Screen.WriteString(num_topics+7,4,"Quit");
+			Screen.WriteString(0,16,"".PadRight(61,'-'));
+			Screen.WriteString(23,16,"".PadRight(61,'-'));
+			List<string> text = HelpTopic(h);
+			int startline = 0;
+			ConsoleKeyInfo command;
+			char ch;
+			for(bool done=false;!done;){
+				foreach(Help help in Enum.GetValues(typeof(Help))){
+					if(h == help){
+						Screen.WriteString(7+(int)help,4,Enum.GetName(typeof(Help),help),Color.Yellow);
+					}
+					else{
+						Screen.WriteString(7+(int)help,4,Enum.GetName(typeof(Help),help));
+					}
+				}
+				if(startline > 0){
+					Screen.WriteString(0,77,new colorstring("[",Color.Yellow,"-",Color.Cyan,"]",Color.Yellow));
+				}
+				else{
+					Screen.WriteString(0,77,"---");
+				}
+				bool more = false;
+				if(startline + 22 < text.Count){
+					more = true;
+				}
+				if(more){
+					Screen.WriteString(23,77,new colorstring("[",Color.Yellow,"-",Color.Cyan,"]",Color.Yellow));
+				}
+				else{
+					Screen.WriteString(23,77,"---");
+				}
+				for(int i=1;i<=22;++i){
+					if(text.Count - startline < i){
+						Screen.WriteString(i,16,"".PadRight(64));
+					}
+					else{
+						Screen.WriteString(i,16,text[i+startline-1].PadRight(64));
+					}
+				}
+				command = Console.ReadKey(true);
+				ch = Actor.ConvertInput(command);
+				switch(ch){
+				case 'a':
+					if(h != Help.Overview){
+						h = Help.Overview;
+						text = HelpTopic(h);
+						startline = 0;
+					}
+					break;
+				case 'b':
+					if(h != Help.Skills){
+						h = Help.Skills;
+						text = HelpTopic(h);
+						startline = 0;
+						
+					}
+					break;
+				case 'c':
+					if(h != Help.Feats){
+						h = Help.Feats;
+						text = HelpTopic(h);
+						startline = 0;
+					}
+					break;
+				case 'd':
+					if(h != Help.Spells){
+						h = Help.Spells;
+						text = HelpTopic(h);
+						startline = 0;
+					}
+					break;
+				case 'e':
+					if(h != Help.Items){
+						h = Help.Items;
+						text = HelpTopic(h);
+						startline = 0;
+					}
+					break;
+				case 'f':
+					if(h != Help.Commands){
+						h = Help.Commands;
+						text = HelpTopic(h);
+						startline = 0;
+					}
+					break;
+				case 'g':
+					if(h != Help.Advanced){
+						h = Help.Advanced;
+						text = HelpTopic(h);
+						startline = 0;
+					}
+					break;
+				case 'h':
+				case (char)27:
+					done = true;
+					break;
+				case '8':
+				case '+':
+				case '=':
+					if(startline > 0){
+						--startline;
+					}
+					break;
+				case '2':
+				case '_':
+				case '-':
+					if(more){
+						++startline;
+					}
+					break;
+				case ' ':
+				case (char)13:
+					if(text.Count > 22){
+						startline += 22;
+						if(startline + 22 > text.Count){
+							startline = text.Count - 22;
+						}
+					}
+					break;
+				default:
+					break;
+				}
+			}
+			Screen.Blank();
+		}
+		public static List<string> HelpTopic(Help h){
+			string path = "";
+			int startline = 0;
+			int num_lines = -1; //-1 means read until end
+			switch(h){
+			case Help.Overview:
+				path = "help.txt";
+				num_lines = 55;
+				break;
+			case Help.Commands:
+				path = "help.txt";
+				if(Option(OptionType.VI_KEYS)){
+					startline = 85;
+				}
+				else{
+					startline = 57;
+				}
+				num_lines = 26;
+				break;
+			case Help.Items:
+				path = "item_help.txt";
+				break;
+			case Help.Skills:
+				path = "feat_help.txt";
+				num_lines = 19;
+				break;
+			case Help.Feats:
+				path = "feat_help.txt";
+				startline = 21;
+				break;
+			case Help.Spells:
+				path = "spell_help.txt";
+				break;
+			case Help.Advanced:
+				path = "advanced_help.txt";
+				break;
+			default:
+				path = "feat_help.txt";
+				break;
+			}
+			List<string> result = new List<string>();
+			if(path != ""){
+				StreamReader file = new StreamReader(path);
+				for(int i=0;i<startline;++i){
+					file.ReadLine();
+				}
+				for(int i=0;i<num_lines || num_lines == -1;++i){
+					if(file.Peek() != -1){
+						result.Add(file.ReadLine());
+					}
+					else{
+						break;
+					}
+				}
+				file.Close();
+			}
+			return result;
+		}
 		public static void LoadOptions(){
 			StreamReader file = new StreamReader("options.txt");
 			string s = "";
@@ -296,7 +514,7 @@ namespace Forays{
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options:");
-			file.WriteLine("last_target vi_keys open_chests items_and_tiles_are_interesting no_blood_boil_message autopickup no_roman_numerals");
+			file.WriteLine("last_target vi_keys open_chests items_and_tiles_are_interesting no_blood_boil_message autopickup no_roman_numerals dark_gray_unseen");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");
@@ -319,6 +537,7 @@ namespace Forays{
 			Environment.Exit(0);
 		}
 	}
+	public enum Help{Overview,Skills,Feats,Spells,Items,Commands,Advanced};
 	public class Dict<TKey,TValue>{
 		private Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
 		public TValue this[TKey key]{

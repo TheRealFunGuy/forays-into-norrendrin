@@ -8,4 +8,5 @@ f items_and_tiles_are_interesting
 f no_blood_boil_message
 f autopickup
 f no_roman_numerals
+f dark_gray_unseen
 --

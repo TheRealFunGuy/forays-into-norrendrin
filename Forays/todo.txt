@@ -22,6 +22,7 @@ shadow should reduce the light radius of zealots, too
 if the line is blocked while targeting, perhaps the alternate line could be considered.
 
 do doomRL/infra arcana style saves! no need to save the dungeon!
+	-still hard to do. it might be just as easy to do it properly.
 
 0.7.0 should have: (focus on gameplay)
 things other than the player should be able to call MakeNoise
@@ -40,8 +41,8 @@ kills list
 0.6.0 should have: (focus on UI and user friendliness)
 turn cheats back off you noob
 reset high scores
-test autonaming on linux - specifically file.exists()
-fully implement help system.
+option to use dark gray for unseen areas
+add Help parameter to Select. rewrite 'd' and 'i' while at it.
 
 
 

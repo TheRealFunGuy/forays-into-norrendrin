@@ -126,6 +126,7 @@ namespace Forays{
 			Prototype(ActorType.ROBED_ZEALOT).GainSpell(SpellType.MINOR_HEAL,SpellType.BLESS,SpellType.HOLY_SHIELD);
 			Prototype(ActorType.ROBED_ZEALOT).skills[SkillType.MAGIC] = 6;
 			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,40,100,0,6,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
+			Prototype(ActorType.SKULKING_KILLER).skills[SkillType.STEALTH] = 6;
 			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,35,100,0,7,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
 			Define(ActorType.OGRE,"ogre",'O',Color.Green,50,100,0,7,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION,AttrType.SMALL_GROUP);
 			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,40,100,0,7,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DIM_VISION_HIT,AttrType.DARKVISION);
@@ -612,7 +613,7 @@ namespace Forays{
 			}
 			time_of_last_action = Q.turn; //this might eventually need a slight rework for 0-time turns
 		}
-		private char ConvertInput(ConsoleKeyInfo k){
+		public static char ConvertInput(ConsoleKeyInfo k){
 			switch(k.Key){
 			case ConsoleKey.UpArrow: //notes: the existing design necessitated that I choose characters to assign to the toprow numbers.
 			case ConsoleKey.NumPad8: //Not being able to think of anything better, I went with '!' through ')' ...
@@ -676,7 +677,7 @@ namespace Forays{
 				}
 			}
 		}
-		private char ConvertVIKeys(char ch){
+		public static char ConvertVIKeys(char ch){
 			switch(ch){
 			case 'h':
 				return '4';
@@ -1188,7 +1189,7 @@ namespace Forays{
 					}
 					else{
 						if(ch == '?'){
-							Global.DisplayFeatHelp();
+							Global.DisplayHelp(Help.Feats);
 							done = true;
 						}
 						else{
@@ -1421,7 +1422,7 @@ namespace Forays{
 						}
 						else{
 							if(ch == '?'){
-								Global.DisplayItemHelp();
+								Global.DisplayHelp(Help.Items);
 								num = -1;
 								break;
 							}
@@ -1530,7 +1531,7 @@ namespace Forays{
 						}
 						else{
 							if(ch == '?'){
-								Global.DisplayItemHelp();
+								Global.DisplayHelp(Help.Items);
 								num = -1;
 								break;
 							}
@@ -1899,6 +1900,7 @@ namespace Forays{
 					ls.Add("Consider items and tiles interesting".PadRight(58) + (Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING)? "yes ":"no ").PadLeft(4));
 					ls.Add("Don't print a message for the Blood boil feat".PadRight(58) + (Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE)? "yes ":"no ").PadLeft(4));
 					ls.Add("Don't use roman numerals for automatic naming".PadRight(58) + (Global.Option(OptionType.NO_ROMAN_NUMERALS)? "yes ":"no ").PadLeft(4));
+					ls.Add("Make unseen walls and floors dark gray".PadRight(58) + (Global.Option(OptionType.DARK_GRAY_UNSEEN)? "yes ":"no ").PadLeft(4));
 					Select("Options: ",ls,true,false,false);
 					Console.CursorVisible = true;
 					ch = ConvertInput(Console.ReadKey(true));
@@ -1953,6 +1955,9 @@ namespace Forays{
 					case 'h':
 						Global.Options[OptionType.NO_ROMAN_NUMERALS] = !Global.Option(OptionType.NO_ROMAN_NUMERALS);
 						break;
+					case 'i':
+						Global.Options[OptionType.DARK_GRAY_UNSEEN] = !Global.Option(OptionType.DARK_GRAY_UNSEEN);
+						break;
 					case (char)27:
 					case ' ':
 					case (char)13:
@@ -1975,16 +1980,16 @@ namespace Forays{
 			{
 				Console.CursorVisible = false;
 				StreamReader file = new StreamReader("help.txt");
-				for(int i=0;i<48;++i){
+				for(int i=0;i<55;++i){
 					file.ReadLine();
 				}
 				if(Global.Option(OptionType.VI_KEYS)){
-					for(int i=0;i<24;++i){
+					for(int i=0;i<28;++i){
 						file.ReadLine();
 					}
 				}
-				for(int i=0;i<24;++i){
-					Screen.WriteString(i,0,file.ReadLine());
+				for(int i=0;i<22;++i){
+					Screen.WriteMapString(i,0,file.ReadLine().PadRight(COLS));
 				}
 				Console.ReadKey(true);
 				file.Close();
@@ -2036,6 +2041,7 @@ namespace Forays{
 				l.Add("create trap");
 				l.Add("create door");
 				l.Add("spawn lots of goblins and lose neck snap");
+				l.Add("test help");
 				switch(Select("Activate which cheat? ",l)){
 				case 0:
 					{
@@ -2206,6 +2212,10 @@ namespace Forays{
 					Q0();
 					break;
 				}
+				case 17:
+					Global.DisplayHelp(Help.Overview);
+					Q0();
+					break;
 				default:
 					Q0();
 					break;
@@ -5129,7 +5139,7 @@ namespace Forays{
 					if(a != null){
 						AnimateProjectile(a,Color.RandomIce,'*');
 						B.Add("The icy blast hits " + a.the_name + ". ",a);
-						a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(2+bonus,6),this);
+						a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
 					}
 					else{
 						AnimateProjectile(t,Color.RandomIce,'*');
@@ -5177,7 +5187,7 @@ namespace Forays{
 						int r = a.row;
 						int c = a.col;
 						a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
-						if(M.actor[r,c] != null && !a.HasAttr(AttrType.IMMOBILIZED) && Global.Roll(1,10) <= 6){
+						if(M.actor[r,c] != null && !a.HasAttr(AttrType.IMMOBILIZED) && Global.Roll(1,10) <= 7){
 							B.Add(a.YouAre() + " immobilized. ",a);
 							a.attrs[AttrType.IMMOBILIZED]++;
 							int duration = DurationOfMagicalEffect(Global.Roll(1,3)) * 100;
@@ -5272,7 +5282,7 @@ namespace Forays{
 					if(a != null){
 						AnimateBoltProjectile(a,Color.RandomLightning);
 						B.Add("Electricity leaps to " + a.the_name + ". ",a);
-						a.TakeDamage(DamageType.ELECTRIC,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
+						a.TakeDamage(DamageType.ELECTRIC,DamageClass.MAGICAL,Global.Roll(2+bonus,6),this);
 					}
 					else{
 						AnimateMapCell(this,Color.RandomLightning,'*');
@@ -6719,7 +6729,7 @@ effect as standing still, if you're on fire or catching fire. */
 								break;
 								}
 							case '?':
-								Global.DisplayFeatHelp();
+								Global.DisplayHelp(Help.Feats);
 								DisplayStats();
 								break;
 							case ' ':
@@ -6734,7 +6744,7 @@ effect as standing still, if you're on fire or catching fire. */
 					}
 					break;
 				case '?':
-					Global.DisplayFeatHelp();
+					Global.DisplayHelp(Help.Feats);
 					DisplayStats();
 					break;
 				case (char)13:

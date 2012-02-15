@@ -274,7 +274,12 @@ namespace Forays{
 						ch.c = tile[r,c].symbol;
 						ch.color = tile[r,c].color;
 						if(ch.c=='.' || ch.c=='#'){
-							ch.color = Color.White;
+							if(Global.Option(OptionType.DARK_GRAY_UNSEEN)){
+								ch.color = Color.DarkGray;
+							}
+							else{
+								ch.color = Color.White;
+							}
 						}
 					}
 					else{
@@ -324,7 +329,7 @@ namespace Forays{
 			return types[Global.Roll(types.Count)-1];
 		}
 		public ActorType SpawnMob(){ return SpawnMob(MobType()); }
-		public ActorType SpawnMob(ActorType type){
+		public ActorType SpawnMob(ActorType type){if(type == ActorType.SKULKING_KILLER){ Actor.B.Add("There's a killer on the road. "); }
 			if(type == ActorType.POLTERGEIST){
 				while(true){
 					int rr = Global.Roll(ROWS-4) + 1;

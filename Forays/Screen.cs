@@ -88,6 +88,21 @@ namespace Forays{
 			strings.Add(new cstr(s3,c3));
 			strings.Add(new cstr(s4,c4));
 		}
+		public colorstring(string s1,Color c1,string s2,Color c2,string s3,Color c3,string s4,Color c4,string s5,Color c5){
+			strings.Add(new cstr(s1,c1));
+			strings.Add(new cstr(s2,c2));
+			strings.Add(new cstr(s3,c3));
+			strings.Add(new cstr(s4,c4));
+			strings.Add(new cstr(s5,c5));
+		}
+		public colorstring(string s1,Color c1,string s2,Color c2,string s3,Color c3,string s4,Color c4,string s5,Color c5,string s6,Color c6){
+			strings.Add(new cstr(s1,c1));
+			strings.Add(new cstr(s2,c2));
+			strings.Add(new cstr(s3,c3));
+			strings.Add(new cstr(s4,c4));
+			strings.Add(new cstr(s5,c5));
+			strings.Add(new cstr(s6,c6));
+		}
 		public colorstring(params cstr[] cstrs){
 			if(cstrs != null && cstrs.Length > 0){
 				foreach(cstr cs in cstrs){
@@ -200,6 +215,9 @@ namespace Forays{
 		public static void WriteChar(int r,int c,char ch){
 			WriteChar(r,c,new colorchar(Color.Gray,ch));
 		}
+		public static void WriteChar(int r,int c,char ch,Color color){
+			WriteChar(r,c,new colorchar(ch,color));
+		}
 		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
 				ch.color = ResolveColor(ch.color);
@@ -218,6 +236,7 @@ namespace Forays{
 			}
 		}
 		public static void WriteString(int r,int c,string s){ WriteString(r,c,new cstr(Color.Gray,s)); }
+		public static void WriteString(int r,int c,string s,Color color){ WriteString(r,c,new cstr(s,color)); }
 		public static void WriteString(int r,int c,cstr s){
 			if(Global.SCREEN_W - c > s.s.Length){
 				//s.s = s.s.Substring(0,; //don't move down to the next line
@@ -257,8 +276,12 @@ namespace Forays{
 		}
 		public static void WriteString(int r,int c,colorstring cs){
 			if(cs.Length() > 0){
+				int pos = c;
 				foreach(cstr s1 in cs.strings){
 					cstr s = new cstr(s1.s,s1.color,s1.bgcolor);
+					if(s.s.Length + pos > Global.SCREEN_W){
+						s.s = s.s.Substring(0,Global.SCREEN_W - pos);
+					}
 					s.color = ResolveColor(s.color);
 					s.bgcolor = ResolveColor(s.bgcolor);
 					colorchar cch;
@@ -276,16 +299,17 @@ namespace Forays{
 					bool changed = false;
 					foreach(char ch in s.s){
 						cch.c = ch;
-						if(!memory[r,c+i].Equals(cch)){
-							memory[r,c+i] = cch;
+						if(!memory[r,pos+i].Equals(cch)){
+							memory[r,pos+i] = cch;
 							changed = true;
 						}
 						++i;
 					}
 					if(changed){
-						Console.SetCursorPosition(c,r);
+						Console.SetCursorPosition(pos,r);
 						Console.Write(s.s);
 					}
+					pos += s.s.Length;
 				}
 			}
 		}
@@ -300,12 +324,22 @@ namespace Forays{
 		public static void WriteMapChar(int r,int c,char ch){
 			WriteMapChar(r,c,new colorchar(Color.Gray,ch));
 		}
+		public static void WriteMapChar(int r,int c,char ch,Color color){
+			WriteMapChar(r,c,new colorchar(ch,color));
+		}
 		public static void WriteMapChar(int r,int c,colorchar ch){
 			WriteChar(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch);
 		}
 		public static void WriteMapString(int r,int c,string s){
 			cstr cs;
 			cs.color = Color.Gray;
+			cs.bgcolor = Color.Black;
+			cs.s = s;
+			WriteMapString(r,c,cs);
+		}
+		public static void WriteMapString(int r,int c,string s,Color color){
+			cstr cs;
+			cs.color = color;
 			cs.bgcolor = Color.Black;
 			cs.s = s;
 			WriteMapString(r,c,cs);
@@ -397,6 +431,13 @@ namespace Forays{
 		public static void WriteStatsString(int r,int c,string s){
 			cstr cs;
 			cs.color = Color.Gray;
+			cs.bgcolor = Color.Black;
+			cs.s = s;
+			WriteStatsString(r,c,cs);
+		}
+		public static void WriteStatsString(int r,int c,string s,Color color){
+			cstr cs;
+			cs.color = color;
 			cs.bgcolor = Color.Black;
 			cs.s = s;
 			WriteStatsString(r,c,cs);
