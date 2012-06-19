@@ -12,53 +12,53 @@ namespace Forays{
 		public static int Level(SpellType spell){
 			switch(spell){
 			case SpellType.SHINE:
-				return 5;
+				return 1;
 			case SpellType.MAGIC_MISSILE:
-				return 10;
+				return 2;
 			case SpellType.DETECT_MONSTERS:
-				return 10;
+				return 2;
 			case SpellType.FORCE_PALM:
-				return 15;
+				return 3;
 			case SpellType.BLINK:
-				return 20;
+				return 4;
 			case SpellType.IMMOLATE:
-				return 20;
+				return 4;
 			case SpellType.SHOCK:
-				return 25;
+				return 5;
 			case SpellType.BURNING_HANDS:
-				return 25;
+				return 5;
 			case SpellType.FREEZE:
-				return 30;
+				return 6;
 			case SpellType.NIMBUS:
-				return 30;
+				return 6;
 			case SpellType.SONIC_BOOM:
-				return 35;
+				return 7;
 			case SpellType.ARC_LIGHTNING:
-				return 40;
+				return 8;
 			case SpellType.ICY_BLAST:
-				return 45;
+				return 9;
 			case SpellType.SHADOWSIGHT:
-				return 50;
+				return 10;
 			case SpellType.RETREAT:
-				return 55;
+				return 11;
 			case SpellType.FIREBALL:
-				return 60;
+				return 12;
 			case SpellType.PASSAGE:
-				return 60;
+				return 12;
 			case SpellType.FORCE_BEAM:
-				return 75;
-			case SpellType.DISINTEGRATE:
-				return 90;
-			case SpellType.BLIZZARD:
-				return 100;
-			case SpellType.BLESS:
 				return 15;
+			case SpellType.DISINTEGRATE:
+				return 18;
+			case SpellType.BLIZZARD:
+				return 20;
+			case SpellType.BLESS:
+				return 3;
 			case SpellType.MINOR_HEAL:
-				return 35;
+				return 7;
 			case SpellType.HOLY_SHIELD:
-				return 45;
+				return 9;
 			default:
-				return 100;
+				return 20;
 			}
 		}
 		public static string Name(SpellType spell){

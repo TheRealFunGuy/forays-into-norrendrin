@@ -95,7 +95,7 @@ g : pick up an item
 d : drop an item
 
 > : take stairs to next level              o : open a door/chest
-w : walking automatically in a direction   c : close a door
+w : walk automatically in a direction      c : close a door
 
 C : view character information
 P : view previous messages
