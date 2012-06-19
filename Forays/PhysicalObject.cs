@@ -10,8 +10,23 @@ using System;
 using System.Collections.Generic;
 namespace Forays{
 	public class PhysicalObject{
-		public int row{get;set;}
-		public int col{get;set;}
+		public pos p;
+		public int row{
+			get{
+				return p.row;
+			}
+			set{
+				p.row = value;
+			}
+		}
+		public int col{
+			get{
+				return p.col;
+			}
+			set{
+				p.col = value;
+			}
+		}
 		public string name{get;set;}
 		public string a_name{get;set;}
 		public string the_name{get;set;}

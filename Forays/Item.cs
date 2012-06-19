@@ -664,7 +664,7 @@ namespace Forays{
 				return ArmorType.NO_ARMOR;
 			}
 		}
-		public static int AddedFailRate(ArmorType type){ //balance check: should these be higher?
+		public static int AddedFailRate(ArmorType type){
 			switch(type){
 			case ArmorType.CHAINMAIL: //chainmail of arcana has no penalty
 				return 5;
@@ -675,7 +675,7 @@ namespace Forays{
 				return 0;
 			}
 		}
-		public static int StealthPenalty(ArmorType type){ //balance check: should these be higher?
+		public static int StealthPenalty(ArmorType type){
 			switch(type){
 			case ArmorType.CHAINMAIL:
 			case ArmorType.CHAINMAIL_OF_ARCANA:

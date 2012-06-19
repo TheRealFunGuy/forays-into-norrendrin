@@ -582,4 +582,33 @@ namespace Forays{
 			return result;
 		}
 	}
+	public static class Extensions{
+		public static T Random<T>(this List<T> l){
+			return l[Global.Roll(l.Count)-1];
+		}
+		public static string PadOuter(this string s,int totalWidth){
+			return s.PadOuter(totalWidth,' ');
+		}
+		public static string PadOuter(this string s,int totalWidth,char paddingChar){
+			if(s.Length >= totalWidth){
+				return s;
+			}
+			int added = totalWidth - s.Length;
+			string left = "";
+			for(int i=0;i<(added+1)/2;++i){
+				left = left + paddingChar;
+			}
+			string right = "";
+			for(int i=0;i<added/2;++i){
+				right = right + paddingChar;
+			}
+			return left + s + right;
+		}
+		public delegate void ListDelegate<T>(T t); //this one is kinda experimental and doesn't save tooo much typing, but it's here anyway
+		public static void Each<T>(this List<T> l,ListDelegate<T> del){
+			foreach(T t in l){
+				del(t);
+			}
+		}
+	}
 }

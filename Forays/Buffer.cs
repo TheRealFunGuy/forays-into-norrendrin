@@ -79,8 +79,11 @@ namespace Forays{
 		public void Print(bool special_message){
 			Console.CursorVisible = false;
 			if(str != ""){
-				if(str != "You regenerate. " && player.HasAttr(AttrType.RUNNING)){
-					player.attrs[AttrType.RUNNING] = 0;
+				//if(str != "You regenerate. " && player.HasAttr(AttrType.RUNNING)){
+				//	player.attrs[AttrType.RUNNING] = 0;
+				//}
+				if(str != "You regenerate. " && str != "You rest... "){
+					player.Interrupt();
 				}
 				int last = position-1;
 				if(last == -1){ last = 19; }

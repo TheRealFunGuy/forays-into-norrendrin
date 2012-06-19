@@ -12,8 +12,32 @@ using System.Text;
 using System.Collections.Generic;
 namespace Forays{
 	public class Map{
-		public Tile[,] tile{get;set;} //note for dungeon generator overhaul: make sure there's something to hide behind.
-		public Actor[,] actor{get;set;} //i could make a tilearray/actorarray class if i wanted to use a pos as an index
+		public class PosArray<T>{
+			private T[,] objs;
+			public T this[int row,int col]{
+				get{
+					return objs[row,col];
+				}
+				set{
+					objs[row,col] = value;
+				}
+			}
+			public T this[pos p]{
+				get{
+					return objs[p.row,p.col];
+				}
+				set{
+					objs[p.row,p.col] = value;
+				}
+			}
+			public PosArray(int rows,int cols){
+				objs = new T[rows,cols];
+			}
+		}
+		//public Tile[,] tile{get;set;} 
+		//public Actor[,] actor{get;set;} 
+		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);  //note for dungeon generator overhaul: make sure there's something to hide behind.
+		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
 		public int current_level{get; private set;}
 		public bool wiz_lite{get;set;}
 		private bool[,] danger_sensed{get;set;}
@@ -32,8 +56,8 @@ namespace Forays{
 			}
 		}
 		public Map(Game g){
-			tile = new Tile[ROWS,COLS];
-			actor = new Actor[ROWS,COLS];
+			//tile = new Tile[ROWS,COLS];
+			//actor = new Actor[ROWS,COLS];
 			current_level = 0;
 			Map.player = g.player;
 			Map.Q = g.Q;

@@ -1,3 +1,180 @@
+             
+             Do what now?
+                           #####
+HP: 69                   ###...####       ############
+Depth: 1                 #........#       #..........######
+---                   ####........#       #...............#
+Mace                  #...........#     ###..........####.#
+---                   #.##........#      .................#
+Leather               #.##........#       #..........##.#.#
+---                   #.##........#       #..........##.#.#
+             ##########.####.#.####   #########.##.####.#.#       #############
+[paralyzed-] #........#.####.#.#      #....#  #...........#########...........#
+[-stunned--] #....0............#      #....####.##.####.####......#.###.#.### #
+[-burning--] #........#.####.######## #...................##..................#
+[--afraid--] #........#.............# #.0..####.##.####.#.##......#.###.#.#####
+[--slowed--] #^.........####.######.# #.........#  #  #.#......>........#.#
+[--shine---] #........###  #.#    #.# #....######     #.####......#####.#.#
+             ##########    #.#    #.# ###.##          #.#  ##.##.##  ##.#.####
+                           #.#    #.#   #.#        ####.#  ##.##.#####.......#
+                           #.######.#####.######   .....####.........#.......#
+11                         #...................       #.@.......0..0.........#
+12                         ####.###.##.##.#.####      ######.........#.......#
+13                            #.............#              ###################
+14                            ###############
+             Depth: 1
+---
+(removed XP, level, and AC)
+
+it's a stretch, but there might be room for EIGHT statuses at once. that ain't bad; let me see if I can reasonably get more than 8 at once...
+
+conviction
+boiling blood
+regen
+resistance (+immunity?)
+detecting
+counter for fail rate, sure.
+
+[regenerate]
+[-poisoned-]
+[--frozen--]
+ or
+[-immobile-]
+[--dimmed--]
+[dim-light-]
+[conviction]
+[invincible]
+[bloodboil-]
+
+
+#
+
+
+mechanical knight or something:
+  -becomes vulnerable only when it misses
+  -has 2 or 3 hp, but loses only 1 at a time "the clockwork knight's arms fall off!"
+	-"the clockwork knight kicks you!"
+	-"the clockwork knight misses you and is off-balance!" "you hit the clockwork knight. the clockwork knight's legs fall off!"
+  -kinda exists only to make the staff ideal for ONE guy. is this acceptable?
+	-oh wait. let's have crits take off 1hp, too, so you might use a dagger too.
+
+
+
+statues when light is on them
+monsters you can only see in direct light
+fungus killed by light
+darkness dweller repelled, dazed, or blinded by light (for a few turns)
+doors(stone slabs) that open when lit
+rename wizard's light to sunlight, have it destroy monsters that are weak to light.
+Shine spell might turn your torch to sunlight.
+lit rooms, or torches, or whatever. of course.
+fire vents (or firespouts, or something) that occasionally burn things on top of them and give off more light than firepits.
+
+change to light trap
+changes to immolate, freeze/immobilization
+nerf low-light vision to 5 tiles, and darkvision to 8-10?
+potion of brutish strength <-no items, spells, certain feats, but tons of damage and ability to smash statues, doors, other features
+potion of cure poison should become potion of immunity, rarity 2. immune to stun/par/pois/fear/slow? what of dim vision, immob, fire?
+	-perhaps toxin-based ones only, like poison + paralysis?
+or 'potion of elemental resistance' and 'potion of toxin immunity'?
+	-or, since fire resistance is...problematic..., maybe roll burning immunity into the immunity potion?
+bombable walls and (orcish?) grenades. some hidden rooms would be behind them.
+make sure to always consider the old stuff when adding new stuff - it can use updates too, or receive some of these new ideas.
+
+
+make sure there's a light-sensitive feature early on.
+
+
+should all crits stun?
+	-while i'm at it, fix the pillar dance abuse.
+		-pathfinding at distance 2?
+		-and a hard limit of 2 sneak attacks?
+	-and maybe stun should be 1/3, not 1/5.
+
+some monsters need to carry items.
+when targeting a burst effect, the radius should be shown...somehow.
+when targeting Lunge, you should be able to lunge if the tile next to you is a wall. (use alternate targeting lines)
+rethink 'all is still and silent'
+change feat list to only include ones you've learned? but what about the letters?
+
+combat feat to replace frenzy: Lethality. +10% crit chance, +5% crit chance for each 20% health your target is missing.
+spirit feat to replace war shout: Conviction. Increases your Spirit as long as you're fighting, and increases your Combat by half that.
+stealth feat to replace corner look: Distract. Ranged radius ~3 effect that causes enemies to move toward the sound.
+	-probably only works once per enemy, so you can only move them a few spaces.
+	-remember to add a visible burst indicator to targeting. maybe.
+
+
+decide which changes should go into 0.7.0!
+probably split all these into 0.7.0 and 0.8.0.
+then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
+	-well, so far i have:
+		new map gen
+		new monsters
+		new items
+		new terrain
+		shrines
+		replaced feats, tweaked traits
+		other 'light' features, including tweak to Shine
+		other balance changes(crits stun, stun 1/3, monsters have items, burning deals less)
+		sidebar counters and stuff. for increasing bars like Conviction, or brogue-style bars for other durations.
+#
+
+probably not going in: 
+
+different trap triggers.
+
+an alarm trap might be tied to an item or a door
+
+a stun trap would probably be a proximity trap, pressure plate, or even periodic.
+
+a grenade trap would be proximity/plate only
+
+sliding wall would probably be proximity/plate.
+
+teleport would be
+
+
+#
+
+so, let's start with a game that has a torch you can turn on and off, to switch between stealth and sight...
+...with 5 skills with 4 feats each...and a single trait per character...5 weapons and 3 armors to switch between...
+...a 20 level dungeon with a variety of monsters...
+
+now, what elements are already present?
+
+-the aforementioned torch: stealth vs. sight
+	light: firepits, being on fire, 
+
+
+
+
+
+hmm, okay. what if instead of this:
+
+catching -> on fire(1)
+on fire(x) -> on fire(x+1)
+on fire(5) -> on fire(5)
+
+putting it out:
+on fire(x) -> on fire(x-roll(2))
+on fire(2) -> safety
+
+i tried this:
+
+catching -> catching OR catching OR on fire(1)
+on fire(x) -> on fire(x) OR on fire(x+1)
+on fire(5) -> on fire(5)
+
+putting it out:
+on fire(x) -> safety
+
+...so, you would probably be safe for a turn or two, and then it wouldn't deal quite so much...
+
+
+
+
+
+#
 things to do between 0.5 and 1.0:
 
 at least 1 special level per game, with an appropriate number of different special levels
@@ -24,7 +201,52 @@ if the line is blocked while targeting, perhaps the alternate line could be cons
 do doomRL/infra arcana style saves! no need to save the dungeon!
 	-still hard to do. it might be just as easy to do it properly.
 
+Select() needs a rewrite, and to be moved out of Actor.
+
 0.7.0 should have: (focus on gameplay)
+make displayed damage values consistent - PROBABLY don't say "3d6".
+there's a good reason to make animals act more realistically
+	-no, having them avoid the player would be kinda bad for gameplay.
+		-just make them notice the player more often, because THEY don't carry items.
+try --- over ~~~ again
+(most) monsters need to wander, somehow.
+many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
+"the arrow hits the goblin" x2   should become "the arrow hits something" x2 "something dies"
+hold up! do arrows only go 11 squares, but target as 12?
+think about scaling Spirit's duration reduction to more than 50%
+oh, hey, necromancers should probably not use melee attacks so often.
+change the arrow-immunity message. find a synonym for 'protrudes'
+note that you still print the "killer on the road" line. heh.
+what about a 'default ranged attack' in addition to the 'default melee attack' spell?
+corpsetower behemoths: they either need a way to reach the player(meh) or they need to be REALLY nasty. they already do tons of damage, it's true. do they need anything else?
+remove the 'g'et command and the 'o'pen command, relying instead on autopickup and auto-open? what about 'c'lose, then?
+oh, hey, change vision back to 3 tiles.
+bats shouldn't 'walk' into you if they don't see you
+more than one line for messages!
+"quietly snap" to something else? "silently snap"?
+fire drake should come with a quickfire event
+is the minimum number of enemies really 4? eww, too low.
+...just...just remove scarecrows and poltergeists if they're not interesting. but instead, make them interesting!
+mud monster that makes walls grab at you, dazing trap that uses LOS
+antimagic enemy
+an enemy that teleports you away under some circumstances
+another bow-user
+another trap that makes spirit useful
+and seriously, i need an enemy that does tons of damage at range, but doesn't go down easily.
+that accuracy-affecting thing should happen, whether it's fog or gas or blinding/dazing. it works well with Conviction.
+an enemy with armor (besides the mechaknight)?
+rework skulking killer
+a stealth enemy that can teleport from shadows on ONE side of you to shadows on the OTHER side, and re-stealth while doing so.
+	-limited somehow. does he need to escape first?
+a 'duelist', sort of an upgrade to the bat: after attacking, often moves to another adjacent tile. sometimes moves back or lunges.
+	-but this isn't very interesting at all yet. scrap it unless there's something more to add here.
+a group enemy that slightly punishes fighting in corridors?
+an enemy that breaks Frenzy(conviction?) somehow. burst knockback on death?
+update help files - add more description to feats and such.
+support for multiple sub-tile elements, such as quickfire, traps, troll corpses, grenades, slime...
+slime-trail-leaving group enemies. (slugmen?)
+make dark gray unseen tiles by default, and remove option. much easier to see.
+autopickup while autoexploring would be nice
 things other than the player should be able to call MakeNoise
 generate rats at start.
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
@@ -35,15 +257,18 @@ killers should search for you
 another round of balancing.
 	-potion of cure poison should be rarity 2
 	-freeze should have a chance of holding enemies for more than one turn.
+orb of darkness...would put out lit rooms, torches, fire pits, and torches held by the player and monsters.
+	-add messages for "You take out your torch, but it gives off no light!" and the wizlite one too
 kills list
+make shadows appear earlier? make swordsmen appear earlier(maybe?)?
+the auto-cornerlook shouldn't happen when the whole level is lit.
 
+levelup screen - '?' on skill selection should go to skill help.
+make sure death screen shows proper HP value. viewing char info shows it, so make it show all the time.
+no 2nd wave of light if already wiz_lit
 
-0.6.0 should have: (focus on UI and user friendliness)
-turn cheats back off you noob
-reset high scores
-option to use dark gray for unseen areas
-add Help parameter to Select. rewrite 'd' and 'i' while at it.
-
+beamos-inspired mob OR trap
+	-but mounted in the wall.
 
 
 bugs: 
@@ -58,12 +283,19 @@ there still might be a bug related to being on fire and catching fire at the sam
 "The skeleton looks less disoriented. " - no skeleton in sight.
 	-reviewed code. should never happen, but it did.
 		-theory: it died and the message was still printed. rework removal from msg_obj list.
+			-happened again with "the skeleton looks more stable". debug the trap messages, then do the msg_obj fix.
 stalagmites, because they are solid, leave UNLIT tiles next to fire pits. simple enough to check as a one-off hack.
 lashers can still move somehow, probably by pathing.
 	-not reproduced
 "You fire an arrow. The arrow hits the cultist. The cultist [more]
 dies."
 	-note that the [more] takes up exactly as much space as "dies. " - what gives?
+tumble + autotarget bug
+GOTCHA. somewhere, I'm using ReadKey() instead of ReadKey(true) - i think it's in buffer. that is the cause of those border letters.
+
+
+things to consider for design:
+active dungeon elements
 
 
 

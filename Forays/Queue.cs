@@ -353,7 +353,20 @@ namespace Forays{
 						}
 					}
 					if(attr==AttrType.BLOOD_BOILED){
-						temp.speed += 10;
+						temp.speed += (10 * value);
+					}
+					if(attr==AttrType.CONVICTION){
+						if(temp.HasAttr(AttrType.IN_COMBAT)){
+							temp.attrs[Forays.AttrType.CONVICTION] += value; //whoops, undo that
+						}
+						else{
+							temp.attrs[Forays.AttrType.BONUS_SPIRIT] -= value;      //otherwise, set things to normal
+							temp.attrs[Forays.AttrType.BONUS_COMBAT] -= value / 2;
+							if(temp.attrs[Forays.AttrType.KILLSTREAK] >= 2){
+								B.Add("You wipe off your weapon. ");
+							}
+							temp.attrs[Forays.AttrType.KILLSTREAK] = 0;
+						}
 					}
 					if(attr==AttrType.POISONED && temp == player){
 						if(temp.HasAttr(AttrType.POISONED)){
