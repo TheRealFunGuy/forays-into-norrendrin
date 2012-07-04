@@ -46,6 +46,44 @@ namespace Forays{
 		public void Cursor(){
 			Console.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);
 		}
+		public string YouAre(){
+			if(name == "you"){
+				return "you are";
+			}
+			else{
+				return the_name + " is";
+			}
+		}
+		public string Your(){
+			if(name == "you"){
+				return "your";
+			}
+			else{
+				return the_name + "'s";
+			}
+		}
+		public string You(string s){ return You(s,false); }
+		public string You(string s,bool ends_in_es){
+			if(name == "you"){
+				return "you " + s;
+			}
+			else{
+				if(ends_in_es){
+					return the_name + " " + s + "es";
+				}
+				else{
+					return the_name + " " + s + "s";
+				}
+			}
+		}
+		public string YouFeel(){
+			if(name == "you"){
+				return "you feel";
+			}
+			else{
+				return the_name + " looks";
+			}
+		}
 		public int DistanceFrom(PhysicalObject o){ return DistanceFrom(o.row,o.col); }
 		public int DistanceFrom(pos p){ return DistanceFrom(p.row,p.col); }
 		public int DistanceFrom(int r,int c){
@@ -56,6 +94,18 @@ namespace Forays{
 			}
 			else{
 				return dy;
+			}
+		}
+		public int EstimatedEuclideanDistanceFrom(PhysicalObject o){ return EstimatedEuclideanDistanceFrom(o.row,o.col); }
+		public int EstimatedEuclideanDistanceFrom(pos p){ return EstimatedEuclideanDistanceFrom(p.row,p.col); }
+		public int EstimatedEuclideanDistanceFrom(int r,int c){
+			int dy = Math.Abs(r-row);
+			int dx = Math.Abs(c-col);
+			if(dx > dy){
+				return dx + (dy/2);
+			}
+			else{
+				return dy + (dx/2);
 			}
 		}
 		public Actor ActorInDirection(int dir){
@@ -423,6 +473,32 @@ compare this number to 1/2:  if less than 1/2, major.
 			}
 			return false;
 		}
+		public bool HasLOS(PhysicalObject o){ return HasLOS(o.row,o.col); }
+		public bool HasLOS(int r,int c){
+			int y1 = row;
+			int x1 = col;
+			int y2 = r;
+			int x2 = c;
+			int dx = Math.Abs(x2-x1);
+			int dy = Math.Abs(y2-y1);
+			if(dx<=1 && dy<=1){ //everything adjacent
+				return true;
+			}
+			if(HasBresenhamLine(r,c)){ //basic LOS check
+				return true;
+			}
+			if(M.tile[r,c].HasBresenhamLine(row,col)){ //for symmetry!
+				return true;
+			}
+			if(M.tile[r,c].opaque){ //for walls, check nearby tiles
+				foreach(Tile t in M.tile[r,c].NeighborsBetween(row,col)){
+					if(HasBresenhamLine(t.row,t.col)){
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 		public bool HasBresenhamLine(int r,int c){
 			List<Tile> line = GetBresenhamLine(r,c);
 			int length = line.Count;
@@ -436,6 +512,7 @@ compare this number to 1/2:  if less than 1/2, major.
 			}
 			return true;
 		}
+		public List<Tile> GetBresenhamLine(PhysicalObject o){ return GetBresenhamLine(o.row,o.col); }
 		public List<Tile> GetBresenhamLine(int r,int c){ //bresenham (inverted y)
 			int y2 = r;
 			int x2 = c;

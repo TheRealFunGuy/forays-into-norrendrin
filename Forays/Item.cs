@@ -23,16 +23,18 @@ namespace Forays{
 		static Item(){
 			proto[ConsumableType.HEALING] = new Item(ConsumableType.HEALING,"potion~ of healing",'!',Color.DarkMagenta);
 			proto[ConsumableType.REGENERATION] = new Item(ConsumableType.REGENERATION,"potion~ of regeneration",'!',Color.Green);
-			proto[ConsumableType.CURE_POISON] = new Item(ConsumableType.CURE_POISON,"potion~ of cure poison",'!',Color.Red);
-			proto[ConsumableType.RESISTANCE] = new Item(ConsumableType.RESISTANCE,"potion~ of resistance",'!',Color.Yellow);
+			proto[ConsumableType.TOXIN_IMMUNITY] = new Item(ConsumableType.TOXIN_IMMUNITY,"potion~ of toxin immunity",'!',Color.Red);
+//			proto[ConsumableType.RESISTANCE] = new Item(ConsumableType.RESISTANCE,"potion~ of resistance",'!',Color.Yellow);
 			proto[ConsumableType.CLARITY] = new Item(ConsumableType.CLARITY,"potion~ of clarity",'!',Color.Gray);
-			proto[ConsumableType.PHASING] = new Item(ConsumableType.PHASING,"rune~ of phasing",'&',Color.Cyan);
+			proto[ConsumableType.BLINKING] = new Item(ConsumableType.BLINKING,"rune~ of blinking",'&',Color.Cyan);
 			proto[ConsumableType.TELEPORTATION] = new Item(ConsumableType.TELEPORTATION,"rune~ of teleportation",'&',Color.DarkRed);
 			proto[ConsumableType.PASSAGE] = new Item(ConsumableType.PASSAGE,"rune~ of passage",'&',Color.Blue);
 			proto[ConsumableType.DETECT_MONSTERS] = new Item(ConsumableType.DETECT_MONSTERS,"scroll~ of detect monsters",'?',Color.White);
 			proto[ConsumableType.MAGIC_MAP] = new Item(ConsumableType.MAGIC_MAP,"scroll~ of magic map",'?',Color.Gray);
-			proto[ConsumableType.WIZARDS_LIGHT] = new Item(ConsumableType.WIZARDS_LIGHT,"orb~ of wizard's light",'*',Color.White);
-			proto[ConsumableType.PRISMATIC_ORB] = new Item(ConsumableType.PRISMATIC_ORB,"prismatic orb~",'*',Color.RandomPrismatic);
+			proto[ConsumableType.SUNLIGHT] = new Item(ConsumableType.SUNLIGHT,"orb~ of sunlight",'*',Color.White);
+			proto[ConsumableType.DARKNESS] = new Item(ConsumableType.DARKNESS,"orb~ of darkness",'*',Color.DarkGray);
+			proto[ConsumableType.PRISMATIC] = new Item(ConsumableType.PRISMATIC,"prismatic orb~",'*',Color.RandomPrismatic);
+			proto[ConsumableType.FREEZING] = new Item(ConsumableType.FREEZING,"orb~ of freezing",'*',Color.RandomIce);
 			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'~',Color.White);
 		}
 		public Item(ConsumableType type_,string name_,char symbol_,Color color_){
@@ -152,13 +154,14 @@ namespace Forays{
 		}
 		public static int Rarity(ConsumableType type){
 			switch(type){
-			case ConsumableType.RESISTANCE:
+			case ConsumableType.TOXIN_IMMUNITY:
 			case ConsumableType.CLARITY:
 			case ConsumableType.TELEPORTATION:
-			case ConsumableType.PASSAGE:
-			case ConsumableType.MAGIC_MAP:
-			case ConsumableType.WIZARDS_LIGHT:
-			case ConsumableType.PRISMATIC_ORB:
+			case ConsumableType.DETECT_MONSTERS:
+			case ConsumableType.SUNLIGHT:
+			case ConsumableType.DARKNESS:
+			case ConsumableType.PRISMATIC:
+				//plus the potion of 'brutish strength'
 				return 2;
 			default:
 				return 1;
@@ -182,16 +185,19 @@ namespace Forays{
 			bool used = true;
 			switch(type){
 			case ConsumableType.HEALING:
-				user.TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,Global.Roll(8,6),null);
+				user.TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,50,null); //was Roll(8,6)
 				B.Add("A blue glow surrounds " + user.the_name + ". ",user);
 				break;
-			case ConsumableType.CURE_POISON:
-				if(user.HasAttr(AttrType.POISONED)){
-					user.attrs[AttrType.POISONED] = 0;
-					B.Add(user.YouFeel() + " relieved. ",user);
+			case ConsumableType.TOXIN_IMMUNITY:
+				if(!user.HasAttr(AttrType.IMMUNE_TOXINS)){
+					if(user.HasAttr(AttrType.POISONED)){
+						user.attrs[AttrType.POISONED] = 0;
+						B.Add(user.YouFeel() + " relieved. ",user);
+					}
+					user.GainAttr(AttrType.IMMUNE_TOXINS,5100,user.YouAre() + " no longer immune to toxins. ",user);
 				}
 				else{
-					B.Add(user.YouFeel() + " no different. ",user);
+					B.Add("Nothing happens. ",user);
 				}
 				break;
 			case ConsumableType.REGENERATION:
@@ -203,11 +209,11 @@ namespace Forays{
 				else{
 					B.Add(user.the_name + " looks energized. ",user);
 				}
-				int duration = Global.Roll(1,10)+20;
+				int duration = 70; //was Roll(10)+20
 				Q.Add(new Event(user,duration*100,AttrType.REGENERATING));
 				break;
 				}
-			case ConsumableType.RESISTANCE:
+			/*case ConsumableType.RESISTANCE:
 				{
 				user.attrs[AttrType.RESIST_FIRE]++;
 				user.attrs[AttrType.RESIST_COLD]++;
@@ -229,7 +235,7 @@ namespace Forays{
 					}
 				}
 				break;
-				}
+				}*/
 			case ConsumableType.CLARITY:
 				user.ResetSpells();
 				if(user.name == "you"){
@@ -239,7 +245,7 @@ namespace Forays{
 					B.Add(user.the_name + " seems focused. ",user);
 				}
 				break;
-			case ConsumableType.PHASING:
+			case ConsumableType.BLINKING:
 				for(int i=0;i<9999;++i){
 					int rr = Global.Roll(1,17) - 9;
 					int rc = Global.Roll(1,17) - 9;
@@ -248,7 +254,10 @@ namespace Forays{
 						rc += user.col;
 						if(M.BoundsCheck(rr,rc) && M.tile[rr,rc].passable && M.actor[rr,rc] == null){
 							B.Add(user.You("step") + " through a rip in reality. ",M.tile[user.row,user.col],M.tile[rr,rc]);
+							user.AnimateStorm(2,3,4,'*',Color.DarkMagenta);
 							user.Move(rr,rc);
+							M.Draw();
+							user.AnimateStorm(2,3,4,'*',Color.DarkMagenta);
 							break;
 						}
 					}
@@ -261,7 +270,10 @@ namespace Forays{
 					if(Math.Abs(rr-user.row) >= 10 || Math.Abs(rc-user.col) >= 10 || (Math.Abs(rr-user.row) >= 7 && Math.Abs(rc-user.col) >= 7)){
 						if(M.BoundsCheck(rr,rc) && M.tile[rr,rc].passable && M.actor[rr,rc] == null){
 							B.Add(user.You("jump") + " through a rift in reality. ",M.tile[user.row,user.col],M.tile[rr,rc]);
+							user.AnimateStorm(3,5,10,'*',Color.Green);
 							user.Move(rr,rc);
+							M.Draw();
+							user.AnimateStorm(3,5,10,'*',Color.Green);
 							break;
 						}
 					}
@@ -269,11 +281,6 @@ namespace Forays{
 				break;
 			case ConsumableType.PASSAGE:
 				{
-				if(user.HasAttr(AttrType.IMMOBILIZED)){
-					B.Add("You can't use this item while immobilized. ");
-					used = false;
-					break;
-				}
 				int i = user.DirectionOfOnly(TileType.WALL,true);
 				if(i == 0){
 					B.Add("This item requires an adjacent wall. ");
@@ -349,7 +356,7 @@ namespace Forays{
 			case ConsumableType.DETECT_MONSTERS:
 				user.attrs[AttrType.DETECTING_MONSTERS]++;
 				B.Add("The scroll reveals " + user.Your() + " foes. ",user);
-				int duration = Global.Roll(2,50)+50;
+				int duration = Global.Roll(20)+30;
 				Q.Add(new Event(user,duration*100,AttrType.DETECTING_MONSTERS,user.Your() + " foes are no longer revealed. ",user));
 				break;
 			case ConsumableType.MAGIC_MAP:
@@ -368,16 +375,27 @@ namespace Forays{
 					}
 				}
 				break;
-			case ConsumableType.WIZARDS_LIGHT:
+			case ConsumableType.SUNLIGHT:
 				if(!M.wiz_lite){
 					M.wiz_lite = true;
+					M.wiz_dark = false;
 					B.Add("The air itself seems to shine. ");
 				}
 				else{
 					B.Add("Nothing happens. ");
 				}
 				break;
-			case ConsumableType.PRISMATIC_ORB:
+			case ConsumableType.DARKNESS:
+				if(!M.wiz_dark){
+					M.wiz_dark = true;
+					M.wiz_lite = false;
+					B.Add("The air itself grows dark. ");
+				}
+				else{
+					B.Add("Nothing happens. ");
+				}
+				break;
+			case ConsumableType.PRISMATIC:
 				{
 				Tile t = user.GetTarget();
 				if(t != null){
@@ -422,6 +440,36 @@ namespace Forays{
 				}
 				break;
 				}
+			case ConsumableType.FREEZING:
+			{
+				Tile t = user.GetTarget();
+				if(t != null){
+					Actor first = user.FirstActorInLine(t);
+					B.Add(user.You("throw") + " the freezing orb. ",user);
+					if(first != null){
+						t = first.tile();
+						B.Add("It shatters on " + first.the_name + "! ",first);
+					}
+					else{
+						B.Add("It shatters on " + t.the_name + "! ",t);
+					}
+					Screen.AnimateProjectile(user.GetBresenhamLine(t.row,t.col),new colorchar(Color.RandomIce,'*'));
+					Screen.AnimateExplosion(t,3,new colorchar('*',Color.Cyan));
+					List<Actor> targets = new List<Actor>();
+					foreach(Actor ac in t.ActorsWithinDistance(3)){
+						targets.Add(ac);
+					}
+					while(targets.Count > 0){
+						Actor ac = targets.RemoveRandom();
+						B.Add(ac.YouAre() + " encased in ice. ",ac);
+						ac.attrs[Forays.AttrType.FROZEN] = 15;
+					}
+				}
+				else{
+					used = false;
+				}
+				break;
+			}
 			case ConsumableType.BANDAGE:
 				user.TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,1,null);
 				if(user.name == "you"){
