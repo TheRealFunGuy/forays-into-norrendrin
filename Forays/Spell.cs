@@ -13,41 +13,36 @@ namespace Forays{
 			switch(spell){
 			case SpellType.SHINE:
 				return 1;
-			case SpellType.MAGIC_MISSILE:
-				return 2;
-			case SpellType.DETECT_MONSTERS:
-				return 2;
+			case SpellType.IMMOLATE:
 			case SpellType.FORCE_PALM:
+				return 2;
+			case SpellType.FREEZE:
 				return 3;
 			case SpellType.BLINK:
+			case SpellType.SCORCH:
 				return 4;
-			case SpellType.IMMOLATE:
-				return 4;
-			case SpellType.SHOCK:
+			case SpellType.BLOODSCENT:
 				return 5;
-			case SpellType.BURNING_HANDS:
-				return 5;
-			case SpellType.FREEZE:
+			case SpellType.LIGHTNING_BOLT:
 				return 6;
-			case SpellType.NIMBUS:
-				return 6;
-			case SpellType.SONIC_BOOM:
-				return 7;
-			case SpellType.ARC_LIGHTNING:
-				return 8;
-			case SpellType.ICY_BLAST:
-				return 9;
 			case SpellType.SHADOWSIGHT:
-				return 10;
+			case SpellType.VOLTAIC_SURGE:
+				return 7;
+			case SpellType.MAGIC_HAMMER:
+				return 8;
 			case SpellType.RETREAT:
-				return 11;
-			case SpellType.FIREBALL:
-				return 12;
+				return 9;
+			case SpellType.GLACIAL_BLAST:
+				return 10;
 			case SpellType.PASSAGE:
-				return 12;
+				return 11;
+			case SpellType.FLASHFIRE:
+				return 13;
+			case SpellType.COLLAPSE:
+				return 16;
 			case SpellType.FORCE_BEAM:
-				return 15;
-			case SpellType.DISINTEGRATE:
+				return 17;
+			case SpellType.AMNESIA:
 				return 18;
 			case SpellType.BLIZZARD:
 				return 20;
@@ -63,44 +58,42 @@ namespace Forays{
 		}
 		public static string Name(SpellType spell){
 			switch(spell){
+			case SpellType.SCORCH:
+				return "Scorch";
+			case SpellType.BLOODSCENT:
+				return "Bloodscent";
+			case SpellType.LIGHTNING_BOLT:
+				return "Lightning bolt";
+			case SpellType.VOLTAIC_SURGE:
+				return "Voltaic surge";
+			case SpellType.MAGIC_HAMMER:
+				return "Magic hammer";
+			case SpellType.GLACIAL_BLAST:
+				return "Glacial blast";
+			case SpellType.FLASHFIRE:
+				return "Flashfire";
+			case SpellType.COLLAPSE:
+				return "Collapse";
+			case SpellType.AMNESIA:
+				return "Amnesia";
 			case SpellType.SHINE:
 				return "Shine";
-			case SpellType.MAGIC_MISSILE:
-				return "Magic missile";
-			case SpellType.DETECT_MONSTERS:
-				return "Detect monsters";
 			case SpellType.FORCE_PALM:
 				return "Force palm";
 			case SpellType.BLINK:
 				return "Blink";
 			case SpellType.IMMOLATE:
 				return "Immolate";
-			case SpellType.SHOCK:
-				return "Shock";
-			case SpellType.BURNING_HANDS:
-				return "Burning hands";
 			case SpellType.FREEZE:
 				return "Freeze";
-			case SpellType.NIMBUS:
-				return "Nimbus";
-			case SpellType.SONIC_BOOM:
-				return "Sonic boom";
-			case SpellType.ARC_LIGHTNING:
-				return "Arc lightning";
-			case SpellType.ICY_BLAST:
-				return "Icy blast";
 			case SpellType.SHADOWSIGHT:
 				return "Shadowsight";
 			case SpellType.RETREAT:
 				return "Retreat";
-			case SpellType.FIREBALL:
-				return "Fireball";
 			case SpellType.PASSAGE:
 				return "Passage";
 			case SpellType.FORCE_BEAM:
 				return "Force beam";
-			case SpellType.DISINTEGRATE:
-				return "Disintegrate";
 			case SpellType.BLIZZARD:
 				return "Blizzard";
 			case SpellType.BLESS:
@@ -110,84 +103,57 @@ namespace Forays{
 			case SpellType.HOLY_SHIELD:
 				return "Holy shield";
 			default:
-				return "an unknown spell";
+				return "unknown spell";
 			}
 		}
 		public static string Description(SpellType spell){
 			switch(spell){
 			case SpellType.SHINE:
-				return "Light radius is doubled.";
-			case SpellType.MAGIC_MISSILE:
-				return "Basic offensive spell.  ";
-			case SpellType.DETECT_MONSTERS:
-				return "Sense nearby enemies.   ";
+				return "Doubles your torch's radius     ";
+			case SpellType.IMMOLATE:
+				return "Throws flame to ignite an enemy ";
 			case SpellType.FORCE_PALM:
-				return "Can knock foes back.    ";
+				return "1d6 damage, range 1, knockback  ";
+			case SpellType.FREEZE:
+				return "Encases an enemy in ice         ";
 			case SpellType.BLINK:
-				return "Teleport a few spaces.  ";
-			case SpellType.IMMOLATE:
-				return "Ignites an enemy.       ";
-			case SpellType.SHOCK:
-				return "Electric attack spell.  ";
-			case SpellType.BURNING_HANDS:
-				return "Range 1 attack spell.   ";
-			case SpellType.FREEZE:
-				return "Immobilizes an enemy.   ";
-			case SpellType.NIMBUS:
-				return "Range 1 damage each turn";
-			case SpellType.SONIC_BOOM:
-				return "Can stun an enemy.      ";
-			case SpellType.ARC_LIGHTNING:
-				return "Radius 1 attack spell.  ";
-			case SpellType.ICY_BLAST:
-				return "Cold attack spell.      ";
+				return "Teleports you a short distance  ";
+			case SpellType.SCORCH:
+				return "2d6 fire damage, ranged         ";
+			case SpellType.BLOODSCENT:
+				return "Tracks one nearby living enemy  ";
+			case SpellType.LIGHTNING_BOLT:
+				return "2d6 electric, leaps between foes";
 			case SpellType.SHADOWSIGHT:
-				return "Grants darkvision.      ";
+				return "Grants better vision in the dark";
+			case SpellType.VOLTAIC_SURGE:
+				return "3d6 electric, radius 2 burst    ";
+			case SpellType.MAGIC_HAMMER:
+				return "4d6 damage, range 1, stun       ";
 			case SpellType.RETREAT:
-				return "Return to a safe place. ";
-			case SpellType.FIREBALL:
-				return "Ranged radius 2 spell.  ";
+				return "Marks a spot, then returns to it";
+			case SpellType.GLACIAL_BLAST:
+				return "3d6 cold damage, ranged         ";
 			case SpellType.PASSAGE:
-				return "Move through a wall.    ";
+				return "Move to the other side of a wall";
+			case SpellType.FLASHFIRE:
+				return "3d6 fire damage, ranged radius 2";
+			case SpellType.COLLAPSE:
+				return "4d6, breaks walls, leaves rubble";
 			case SpellType.FORCE_BEAM:
-				return "Knocks foes back.       ";
-			case SpellType.DISINTEGRATE:
-				return "Can destroy terrain.    ";
+				return "Three 1d6 beams knock foes back ";
+			case SpellType.AMNESIA:
+				return "An enemy forgets your presence  ";
 			case SpellType.BLIZZARD:
-				return "Radius 5. Immobilizes.  ";
+				return "5d6 radius 5 burst, freezes foes";
 			case SpellType.BLESS:
-				return "Increases Combat skill. ";
+				return "Increases Combat skill briefly  ";
 			case SpellType.MINOR_HEAL:
-				return "Heals minor wounds.     ";
+				return "Heals 4d6 damage                ";
 			case SpellType.HOLY_SHIELD:
-				return "Attackers take damage.  ";
+				return "Attackers take 2d6 magic damage ";
 			default:
-				return "Unknown.                ";
-			}
-		}
-		public static string Damage(SpellType spell){
-			switch(spell){
-			case SpellType.MAGIC_MISSILE:
-			case SpellType.FORCE_PALM:
-			case SpellType.IMMOLATE:
-			case SpellType.FREEZE:
-			case SpellType.NIMBUS:
-				return "1d6";
-			case SpellType.SHOCK:
-			case SpellType.SONIC_BOOM:
-				return "2d6";
-			case SpellType.BURNING_HANDS:
-			case SpellType.ARC_LIGHTNING:
-			case SpellType.ICY_BLAST:
-			case SpellType.FIREBALL:
-			case SpellType.FORCE_BEAM:
-				return "3d6";
-			case SpellType.DISINTEGRATE:
-				return "8d6";
-			case SpellType.BLIZZARD:
-				return "5d6";
-			default:
-				return "   ";
+				return "Unknown.                        ";
 			}
 		}
 	}

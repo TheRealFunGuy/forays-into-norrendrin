@@ -1,26 +1,29 @@
 Potions:
-Healing - Instantly heals some of your wounds.
-Regeneration - Healing over time. Stronger than Healing in the
-               long run.
-Cure poison - Neutralizes poison in your system.
-Resistance - Grants temporary resistance to fire, cold, and
-             electricity.
-Clarity - Restores your ability to cast difficult spells.
+Healing - Instantly heals half of your maximum health.
+Regeneration - You regenerate 1HP each turn for the next 70
+                turns. Stronger than healing if you can wait.
+Toxin immunity - Grants complete immunity to biological toxins
+                  and poisons for 50 turns.
+Clarity - Restores your drained magic reserves to full potency.
 
 Runes:
-Phasing - Magically transports you a few spaces away.
+Blinking - Magically transports you a few spaces away.
 Teleportation - Magically transports you far away.
 Passage - You travel through an adjacent wall.
 
 Scrolls:
-Detect monsters - You automatically know about nearby enemies
-                  for a while.
+Detect monsters - Reveals the location of enemies on the
+                   current level for around 40 turns.
 Magic map - Shows the layout of the current level.
 
 Orbs:
-Wizard's light - Lights the entire level.
-Prismatic - An elemental burst weapon. Deals fire, cold, and
-            electrical damage.
+Sunlight - Lights the entire level.
+Darkness - Darkens the entire level, extinguishing all light
+            sources.
+Prismatic - An elemental burst weapon. When thrown, deals 2d6
+             fire, cold, and electrical damage (radius 1).
+Freezing - When thrown, everything within 3 spaces is encased
+            in ice.
 
 Other:
 Bandage - Restores one hit point. Use it with natural recovery.

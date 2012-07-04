@@ -335,9 +335,6 @@ namespace Forays{
 					if(attr == AttrType.TELEPORTING){
 						temp.attrs[attr] = 0;
 					}
-					if(attr == AttrType.IMMOBILIZED && temp.attrs[attr] < 0){ //check here for attrs that shouldn't drop below 0
-						temp.attrs[attr] = 0;
-					}
 					if(attr==AttrType.ENHANCED_TORCH && temp.light_radius > 0){
 						temp.UpdateRadius(temp.LightRadius(),6 - temp.attrs[AttrType.DIM_LIGHT],true); //where 6 is the default radius
 						if(temp.attrs[AttrType.ON_FIRE] > temp.light_radius){
@@ -349,7 +346,12 @@ namespace Forays{
 							temp.speed = Actor.Prototype(temp.type).speed;
 						}
 						else{
-							temp.speed = 100;
+							if(temp.HasAttr(AttrType.LONG_STRIDE)){
+								temp.speed = 80;
+							}
+							else{
+								temp.speed = 100;
+							}
 						}
 					}
 					if(attr==AttrType.BLOOD_BOILED){
@@ -393,7 +395,9 @@ namespace Forays{
 								--exponent;
 							}
 							if(!t.IsLit()){
-								++exponent;
+								if(!player.HasAttr(AttrType.SHADOWSIGHT)){
+									++exponent;
+								}
 							}
 							if(exponent > 8){
 								exponent = 8; //because 1 in 256 is enough.
@@ -433,7 +437,7 @@ namespace Forays{
 				{
 					if(M.AllActors().Count == 1 && !Q.Contains(EventType.POLTERGEIST) && !Q.Contains(EventType.BOSS_ARRIVE)
 					&& !Q.Contains(EventType.REGENERATING_FROM_DEATH)){
-						B.Add("All is still and silent. ");
+						B.Add("The dungeon is still and silent. ");
 						B.PrintAll();
 					}
 					else{
@@ -519,8 +523,8 @@ namespace Forays{
 											t = line[i];
 											++i;
 										}
-										if(line[0].inv.type == ConsumableType.PRISMATIC_ORB || line[0].inv.type == ConsumableType.WIZARDS_LIGHT){
-											if(line[0].inv.type == ConsumableType.WIZARDS_LIGHT){ //let's say that they don't like the light
+										if(line[0].inv.type == ConsumableType.PRISMATIC || line[0].inv.type == ConsumableType.SUNLIGHT){
+											if(line[0].inv.type == ConsumableType.SUNLIGHT){ //let's say that they don't like the light
 												B.Add("The orb bobs up and down in the air for a moment. ",line[0]);
 											}
 											else{
@@ -738,7 +742,7 @@ namespace Forays{
 							B.Add("You hear sounds coming from the troll's corpse. ",target);
 							break;
 						case 5:
-							B.Add("The troll on the floor regenerates. ");
+							B.Add("The troll on the floor regenerates. ",target);
 							break;
 						default:
 							break;

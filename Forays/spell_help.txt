@@ -1,57 +1,44 @@
-Shine. Level 5. Increases your light radius from 6 to 12 for 100
-                turns.
-
-Magic missile. Level 10. Projectile deals 1d6 magic damage.
-
-Detect monsters. Level 10. Grants vision of monsters within 6
-                           spaces for 20 turns.
-
-Force palm. Level 15. Deals 1d6 magic damage to an adjacent
-                      target. 60% chance of knockback.
-
-Blink. Level 20. Teleports you up to 8 spaces away (and at least
-                 3 spaces).
-
-Immolate. Level 20. Ignites and deals 1d6 fire damage to your
-                    target.
-
-Shock. Level 25. Projectile deals 2d6 electric damage.
-
-Burning hands. Level 25. Deals 3d6 fire damage to an adjacent
-                         target. 20% chance of ignition.
-
-Freeze. Level 30. Deals 1d6 cold damage to your target. 70%
-                  chance of immobilization.
-
-Nimbus. Level 30. Each turn for 6-10 turns, you deal 1d6
-                  electric damage to adjacent enemies.
-
-Sonic boom. Level 35. Projectile deals 2d6 magic damage. 50%
-                      chance of stunning.
-
-Arc lightning. Level 40. Deals 3d6 electric damage to all
-                         adjacent enemies.
-
-Icy blast. Level 45. Projectile deals 3d6 cold damage.
-
-Shadowsight. Level 50. Grants darkvision for 17-23 turns.
-
-Retreat. Level 55. Cast once to create a rune of transport at
-                   your current location. Cast again to return
-                   to that location.
-
-Fireball. Level 60. Projectile deals 3d6 fire damage to
-                    anything within 2 spaces of your target.
-
-Passage. Level 60. Travel all the way through an adjacent wall,
-                   if there is empty space on the other side.
-
-Force beam. Level 75. Three beams each deal 1d6 magic damage and
-                      have a 90% chance of knockback.
-
-Disintegrate. Level 90. Beam deals 8d6 magic damage or destroys
-                        terrain.
-
-Blizzard. Level 100. All enemies within 5 spaces take 5d6 cold
-                     damage and have an 80% chance to be
-                     immobilized.
+Shine (Level 1) Increases your light radius from 6 to 12 for
+                 100 turns.
+Immolate (Level 2) Throws flames to engulf your target, dealing
+                    increasing damage until extinguished.
+Force palm (Level 2) Deals 1d6 magic damage to an adjacent
+                      target. 70% chance of knockback.
+Freeze (Level 3) A frigid beam encases your target in ice until
+                  the ice is shattered.
+Blink (Level 4) Teleports you up to 8 spaces away (and at least
+                 3 spaces away).
+Scorch (Level 4) A fiery missile deals 2d6 fire damage. As with
+                  other ranged spells, the maximum range is 12.
+Bloodscent (Level 5) Allows you to sense the nearest living
+                      enemy within 12 tiles for 100 turns.
+Lightning bolt (Level 6) A bolt leaps between foes (and some
+                          terrain), dealing 2d6 damage.
+Shadowsight (Level 7) Grants low-light vision and increases
+                       perception in darkness for 100 turns.
+Voltaic surge (Level 7) Electricity arcs to each enemy within 2
+                         spaces, dealing 3d6 damage.
+Magic hammer (Level 8) Deals 4d6 magic damage to an adjacent
+                        target, stunning it for 2 turns.
+Retreat (Level 9) Cast once to create a rune of transport under
+                   you. Cast again to return to your rune.
+Placeholder (Level 9 3/4) Transports you to a land of
+                           make-believe.
+Glacial blast (Level 10) A freezing projectile deals 3d6 cold
+                          damage at range.
+Passage (Level 11) Travel all the way through an adjacent wall,
+                    if there is empty space on the other side.
+Flashfire (Level 13) A fiery explosion deals 3d6 fire damage to
+                      anything within 2 spaces of your target.
+Collapse (Level 16) Part of the dungeon crashes down on the
+                     chosen spot, leaving rubble strewn about.
+                     Destroys a wall or brings the ceiling down
+                     upon an enemy, dealing 4d6 bashing damage.
+                     Falling rubble deals 2d6 bashing damage.
+Force beam (Level 17) Three beams each deal 1d6 magic damage
+                       and knock the target back.
+Amnesia (Level 18) Causes an adjacent enemy to forget your
+                    presence and do nothing for one turn.
+Blizzard (Level 20) A freezing storm deals 5d6 cold damage to
+                     each enemy within 5 spaces, and has a 80%
+                     chance to freeze each one.

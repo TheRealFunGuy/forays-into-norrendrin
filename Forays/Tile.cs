@@ -14,6 +14,7 @@ namespace Forays{
 		public bool passable{get;set;}
 		public bool opaque{get;set;}
 		public bool seen{get;set;}
+		public bool solid_rock{get;set;} //used for walls that will never be seen, to speed up LOS checks
 		public int light_value{get;set;}
 		public TileType? toggles_into;
 		public Item inv{get;set;}
@@ -44,10 +45,14 @@ namespace Forays{
 			proto[TileType.GRENADE_TRAP] = new Tile(TileType.GRENADE_TRAP,"grenade trap",'^',Color.DarkGray,true,false,TileType.FLOOR);
 			proto[TileType.STUN_TRAP] = new Tile(TileType.STUN_TRAP,"stun trap",'^',Color.Red,true,false,TileType.FLOOR);
 			proto[TileType.HIDDEN_DOOR] = new Tile(TileType.HIDDEN_DOOR,"wall",'#',Color.Gray,false,true,TileType.DOOR_C);
+			Define(TileType.RUBBLE,"pile of rubble",':',Color.Gray,false,true,TileType.FLOOR);
 			//mimic
 			//not an actual trap, but arena rooms, too. perhaps you'll see the opponent, in stasis.
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
 			//poison gas
+		}
+		private static void Define(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
+			proto[type_] = new Tile(type_,name_,symbol_,color_,passable_,opaque_,toggles_into_);
 		}
 		public Tile(Tile t,int r,int c){
 			type = t.type;
@@ -59,6 +64,7 @@ namespace Forays{
 			passable = t.passable;
 			opaque = t.opaque;
 			seen = false;
+			solid_rock = false;
 			light_value = 0;
 			toggles_into = t.toggles_into;
 			inv = null;
@@ -91,6 +97,7 @@ namespace Forays{
 			passable = passable_;
 			opaque = opaque_;
 			seen = false;
+			solid_rock = false;
 			light_value = 0;
 			toggles_into = toggles_into_;
 			inv = null;
@@ -163,6 +170,7 @@ namespace Forays{
 		public void Toggle(PhysicalObject toggler,TileType toggle_to){
 			bool lighting_update = false;
 			List<Actor> actors = new List<Actor>();
+			TileType original_type = type;
 			if(opaque != Prototype(toggle_to).opaque){
 				for(int i=row-1;i<=row+1;++i){
 					for(int j=col-1;j<=col+1;++j){
@@ -214,6 +222,12 @@ namespace Forays{
 					}
 				}
 			}
+
+			if(toggler != null){
+				if(original_type == TileType.RUBBLE){
+					B.Add(toggler.You("shift") + " the rubble aside. ",toggler);
+				}
+			}
 		}
 		public void TransformTo(TileType type_){
 			name=Prototype(type_).name;
@@ -233,13 +247,18 @@ namespace Forays{
 			bool lighting_update = false;
 			List<Actor> actors = new List<Actor>();
 			if(opaque){
-				for(int i=row-1;i<=row+1;++i){
+				foreach(Tile t in TilesWithinDistance(1)){
+					if(t.IsLit()){
+						lighting_update = true;
+					}
+				}
+/*				for(int i=row-1;i<=row+1;++i){
 					for(int j=col-1;j<=col+1;++j){
 						if(M.tile[i,j].IsLit()){
 							lighting_update = true;
 						}
 					}
-				}
+				}*/
 			}
 			if(lighting_update){
 				for(int i=row-Global.MAX_LIGHT_RADIUS;i<=row+Global.MAX_LIGHT_RADIUS;++i){
@@ -393,6 +412,9 @@ namespace Forays{
 					ActorType ac = Global.CoinFlip()? ActorType.SKELETON : ActorType.ZOMBIE;
 					Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col);
 					first.TurnToFloor();
+					foreach(Tile t in first.TileInDirection(dir).TilesWithinDistance(1)){
+						t.solid_rock = false;
+					}
 					//first.ActorInDirection(dir).target_location = this;
 					//first.ActorInDirection(dir).player_visibility_duration = -1;
 					first.ActorInDirection(dir).FindPath(TileInDirection(dir));
@@ -421,7 +443,7 @@ namespace Forays{
 				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(5)+7)*100,AttrType.STUNNED,(actor().YouFeel() + " less disoriented. "),(this.actor())));
 				Toggle(actor());
 				break;
-			case TileType.LIGHT_TRAP:
+			case TileType.LIGHT_TRAP: //todo split
 				B.Add("You hear a high-pitched ringing sound. "); //was "high-pitched thrumming sound"
 				if(actor() == player || player.DistanceFrom(this) <= 4){ //kinda hacky until other things can MakeNoise
 					player.MakeNoise();
@@ -433,6 +455,7 @@ namespace Forays{
 					B.Add("A wave of light washes over the area! ");
 				}
 				M.wiz_lite = true;
+				M.wiz_dark = false;
 				Toggle(actor());
 				break;
 			case TileType.QUICKFIRE_TRAP:
@@ -603,6 +626,9 @@ namespace Forays{
 			if(M.wiz_lite){
 				return true;
 			}
+			if(M.wiz_dark){
+				return false;
+			}
 			if(light_value > 0){
 				return true;
 			}
@@ -634,6 +660,24 @@ namespace Forays{
 			default:
 				return false;
 			}
+		}
+		public bool IsShrine(){
+			switch(type){
+			case TileType.COMBAT_SHRINE:
+			case TileType.DEFENSE_SHRINE:
+			case TileType.MAGIC_SHRINE:
+			case TileType.SPIRIT_SHRINE:
+			case TileType.STEALTH_SHRINE:
+				return true;
+			default:
+				return false;
+			}
+		}
+		public bool ConductsElectricity(){
+			if(IsShrine() || type == TileType.CHEST){
+				return true;
+			}
+			return false;
 		}
 		delegate int del(int i);
 		public List<Tile> NeighborsBetween(int r,int c){ //list of non-opaque tiles next to this one that are between you and it

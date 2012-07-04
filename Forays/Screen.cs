@@ -487,6 +487,38 @@ namespace Forays{
 		public static void AnimateMapCell(int r,int c,colorchar ch,int duration){
 			AnimateCell(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch,duration);
 		}
+		public static void AnimateMapCells(List<pos> cells,List<colorchar> chars){ AnimateMapCells(cells,chars,50); }
+		public static void AnimateMapCells(List<pos> cells,List<colorchar> chars,int duration){
+			List<colorchar> prev = new List<colorchar>();
+			int idx = 0;
+			foreach(pos p in cells){
+				prev.Add(MapChar(p.row,p.col));
+				WriteMapChar(p.row,p.col,chars[idx]);
+				++idx;
+			}
+			Thread.Sleep(duration);
+			idx = 0;
+			foreach(pos p in cells){
+				WriteMapChar(p.row,p.col,prev[idx]);
+				++idx;
+			}
+		}
+		public static void AnimateMapCells(List<pos> cells,colorchar ch){ AnimateMapCells(cells,ch,50); }
+		public static void AnimateMapCells(List<pos> cells,colorchar ch,int duration){
+			List<colorchar> prev = new List<colorchar>();
+			int idx = 0;
+			foreach(pos p in cells){
+				prev.Add(MapChar(p.row,p.col));
+				WriteMapChar(p.row,p.col,ch);
+				++idx;
+			}
+			Thread.Sleep(duration);
+			idx = 0;
+			foreach(pos p in cells){
+				WriteMapChar(p.row,p.col,prev[idx]);
+				++idx;
+			}
+		}
 		public static void AnimateProjectile(List<Tile> list,colorchar ch){ AnimateProjectile(list,ch,50); }
 		public static void AnimateProjectile(List<Tile> list,colorchar ch,int duration){
 			Console.CursorVisible = false;
@@ -622,6 +654,19 @@ namespace Forays{
 				WriteMapChar(t.row,t.col,memlist[i++]);
 			}
 			Console.CursorVisible = true;
+		}
+		public static void AnimateStorm(pos origin,int radius,int num_frames,int num_per_frame,char c,Color color){
+			AnimateStorm(origin,radius,num_frames,num_per_frame,new colorchar(c,color));
+		}
+		public static void AnimateStorm(pos origin,int radius,int num_frames,int num_per_frame,colorchar ch){
+			for(int i=0;i<num_frames;++i){
+				List<pos> cells = new List<pos>();
+				List<pos> nearby = origin.PositionsWithinDistance(radius);
+				for(int j=0;j<num_per_frame;++j){
+					cells.Add(nearby.RemoveRandom());
+				}
+				Screen.AnimateMapCells(cells,ch);
+			}
 		}
 		public static void DrawMapBorder(colorchar ch){
 			for(int i=0;i<Global.ROWS;i+=Global.ROWS-1){

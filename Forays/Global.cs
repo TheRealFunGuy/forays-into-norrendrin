@@ -45,6 +45,13 @@ namespace Forays{
 			total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
 			return total;
 		}
+		public static bool OneIn(int num){
+			int i = Roll(num);
+			if(i == num){
+				return true;
+			}
+			return false;
+		}
 		public static bool CoinFlip(){
 			if(r.Next(1,3) == 2){ //returns 1 or 2...
 				return true;
@@ -344,7 +351,18 @@ namespace Forays{
 					}
 				}
 				command = Console.ReadKey(true);
-				ch = Actor.ConvertInput(command);
+				ConsoleKey ck = command.Key;
+				if(ck == ConsoleKey.Backspace || ck == ConsoleKey.PageUp){
+					ch = (char)8;
+				}
+				else{
+					if(ck == ConsoleKey.PageDown){
+						ch = ' ';
+					}
+					else{
+						ch = Actor.ConvertInput(command);
+					}
+				}
 				switch(ch){
 				case 'a':
 					if(h != Help.Overview){
@@ -401,17 +419,25 @@ namespace Forays{
 					done = true;
 					break;
 				case '8':
-				case '+':
-				case '=':
+				case '-':
+				case '_':
 					if(startline > 0){
 						--startline;
 					}
 					break;
 				case '2':
-				case '_':
-				case '-':
+				case '+':
+				case '=':
 					if(more){
 						++startline;
+					}
+					break;
+				case (char)8:
+					if(startline > 0){
+						startline -= 22;
+						if(startline < 0){
+							startline = 0;
+						}
 					}
 					break;
 				case ' ':
@@ -514,7 +540,7 @@ namespace Forays{
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options:");
-			file.WriteLine("last_target vi_keys open_chests items_and_tiles_are_interesting no_blood_boil_message autopickup no_roman_numerals dark_gray_unseen");
+			file.WriteLine("last_target vi_keys open_chests no_blood_boil_message autopickup no_roman_numerals");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");
@@ -539,7 +565,7 @@ namespace Forays{
 	}
 	public enum Help{Overview,Skills,Feats,Spells,Items,Commands,Advanced};
 	public class Dict<TKey,TValue>{
-		private Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
+		public Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
 		public TValue this[TKey key]{
 			get{
 				return d.ContainsKey(key)? d[key] : default(TValue);
@@ -570,6 +596,20 @@ namespace Forays{
 				return dy;
 			}
 		}
+		public List<pos> PositionsWithinDistance(int dist){ return PositionsWithinDistance(dist,false); }
+		public List<pos> PositionsWithinDistance(int dist,bool exclude_origin){
+			List<pos> result = new List<pos>();
+			for(int i=row-dist;i<=row+dist;++i){
+				for(int j=col-dist;j<=col+dist;++j){
+					if(i!=row || j!=col || exclude_origin==false){
+						if(Global.BoundsCheck(i,j)){
+							result.Add(new pos(i,j));
+						}
+					}
+				}
+			}
+			return result;
+		}
 		public List<pos> PositionsAtDistance(int dist){
 			List<pos> result = new List<pos>();
 			for(int i=row-dist;i<=row+dist;++i){
@@ -581,10 +621,26 @@ namespace Forays{
 			}
 			return result;
 		}
+		public bool BoundsCheck(){
+			if(row>=0 && row<Global.ROWS && col>=0 && col<Global.COLS){
+				return true;
+			}
+			return false;
+		}
 	}
 	public static class Extensions{
 		public static T Random<T>(this List<T> l){
 			return l[Global.Roll(l.Count)-1];
+		}
+		public static T RemoveRandom<T>(this List<T> l){
+			T result = l[Global.Roll(l.Count)-1];
+			l.Remove(result);
+			return result;
+		}
+		public static void AddUnique<T>(this List<T> l,T obj){
+			if(!l.Contains(obj)){
+				l.Add(obj);
+			}
 		}
 		public static string PadOuter(this string s,int totalWidth){
 			return s.PadOuter(totalWidth,' ');

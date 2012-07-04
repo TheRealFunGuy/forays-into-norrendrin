@@ -40,6 +40,7 @@ namespace Forays{
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
 		public int current_level{get; private set;}
 		public bool wiz_lite{get;set;}
+		public bool wiz_dark{get;set;}
 		private bool[,] danger_sensed{get;set;}
 		private List<Tile> alltiles = new List<Tile>();
 		private static List<pos> allpositions = new List<pos>();
@@ -298,12 +299,12 @@ namespace Forays{
 						ch.c = tile[r,c].symbol;
 						ch.color = tile[r,c].color;
 						if(ch.c=='.' || ch.c=='#'){
-							if(Global.Option(OptionType.DARK_GRAY_UNSEEN)){
-								ch.color = Color.DarkGray;
-							}
+							//if(Global.Option(OptionType.DARK_GRAY_UNSEEN)){
+							ch.color = Color.DarkGray;
+							/*}
 							else{
 								ch.color = Color.White;
-							}
+							}*/
 						}
 					}
 					else{
@@ -350,10 +351,10 @@ namespace Forays{
 					}
 				}
 			}
-			return types[Global.Roll(types.Count)-1];
+			return types.Random();
 		}
 		public ActorType SpawnMob(){ return SpawnMob(MobType()); }
-		public ActorType SpawnMob(ActorType type){if(type == ActorType.SKULKING_KILLER){ Actor.B.Add("There's a killer on the road. "); }
+		public ActorType SpawnMob(ActorType type){
 			if(type == ActorType.POLTERGEIST){
 				while(true){
 					int rr = Global.Roll(ROWS-4) + 1;
@@ -406,7 +407,7 @@ namespace Forays{
 						if(group_tiles.Count == 0){ //no space left!
 							return type;
 						}
-						Tile t = group_tiles[Global.Roll(group_tiles.Count)-1];
+						Tile t = group_tiles.Random();
 						List<Tile> empty_neighbors = new List<Tile>();
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
 							if(neighbor.passable && !neighbor.IsTrap() && neighbor.actor() == null){
@@ -414,7 +415,7 @@ namespace Forays{
 							}
 						}
 						if(empty_neighbors.Count > 0){
-							t = empty_neighbors[Global.Roll(empty_neighbors.Count)-1];
+							t = empty_neighbors.Random();
 							Actor.Create(type,t.row,t.col);
 							group_tiles.Add(t);
 							break;
@@ -586,6 +587,7 @@ namespace Forays{
 						break;
 					}
 					alltiles.Add(tile[i,j]);
+					tile[i,j].solid_rock = true;
 				}
 			}
 			player.ResetForNewLevel();
@@ -623,6 +625,7 @@ namespace Forays{
 			}
 			foreach(Actor a in AllActors()){
 				if(a != player){
+					nogood[a.row,a.col] = true;
 					for(int i=0;i<ROWS;++i){
 						for(int j=0;j<COLS;++j){
 							if(!tile[i,j].passable || tile[i,j].IsTrap() || a.CanSee(i,j)){
@@ -641,7 +644,7 @@ namespace Forays{
 				}
 			}
 			if(goodtiles.Count > 0){
-				Tile t = goodtiles[Global.Roll(goodtiles.Count)-1];
+				Tile t = goodtiles.Random();
 				int light = player.light_radius;
 				player.light_radius = 0;
 				player.Move(t.row,t.col);
@@ -817,6 +820,13 @@ namespace Forays{
 							}
 							done = true;
 						}
+					}
+				}
+			}
+			foreach(Tile t in AllTiles()){
+				if(t.type != TileType.WALL){
+					foreach(Tile neighbor in t.TilesAtDistance(1)){
+						neighbor.solid_rock = false;
 					}
 				}
 			}

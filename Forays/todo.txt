@@ -1,3 +1,31 @@
+must do before release:
+"The troll on the floor regenerates" <--out of sight
+bug: monsters don't take fire damage from burning if they're frozen, paralyzed, afraid, etc.?
+hold up! do arrows only go 11 squares, but target as 12?
+bug: "the goblin puts out the fire" when not visible
+really need to fix LOS reciprocity so that stuff targets correctly, especially range 2 stuff.
+bug: once you set a melee spell, you can't unset it. easy fix.
+bug: you can't fire at adjacent targets, but you can target right behind them -_-
+remove burning from quickfire trap...
+consider reworks for: scarecrow, poltergeist, frostling, dream warrior, zealot, killer, ALL CASTERS, behemoth
+-consider buffing HP of every monster above level 4 or so.
+stone golem turns to lots of rubble?
+skulking killer only slows?
+
+
+#
+
+
+invisibility. you get a crapton of bonus stealth for a few turns. high level!
+	-maybe. or maybe just an item.
+	-only works in darkness? this would be the same as the monster ability, then.
+-smoke bomb. smoke blocks LOS and gives 50% miss chance.
+
+considering a 'slimed' status that would put out fires but leave you clumsy or something. fire melts ice, ice freezes slime, slime douses fire. slime traps, slime enemies, slime orbs that you can employ to extinguish fires on yourself.
+	-being on fire makes you immune to freezing, being frozen makes you immune to slime, and being slimed makes you immune to burning? sounds decent.
+	-then i would add slime orb and orb of burning at the same time.
+
+
              
              Do what now?
                            #####
@@ -49,6 +77,8 @@ counter for fail rate, sure.
 
 #
 
+a status effect that affects combat but not movement? right now it's just Stun.
+	-need an ice trap for new 'frozen' status
 
 mechanical knight or something:
   -becomes vulnerable only when it misses
@@ -65,19 +95,14 @@ monsters you can only see in direct light
 fungus killed by light
 darkness dweller repelled, dazed, or blinded by light (for a few turns)
 doors(stone slabs) that open when lit
-rename wizard's light to sunlight, have it destroy monsters that are weak to light.
+sunlight - have it destroy monsters that are weak to light.
 Shine spell might turn your torch to sunlight.
 lit rooms, or torches, or whatever. of course.
 fire vents (or firespouts, or something) that occasionally burn things on top of them and give off more light than firepits.
 
-change to light trap
-changes to immolate, freeze/immobilization
-nerf low-light vision to 5 tiles, and darkvision to 8-10?
+change to light trap - make alarm a separate trap.
 potion of brutish strength <-no items, spells, certain feats, but tons of damage and ability to smash statues, doors, other features
-potion of cure poison should become potion of immunity, rarity 2. immune to stun/par/pois/fear/slow? what of dim vision, immob, fire?
-	-perhaps toxin-based ones only, like poison + paralysis?
-or 'potion of elemental resistance' and 'potion of toxin immunity'?
-	-or, since fire resistance is...problematic..., maybe roll burning immunity into the immunity potion?
+
 bombable walls and (orcish?) grenades. some hidden rooms would be behind them.
 make sure to always consider the old stuff when adding new stuff - it can use updates too, or receive some of these new ideas.
 
@@ -88,8 +113,6 @@ make sure there's a light-sensitive feature early on.
 should all crits stun?
 	-while i'm at it, fix the pillar dance abuse.
 		-pathfinding at distance 2?
-		-and a hard limit of 2 sneak attacks?
-	-and maybe stun should be 1/3, not 1/5.
 
 some monsters need to carry items.
 when targeting a burst effect, the radius should be shown...somehow.
@@ -97,11 +120,6 @@ when targeting Lunge, you should be able to lunge if the tile next to you is a w
 rethink 'all is still and silent'
 change feat list to only include ones you've learned? but what about the letters?
 
-combat feat to replace frenzy: Lethality. +10% crit chance, +5% crit chance for each 20% health your target is missing.
-spirit feat to replace war shout: Conviction. Increases your Spirit as long as you're fighting, and increases your Combat by half that.
-stealth feat to replace corner look: Distract. Ranged radius ~3 effect that causes enemies to move toward the sound.
-	-probably only works once per enemy, so you can only move them a few spaces.
-	-remember to add a visible burst indicator to targeting. maybe.
 
 
 decide which changes should go into 0.7.0!
@@ -113,66 +131,19 @@ then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
 		new items
 		new terrain
 		shrines
-		replaced feats, tweaked traits
 		other 'light' features, including tweak to Shine
-		other balance changes(crits stun, stun 1/3, monsters have items, burning deals less)
+		other balance changes(crits stun, monsters have items)
 		sidebar counters and stuff. for increasing bars like Conviction, or brogue-style bars for other durations.
+		save + load, because players probably like saving their games.
+		and help check
 #
 
-probably not going in: 
-
-different trap triggers.
-
+probably not going in: different trap triggers.
 an alarm trap might be tied to an item or a door
-
 a stun trap would probably be a proximity trap, pressure plate, or even periodic.
-
 a grenade trap would be proximity/plate only
-
 sliding wall would probably be proximity/plate.
-
-teleport would be
-
-
-#
-
-so, let's start with a game that has a torch you can turn on and off, to switch between stealth and sight...
-...with 5 skills with 4 feats each...and a single trait per character...5 weapons and 3 armors to switch between...
-...a 20 level dungeon with a variety of monsters...
-
-now, what elements are already present?
-
--the aforementioned torch: stealth vs. sight
-	light: firepits, being on fire, 
-
-
-
-
-
-hmm, okay. what if instead of this:
-
-catching -> on fire(1)
-on fire(x) -> on fire(x+1)
-on fire(5) -> on fire(5)
-
-putting it out:
-on fire(x) -> on fire(x-roll(2))
-on fire(2) -> safety
-
-i tried this:
-
-catching -> catching OR catching OR on fire(1)
-on fire(x) -> on fire(x) OR on fire(x+1)
-on fire(5) -> on fire(5)
-
-putting it out:
-on fire(x) -> safety
-
-...so, you would probably be safe for a turn or two, and then it wouldn't deal quite so much...
-
-
-
-
+teleport would be?
 
 #
 things to do between 0.5 and 1.0:
@@ -181,8 +152,6 @@ at least 1 special level per game, with an appropriate number of different speci
 	-cave of bats
 
 animations should support the concept of a 'viewer' - cells outside viewer's FOV don't animate.
-
-if lashers happen to need balancing: their tentacles could miss adjacent targets more often, or deal less damage to them
 
 generate trolls with rocks they can throw, in a lair, and have them stay in that lair.
 
@@ -193,18 +162,17 @@ should group monsters regroup when they can't see the player?
 should dream warrior teleport straight to target_location in seekAI?
 
 replace old spell?
+	-should be easier with shrines!
 
 shadow should reduce the light radius of zealots, too
 
 if the line is blocked while targeting, perhaps the alternate line could be considered.
 
-do doomRL/infra arcana style saves! no need to save the dungeon!
-	-still hard to do. it might be just as easy to do it properly.
-
 Select() needs a rewrite, and to be moved out of Actor.
 
 0.7.0 should have: (focus on gameplay)
-make displayed damage values consistent - PROBABLY don't say "3d6".
+a weak enemy that, upon death, lights the surroundings.
+add more numbers to the equipment screen
 there's a good reason to make animals act more realistically
 	-no, having them avoid the player would be kinda bad for gameplay.
 		-just make them notice the player more often, because THEY don't carry items.
@@ -212,22 +180,35 @@ try --- over ~~~ again
 (most) monsters need to wander, somehow.
 many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
 "the arrow hits the goblin" x2   should become "the arrow hits something" x2 "something dies"
-hold up! do arrows only go 11 squares, but target as 12?
+weird: there might be something strange happening in the buffer, with extra [more]. for instance, "You attempt to break free. You attempt to break free. You [more] --> break free! [more] ...this could use some debugging.
+bug: cultist was in solid rock. this WAS using the wizmode 'jump to next level', and this hasn't been reproduced yet.
+not being able to target a wall you can see mid-corridor is crappy. change it.
+	-at LEAST use a FirstTileInLine method
+		-this would let you target far into the darkness, too.
+"You are burned. You are unburnt." <--being attacked by burning enemy while Tough
+goblin shamans shouldn't re-immolate you EVERY turn, probably.
 think about scaling Spirit's duration reduction to more than 50%
+luminous avenger: fast, holy shield, gives off light. when injured, darkens the level to fully heal.
+crusading knight: strong attack, heavy armor, & torch. if attacked from hiding, lights the level.
+a few more open areas! chances to use lightning bolt, and take advantage of the full 12 spaces range.
+	-borrowing brush from LoL would be neat even if it doesn't make sense.
+undead animal?
+"You drain your magic reserves / Your magic feels weaker / You feel drained" when casting higher-level spells.
 oh, hey, necromancers should probably not use melee attacks so often.
-change the arrow-immunity message. find a synonym for 'protrudes'
-note that you still print the "killer on the road" line. heh.
 what about a 'default ranged attack' in addition to the 'default melee attack' spell?
 corpsetower behemoths: they either need a way to reach the player(meh) or they need to be REALLY nasty. they already do tons of damage, it's true. do they need anything else?
+	-maybe they get the earthquake slam (3 tiles high, in a line)
+		-no, just make their melee attacks stun automatically
 remove the 'g'et command and the 'o'pen command, relying instead on autopickup and auto-open? what about 'c'lose, then?
-oh, hey, change vision back to 3 tiles.
 bats shouldn't 'walk' into you if they don't see you
 more than one line for messages!
-"quietly snap" to something else? "silently snap"?
 fire drake should come with a quickfire event
 is the minimum number of enemies really 4? eww, too low.
 ...just...just remove scarecrows and poltergeists if they're not interesting. but instead, make them interesting!
+	-give poltergeists an identity as item-throwers. remove the crap messages, remove the shriek,
+	 and make them yank items from the player's pack sometimes.
 mud monster that makes walls grab at you, dazing trap that uses LOS
+	-periodic dazing trap? when I have a 'viewer' for animations, yes.
 antimagic enemy
 an enemy that teleports you away under some circumstances
 another bow-user
@@ -254,17 +235,13 @@ extend the "monster notices" sounds so that you can hear them even if you can't 
 generate some doors
 make stun traps nastier. add at LEAST one more damaging trap. make light trap rarer? (well, just adding more does that.)
 killers should search for you
-another round of balancing.
-	-potion of cure poison should be rarity 2
-	-freeze should have a chance of holding enemies for more than one turn.
 orb of darkness...would put out lit rooms, torches, fire pits, and torches held by the player and monsters.
 	-add messages for "You take out your torch, but it gives off no light!" and the wizlite one too
 kills list
 make shadows appear earlier? make swordsmen appear earlier(maybe?)?
-the auto-cornerlook shouldn't happen when the whole level is lit.
+there is no '?' for help on the "learn which spell?" screen. fix this.
 
 levelup screen - '?' on skill selection should go to skill help.
-make sure death screen shows proper HP value. viewing char info shows it, so make it show all the time.
 no 2nd wave of light if already wiz_lit
 
 beamos-inspired mob OR trap
@@ -356,6 +333,8 @@ room mimic
 		-'number of turns until next crushing attack'
 		-'membrane has been destroyed' - could also just mean it's dead, and remove the event.
 
+idea for the cultist's special level: a receptacle fills as cultists die to fire damage. you don't want it to fill up.
+idea for pangolin special level: giant pangolins tear open giant termite mounds. the pangolins use their armor to avoid harm as the termites swarm you.
 
-
-
+voltaic rapture was too badass
+-this spell wasn't voltaic rapture, but was lightning-based: each time you're hit in melee you release a radius 2 burst of electricity
