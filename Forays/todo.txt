@@ -1,17 +1,23 @@
-must do before release:
-"The troll on the floor regenerates" <--out of sight
-bug: monsters don't take fire damage from burning if they're frozen, paralyzed, afraid, etc.?
-hold up! do arrows only go 11 squares, but target as 12?
-bug: "the goblin puts out the fire" when not visible
-really need to fix LOS reciprocity so that stuff targets correctly, especially range 2 stuff.
-bug: once you set a melee spell, you can't unset it. easy fix.
-bug: you can't fire at adjacent targets, but you can target right behind them -_-
-remove burning from quickfire trap...
-consider reworks for: scarecrow, poltergeist, frostling, dream warrior, zealot, killer, ALL CASTERS, behemoth
--consider buffing HP of every monster above level 4 or so.
-stone golem turns to lots of rubble?
-skulking killer only slows?
 
+add headers to overview help - 'Regaining Health, Attacking Monsters, Exploring the Dungeon...'
+
+make quickfire give off light
+maybe check for movement before printing level 20 messages. maybe not.
+
+DisplayNow() is still a bit wonky with show_old_messages, but i don't know if it's worth changing.
+	-do this: check whether the contents of str match part of the previous msg
+	-if so, print that PART in gray and the rest in dark gray.
+-also, in msg_clear mode, if 3 messages are printed..
+	-what i'm saying is, in hideOldMessages mode, consider starting the next line at a position based on the last printed.
+	-or don't.
+
+remove 'm' and GetTargetXTemp()
+
+add more items, make healing & regen rarity 2. <--this
+
+TEST LOOKMODE AND NEW TARGETING ON LINUX BEFORE RELEASE
+
+probably make animals twice as observant right now (when shrines are added)
 
 #
 
@@ -117,9 +123,7 @@ should all crits stun?
 some monsters need to carry items.
 when targeting a burst effect, the radius should be shown...somehow.
 when targeting Lunge, you should be able to lunge if the tile next to you is a wall. (use alternate targeting lines)
-rethink 'all is still and silent'
 change feat list to only include ones you've learned? but what about the letters?
-
 
 
 decide which changes should go into 0.7.0!
@@ -136,6 +140,12 @@ then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
 		sidebar counters and stuff. for increasing bars like Conviction, or brogue-style bars for other durations.
 		save + load, because players probably like saving their games.
 		and help check
+
+update your screenshots and videos!
+
+new keys: 'f' for 'use selected ranged attack on chosen target, picking a random closest target if you don't have one already'  and 'F' for 'use selected ranged attack on a target i'll choose right now'
+	-this will let me remove the lasttarget option, too
+
 #
 
 probably not going in: different trap triggers.
@@ -170,6 +180,8 @@ if the line is blocked while targeting, perhaps the alternate line could be cons
 
 Select() needs a rewrite, and to be moved out of Actor.
 
+group 'major' and 'minor' options
+
 0.7.0 should have: (focus on gameplay)
 a weak enemy that, upon death, lights the surroundings.
 add more numbers to the equipment screen
@@ -181,26 +193,18 @@ try --- over ~~~ again
 many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
 "the arrow hits the goblin" x2   should become "the arrow hits something" x2 "something dies"
 weird: there might be something strange happening in the buffer, with extra [more]. for instance, "You attempt to break free. You attempt to break free. You [more] --> break free! [more] ...this could use some debugging.
-bug: cultist was in solid rock. this WAS using the wizmode 'jump to next level', and this hasn't been reproduced yet.
 not being able to target a wall you can see mid-corridor is crappy. change it.
 	-at LEAST use a FirstTileInLine method
 		-this would let you target far into the darkness, too.
 "You are burned. You are unburnt." <--being attacked by burning enemy while Tough
-goblin shamans shouldn't re-immolate you EVERY turn, probably.
 think about scaling Spirit's duration reduction to more than 50%
 luminous avenger: fast, holy shield, gives off light. when injured, darkens the level to fully heal.
 crusading knight: strong attack, heavy armor, & torch. if attacked from hiding, lights the level.
 a few more open areas! chances to use lightning bolt, and take advantage of the full 12 spaces range.
 	-borrowing brush from LoL would be neat even if it doesn't make sense.
 undead animal?
-"You drain your magic reserves / Your magic feels weaker / You feel drained" when casting higher-level spells.
-oh, hey, necromancers should probably not use melee attacks so often.
 what about a 'default ranged attack' in addition to the 'default melee attack' spell?
-corpsetower behemoths: they either need a way to reach the player(meh) or they need to be REALLY nasty. they already do tons of damage, it's true. do they need anything else?
-	-maybe they get the earthquake slam (3 tiles high, in a line)
-		-no, just make their melee attacks stun automatically
 remove the 'g'et command and the 'o'pen command, relying instead on autopickup and auto-open? what about 'c'lose, then?
-bats shouldn't 'walk' into you if they don't see you
 more than one line for messages!
 fire drake should come with a quickfire event
 is the minimum number of enemies really 4? eww, too low.
@@ -210,13 +214,13 @@ is the minimum number of enemies really 4? eww, too low.
 mud monster that makes walls grab at you, dazing trap that uses LOS
 	-periodic dazing trap? when I have a 'viewer' for animations, yes.
 antimagic enemy
+	-a normal-speed melee guy and a fast, flying anti-magic pixie or something
 an enemy that teleports you away under some circumstances
 another bow-user
 another trap that makes spirit useful
 and seriously, i need an enemy that does tons of damage at range, but doesn't go down easily.
 that accuracy-affecting thing should happen, whether it's fog or gas or blinding/dazing. it works well with Conviction.
 an enemy with armor (besides the mechaknight)?
-rework skulking killer
 a stealth enemy that can teleport from shadows on ONE side of you to shadows on the OTHER side, and re-stealth while doing so.
 	-limited somehow. does he need to escape first?
 a 'duelist', sort of an upgrade to the bat: after attacking, often moves to another adjacent tile. sometimes moves back or lunges.
@@ -226,7 +230,6 @@ an enemy that breaks Frenzy(conviction?) somehow. burst knockback on death?
 update help files - add more description to feats and such.
 support for multiple sub-tile elements, such as quickfire, traps, troll corpses, grenades, slime...
 slime-trail-leaving group enemies. (slugmen?)
-make dark gray unseen tiles by default, and remove option. much easier to see.
 autopickup while autoexploring would be nice
 things other than the player should be able to call MakeNoise
 generate rats at start.
@@ -235,8 +238,6 @@ extend the "monster notices" sounds so that you can hear them even if you can't 
 generate some doors
 make stun traps nastier. add at LEAST one more damaging trap. make light trap rarer? (well, just adding more does that.)
 killers should search for you
-orb of darkness...would put out lit rooms, torches, fire pits, and torches held by the player and monsters.
-	-add messages for "You take out your torch, but it gives off no light!" and the wizlite one too
 kills list
 make shadows appear earlier? make swordsmen appear earlier(maybe?)?
 there is no '?' for help on the "learn which spell?" screen. fix this.
@@ -249,6 +250,7 @@ beamos-inspired mob OR trap
 
 
 bugs: 
+minor: passage shows a WHITE floor under the player, not the correct color.
 using lunge on an aware goblin archer a knight's move away. the archer appears normal, when it should have a green background from the targeting.
 	-i believe this is another form of the other background color bug.
 	-linux or win?
@@ -268,7 +270,6 @@ lashers can still move somehow, probably by pathing.
 dies."
 	-note that the [more] takes up exactly as much space as "dies. " - what gives?
 tumble + autotarget bug
-GOTCHA. somewhere, I'm using ReadKey() instead of ReadKey(true) - i think it's in buffer. that is the cause of those border letters.
 
 
 things to consider for design:

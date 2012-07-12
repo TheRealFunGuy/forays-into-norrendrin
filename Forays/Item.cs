@@ -201,7 +201,7 @@ namespace Forays{
 				}
 				break;
 			case ConsumableType.REGENERATION:
-				{
+			{
 				user.attrs[AttrType.REGENERATING]++;
 				if(user.name == "you"){
 					B.Add("Your blood tingles. ",user);
@@ -209,10 +209,10 @@ namespace Forays{
 				else{
 					B.Add(user.the_name + " looks energized. ",user);
 				}
-				int duration = 70; //was Roll(10)+20
+				int duration = 60; //was Roll(10)+20
 				Q.Add(new Event(user,duration*100,AttrType.REGENERATING));
 				break;
-				}
+			}
 			/*case ConsumableType.RESISTANCE:
 				{
 				user.attrs[AttrType.RESIST_FIRE]++;
@@ -270,10 +270,10 @@ namespace Forays{
 					if(Math.Abs(rr-user.row) >= 10 || Math.Abs(rc-user.col) >= 10 || (Math.Abs(rr-user.row) >= 7 && Math.Abs(rc-user.col) >= 7)){
 						if(M.BoundsCheck(rr,rc) && M.tile[rr,rc].passable && M.actor[rr,rc] == null){
 							B.Add(user.You("jump") + " through a rift in reality. ",M.tile[user.row,user.col],M.tile[rr,rc]);
-							user.AnimateStorm(3,5,10,'*',Color.Green);
+							user.AnimateStorm(3,3,10,'*',Color.Green);
 							user.Move(rr,rc);
 							M.Draw();
-							user.AnimateStorm(3,5,10,'*',Color.Green);
+							user.AnimateStorm(3,3,10,'*',Color.Green);
 							break;
 						}
 					}
@@ -281,7 +281,7 @@ namespace Forays{
 				break;
 			case ConsumableType.PASSAGE:
 				{
-				int i = user.DirectionOfOnly(TileType.WALL,true);
+				int i = user.DirectionOfOnlyUnblocked(TileType.WALL,true);
 				if(i == 0){
 					B.Add("This item requires an adjacent wall. ");
 					used = false;
@@ -354,15 +354,17 @@ namespace Forays{
 				break;
 				}
 			case ConsumableType.DETECT_MONSTERS:
+			{
 				user.attrs[AttrType.DETECTING_MONSTERS]++;
 				B.Add("The scroll reveals " + user.Your() + " foes. ",user);
 				int duration = Global.Roll(20)+30;
 				Q.Add(new Event(user,duration*100,AttrType.DETECTING_MONSTERS,user.Your() + " foes are no longer revealed. ",user));
 				break;
+			}
 			case ConsumableType.MAGIC_MAP:
 				B.Add("The scroll reveals the layout of this level. ");
 				foreach(Tile t in M.AllTiles()){
-					if(t.type != TileType.FLOOR && !t.IsTrap()){
+					if(t.type != TileType.FLOOR){
 						bool good = false;
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
 							if(neighbor.type != TileType.WALL){
@@ -371,6 +373,13 @@ namespace Forays{
 						}
 						if(good){
 							t.seen = true;
+							if(t.IsTrap()){
+								t.name = Tile.Prototype(t.type).name;
+								t.a_name = Tile.Prototype(t.type).a_name;
+								t.the_name = Tile.Prototype(t.type).the_name;
+								t.symbol = Tile.Prototype(t.type).symbol;
+								t.color = Tile.Prototype(t.type).color;
+							}
 						}
 					}
 				}
@@ -397,9 +406,11 @@ namespace Forays{
 				break;
 			case ConsumableType.PRISMATIC:
 				{
-				Tile t = user.GetTarget();
-				if(t != null){
-					Actor first = user.FirstActorInLine(t);
+				List<Tile> line = user.GetTarget(12,1);
+				if(line != null){
+					Tile t = line.Last();
+					Tile prev = line.LastBeforeSolidTile();
+					Actor first = user.FirstActorInLine(line); //todo - consider allowing thrown items to pass over actors, because they fly in an arc
 					B.Add(user.You("throw") + " the prismatic orb. ",user);
 					if(first != null){
 						t = first.tile();
@@ -408,7 +419,7 @@ namespace Forays{
 					else{
 						B.Add("It shatters on " + t.the_name + "! ",t);
 					}
-					Screen.AnimateProjectile(user.GetBresenhamLine(t.row,t.col),new colorchar(Color.RandomPrismatic,'*'));
+					user.AnimateProjectile(line.ToFirstObstruction(),'*',Color.RandomPrismatic);
 					List<DamageType> dmg = new List<DamageType>();
 					dmg.Add(DamageType.FIRE);
 					dmg.Add(DamageType.COLD);
@@ -429,8 +440,17 @@ namespace Forays{
 						}
 						B.DisplayNow();
 						Screen.AnimateExplosion(t,1,ch,100);
-						foreach(Actor a in t.ActorsWithinDistance(1)){
-							a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+						if(t.passable){
+							foreach(Actor a in t.ActorsWithinDistance(1)){
+								a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+							}
+						}
+						else{
+							foreach(Actor a in t.ActorsWithinDistance(1)){
+								if(prev != null && prev.HasBresenhamLine(a.row,a.col)){
+									a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+								}
+							}
 						}
 						dmg.Remove(damtype);
 					}
@@ -442,9 +462,11 @@ namespace Forays{
 				}
 			case ConsumableType.FREEZING:
 			{
-				Tile t = user.GetTarget();
-				if(t != null){
-					Actor first = user.FirstActorInLine(t);
+				List<Tile> line = user.GetTarget(12,3);
+				if(line != null){
+					Tile t = line.Last();
+					Tile prev = line.LastBeforeSolidTile();
+					Actor first = user.FirstActorInLine(line);
 					B.Add(user.You("throw") + " the freezing orb. ",user);
 					if(first != null){
 						t = first.tile();
@@ -453,11 +475,20 @@ namespace Forays{
 					else{
 						B.Add("It shatters on " + t.the_name + "! ",t);
 					}
-					Screen.AnimateProjectile(user.GetBresenhamLine(t.row,t.col),new colorchar(Color.RandomIce,'*'));
-					Screen.AnimateExplosion(t,3,new colorchar('*',Color.Cyan));
+					user.AnimateProjectile(line.ToFirstObstruction(),'*',Color.RandomIce);
+					user.AnimateExplosion(t,3,'*',Color.Cyan);
 					List<Actor> targets = new List<Actor>();
-					foreach(Actor ac in t.ActorsWithinDistance(3)){
-						targets.Add(ac);
+					if(t.passable){
+						foreach(Actor ac in t.ActorsWithinDistance(3)){
+							targets.Add(ac);
+						}
+					}
+					else{
+						foreach(Actor ac in t.ActorsWithinDistance(3)){
+							if(prev != null && prev.HasBresenhamLine(ac.row,ac.col)){
+								targets.Add(ac);
+							}
+						}
 					}
 					while(targets.Count > 0){
 						Actor ac = targets.RemoveRandom();

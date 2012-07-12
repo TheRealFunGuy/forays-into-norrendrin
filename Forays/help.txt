@@ -14,7 +14,7 @@ a point toward mastering one of that skill's associated feats.
 
 
 Important commands to remember are 'e' to examine and change
-your equipment, and 'i' to view and use your consumable items.
+your equipment, and 'a' to use your consumable items.
 If your health drops, press 'R' to rest - but only once per
 level!
 
@@ -62,12 +62,12 @@ R : rest to recover health and spells          F : use a feat
 T : turn your torch on/off                     f : fire an arrow
 e : view and change equipment
 
-i : view and use consumable items
-g : pick up an item
-d : drop an item
+i : view your inventory
+a : use a consumable item
+g : pick up an item                        d : drop an item
 
 > : take stairs to next level              o : open a door/chest
-w : walking automatically in a direction   c : close a door
+w : walk automatically in a direction      c : close a door
 
 C : view character information
 P : view previous messages
@@ -90,9 +90,9 @@ R : rest to recover health and spells          F : use a feat
 T : turn your torch on/off                     f : fire an arrow
 e : view and change equipment
 
-i : view and use consumable items
-g : pick up an item
-d : drop an item
+i : view your inventory
+a : use a consumable item
+g : pick up an item                        d : drop an item
 
 > : take stairs to next level              o : open a door/chest
 w : walk automatically in a direction      c : close a door

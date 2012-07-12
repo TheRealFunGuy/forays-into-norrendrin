@@ -96,11 +96,11 @@ namespace Forays{
 				return dy;
 			}
 		}
-		public int EstimatedEuclideanDistanceFrom(PhysicalObject o){ return EstimatedEuclideanDistanceFrom(o.row,o.col); }
-		public int EstimatedEuclideanDistanceFrom(pos p){ return EstimatedEuclideanDistanceFrom(p.row,p.col); }
-		public int EstimatedEuclideanDistanceFrom(int r,int c){
-			int dy = Math.Abs(r-row);
-			int dx = Math.Abs(c-col);
+		public int EstimatedEuclideanDistanceFromX10(PhysicalObject o){ return EstimatedEuclideanDistanceFromX10(o.row,o.col); }
+		public int EstimatedEuclideanDistanceFromX10(pos p){ return EstimatedEuclideanDistanceFromX10(p.row,p.col); }
+		public int EstimatedEuclideanDistanceFromX10(int r,int c){ // x10 so that orthogonal directions are closer than diagonals
+			int dy = Math.Abs(r-row) * 10;
+			int dx = Math.Abs(c-col) * 10;
 			if(dx > dy){
 				return dx + (dy/2);
 			}
@@ -209,6 +209,93 @@ namespace Forays{
 				break;
 			default:
 				return null;
+			}
+			return null;
+		}
+		public Actor FirstActorInLine(PhysicalObject obj){ return FirstActorInLine(obj,1); }
+		public Actor FirstActorInLine(PhysicalObject obj,int num){
+			if(obj == null){
+				return null;
+			}
+			int count = 0;
+			List<Tile> line = GetBestLine(obj.row,obj.col);
+			line.RemoveAt(0);
+			foreach(Tile t in line){
+				if(!t.passable){
+					return null;
+				}
+				if(M.actor[t.row,t.col] != null){
+					++count;
+					if(count == num){
+						return M.actor[t.row,t.col];
+					}
+				}
+			}
+			return null;
+		}
+		public Actor FirstActorInLine(List<Tile> line){ return FirstActorInLine(line,1); }
+		public Actor FirstActorInLine(List<Tile> line,int num){
+			if(line == null){
+				return null;
+			}
+			int count = 0;
+			int idx = 0; //note that the first position is thrown out, as it is assumed to be the origin of the line
+			foreach(Tile t in line){
+				if(idx != 0){
+					if(!t.passable){
+						return null;
+					}
+					if(M.actor[t.row,t.col] != null){
+						++count;
+						if(count == num){
+							return M.actor[t.row,t.col];
+						}
+					}
+				}
+				++idx;
+			}
+			return null;
+		}
+		public Actor FirstActorInExtendedLine(PhysicalObject obj){ return FirstActorInExtendedLine(obj,1,-1); }
+		public Actor FirstActorInExtendedLine(PhysicalObject obj,int max_distance){ return FirstActorInExtendedLine(obj,1,max_distance); }
+		public Actor FirstActorInExtendedLine(PhysicalObject obj,int num,int max_distance){
+			if(obj == null){
+				return null;
+			}
+			int count = 0;
+			List<Tile> line = GetBestExtendedLine(obj.row,obj.col);
+			line.RemoveAt(0);
+			foreach(Tile t in line){
+				if(!t.passable){
+					return null;
+				}
+				if(max_distance != -1 && DistanceFrom(t) > max_distance){
+					return null;
+				}
+				if(M.actor[t.row,t.col] != null){
+					++count;
+					if(count == num){
+						return M.actor[t.row,t.col];
+					}
+				}
+			}
+			return null;
+		}
+		public Tile FirstSolidTileInLine(PhysicalObject obj){ return FirstSolidTileInLine(obj,1); }
+		public Tile FirstSolidTileInLine(PhysicalObject obj,int num){
+			if(obj == null){
+				return null;
+			}
+			int count = 0;
+			List<Tile> line = GetBestLine(obj.row,obj.col);
+			line.RemoveAt(0);
+			foreach(Tile t in line){
+				if(!t.passable){
+					++count;
+					if(count == num){
+						return t;
+					}
+				}
 			}
 			return null;
 		}
@@ -397,6 +484,38 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 		}
+		public int DirectionOfOnlyUnblocked(TileType tiletype){ return DirectionOfOnlyUnblocked(tiletype,false); }
+		public int DirectionOfOnlyUnblocked(TileType tiletype,bool orth){//if there's only 1 unblocked tile of this kind, return its dir
+			int total=0;
+			int dir=0;
+			for(int i=1;i<=9;++i){
+				if(i != 5){
+					if(TileInDirection(i).type == tiletype && ActorInDirection(i) == null){
+						if(!orth || i%2==0){
+							++total;
+							dir = i;
+						}
+					}
+				}
+				/*else{
+					if(tile().type == tiletype && !orth){
+						++total;
+						dir = i;
+					}
+				}*/
+			}
+			if(total > 1){
+				return -1;
+			}
+			else{
+				if(total == 1){
+					return dir;
+				}
+				else{
+					return 0;
+				}
+			}
+		}
 		public Actor actor(){
 			return M.actor[row,col];
 		}
@@ -487,9 +606,6 @@ compare this number to 1/2:  if less than 1/2, major.
 			if(HasBresenhamLine(r,c)){ //basic LOS check
 				return true;
 			}
-			if(M.tile[r,c].HasBresenhamLine(row,col)){ //for symmetry!
-				return true;
-			}
 			if(M.tile[r,c].opaque){ //for walls, check nearby tiles
 				foreach(Tile t in M.tile[r,c].NeighborsBetween(row,col)){
 					if(HasBresenhamLine(t.row,t.col)){
@@ -500,7 +616,7 @@ compare this number to 1/2:  if less than 1/2, major.
 			return false;
 		}
 		public bool HasBresenhamLine(int r,int c){
-			List<Tile> line = GetBresenhamLine(r,c);
+			List<Tile> line = GetBestLine(r,c);
 			int length = line.Count;
 			if(length == 1){
 				return true;
@@ -511,6 +627,34 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 			return true;
+		}
+		public List<Tile> GetBestLine(PhysicalObject o){ return GetBestLine(o.row,o.col); }
+		public List<Tile> GetBestLine(int r,int c){
+			List<Tile> list = GetBresenhamLine(r,c);
+			List<Tile> list2 = GetAlternateBresenhamLine(r,c);
+			for(int i=0;i<list.Count;++i){
+				if(list2[i].opaque){
+					return list;
+				}
+				if(list[i].opaque){
+					return list2;
+				}
+			}
+			return list;
+		}
+		public List<Tile> GetBestExtendedLine(PhysicalObject o){ return GetBestExtendedLine(o.row,o.col); }
+		public List<Tile> GetBestExtendedLine(int r,int c){
+			List<Tile> list = GetExtendedBresenhamLine(r,c);
+			List<Tile> list2 = GetAlternateExtendedBresenhamLine(r,c);
+			for(int i=0;i<list.Count;++i){
+				if(list2[i].opaque){
+					return list;
+				}
+				if(list[i].opaque){
+					return list2;
+				}
+			}
+			return list;
 		}
 		public List<Tile> GetBresenhamLine(PhysicalObject o){ return GetBresenhamLine(o.row,o.col); }
 		public List<Tile> GetBresenhamLine(int r,int c){ //bresenham (inverted y)
@@ -679,6 +823,7 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 		}
+		public List<Tile> GetExtendedBresenhamLine(PhysicalObject o){ return GetExtendedBresenhamLine(o.row,o.col); }
 		public List<Tile> GetExtendedBresenhamLine(int r,int c){ //extends to edge of map
 			int y2 = r;
 			int x2 = c;
@@ -842,6 +987,346 @@ compare this number to 1/2:  if less than 1/2, major.
 							list.Add(M.tile[y1,x1]);
 							er += dx;
 							if(er<<1 >= dy){
+								--x1;
+								er -= dy;
+							}
+						}
+						return list;
+					}
+				}
+			}
+		}
+		public List<Tile> GetAlternateBresenhamLine(PhysicalObject o){ return GetAlternateBresenhamLine(o.row,o.col); }
+		public List<Tile> GetAlternateBresenhamLine(int r,int c){ //bresenham (inverted y)
+			int y2 = r;
+			int x2 = c;
+			int y1 = row;
+			int x1 = col;
+			int dx = Math.Abs(x2-x1);
+			int dy = Math.Abs(y2-y1);
+			int er = 0;
+			List<Tile> list = new List<Tile>();
+			if(dy==0){
+				if(dx==0){
+					list.Add(M.tile[row,col]);
+					return list;
+				}
+				for(;x1<x2;++x1){ //right
+					list.Add(M.tile[y1,x1]);
+				}
+				for(;x1>x2;--x1){ //left
+					list.Add(M.tile[y1,x1]);
+				}
+				list.Add(M.tile[r,c]);
+				return list;
+			}
+			if(dx==0){
+				for(;y1>y2;--y1){ //up
+					list.Add(M.tile[y1,x1]);
+				}
+				for(;y1<y2;++y1){ //down
+					list.Add(M.tile[y1,x1]);
+				}
+				list.Add(M.tile[r,c]);
+				return list;
+			}
+			if(y1+x1==y2+x2){ //slope is -1
+				for(;x1<x2;++x1){ //up-right
+					list.Add(M.tile[y1,x1]);
+					--y1;
+				}
+				for(;x1>x2;--x1){ //down-left
+					list.Add(M.tile[y1,x1]);
+					++y1;
+				}
+				list.Add(M.tile[r,c]);
+				return list;
+			}
+			if(y1-x1==y2-x2){ //slope is 1
+				for(;x1<x2;++x1){ //down-right
+					list.Add(M.tile[y1,x1]);
+					++y1;
+				}
+				for(;x1>x2;--x1){ //up-left
+					list.Add(M.tile[y1,x1]);
+					--y1;
+				}
+				list.Add(M.tile[r,c]);
+				return list;
+			}
+			if(y1<y2){ //down
+				if(x1<x2){ //right
+					if(dx>dy){ //slope less than 1
+						for(;x1<x2;++x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								++y1;
+								er -= dx;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1<y2;++y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
+								++x1;
+								er -= dy;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+				}
+				else{ //left
+					if(dx>dy){ //slope less than 1
+						for(;x1>x2;--x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								++y1;
+								er -= dx;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1<y2;++y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
+								--x1;
+								er -= dy;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+				}
+			}
+			else{ //up
+				if(x1<x2){ //right
+					if(dx>dy){ //slope less than 1
+						for(;x1<x2;++x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								--y1;
+								er -= dx;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1>y2;--y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
+								++x1;
+								er -= dy;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+				}
+				else{ //left
+					if(dx>dy){ //slope less than 1
+						for(;x1>x2;--x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								--y1;
+								er -= dx;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1>y2;--y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
+								--x1;
+								er -= dy;
+							}
+						}
+						list.Add(M.tile[r,c]);
+						return list;
+					}
+				}
+			}
+		}
+		public List<Tile> GetAlternateExtendedBresenhamLine(PhysicalObject o){ return GetAlternateExtendedBresenhamLine(o.row,o.col); }
+		public List<Tile> GetAlternateExtendedBresenhamLine(int r,int c){ //extends to edge of map
+			int y2 = r;
+			int x2 = c;
+			int y1 = row;
+			int x1 = col;
+			int dx = Math.Abs(x2-x1);
+			int dy = Math.Abs(y2-y1);
+			int er = 0;
+			int COLS = Global.COLS; //for laziness
+			int ROWS = Global.ROWS;
+			List<Tile> list = new List<Tile>();
+			if(dy==0){
+				if(dx==0){
+					list.Add(M.tile[row,col]);
+					return list;
+				}
+				if(x1<x2){
+					for(;x1<=COLS-1;++x1){ //right
+						list.Add(M.tile[y1,x1]);
+					}
+				}
+				else{
+					for(;x1>=0;--x1){ //left
+						list.Add(M.tile[y1,x1]);
+					}
+				}
+				return list;
+			}
+			if(dx==0){
+				if(y1>y2){
+					for(;y1>=0;--y1){ //up
+						list.Add(M.tile[y1,x1]);
+					}
+				}
+				else{
+					for(;y1<=ROWS-1;++y1){ //down
+						list.Add(M.tile[y1,x1]);
+					}
+				}
+				return list;
+			}
+			if(y1+x1==y2+x2){ //slope is -1
+				if(x1<x2){
+					for(;x1<=COLS-1 && y1>=0;++x1){ //up-right
+						list.Add(M.tile[y1,x1]);
+						--y1;
+					}
+				}
+				else{
+					for(;x1>=0 && y1<=ROWS-1;--x1){ //down-left
+						list.Add(M.tile[y1,x1]);
+						++y1;
+					}
+				}
+				return list;
+			}
+			if(y1-x1==y2-x2){ //slope is 1
+				if(x1<x2){
+					for(;x1<=COLS-1 && y1<=ROWS-1;++x1){ //down-right
+						list.Add(M.tile[y1,x1]);
+						++y1;
+					}
+				}
+				else{
+					for(;x1>=0 && y1>=0;--x1){ //up-left
+						list.Add(M.tile[y1,x1]);
+						--y1;
+					}
+				}
+				return list;
+			}
+			if(y1<y2){ //down
+				if(x1<x2){ //right
+					if(dx>dy){ //slope less than 1
+						for(;x1<=COLS-1 && y1<=ROWS-1;++x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								++y1;
+								er -= dx;
+							}
+						}
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1<=ROWS-1 && x1<=COLS-1;++y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
+								++x1;
+								er -= dy;
+							}
+						}
+						return list;
+					}
+				}
+				else{ //left
+					if(dx>dy){ //slope less than 1
+						for(;x1>=0 && y1<=ROWS-1;--x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								++y1;
+								er -= dx;
+							}
+						}
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1<=ROWS-1 && x1>=0;++y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
+								--x1;
+								er -= dy;
+							}
+						}
+						return list;
+					}
+				}
+			}
+			else{ //up
+				if(x1<x2){ //right
+					if(dx>dy){ //slope less than 1
+						for(;x1<=COLS-1 && y1>=0;++x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								--y1;
+								er -= dx;
+							}
+						}
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1>=0 && x1<=COLS-1;--y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
+								++x1;
+								er -= dy;
+							}
+						}
+						return list;
+					}
+				}
+				else{ //left
+					if(dx>dy){ //slope less than 1
+						for(;x1>=0 && y1>=0;--x1){
+							list.Add(M.tile[y1,x1]);
+							er += dy;
+							if(er<<1 > dx){
+								--y1;
+								er -= dx;
+							}
+						}
+						return list;
+					}
+					else{ //slope greater than 1
+						for(;y1>=0 && x1>=0;--y1){
+							list.Add(M.tile[y1,x1]);
+							er += dx;
+							if(er<<1 > dy){
 								--x1;
 								er -= dy;
 							}

@@ -287,8 +287,10 @@ namespace Forays{
 				TransformTo(TileType.FLOOR);
 				return;
 			}
-			B.Add("*CLICK* ",this);
-			B.PrintAll();
+			if(player.CanSee(this)){
+				B.Add("*CLICK* ",this);
+				B.PrintAll();
+			}
 			switch(type){
 			case TileType.GRENADE_TRAP:
 			{

@@ -38,6 +38,8 @@ namespace Forays{
 				return 11;
 			case SpellType.FLASHFIRE:
 				return 13;
+			case SpellType.SONIC_BOOM:
+				return 15;
 			case SpellType.COLLAPSE:
 				return 16;
 			case SpellType.FORCE_BEAM:
@@ -78,6 +80,8 @@ namespace Forays{
 				return "Amnesia";
 			case SpellType.SHINE:
 				return "Shine";
+			case SpellType.SONIC_BOOM:
+				return "Sonic boom";
 			case SpellType.FORCE_PALM:
 				return "Force palm";
 			case SpellType.BLINK:
@@ -138,6 +142,8 @@ namespace Forays{
 				return "Move to the other side of a wall";
 			case SpellType.FLASHFIRE:
 				return "3d6 fire damage, ranged radius 2";
+			case SpellType.SONIC_BOOM:
+				return "3d6 magic damage, can stun foes ";
 			case SpellType.COLLAPSE:
 				return "4d6, breaks walls, leaves rubble";
 			case SpellType.FORCE_BEAM:
