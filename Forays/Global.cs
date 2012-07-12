@@ -10,14 +10,14 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 namespace Forays{
-	public static class Global{
-		public const string VERSION = "version 0.6.0 ";
+	public static class Global{public static int temporary = 0;
+		public const string VERSION = "version 0.6.1 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
 		public const int ROWS = 22;
 		public const int COLS = 66;
-		public const int MAP_OFFSET_ROWS = 2;
+		public const int MAP_OFFSET_ROWS = 3;
 		public const int MAP_OFFSET_COLS = 13;
 		public const int MAX_LIGHT_RADIUS = 12; //the maximum POSSIBLE light radius. used in light calculations.
 		public const int MAX_INVENTORY_SIZE = ROWS-2;
@@ -219,87 +219,6 @@ namespace Forays{
 				return "";
 			}
 		}
-/*		public static void DisplayHelp(){
-			Console.CursorVisible = false;
-			Screen.Blank();
-			StreamReader file = new StreamReader("help.txt");
-			for(int i=0;i<24;++i){
-				Screen.WriteString(i,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			for(int i=0;i<24;++i){
-				Screen.WriteString(i,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			if(Global.Option(OptionType.VI_KEYS)){
-				for(int i=0;i<24;++i){
-					file.ReadLine();
-				}
-			}
-			for(int i=0;i<24;++i){
-				Screen.WriteString(i,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			file.Close();
-			Screen.Blank();
-		}
-		public static void DisplayFeatHelp(){
-			Console.CursorVisible = false;
-			Screen.Blank();
-			StreamReader file = new StreamReader("feat_help.txt");
-			Screen.Blank();
-			for(int s=0;s<24;++s){
-				Screen.WriteString(s,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			Screen.Blank();
-			for(int s=0;s<24;++s){
-				Screen.WriteString(s,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			Screen.Blank();
-			for(int s=0;s<24;++s){
-				Screen.WriteString(s,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			file.Close();
-			Screen.Blank();
-		}
-		public static void DisplayItemHelp(){
-			Console.CursorVisible = false;
-			Screen.Blank();
-			StreamReader file = new StreamReader("item_help.txt");
-			for(int i=0;i<24;++i){
-				Screen.WriteString(i,0,file.ReadLine());
-			}
-			Console.ReadKey(true);
-			file.Close();
-			Screen.Blank();
-		}
-		public static void Test(){
-			string[] topics = {"Overview","Skills","Feats","Items","Commands","Advanced","Quit"};
-			Screen.WriteString(5,4,"Topics:",Color.Yellow);
-			int line = 7;
-			foreach(string s in topics){
-				Screen.WriteString(line,0,"[ ] ");
-				Screen.WriteString(line,4,s);
-				if(line == 10){
-					Screen.WriteString(line,4,s,Color.Yellow);
-				}
-				Screen.WriteChar(line,1,new colorchar((char)('a'+line-7),Color.Cyan));
-				++line;
-			}
-			Screen.WriteString(0,16,new colorstring("".PadRight(61,'-'),Color.Gray,"[",Color.Yellow,"-",Color.Cyan,"]",Color.Yellow));
-			Screen.WriteString(23,16,new colorstring("".PadRight(61,'-'),Color.Gray,"[",Color.Yellow,"+",Color.Cyan,"]",Color.Yellow));
-			line = 1;
-			while(line < 23){
-				if(line % 2 == 1){
-				}else{}
-				++line;
-			}
-			Console.ReadKey(true);
-			Screen.Blank();
-		}*/
 		public static void DisplayHelp(){ DisplayHelp(Help.Overview); }
 		public static void DisplayHelp(Help h){
 			Console.CursorVisible = false;
@@ -540,7 +459,7 @@ namespace Forays{
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options:");
-			file.WriteLine("last_target vi_keys open_chests no_blood_boil_message autopickup no_roman_numerals");
+			file.WriteLine("last_target vi_keys open_chests no_blood_boil_message autopickup no_roman_numerals hide_old_messages");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");
@@ -577,8 +496,8 @@ namespace Forays{
 		public Dict(){ d = new Dictionary<TKey,TValue>(); }
 		public Dict(Dict<TKey,TValue> d2){ d = new Dictionary<TKey, TValue>(d2.d); }
 	}
-	public struct pos{ //eventually, this might become part of PhysicalObject. if so, i'll create a property for 'row' and 'col'
-		public int row; //so the change will be entirely transparent.
+	public struct pos{
+		public int row;
 		public int col;
 		public pos(int r,int c){
 			row = r;
@@ -586,6 +505,7 @@ namespace Forays{
 		}
 		public int DistanceFrom(PhysicalObject o){ return DistanceFrom(o.row,o.col); }
 		public int DistanceFrom(pos p){ return DistanceFrom(p.row,p.col); }
+		//public int DistanceFrom(ICoord o){ return DistanceFrom(o.row,o.col); }
 		public int DistanceFrom(int r,int c){
 			int dy = Math.Abs(r-row);
 			int dx = Math.Abs(c-col);
@@ -594,6 +514,18 @@ namespace Forays{
 			}
 			else{
 				return dy;
+			}
+		}
+		public int EstimatedEuclideanDistanceFromX10(PhysicalObject o){ return EstimatedEuclideanDistanceFromX10(o.row,o.col); }
+		public int EstimatedEuclideanDistanceFromX10(pos p){ return EstimatedEuclideanDistanceFromX10(p.row,p.col); }
+		public int EstimatedEuclideanDistanceFromX10(int r,int c){ // x10 so that orthogonal directions are closer than diagonals
+			int dy = Math.Abs(r-row) * 10;
+			int dx = Math.Abs(c-col) * 10;
+			if(dx > dy){
+				return dx + (dy/2);
+			}
+			else{
+				return dy + (dx/2);
 			}
 		}
 		public List<pos> PositionsWithinDistance(int dist){ return PositionsWithinDistance(dist,false); }
@@ -642,6 +574,12 @@ namespace Forays{
 				l.Add(obj);
 			}
 		}
+		public static T Last<T>(this List<T> l){ //note that this doesn't work the way I wanted it to - 
+			if(l.Count == 0){ // you can't assign to list.Last()
+				return default(T);
+			}
+			return l[l.Count-1];
+		}
 		public static string PadOuter(this string s,int totalWidth){
 			return s.PadOuter(totalWidth,' ');
 		}
@@ -660,11 +598,67 @@ namespace Forays{
 			}
 			return left + s + right;
 		}
+		public static string PadToMapSize(this string s){
+			return s.PadRight(Global.COLS);
+		}
 		public delegate void ListDelegate<T>(T t); //this one is kinda experimental and doesn't save tooo much typing, but it's here anyway
 		public static void Each<T>(this List<T> l,ListDelegate<T> del){
 			foreach(T t in l){
 				del(t);
 			}
 		}
+		public static List<Tile> ToFirstSolidTile(this List<Tile> line){
+			List<Tile> result = new List<Tile>();
+			foreach(Tile t in line){
+				result.Add(t);
+				if(!t.passable){
+					break;
+				}
+			}
+			return result;
+		}
+		public static List<Tile> ToFirstObstruction(this List<Tile> line){ //impassible tile OR actor
+			List<Tile> result = new List<Tile>();
+			int idx = 0;
+			foreach(Tile t in line){
+				result.Add(t);
+				if(idx != 0){ //skip the first, as it is assumed to be the origin
+					if(!t.passable || t.actor() != null){
+						break;
+					}
+				}
+				++idx;
+			}
+			return result;
+		}
+		public static List<Tile> To(this List<Tile> line,PhysicalObject o){
+			List<Tile> result = new List<Tile>();
+			foreach(Tile t in line){
+				result.Add(t);
+				if(o.row == t.row && o.col == t.col){
+					break;
+				}
+			}
+			return result;
+		}
+		public static Tile LastBeforeSolidTile(this List<Tile> line){
+			Tile result = null;
+			foreach(Tile t in line){
+				if(!t.passable){
+					break;
+				}
+				else{
+					result = t;
+				}
+			}
+			return result;
+		}
+		/*public static List<ICoord> ToICoord(this List<Tile> l){
+			List<ICoord> result = new List<ICoord>();
+			foreach(Tile t in l){
+				result.Add(t);
+			}
+			return result;
+		}*/
 	}
 }

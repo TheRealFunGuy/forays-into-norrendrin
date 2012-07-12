@@ -296,15 +296,21 @@ namespace Forays{
 				}
 				else{
 					if(tile[r,c].seen){
-						ch.c = tile[r,c].symbol;
-						ch.color = tile[r,c].color;
-						if(ch.c=='.' || ch.c=='#'){
-							//if(Global.Option(OptionType.DARK_GRAY_UNSEEN)){
-							ch.color = Color.DarkGray;
-							/*}
+						if(tile[r,c].inv != null){
+							ch.c = tile[r,c].inv.symbol;
+							ch.color = tile[r,c].inv.color;
+						}
+						else{
+							ch.c = tile[r,c].symbol;
+							ch.color = tile[r,c].color;
+							if(ch.c=='.' || ch.c=='#'){
+								//if(Global.Option(OptionType.DARK_GRAY_UNSEEN)){
+								ch.color = Color.DarkGray;
+								/*}
 							else{
 								ch.color = Color.White;
 							}*/
+							}
 						}
 					}
 					else{
@@ -449,6 +455,7 @@ namespace Forays{
 				}
 			}
 			wiz_lite = false;
+			wiz_dark = false;
 			Q.KillEvents(null,EventType.RELATIVELY_SAFE);
 			Q.KillEvents(null,EventType.POLTERGEIST);
 			alltiles.Clear();
@@ -617,19 +624,46 @@ namespace Forays{
 					SpawnMob(type);
 				}
 			}
-			bool[,] nogood = new bool[ROWS,COLS];
+			bool[,] good_location = new bool[ROWS,COLS];
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
-					nogood[i,j] = false;
+					if(tile[i,j].type == TileType.FLOOR){
+						good_location[i,j] = true;
+					}
+					else{
+						good_location[i,j] = false;
+					}
 				}
 			}
 			foreach(Actor a in AllActors()){
 				if(a != player){
-					nogood[a.row,a.col] = true;
+					good_location[a.row,a.col] = false;
 					for(int i=0;i<ROWS;++i){
 						for(int j=0;j<COLS;++j){
-							if(!tile[i,j].passable || tile[i,j].IsTrap() || a.CanSee(i,j)){
-								nogood[i,j] = true;
+							if(good_location[i,j] && a.HasLOS(i,j)){
+								good_location[i,j] = false;
+							}
+						}
+					}
+				}
+			}
+			bool at_least_one_good = false;
+			for(int i=0;i<ROWS && !at_least_one_good;++i){
+				for(int j=0;j<COLS && !at_least_one_good;++j){
+					if(good_location[i,j]){
+						at_least_one_good = true;
+					}
+				}
+			}
+			if(!at_least_one_good){
+				foreach(Actor a in AllActors()){
+					if(a != player){
+						good_location[a.row,a.col] = false;
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								if(good_location[i,j] && a.CanSee(i,j)){ //checking CanSee this time
+									good_location[i,j] = false;
+								}
 							}
 						}
 					}
@@ -638,7 +672,7 @@ namespace Forays{
 			List<Tile> goodtiles = new List<Tile>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
-					if(!nogood[i,j]){
+					if(good_location[i,j]){
 						goodtiles.Add(tile[i,j]);
 					}
 				}
@@ -735,8 +769,8 @@ namespace Forays{
 										if(t.DistanceFrom(tile[rr,rc]) < distance+2){
 											Tile neighbor = t.TileInDirection(t.RotateDirection(i,false,2));
 											if(neighbor.TileInDirection(t.RotateDirection(i,false,1)).type == TileType.WALL
-											&& neighbor.TileInDirection(t.RotateDirection(i,false,2)).type == TileType.WALL
-											&& neighbor.TileInDirection(t.RotateDirection(i,false,3)).type == TileType.WALL){
+											   && neighbor.TileInDirection(t.RotateDirection(i,false,2)).type == TileType.WALL
+											   && neighbor.TileInDirection(t.RotateDirection(i,false,3)).type == TileType.WALL){
 												tt = TileType.FLOOR;
 												if(Global.Roll(3) >= 2){
 													tt = TileType.GRENADE_TRAP;
@@ -753,8 +787,8 @@ namespace Forays{
 											}
 											neighbor = t.TileInDirection(t.RotateDirection(i,true,2));
 											if(neighbor.TileInDirection(t.RotateDirection(i,true,1)).type == TileType.WALL
-											&& neighbor.TileInDirection(t.RotateDirection(i,true,2)).type == TileType.WALL
-											&& neighbor.TileInDirection(t.RotateDirection(i,true,3)).type == TileType.WALL){
+											   && neighbor.TileInDirection(t.RotateDirection(i,true,2)).type == TileType.WALL
+											   && neighbor.TileInDirection(t.RotateDirection(i,true,3)).type == TileType.WALL){
 												tt = TileType.FLOOR;
 												if(Global.Roll(3) >= 2){
 													tt = TileType.GRENADE_TRAP;

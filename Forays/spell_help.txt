@@ -22,14 +22,14 @@ Magic hammer (Level 8) Deals 4d6 magic damage to an adjacent
                         target, stunning it for 2 turns.
 Retreat (Level 9) Cast once to create a rune of transport under
                    you. Cast again to return to your rune.
-Placeholder (Level 9 3/4) Transports you to a land of
-                           make-believe.
 Glacial blast (Level 10) A freezing projectile deals 3d6 cold
                           damage at range.
 Passage (Level 11) Travel all the way through an adjacent wall,
                     if there is empty space on the other side.
 Flashfire (Level 13) A fiery explosion deals 3d6 fire damage to
                       anything within 2 spaces of your target.
+Sonic boom (Level 15) A wave of sound deals 3d6 magic damage
+                       and has a 50% chance to stun.
 Collapse (Level 16) Part of the dungeon crashes down on the
                      chosen spot, leaving rubble strewn about.
                      Destroys a wall or brings the ceiling down

@@ -485,38 +485,6 @@ namespace Forays{
 				Q1();
 				skip_input = true;
 			}
-			/*if(HasAttr(AttrType.FROZEN)){
-				int damage = 0;
-				if(type == ActorType.PLAYER){
-					damage = Global.Roll(Weapon.Damage(weapons.First.Value).dice,6) + TotalSkill(SkillType.COMBAT);
-				}
-				else{
-					damage = Global.Roll(AttackList.Attack(type,0).damage.dice,6) + TotalSkill(SkillType.COMBAT);
-				}
-				attrs[Forays.AttrType.FROZEN] -= damage;
-				if(attrs[Forays.AttrType.FROZEN] < 0){
-					attrs[Forays.AttrType.FROZEN] = 0;
-				}
-				if(type == ActorType.PLAYER){
-					if(HasAttr(AttrType.FROZEN)){
-						B.AddDependingOnLastPartialMessage("You attempt to break free. ");
-					}
-					else{
-						B.Add("You break free! "); //todo fix this!
-						B.Print(false); //displaynow didn't work either - rethink the entire handling of Frozen.
-					}
-				}
-				else{
-					if(HasAttr(AttrType.FROZEN)){
-						B.Add(the_name + " attempts to break free. ",this);
-					}
-					else{
-						B.Add(the_name + " breaks free! ",this);
-					}
-					Q1();
-					skip_input = true;
-				}
-			}*/
 			if(HasAttr(AttrType.FROZEN)){
 				if(type != ActorType.PLAYER){
 					int damage = Global.Roll(AttackList.Attack(type,0).damage.dice,6) + TotalSkill(SkillType.COMBAT);
@@ -661,7 +629,7 @@ namespace Forays{
 					}
 				}
 			}
-			if(HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN) && time_of_last_action < Q.turn){ //this hack is necessary because of
+			if(HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){ //this hack is necessary because of
 				if(!HasAttr(AttrType.CATCHING_FIRE)){ //  the timing involved - 
 					attrs[AttrType.CATCHING_FIRE] = 1;	// anything that catches fire on its own turn would immediately be on fire.
 				}
@@ -736,23 +704,31 @@ namespace Forays{
 		public static char ConvertVIKeys(char ch){
 			switch(ch){
 			case 'h':
+			case 'H':
 				return '4';
 			case 'j':
+			case 'J':
 				return '2';
 			case 'k':
+			case 'K':
 				return '8';
 			case 'l':
+			case 'L':
 				return '6';
 			case 'y':
+			case 'Y':
 				return '7';
 			case 'u':
+			case 'U':
 				return '9';
 			case 'b':
+			case 'B':
 				return '1';
 			case 'n':
+			case 'N':
 				return '3';
-			case 'x':
-				return 'l';
+			//case 'x':
+			//	return 'l';
 			default:
 				return ch;
 			}
@@ -773,7 +749,7 @@ namespace Forays{
 			Console.CursorVisible = true;
 			if(HasAttr(AttrType.AUTOEXPLORE)){
 				if(path.Count == 0){
-					FindPathToNearestFrontier();
+					FindAutoexplorePath();
 				}
 			}
 			if(HasAttr(AttrType.PARALYZED) || HasAttr(AttrType.AFRAID)){
@@ -987,7 +963,7 @@ namespace Forays{
 			case '5':
 			case '.':
 				if(HasFeat(FeatType.FULL_DEFENSE) && EnemiesAdjacent() > 0){
-					if(!HasAttr(AttrType.FROZEN) && !HasAttr(AttrType.CATCHING_FIRE) && !HasAttr(AttrType.ON_FIRE)){
+					if(!HasAttr(AttrType.CATCHING_FIRE) && !HasAttr(AttrType.ON_FIRE)){
 						attrs[AttrType.DEFENSIVE_STANCE]++;
 						B.Add("You ready yourself. ");
 					}
@@ -1022,12 +998,6 @@ namespace Forays{
 						}
 					}
 				}
-				if(HasAttr(AttrType.FROZEN)){
-					attrs[AttrType.FROZEN] = 0;
-					B.Add("You break free. ");
-					Q1();
-					break;
-				}
 				if(M.tile[row,col].inv != null){
 					B.Add("You see " + M.tile[row,col].inv.AName() + ". ");
 				}
@@ -1058,10 +1028,10 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'o':
+			case 'o': //todo - change to 'o'perate
 				{
-				int door = DirectionOfOnly(TileType.DOOR_C);
-				int chest = DirectionOfOnly(TileType.CHEST);
+				int door = DirectionOfOnlyUnblocked(TileType.DOOR_C);
+				int chest = DirectionOfOnlyUnblocked(TileType.CHEST);
 				bool ask=false;
 				if(door == -1){
 					ask = true;
@@ -1073,8 +1043,17 @@ namespace Forays{
 						}
 						else{
 							if(chest == 0){
-								B.Add("There's nothing to open here. ");
-								Q0();
+								if(tile().type == TileType.CHEST){
+									if(StunnedThisTurn()){
+										break;
+									}
+									tile().OpenChest();
+									Q1();
+								}
+								else{
+									B.Add("There's nothing to open here. ");
+									Q0();
+								}
 							}
 							else{
 								if(StunnedThisTurn()){
@@ -1128,9 +1107,9 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'c':
+			case 'c': //todo - remove: replaced by operate
 				{
-				int door = DirectionOfOnly(TileType.DOOR_O);
+				int door = DirectionOfOnlyUnblocked(TileType.DOOR_O);
 				if(door == -1){
 					int dir = GetDirection("Close in which direction? ");
 					if(dir != -1){
@@ -1164,7 +1143,7 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'f':
+			case 's':
 				{
 				if(Weapon.BaseWeapon(weapons.First.Value) == WeaponType.BOW || HasFeat(FeatType.QUICK_DRAW)){
 					if(ActorsAtDistance(1).Count > 0){
@@ -1180,10 +1159,10 @@ namespace Forays{
 						target = null;										//at adjacent targets anyway.
 					}*/
 					else{
-						Tile t = GetTarget(12);
-						if(t != null){
+						List<Tile> line = GetTarget(12);
+						if(line != null){
 							//if(DistanceFrom(t) > 1 || t.actor() == null){
-							FireArrow(t);
+							FireArrow(line);
 							/*}
 							else{
 								B.Add("You can't fire at adjacent targets. ");
@@ -1201,7 +1180,7 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'F':
+			case 'f':
 				{
 				List<FeatType> ft = new List<FeatType>();
 				List<char> charlist = new List<char>();
@@ -1327,7 +1306,7 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'Z':
+			case 'z':
 				{
 				List<colorstring> ls = new List<colorstring>();
 				List<SpellType> sp = new List<SpellType>();
@@ -1395,7 +1374,7 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'R':
+			case 'r':
 				if(attrs[AttrType.RESTING] != -1){ //gets set to -1 if you've rested on this level
 					bool monsters_visible = false;
 					foreach(Actor a in M.AllActors()){
@@ -1471,7 +1450,7 @@ namespace Forays{
 					Q0();
 				}
 				break;
-			case 'B':
+			case 'x':
 			{
 				attrs[AttrType.AUTOEXPLORE]++;
 				Q0();
@@ -1480,8 +1459,17 @@ namespace Forays{
 			case 'g':
 			case ';':
 				if(tile().inv == null){
-					B.Add("There's nothing here to pick up. ");
-					Q0();
+					if(tile().type == TileType.CHEST){
+						if(StunnedThisTurn()){
+							break;
+						}
+						tile().OpenChest();
+						Q1();
+					}
+					else{
+						B.Add("There's nothing here to pick up. ");
+						Q0();
+					}
 				}
 				else{
 					if(StunnedThisTurn()){
@@ -1963,7 +1951,7 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'T':
+			case 't':
 				if(StunnedThisTurn()){
 					break;
 				}
@@ -1993,11 +1981,11 @@ namespace Forays{
 				}
 				Q1();
 				break;
-			case 'l':
-				GetTarget(true);
+			case (char)9: //todo - remove: make 'tab' the best of both worlds
+				GetTarget(true,-1,true);
 				Q0();
 				break;
-			case (char)9: //tab
+/*			case (char)9: //tab
 				{
 				List<PhysicalObject> interesting_targets = new List<PhysicalObject>(); //c&p go
 				foreach(Actor a in M.AllActors()){
@@ -2005,20 +1993,6 @@ namespace Forays{
 						interesting_targets.Add(a);
 					}
 				}
-				/*foreach(Tile t in M.AllTiles()){
-					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
-					|| t.type == TileType.STAIRS || t.type == TileType.CHEST
-					|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
-					|| t.type == TileType.STALAGMITE || t.type == TileType.QUICKFIRE
-					|| t.inv != null){
-						if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING) && CanSee(t)){
-							interesting_targets.Add(t);
-						}
-					}
-					if(t.IsTrap() && !interesting_targets.Contains(t) && CanSee(t) && t.name != "floor"){
-						interesting_targets.Add(t);
-					}
-				}*/
 				if(interesting_targets.Count > 0){
 					GetTarget(true,-1,true);
 				}
@@ -2027,8 +2001,8 @@ namespace Forays{
 				}
 				Q0();
 				break;
-				}
-			case 'P':
+				}*/
+			case 'p':
 				{
 				Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
 				int i = 1;
@@ -2043,7 +2017,7 @@ namespace Forays{
 				Q0();
 				break;
 				}
-			case 'C':
+			case 'C': //todo - change to 'c'
 				DisplayCharacterInfo();
 				Q0();
 				break;
@@ -2056,6 +2030,7 @@ namespace Forays{
 					ls.Add("Use last target when possible".PadRight(58) + (Global.Option(OptionType.LAST_TARGET)? "yes ":"no ").PadLeft(4));
 					ls.Add("Automatically pick up items (if safe)".PadRight(58) + (Global.Option(OptionType.AUTOPICKUP)? "yes ":"no ").PadLeft(4));
 					ls.Add("Open chests by walking into them".PadRight(58) + (Global.Option(OptionType.OPEN_CHESTS)? "yes ":"no ").PadLeft(4));
+					ls.Add("Hide old messages instead of darkening them".PadRight(58) + (Global.Option(OptionType.HIDE_OLD_MESSAGES)? "yes ":"no ").PadLeft(4));
 					ls.Add("Cast a spell instead of attacking".PadRight(46) + (F[0]==SpellType.NO_SPELL? "no ":Spell.Name(F[0])).PadLeft(16));
 					ls.Add("Don't print a message for the Blood boil feat".PadRight(58) + (Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE)? "yes ":"no ").PadLeft(4));
 					ls.Add("Don't use roman numerals for automatic naming".PadRight(58) + (Global.Option(OptionType.NO_ROMAN_NUMERALS)? "yes ":"no ").PadLeft(4));
@@ -2078,6 +2053,9 @@ namespace Forays{
 						Global.Options[OptionType.OPEN_CHESTS] = !Global.Option(OptionType.OPEN_CHESTS);
 						break;
 					case 'e':
+						Global.Options[OptionType.HIDE_OLD_MESSAGES] = !Global.Option(OptionType.HIDE_OLD_MESSAGES);
+						break;
+					case 'f':
 					{
 						M.RedrawWithStrings();
 						List<string> list = new List<string>();
@@ -2108,18 +2086,12 @@ namespace Forays{
 						}
 						break;
 					}
-					case 'f':
+					case 'g':
 						Global.Options[OptionType.NO_BLOOD_BOIL_MESSAGE] = !Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE);
 						break;
-					case 'g':
+					case 'h':
 						Global.Options[OptionType.NO_ROMAN_NUMERALS] = !Global.Option(OptionType.NO_ROMAN_NUMERALS);
 						break;
-					/*case 'f':
-						Global.Options[OptionType.ITEMS_AND_TILES_ARE_INTERESTING] = !Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING);
-						break;*/
-					/*case 'i':
-						Global.Options[OptionType.DARK_GRAY_UNSEEN] = !Global.Option(OptionType.DARK_GRAY_UNSEEN);
-						break;*/
 					case (char)27:
 					case ' ':
 					case (char)13:
@@ -2133,6 +2105,7 @@ namespace Forays{
 				break;
 			}
 			case '?':
+			case '/':
 			{
 				Global.DisplayHelp();
 				Q0();
@@ -2141,25 +2114,21 @@ namespace Forays{
 			case '-':
 			{
 				Console.CursorVisible = false;
-				StreamReader file = new StreamReader("help.txt");
-				for(int i=0;i<55;++i){
-					file.ReadLine();
+				List<string> commandhelp = Global.HelpTopic(Help.Commands);
+				commandhelp.RemoveRange(0,2);
+				Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+				for(int i=0;i<20;++i){
+					Screen.WriteMapString(i+1,0,commandhelp[i].PadRight(COLS));
 				}
-				if(Global.Option(OptionType.VI_KEYS)){
-					for(int i=0;i<28;++i){
-						file.ReadLine();
-					}
-				}
-				for(int i=0;i<22;++i){
-					Screen.WriteMapString(i,0,file.ReadLine().PadRight(COLS));
-				}
+				Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
+				B.DisplayNow("Commands: ");
+				Console.CursorVisible = true;
 				Console.ReadKey(true);
-				file.Close();
 				Screen.Blank();
 				Q0();
 				break;
 			}
-			case 'Q':
+			case 'q':
 				List<string> ls = new List<string>();
 				ls.Add("Abandon character and exit to main menu");
 				ls.Add("Abandon character and quit game");
@@ -2183,6 +2152,22 @@ namespace Forays{
 				}
 				Q0();
 				break;
+/*			case 'm':
+				Screen.WriteMapString(21,0,"The first option. Move it beyond a wall and it turns red. ");
+				List<Tile> line2 = GetTarget(false,15,true,3);
+				AnimateBoltBeam(line2,Color.Yellow);
+				AnimateExplosion(line2.Last(),3,'*',Color.RandomLightning);
+				Screen.WriteMapString(21,0,"The 2nd option. Like the first, but with an outline.      ");
+				line2 = GetTarget3Temp(false,15,true,3);
+				AnimateBoltBeam(line2,Color.Cyan);
+				AnimateExplosion(line2.Last(),3,'*',Color.Cyan);
+				Screen.WriteMapString(21,0,"The 3rd option. Notice that the radius stops at walls.    ");
+				line2 = GetTarget2Temp(false,15,true,3);
+				AnimateBeam(line2,'*',Color.RandomFire);
+				AnimateExplosion(line2.Last(),3,'*',Color.RandomFire);
+				Screen.WriteMapString(21,0,"                                                          ");
+				Q0();
+				break;*/
 			case '~': //debug mode 
 				if(true){
 				List<string> l = new List<string>();
@@ -2356,10 +2341,13 @@ namespace Forays{
 				}
 				case 15:
 				{
-					Tile t = GetTarget();
-					if(t != null){
-						t.TransformTo(TileType.DOOR_O);
-					}
+						List<Tile> line = GetTarget(-1,-1);
+						if(line != null){
+							Tile t = line.Last();
+							if(t != null){
+								t.TransformTo(TileType.DOOR_O);
+							}
+						}
 					Q0();
 					break;
 				}
@@ -2432,12 +2420,6 @@ namespace Forays{
 							Q1();
 						}
 						else{
-							if(HasAttr(AttrType.FROZEN)){
-								attrs[AttrType.FROZEN] = 0; //todo
-								B.Add("You break free. ");
-								Q1();
-								return;
-							}
 							if(TileInDirection(dir).inv != null){
 								B.Add("You see " + TileInDirection(dir).inv.AName() + ". ");
 							}
@@ -2853,14 +2835,8 @@ namespace Forays{
 							QS();
 						}
 						else{ 
-							bool immob = false;
-							if(HasAttr(AttrType.FROZEN)){
-								immob = true;
-							}
 							if(AI_Sidestep(target)){
-								if(!immob){
-									B.Add(the_name + " tries to line up a shot. ",this);
-								}
+								B.Add(the_name + " tries to line up a shot. ",this);
 							}
 							QS();
 						}
@@ -2869,18 +2845,15 @@ namespace Forays{
 				case 3:
 				case 4:
 				case 5:
+				case 6:
+				case 7:
+				case 8:
 					if(FirstActorInLine(target) == target){
 						FireArrow(target);
 					}
 					else{
-						bool immob = false;
-						if(HasAttr(AttrType.FROZEN)){
-							immob = true;
-						}
 						if(AI_Sidestep(target)){
-							if(!immob){
-								B.Add(the_name + " tries to line up a shot. ",this);
-							}
+							B.Add(the_name + " tries to line up a shot. ",this);
 						}
 						QS();
 					}
@@ -3261,13 +3234,13 @@ namespace Forays{
 			{
 				if(curhp <= 15){
 					Tile wall = null;
-					int wall_distance_to_center = 99;
+					int wall_distance_to_center = 9999;
 					pos center = new pos(ROWS/2,COLS/2);
 					for(int i = 2;i<=8;i += 2){
 						if(TileInDirection(i).type == TileType.WALL){
-							if(TileInDirection(i).EstimatedEuclideanDistanceFrom(center) < wall_distance_to_center){
+							if(TileInDirection(i).EstimatedEuclideanDistanceFromX10(center) < wall_distance_to_center){
 								wall = TileInDirection(i);
-								wall_distance_to_center = TileInDirection(i).EstimatedEuclideanDistanceFrom(center);
+								wall_distance_to_center = TileInDirection(i).EstimatedEuclideanDistanceFromX10(center);
 							}
 						}
 					}
@@ -3365,9 +3338,9 @@ namespace Forays{
 					}
 					else{
 						if(FirstActorInLine(target) == target){
-							List<Tile> line = GetBresenhamLine(target.row,target.col);
+							List<Tile> line = GetBestLine(target.row,target.col);
 							line.Remove(line[line.Count-1]);
-							Screen.AnimateBoltBeam(line,Color.DarkGreen); //todo does this need DisplayNow()?
+							AnimateBoltBeam(line,Color.DarkGreen);
 							if(Global.Roll(1,4) == 4){
 								Attack(0,target);
 							}
@@ -3597,7 +3570,6 @@ namespace Forays{
 			case ActorType.SKULKING_KILLER:
 				if(!HasAttr(AttrType.COOLDOWN_1) && DistanceFrom(target) <= 3){
 					attrs[AttrType.COOLDOWN_1]++;
-					attrs[AttrType.TURNS_VISIBLE] = -1;
 					AnimateProjectile(target,Color.DarkYellow,'%');
 					if(target.CanSee(this)){
 						B.Add(the_name + " throws a bola at " + target.the_name + ". ",this,target);
@@ -3605,6 +3577,7 @@ namespace Forays{
 					else{
 						B.Add("A bola whirls toward " + target.the_name + ". ",this,target);
 					}
+					attrs[AttrType.TURNS_VISIBLE] = -1;
 					target.attrs[AttrType.SLOWED]++;
 					target.speed += 100;
 					Q.Add(new Event(target,(Global.Roll(3)+4)*100,AttrType.SLOWED,target.YouAre() + " no longer slowed. ",target));
@@ -3635,10 +3608,6 @@ namespace Forays{
 					int dir = attrs[AttrType.COOLDOWN_2];
 					bool cw = Global.CoinFlip();
 					if(TileInDirection(dir).passable && ActorInDirection(dir) == null){
-						if(HasAttr(AttrType.FROZEN)){
-							attrs[AttrType.FROZEN] = 0;
-							B.Add(the_name + " breaks free. ",this);
-						}
 						B.Add(the_name + " leaps forward swinging his axe! ",this);
 						Move(TileInDirection(dir).row,TileInDirection(dir).col);
 						Actor a = ActorInDirection(RotateDirection(dir,cw));
@@ -3989,28 +3958,9 @@ namespace Forays{
 			default:
 				if(target_location != null){
 					if(DistanceFrom(target_location) == 1 && M.actor[target_location.row,target_location.col] != null){
-						if(HasAttr(AttrType.FROZEN)){ //todo, search for all instances of FROZEN
-							B.Add(You("break") + " free. ",this);
-							attrs[AttrType.FROZEN] = 0;
-							QS();
-						}
-						else{
-							if(M.actor[target_location.row,target_location.col].HasAttr(AttrType.FROZEN)){
-								if(HasAttr(AttrType.HUMANOID_INTELLIGENCE) && M.actor[target_location.row,target_location.col].symbol == symbol){
-									B.Add(You("break") + M.actor[target_location.row,target_location.col].the_name + " free. ",this,M.actor[target_location.row,target_location.col]);
-									M.actor[target_location.row,target_location.col].attrs[AttrType.FROZEN] = 0;
-									QS();
-								}
-								else{
-									QS();
-								}
-							}
-							else{
-								Move(target_location.row,target_location.col); //swap places
-								target_location = null;
-								QS();
-							}
-						}
+						Move(target_location.row,target_location.col); //swap places
+						target_location = null;
+						QS();
 					}
 					else{
 						if(AI_Step(target_location)){
@@ -4192,11 +4142,6 @@ namespace Forays{
 		}
 		public bool AI_Step(PhysicalObject obj){ return AI_Step(obj,false); }
 		public bool AI_Step(PhysicalObject obj,bool flee){
-			if(HasAttr(AttrType.FROZEN)){
-				B.Add(You("break") + " free. ",this); //todo change
-				attrs[AttrType.FROZEN] = 0;
-				return true;
-			}
 			int rowchange = 0;
 			int colchange = 0;
 			if(obj.row < row){
@@ -4641,7 +4586,8 @@ namespace Forays{
 			Q.Add(new Event(this,info.cost));
 			return hit;
 		}
-		public void FireArrow(PhysicalObject obj){
+		public void FireArrow(PhysicalObject obj){ FireArrow(GetBestExtendedLine(obj)); }
+		public void FireArrow(List<Tile> line){
 			if(StunnedThisTurn()){
 				return;
 			}
@@ -4650,13 +4596,16 @@ namespace Forays{
 				mod = -20; //keen eyes makes it 55%
 			}
 			mod += TotalSkill(SkillType.COMBAT);
-			Tile t = M.tile[obj.row,obj.col];
+			//Tile t = M.tile[obj.row,obj.col];
+			Tile t = null;
 			Actor a = null;
 			bool actor_present = false;
 			List<string> misses = new List<string>();
-			List<Tile> line = GetExtendedBresenhamLine(obj.row,obj.col);
+			List<Actor> missed = new List<Actor>();
 			line.RemoveAt(0); //remove the source of the arrow first
-			line = line.GetRange(0,Math.Min(12,line.Count));
+			if(line.Count > 12){
+				line = line.GetRange(0,Math.Min(12,line.Count));
+			}
 			for(int i=0;i<line.Count;++i){
 				a = line[i].actor();
 				t = line[i];
@@ -4672,6 +4621,7 @@ namespace Forays{
 					}
 					else{
 						misses.Add("The arrow misses " + a.the_name + ". ");
+						missed.Add(a);
 					}
 					a = null;
 				}
@@ -4682,9 +4632,16 @@ namespace Forays{
 			}
 			B.Add(You("fire") + " an arrow. ",this);
 			B.DisplayNow();
-			Screen.AnimateBoltProjectile(GetBresenhamLine(t.row,t.col),Color.DarkYellow,20);
+			if(a != null){
+				Screen.AnimateBoltProjectile(line.To(a),Color.DarkYellow,20);
+			}
+			else{
+				Screen.AnimateBoltProjectile(line.To(t),Color.DarkYellow,20);
+			}
+			int idx = 0;
 			foreach(string s in misses){
-				B.Add(s,this,a);
+				B.Add(s,this,missed[idx]);
+				++idx;
 			}
 			if(a != null){
 				if(a.HasAttr(AttrType.IMMUNE_ARROWS)){
@@ -4712,10 +4669,14 @@ namespace Forays{
 							alive = false;
 						}
 					}
-					if(alive && weapons.First.Value == WeaponType.HOLY_LONGBOW
-					&& (a.HasAttr(AttrType.DEMON) || a.HasAttr(AttrType.UNDEAD))){
-						B.Add(a.the_name + " is blasted with holy energy! ",a);
-						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(2,6),this);
+					if(alive && (a.HasAttr(AttrType.DEMON) || a.HasAttr(AttrType.UNDEAD))){
+						foreach(WeaponType w in weapons){
+							if(w == WeaponType.HOLY_LONGBOW){
+								B.Add(a.the_name + " is blasted with holy energy! ",a);
+								a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(3,6),this);
+								break;
+							}
+						}
 					}
 				}
 			}
@@ -4959,8 +4920,11 @@ namespace Forays{
 					attrs[AttrType.COOLDOWN_1]++;
 					Q.Add(new Event(this,(Global.Roll(1,5)+1)*100,AttrType.COOLDOWN_1));
 					B.Add(You("retaliate") + " with a burst of spores! ",this);
+					for(int i=1;i<=8;++i){
+						AnimateStorm(i,1,(((i*2)+1)*((i*2)+1)) / 4,'*',Color.DarkYellow);
+					}
 					foreach(Actor a in ActorsWithinDistance(8)){
-						if(HasLOS(a.row,a.col)){
+						if(HasLOS(a.row,a.col) && a != this){
 							B.Add("The spores hit " + a.the_name + ". ",a);
 							if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT)
 							&& !a.HasAttr(AttrType.SPORE_BURST) && !a.HasAttr(AttrType.IMMUNE_TOXINS)){
@@ -5172,7 +5136,7 @@ namespace Forays{
 			}
 			return true;
 		}
-		public bool GetKnockedBack(PhysicalObject obj){ return GetKnockedBack(obj.GetExtendedBresenhamLine(row,col)); }
+		public bool GetKnockedBack(PhysicalObject obj){ return GetKnockedBack(obj.GetBestExtendedLine(row,col)); }
 		public bool GetKnockedBack(List<Tile> line){
 			int idx = line.IndexOf(M.tile[row,col]);
 			if(idx == -1){
@@ -5185,7 +5149,7 @@ namespace Forays{
 				B.Add(YouAre() + " knocked back. ",this);
 				if(HasAttr(AttrType.FROZEN)){
 					attrs[AttrType.FROZEN] = 0;
-					B.Add(YouAre() + " no longer immobilized. ",this);
+					B.Add("The ice breaks! ",this);
 				}
 				Move(next.row,next.col);
 			}
@@ -5203,7 +5167,7 @@ namespace Forays{
 					M.actor[next.row,next.col].TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),source);
 				}
 				if(immobilized && M.actor[r,c] != null){
-					B.Add(YouAre() + " no longer immobilized. ",this);
+					B.Add("The ice breaks! ",this);
 				}
 			}
 			return true;
@@ -5219,8 +5183,15 @@ namespace Forays{
 				return false;
 			}
 			Tile t = null;
+			List<Tile> line = null;
 			if(obj != null){
 				t = M.tile[obj.row,obj.col];
+				if(spell == SpellType.FORCE_BEAM){ //force beam requires a line for proper knockback
+					line = GetBestExtendedLine(t);
+				}
+				else{
+					line = GetBestLine(t);
+				}
 			}
 			int bonus = 0; //used for bonus damage on spells - currently, only Master's Edge adds bonus damage.
 			if(FailRate(spell) > 0){
@@ -5314,13 +5285,16 @@ namespace Forays{
 				break;*/
 			case SpellType.IMMOLATE:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget(12);
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
 					B.Add(You("cast") + " immolate. ",this);
-					Actor a = FirstActorInExtendedLine(t);
+					Actor a = FirstActorInLine(line);
 					if(a != null){
-						AnimateBeam(a,Color.RandomFire,'*');
+						AnimateBeam(line.ToFirstObstruction(),'*',Color.RandomFire);
 						if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE) && !a.HasAttr(AttrType.ON_FIRE)){
 							if(a.name == "you"){
 								B.Add("You start to catch fire! ");
@@ -5335,7 +5309,7 @@ namespace Forays{
 						}
 					}
 					else{
-						AnimateBeam(t,Color.RandomFire,'*');
+						AnimateBeam(line,'*',Color.RandomFire);
 						B.Add(You("throw") + " flames. ",this);
 					}
 				}
@@ -5351,13 +5325,14 @@ namespace Forays{
 					Actor a = M.actor[t.row,t.col];
 					B.Add(You("cast") + " force palm. ",this);
 					//AnimateMapCell(t,Color.DarkCyan,'*');
-					Screen.AnimateMapCell(t.row,t.col,new colorchar('*',Color.Blue),100); //todo displaynow?
+					B.DisplayNow();
+					Screen.AnimateMapCell(t.row,t.col,new colorchar('*',Color.Blue),100);
 					if(a != null){
 						B.Add(You("strike") + " " + a.the_name + ". ",this,a);
 						string s = a.the_name;
-						List<Tile> line = GetExtendedBresenhamLine(a.row,a.col);
-						int idx = line.IndexOf(M.tile[a.row,a.col]);
-						Tile next = line[idx+1];
+						List<Tile> line2 = GetBestExtendedLine(a.row,a.col);
+						int idx = line2.IndexOf(M.tile[a.row,a.col]);
+						Tile next = line2[idx+1];
 						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
 						if(Global.Roll(1,10) <= 7){
 							if(M.actor[t.row,t.col] != null){
@@ -5400,13 +5375,16 @@ namespace Forays{
 				break;
 			case SpellType.FREEZE:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget(12);
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
 					B.Add(You("cast") + " freeze. ",this);
-					Actor a = FirstActorInExtendedLine(t);
+					Actor a = FirstActorInLine(line);
 					if(a != null){
-						AnimateBoltBeam(a,Color.Cyan);
+						AnimateBoltBeam(line.ToFirstObstruction(),Color.Cyan);
 						if(!a.HasAttr(AttrType.FROZEN) && !a.HasAttr(AttrType.UNFROZEN)){
 							B.Add(a.YouAre() + " encased in ice. ",a);
 							a.attrs[AttrType.FROZEN] = 15;
@@ -5416,7 +5394,7 @@ namespace Forays{
 						}
 					}
 					else{
-						AnimateBoltBeam(t,Color.Cyan);
+						AnimateBoltBeam(line,Color.Cyan);
 						B.Add("A bit of ice forms on " + t.the_name + ". ",t);
 					}
 				}
@@ -5445,18 +5423,21 @@ namespace Forays{
 				break;
 			case SpellType.SCORCH:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget(12);
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
 					B.Add(You("cast") + " scorch. ",this);
-					Actor a = FirstActorInExtendedLine(t);
+					Actor a = FirstActorInLine(line);
 					if(a != null){
-						AnimateProjectile(a,Color.RandomFire,'*');
+						AnimateProjectile(line.ToFirstObstruction(),'*',Color.RandomFire);
 						B.Add("The scorching bolt hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.FIRE,DamageClass.MAGICAL,Global.Roll(2+bonus,6),this);
 					}
 					else{
-						AnimateProjectile(t,Color.RandomFire,'*');
+						AnimateProjectile(line,'*',Color.RandomFire);
 						B.Add("The scorching bolt hits " + t.the_name + ". ",t);
 					}
 				}
@@ -5483,28 +5464,29 @@ namespace Forays{
 				break;
 			case SpellType.LIGHTNING_BOLT:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget(12);
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
 					B.Add(You("cast") + " lightning bolt. ",this);
-					Actor a = FirstActorInExtendedLine(t);
-					if(a != null || t.ConductsElectricity()){
-						List<Actor> damage_targets = new List<Actor>();
-						PhysicalObject bolt_target = null;
-						/*if(a != null){
-							bolt_target = a;
-							damage_targets.Add(a);
+					PhysicalObject bolt_target = null;
+					List<Actor> damage_targets = new List<Actor>();
+					foreach(Tile t2 in line){
+						if(t2.actor() != null && t2.actor() != this){
+							bolt_target = t2.actor();
+							damage_targets.Add(t2.actor());
+							break;
 						}
 						else{
-							bolt_target = t;
-						}*/
-						if(t.ConductsElectricity()){ //if the player targeted conducting terrain, that's probably what is desired
-							bolt_target = t;
+							if(t2.ConductsElectricity()){
+								bolt_target = t2;
+								break;
+							}
 						}
-						else{
-							bolt_target = a;
-							damage_targets.Add(a);
-						}
+					}
+					if(bolt_target != null){
 						Dict<PhysicalObject,List<PhysicalObject>> chain = new Dict<PhysicalObject,List<PhysicalObject>>();
 						chain[this] = new List<PhysicalObject>{bolt_target};
 						List<PhysicalObject> last_added = new List<PhysicalObject>{bolt_target};
@@ -5582,7 +5564,7 @@ namespace Forays{
 							foreach(PhysicalObject o in current){
 								if(chain[o] != null){
 									foreach(PhysicalObject o2 in chain[o]){
-										List<Tile> bres = o.GetBresenhamLine(o2);
+										List<Tile> bres = o.GetBestLine(o2);
 										bres.RemoveAt(0);
 										line_length[o2] = bres.Count + line_length[o];
 										int idx = 0;
@@ -5616,7 +5598,7 @@ namespace Forays{
 						}
 					}
 					else{
-						AnimateBeam(t,Color.RandomLightning,'*');
+						AnimateBeam(line,'*',Color.RandomLightning);
 						B.Add("The bolt hits " + t.the_name + ". ",t);
 					}
 				}
@@ -5675,36 +5657,7 @@ namespace Forays{
 					Q.Add(new Event(this,duration,AttrType.NIMBUS_ON,"The electric glow fades from " + the_name + ". ",this));
 				}
 				break;
-			}
-			case SpellType.SONIC_BOOM:
-				if(t == null){
-					t = GetTarget();
-				}
-				if(t != null){
-					B.Add(You("cast") + " sonic boom. ",this);
-					Actor a = FirstActorInLine(t);
-					if(a != null){
-						AnimateProjectile(a,Color.Yellow,'~');
-						B.Add("A wave of sound hits " + a.the_name + ". ",a);
-						int r = a.row;
-						int c = a.col;
-						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(2+bonus,6),this);
-						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
-							B.Add(a.YouAre() + " stunned. ",a);
-							a.attrs[AttrType.STUNNED]++;
-							int duration = DurationOfMagicalEffect((Global.Roll(1,4)+2)) * 100;
-							Q.Add(new Event(a,duration,AttrType.STUNNED,the_name + " is no longer stunned. ",a));
-						}
-					}
-					else{
-						AnimateProjectile(t,Color.Yellow,'~');
-						B.Add("Sonic boom! ");
-					}
-				}
-				else{
-					return false;
-				}
-				break;*/
+			}*/
 			case SpellType.VOLTAIC_SURGE:
 				{
 				List<Actor> targets = ActorsWithinDistance(2,true);
@@ -5730,7 +5683,8 @@ namespace Forays{
 				if(t != null){
 					Actor a = t.actor();
 					B.Add(You("cast") + " magic hammer. ",this);
-					Screen.AnimateMapCell(t.row,t.col,new colorchar('*',Color.Magenta),100); //todo displaynow?
+					B.DisplayNow();
+					Screen.AnimateMapCell(t.row,t.col,new colorchar('*',Color.Magenta),100);
 					if(a != null){
 						B.Add(You("smash",true) + " " + a.the_name + ". ",this,a);
 						if(a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(4+bonus,6),this)){
@@ -5766,18 +5720,21 @@ namespace Forays{
 				break;
 			case SpellType.GLACIAL_BLAST:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget(12);
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
 					B.Add(You("cast") + " glacial blast. ",this);
-					Actor a = FirstActorInExtendedLine(t);
+					Actor a = FirstActorInLine(line);
 					if(a != null){
-						AnimateProjectile(a,Color.RandomIce,'*');
+						AnimateProjectile(line.ToFirstObstruction(),'*',Color.RandomIce);
 						B.Add("The glacial blast hits " + a.the_name + ". ",a);
 						a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
 					}
 					else{
-						AnimateProjectile(t,Color.RandomIce,'*');
+						AnimateProjectile(line,'*',Color.RandomIce);
 						B.Add("The glacial blast hits " + t.the_name + ". ",t);
 					}
 				}
@@ -5787,7 +5744,7 @@ namespace Forays{
 				break;
 			case SpellType.PASSAGE:
 				{
-				int i = DirectionOfOnly(TileType.WALL,true);
+				int i = DirectionOfOnlyUnblocked(TileType.WALL,true);
 				if(i == 0){
 					B.Add("There's no wall here. ");
 					return false;
@@ -5866,28 +5823,33 @@ namespace Forays{
 				}
 			case SpellType.FLASHFIRE:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget(12,2);
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
-					Actor a = FirstActorInExtendedLine(t);
+					Actor a = FirstActorInLine(line);
 					if(a != null){
-						bool targets_around_t = false;
-						foreach(Actor nearby in t.ActorsWithinDistance(2)){
-							if(nearby != this){
-								targets_around_t = true;
-							}
-						}
-						if(!targets_around_t){ //if there's no reason to target t, assume it should go farther
-							t = M.tile[a.row,a.col];
-						}
+						t = a.tile();
 					}
 					B.Add(You("cast") + " flashfire. ",this);
-					AnimateBoltProjectile(t,Color.Red);
-					Screen.AnimateExplosion(t,2,new colorchar(Color.RandomFire,'*'));
+					AnimateBoltProjectile(line.ToFirstObstruction(),Color.Red);
+					AnimateExplosion(t,2,'*',Color.RandomFire);
 					B.Add("Fwoosh! ",this,t);
 					List<Actor> targets = new List<Actor>();
+					Tile prev = line.ToFirstObstruction()[line.ToFirstObstruction().Count-2];
 					foreach(Actor ac in t.ActorsWithinDistance(2)){
-						targets.Add(ac);
+						if(t.passable){
+							if(t.HasBresenhamLine(ac.row,ac.col)){
+								targets.Add(ac);
+							}
+						}
+						else{
+							if(prev.HasBresenhamLine(ac.row,ac.col)){
+								targets.Add(ac);
+							}
+						}
 					}
 					while(targets.Count > 0){
 						Actor ac = targets.RemoveRandom();
@@ -5899,12 +5861,48 @@ namespace Forays{
 					return false;
 				}
 				break;
+			case SpellType.SONIC_BOOM:
+				if(t == null){
+					line = GetTarget(12);
+					if(line != null){
+						t = line.Last();
+					}
+				}
+				if(t != null){
+					B.Add(You("cast") + " sonic boom. ",this);
+					Actor a = FirstActorInLine(line);
+					if(a != null){
+						AnimateProjectile(line.ToFirstObstruction(),'~',Color.Yellow);
+						B.Add("A wave of sound hits " + a.the_name + ". ",a);
+						int r = a.row;
+						int c = a.col;
+						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this);
+						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
+							B.Add(a.YouAre() + " stunned. ",a);
+							a.attrs[AttrType.STUNNED]++;
+							int duration = DurationOfMagicalEffect((Global.Roll(1,4)+2)) * 100;
+							Q.Add(new Event(a,duration,AttrType.STUNNED,a.YouAre() + " no longer stunned. ",a));
+						}
+					}
+					else{
+						AnimateProjectile(line,'~',Color.Yellow);
+						B.Add("Sonic boom! ");
+					}
+				}
+				else{
+					return false;
+				}
+				break;
 			case SpellType.COLLAPSE:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget(12,-1);
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
 					B.Add(You("cast") + " collapse. ",this);
+					B.DisplayNow();
 					for(int dist=2;dist>0;--dist){
 						List<pos> cells = new List<pos>();
 						List<colorchar> chars = new List<colorchar>();
@@ -5930,7 +5928,7 @@ namespace Forays{
 						}
 						Screen.AnimateMapCells(cells,chars);
 					}
-					Screen.AnimateMapCell(t.row,t.col,new colorchar('X',Color.DarkGreen)); //todo displaynow?
+					Screen.AnimateMapCell(t.row,t.col,new colorchar('X',Color.DarkGreen));
 					Actor a = t.actor();
 					if(a != null){
 						B.Add("Part of the ceiling falls onto " + a.the_name + ". ",a);
@@ -5984,12 +5982,17 @@ namespace Forays{
 				break;
 			case SpellType.FORCE_BEAM:
 				if(t == null){
-					t = GetTarget(12);
+					line = GetTarget();
+					if(line != null){
+						t = line.Last();
+					}
 				}
 				if(t != null){
 					B.Add(You("cast") + " force beam. ",this);
 					B.DisplayNow();
-					List<Tile> line = GetExtendedBresenhamLine(t.row,t.col);
+					//List<Tile> line2 = GetBestExtendedLine(t.row,t.col);
+					List<Tile> full_line = new List<Tile>(line);
+					line = line.GetRange(0,Math.Min(13,line.Count));
 					for(int i=0;i<3;++i){ //hits thrice
 						Actor firstactor = null;
 						Actor nextactor = null;
@@ -6001,20 +6004,20 @@ namespace Forays{
 								break;
 							}
 							if(M.actor[tile.row,tile.col] != null && M.actor[tile.row,tile.col] != this){
-								int idx = line.IndexOf(tile);
+								int idx = full_line.IndexOf(tile);
 								firsttile = tile;
 								firstactor = M.actor[tile.row,tile.col];
-								nexttile = line[idx+1];
+								nexttile = full_line[idx+1];
 								nextactor = M.actor[nexttile.row,nexttile.col];
 								break;
 							}
 						}
-						Screen.AnimateBoltBeam(GetBresenhamLine(firsttile.row,firsttile.col),Color.Cyan); //todo displaynow?
+						AnimateBoltBeam(line.ToFirstObstruction(),Color.Cyan);
 						if(firstactor != null){
 							string s = firstactor.the_name;
 							firstactor.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this);
 							if(M.actor[firsttile.row,firsttile.col] != null){
-								firstactor.GetKnockedBack(line);
+								firstactor.GetKnockedBack(full_line);
 							}
 							else{
 								if(!nexttile.passable){
@@ -6154,15 +6157,21 @@ namespace Forays{
 					if(HasFeat(FeatType.STUDENTS_LUCK)){
 						if(Global.CoinFlip()){
 							magic_penalty++;
-							B.Add("You feel drained. ");
+							if(type == ActorType.PLAYER){
+								B.Add("You feel drained. ");
+							}
 						}
 						else{
-							B.Add("You feel lucky. "); //...punk
+							if(type == ActorType.PLAYER){
+								B.Add("You feel lucky. "); //...punk
+							}
 						}
 					}
 					else{
 						magic_penalty++;
-						B.Add("You feel drained. ");
+						if(type == ActorType.PLAYER){
+							B.Add("You feel drained. "); //todo maybe this should just use YouFeel()
+						}
 					}
 				}
 			}
@@ -6216,14 +6225,14 @@ namespace Forays{
 			switch(feat){
 			case FeatType.LUNGE:
 				{
-				if(HasAttr(AttrType.FROZEN)){
-					B.Add("You can't perform this feat while immobilized. ");
-					return false;
+				List<Tile> line = GetTarget(2);
+				Tile t = null;
+				if(line != null){
+					t = line.Last();
 				}
-				Tile t = GetTarget(2);
 				if(t != null && t.actor() != null){
 					bool moved = false;
-					foreach(Tile neighbor in t.NeighborsBetween(row,col)){
+					/*foreach(Tile neighbor in t.NeighborsBetween(row,col)){
 						if(neighbor.passable && neighbor.actor() == null){
 							moved = true;
 							B.Add("You lunge! ");
@@ -6233,6 +6242,14 @@ namespace Forays{
 							attrs[AttrType.BONUS_COMBAT] -= 4;
 							break;
 						}
+					}*/
+					if(DistanceFrom(t) == 2 && line[1].passable && line[1].actor() == null){
+						moved = true;
+						B.Add("You lunge! ");
+						Move(line[1].row,line[1].col);
+						attrs[AttrType.BONUS_COMBAT] += 4;
+						Attack(0,t.actor());
+						attrs[AttrType.BONUS_COMBAT] -= 4;
 					}
 					if(!moved){
 						B.Add("The way is blocked! ");
@@ -6267,11 +6284,11 @@ they'll find you, then attack, but you will have still moved past them) ; You wi
 that would hit you before your next turn.(it's still possible they'll roll 2 successes and hit you) ; Has the same
 effect as standing still, if you're on fire or catching fire. */
 				{
-				if(HasAttr(AttrType.FROZEN)){
-					B.Add("You can't perform this feat while immobilized. ");
-					return false;
+				List<Tile> line = GetTarget(false,2,false);
+				Tile t = null;
+				if(line != null){
+					t = line.Last();
 				}
-				Tile t = GetTarget(false,2,false);
 				if(t != null && t.passable && t.actor() == null){
 					List<Actor> actors_moved_past = new List<Actor>();
 					bool moved = false;
@@ -6464,7 +6481,14 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			case FeatType.DISTRACT:
 			{
-				Tile t = GetTarget(12);
+				List<Tile> line = GetTarget(12,3);
+				Tile t = null;
+				if(line != null){
+					t = line.Last();
+				}
+				if(!t.passable){
+					t = line.LastBeforeSolidTile();
+				}
 				if(t != null){
 					B.Add("You throw a small stone. ");
 					foreach(Actor a in t.ActorsWithinDistance(3)){
@@ -7169,7 +7193,7 @@ effect as standing still, if you're on fire or catching fire. */
 					Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'e'));
 					Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
 				}
-				Console.SetCursorPosition(37+Global.MAP_OFFSET_COLS,1);
+				Console.SetCursorPosition(37+Global.MAP_OFFSET_COLS,2);
 				Console.CursorVisible = true;
 				command = Console.ReadKey(true);
 				Console.CursorVisible = false;
@@ -7420,71 +7444,6 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			return false;
 		}
-/*		public bool HasLOS(int r,int c){
-			int y1 = row;
-			int x1 = col;
-			int y2 = r;
-			int x2 = c;
-			int dx = Math.Abs(x2-x1);
-			int dy = Math.Abs(y2-y1);
-			if(dx<=1 && dy<=1){ //everything adjacent
-				return true;
-			}
-			if(HasBresenhamLine(r,c)){ //basic LOS check
-				return true;
-			}
-			if(M.tile[r,c].HasBresenhamLine(row,col)){ //for symmetry!
-				return true;
-			}
-			if(M.tile[r,c].opaque){ //for walls, check nearby tiles
-				foreach(Tile t in M.tile[r,c].NeighborsBetween(row,col)){
-					if(HasBresenhamLine(t.row,t.col)){
-						return true;
-					}
-				}
-			}
-			return false;
-		}*/
-		public Actor FirstActorInLine(PhysicalObject obj){ return FirstActorInLine(obj,1); }
-		public Actor FirstActorInLine(PhysicalObject obj,int num){
-			if(obj == null){
-				return null;
-			}
-			int count = -1; //start at -1 so an actor won't consider itself
-			List<Tile> line = GetBresenhamLine(obj.row,obj.col);
-			foreach(Tile t in line){
-				if(!t.passable){
-					return null;
-				}
-				if(M.actor[t.row,t.col] != null){
-					++count;
-					if(count == num){
-						return M.actor[t.row,t.col];
-					}
-				}
-			}
-			return null;
-		}
-		public Actor FirstActorInExtendedLine(PhysicalObject obj){ return FirstActorInExtendedLine(obj,1); }
-		public Actor FirstActorInExtendedLine(PhysicalObject obj,int num){
-			if(obj == null){
-				return null;
-			}
-			int count = -1; //start at -1 so an actor won't consider itself
-			List<Tile> line = GetExtendedBresenhamLine(obj.row,obj.col);
-			foreach(Tile t in line){
-				if(!t.passable){
-					return null;
-				}
-				if(M.actor[t.row,t.col] != null){
-					++count;
-					if(count == num){
-						return M.actor[t.row,t.col];
-					}
-				}
-			}
-			return null;
-		}
 		public int SightRange(){
 			int divisor = HasAttr(AttrType.DIM_VISION)? 3 : 1;
 			if(HasAttr(AttrType.DARKVISION)){
@@ -7495,6 +7454,7 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			return 3 / divisor;
 		}
+		public bool IsWithinSightRangeOf(PhysicalObject o){ return IsWithinSightRangeOf(o.row,o.col); }
 		public bool IsWithinSightRangeOf(int r,int c){
 			int dist = DistanceFrom(r,c);
 			int divisor = HasAttr(AttrType.DIM_VISION)? 3 : 1;
@@ -7599,7 +7559,10 @@ effect as standing still, if you're on fire or catching fire. */
 							best = neighbor;
 						}
 						else{
-							if(neighbor.DistanceFrom(r,c) < best.Value.DistanceFrom(r,c)){ //todo: change?
+							/*if(neighbor.DistanceFrom(r,c) < best.Value.DistanceFrom(r,c)){ //todo: change?
+								best = neighbor;
+							}*/
+							if(neighbor.EstimatedEuclideanDistanceFromX10(p) < best.Value.EstimatedEuclideanDistanceFromX10(p)){
 								best = neighbor;
 							}
 						}
@@ -7615,12 +7578,15 @@ effect as standing still, if you're on fire or catching fire. */
 			path.Reverse();
 			return path;
 		}
-		public bool FindPathToNearestFrontier(){ //returns true if successful
+		public bool FindAutoexplorePath(){ //returns true if successful
 			List<pos> path = new List<pos>();
 			int[,] values = new int[ROWS,COLS];
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					if(!M.tile[i,j].passable && !(M.tile[i,j].type == TileType.DOOR_C)){ //default is 0 of course
+						values[i,j] = -1;
+					}
+					if(M.tile[i,j].IsTrap() && M.tile[i,j].name != "floor"){
 						values[i,j] = -1;
 					}
 				}
@@ -7701,38 +7667,6 @@ effect as standing still, if you're on fire or catching fire. */
 			this.path = path;
 			return true;
 		}
-		public int DirectionOfOnly(TileType tiletype){ return DirectionOfOnly(tiletype,false); }
-		public int DirectionOfOnly(TileType tiletype,bool orth){//if there's only 1 unblocked tile of this kind, return its dir
-			int total=0;
-			int dir=0;
-			for(int i=1;i<=9;++i){
-				if(i != 5){
-					if(TileInDirection(i).type == tiletype && ActorInDirection(i) == null){
-						if(!orth || i%2==0){
-							++total;
-							dir = i;
-						}
-					}
-				}
-				else{
-					if(tile().type == tiletype && !orth){
-						++total;
-						dir = i;
-					}
-				}
-			}
-			if(total > 1){
-				return -1;
-			}
-			else{
-				if(total == 1){
-					return dir;
-				}
-				else{
-					return 0;
-				}
-			}
-		}
 		public int EnemiesAdjacent(){ //currently counts ALL actors adjacent, and as such really only applies to the player.
 			int count = -1; //don't count self
 			for(int i=row-1;i<=row+1;++i){
@@ -7786,12 +7720,14 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 			}
 		}
-		public Tile GetTarget(){ return GetTarget(false,-1,true); }
-		public Tile GetTarget(bool lookmode){ return GetTarget(lookmode,-1,!lookmode); } //note default
-		public Tile GetTarget(int max_distance){ return GetTarget(false,max_distance,true); }
-		public Tile GetTarget(bool lookmode,int max_distance){ return GetTarget(lookmode,max_distance,!lookmode); }
-		public Tile GetTarget(bool lookmode,int max_distance,bool start_at_interesting_target){
-			Tile result = null;
+		public List<Tile> GetTarget(){ return GetTarget(false,-1,true); }
+		public List<Tile> GetTarget(bool lookmode){ return GetTarget(lookmode,-1,!lookmode); } //note default
+		public List<Tile> GetTarget(int max_distance){ return GetTarget(false,max_distance,true); }
+		public List<Tile> GetTarget(int max_distance,int radius){ return GetTarget(false,max_distance,true,radius); }
+		public List<Tile> GetTarget(bool lookmode,int max_distance){ return GetTarget(lookmode,max_distance,!lookmode); }
+		public List<Tile> GetTarget(bool lookmode,int max_distance,bool start_at_interesting_target){ return GetTarget(lookmode,max_distance,start_at_interesting_target,0); }
+		public List<Tile> GetTarget(bool lookmode,int max_distance,bool start_at_interesting_target,int radius){
+			List<Tile> result = null;
 			ConsoleKeyInfo command;
 			int r,c;
 			int minrow = 0;
@@ -7809,27 +7745,27 @@ effect as standing still, if you're on fire or catching fire. */
 			for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
 				foreach(Actor a in ActorsAtDistance(i)){
 					if(CanSee(a)){
-						interesting_targets.Add(a);
+						if(lookmode || ((IsWithinSightRangeOf(a) || a.tile().IsLit()) && HasLOS(a))){
+							interesting_targets.Add(a);
+						}
 					}
 				}
 			}
-			/*for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
+			for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
 				foreach(Tile t in TilesAtDistance(i)){
-					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
-					|| t.type == TileType.STAIRS || t.type == TileType.CHEST
+					if(t.type == TileType.STAIRS || t.type == TileType.CHEST
 					|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
 					|| t.type == TileType.QUICKFIRE || t.type == TileType.STALAGMITE
-					|| t.inv != null){
-						if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING) && CanSee(t)){
+					|| t.IsShrine() || t.inv != null){
+						if(CanSee(t)){
 							interesting_targets.Add(t);
 						}
 					}
-					if((lookmode || Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING))
-					&& t.IsTrap() && !interesting_targets.Contains(t) && CanSee(t) && t.name != "floor"){
+					if(lookmode && t.IsTrap() && !interesting_targets.Contains(t) && CanSee(t) && t.name != "floor"){
 						interesting_targets.Add(t);
 					}
 				}
-			}*/
+			}
 			colorchar[,] mem = new colorchar[ROWS,COLS];
 			List<Tile> line = new List<Tile>();
 			List<Tile> oldline = new List<Tile>();
@@ -7874,7 +7810,8 @@ effect as standing still, if you're on fire or catching fire. */
 					r = target.row;
 					c = target.col;
 					if(Global.Option(OptionType.LAST_TARGET)){
-						return M.tile[r,c];
+						//return M.tile[r,c];
+						return GetBestLine(target); //todo: this might break since it doesn't extend to a wall, change this.
 					}
 					target_idx = interesting_targets.IndexOf(target);
 				}
@@ -7882,7 +7819,6 @@ effect as standing still, if you're on fire or catching fire. */
 			bool first_iteration = true;
 			bool done=false; //when done==true, we're ready to return 'result'
 			while(!done){
-//TextWriter file = new StreamWriter("targetoutput.txt",true);
 				if(!done){ //i moved this around, thus this relic.
 					Screen.ResetColors();
 					if(r == row && c == col){
@@ -7938,7 +7874,7 @@ effect as standing still, if you're on fire or catching fire. */
 						}
 						else{
 							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
-								B.DisplayNow("You detect " + M.actor[r,c].a_name + ". ");
+								B.DisplayNow("You sense " + M.actor[r,c].a_name + ". ");
 							}
 							else{
 								if(M.tile[r,c].seen){
@@ -7958,16 +7894,15 @@ effect as standing still, if you're on fire or catching fire. */
 					if(!lookmode){
 						bool blocked=false;
 						Console.CursorVisible = false;
-						line = GetBresenhamLine(r,c);
-	//				file.Write("startline: ");
+						line = GetBestLine(r,c);
+						//Tile last_good = tile();
 						foreach(Tile t in line){
-	//						file.Write("{0}-{1}  ",t.row,t.col);
 							if(t.row != row || t.col != col){
-//								colorchar cch = mem[t.row,t.col];
-colorchar cch;
+								colorchar cch = mem[t.row,t.col];
+/*colorchar cch;
 cch.color = mem[t.row,t.col].color;
 cch.bgcolor = mem[t.row,t.col].bgcolor;
-cch.c = mem[t.row,t.col].c;
+cch.c = mem[t.row,t.col].c;*/
 								if(t.row == r && t.col == c){
 									if(!blocked){
 										cch.bgcolor = Color.Green;
@@ -7995,8 +7930,472 @@ cch.c = mem[t.row,t.col].c;
 										}
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
-									if(t.seen && !t.passable){
-										blocked = true;
+								}
+								else{
+									if(!blocked){
+										cch.bgcolor = Color.DarkGreen;
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+									else{
+										cch.bgcolor = Color.DarkRed;
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+								}
+								/*if(!blocked){
+									last_good = t;
+								}*/
+								if(t.seen && !t.passable && (t.row != r || t.col != c)){
+									blocked=true;
+								}
+							}
+							oldline.Remove(t);
+						}
+						if(radius > 0/* && last_good != null*/){
+							foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+								if(!line.Contains(t)){
+									colorchar cch = mem[t.row,t.col];
+									if(blocked){
+										cch.bgcolor = Color.DarkRed;
+									}
+									else{
+										cch.bgcolor = Color.DarkGreen;
+									}
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+									oldline.Remove(t);
+								}
+							}
+						}
+					}
+					else{
+						colorchar cch = mem[r,c];
+						cch.bgcolor = Color.Green;
+						if(Global.LINUX){ //no bright bg in terminals
+							cch.bgcolor = Color.DarkGreen;
+						}
+						if(cch.color == cch.bgcolor){
+							cch.color = Color.Black;
+						}
+						Screen.WriteMapChar(r,c,cch);
+						line = new List<Tile>{M.tile[r,c]};
+						oldline.Remove(M.tile[r,c]);
+					}
+					foreach(Tile t in oldline){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					oldline = new List<Tile>(line);
+					if(radius > 0/* && last_good != null*/){
+						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+							oldline.AddUnique(t);
+						}
+					}
+					first_iteration = false;
+					M.tile[r,c].Cursor();
+				}
+				/*if(lookmode && Screen.MapChar(r,c).c == ' ' && Screen.BackgroundColor == ConsoleColor.Black){
+					//testing for foregroundcolor == black does NOT work
+					//testing for backgroundcolor == black DOES work.
+					Screen.WriteMapChar(r,c,' ');
+					Console.SetCursorPosition(c+Global.MAP_OFFSET_COLS,r+Global.MAP_OFFSET_ROWS);
+				}*/
+				Console.CursorVisible = true;
+				command = Console.ReadKey(true);
+				char ch = ConvertInput(command);
+				if(Global.Option(OptionType.VI_KEYS)){
+					ch = ConvertVIKeys(ch);
+				}
+				switch(ch){
+				case '7':
+					if(r==minrow){
+						if(c!=mincol){
+							--c;
+						}
+					}
+					else{
+						if(c==mincol){
+							--r;
+						}
+						else{
+							--r;
+							--c;
+						}
+					}
+					break;
+				case '8':
+					if(r!=minrow){
+						--r;
+					}
+					break;
+				case '9':
+					if(r==minrow){
+						if(c!=maxcol){
+							++c;
+						}
+					}
+					else{
+						if(c==maxcol){
+							--r;
+						}
+						else{
+							--r;
+							++c;
+						}
+					}
+					break;
+				case '4':
+					if(c!=mincol){
+						--c;
+					}
+					break;
+				case '6':
+					if(c!=maxcol){
+						++c;
+					}
+					break;
+				case '1':
+					if(r==maxrow){
+						if(c!=mincol){
+							--c;
+						}
+					}
+					else{
+						if(c==mincol){
+							++r;
+						}
+						else{
+							++r;
+							--c;
+						}
+					}
+					break;
+				case '2':
+					if(r!=maxrow){
+						++r;
+					}
+					break;
+				case '3':
+					if(r==maxrow){
+						if(c!=maxcol){
+							++c;
+						}
+					}
+					else{
+						if(c==maxcol){
+							++r;
+						}
+						else{
+							++r;
+							++c;
+						}
+					}
+					break;
+				case (char)9:
+					if(interesting_targets.Count > 0){
+						target_idx++;
+						if(target_idx == interesting_targets.Count){
+							target_idx = 0;
+						}
+						r = interesting_targets[target_idx].row;
+						c = interesting_targets[target_idx].col;
+				//		interesting_targets[target_idx].Cursor();
+					}
+					break;
+				case (char)27:
+				case ' ':
+					done = true;
+					break;
+				case (char)13:
+					if(r != row || c != col){
+						if(HasBresenhamLine(r,c)){
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+								target = M.actor[r,c];
+							}
+							//result = M.tile[r,c];
+							if(radius == 0){
+								result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+								if(max_distance > 0 && result.Count > max_distance+1){
+									result = result.GetRange(0,max_distance+1);
+								}
+							}
+							else{
+								bool nearby_actors = false;
+								foreach(Actor a in M.tile[r,c].ActorsWithinDistance(radius)){
+									if(a != this){
+										nearby_actors = true;
+										break;
+									}
+								}
+								if(nearby_actors || radius == -1){ //radius -1 means "allow targeting the ground", basically.
+									result = GetBestLine(r,c);
+									if(max_distance > 0 && result.Count > max_distance+1){
+										result = result.GetRange(0,max_distance+1);
+									}
+								}
+								else{ //same as for radius 0
+									result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+									if(max_distance > 0 && result.Count > max_distance+1){
+										result = result.GetRange(0,max_distance+1);
+									}
+								}
+							}
+						}
+						else{
+							//result = FirstSolidTileInLine(M.tile[r,c]);
+							//result = M.tile[r,c];
+							result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+							if(max_distance > 0 && result.Count > max_distance+1){
+								result = result.GetRange(0,max_distance+1);
+							}
+						}
+						done = true;
+					}
+					else{
+						bool nearby_actors = false;
+						foreach(Actor a in ActorsWithinDistance(radius)){
+							if(a != this){
+								nearby_actors = true;
+								break;
+							}
+						}
+						if(nearby_actors){
+							result = GetBestLine(this);
+							done = true;
+						}
+					}
+					break;
+				default:
+					break;
+				}
+				if(done){
+					Console.CursorVisible = false;
+					foreach(Tile t in line){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					if(radius > 0){
+						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+							if(!line.Contains(t)){
+								Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+							}
+						}
+					}
+					Console.CursorVisible = true;
+				}
+			}
+			return result;
+		}
+		public List<Tile> GetTarget2Temp(bool lookmode,int max_distance,bool start_at_interesting_target,int radius){
+			List<Tile> result = null;
+			ConsoleKeyInfo command;
+			int r,c;
+			int minrow = 0;
+			int maxrow = ROWS-1;
+			int mincol = 0;
+			int maxcol = COLS-1;
+			if(max_distance > 0){
+				minrow = Math.Max(minrow,row - max_distance);
+				maxrow = Math.Min(maxrow,row + max_distance);
+				mincol = Math.Max(mincol,col - max_distance);
+				maxcol = Math.Min(maxcol,col + max_distance);
+			}
+			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
+			int target_idx = 0;
+			for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
+				foreach(Actor a in ActorsAtDistance(i)){
+					if(CanSee(a)){
+						if(lookmode || ((IsWithinSightRangeOf(a) || a.tile().IsLit()) && HasLOS(a))){
+							interesting_targets.Add(a);
+						}
+					}
+				}
+			}
+			/*for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
+				foreach(Tile t in TilesAtDistance(i)){
+					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
+					|| t.type == TileType.STAIRS || t.type == TileType.CHEST
+					|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
+					|| t.type == TileType.QUICKFIRE || t.type == TileType.STALAGMITE
+					|| t.inv != null){
+						if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING) && CanSee(t)){
+							interesting_targets.Add(t);
+						}
+					}
+					if((lookmode || Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING))
+					&& t.IsTrap() && !interesting_targets.Contains(t) && CanSee(t) && t.name != "floor"){
+						interesting_targets.Add(t);
+					}
+				}
+			}*/
+			colorchar[,] mem = new colorchar[ROWS,COLS];
+			List<Tile> line = new List<Tile>();
+			List<Tile> oldline = new List<Tile>();
+			Tile last_good = tile();
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					mem[i,j] = Screen.MapChar(i,j);
+				}
+			}
+			if(!start_at_interesting_target || interesting_targets.Count == 0){
+				if(lookmode){
+					B.DisplayNow("Move the cursor to look around. ");
+				}
+				else{
+					B.DisplayNow("Move cursor to choose target, then press Enter. ");
+				}
+			}
+			if(lookmode){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					r = row;
+					c = col;
+					target_idx = -1;
+				}
+				else{
+					r = interesting_targets[0].row;
+					c = interesting_targets[0].col;
+				}
+			}
+			else{
+				if(target == null || !CanSee(target)
+				|| (max_distance > 0 && DistanceFrom(target) > max_distance)){
+					if(!start_at_interesting_target || interesting_targets.Count == 0){
+						r = row;
+						c = col;
+						target_idx = -1;
+					}
+					else{
+						r = interesting_targets[0].row;
+						c = interesting_targets[0].col;
+					}
+				}
+				else{
+					r = target.row;
+					c = target.col;
+					if(Global.Option(OptionType.LAST_TARGET)){
+						//return M.tile[r,c];
+						return GetBestLine(target); //todo: this might break since it doesn't extend to a wall, change this.
+					}
+					target_idx = interesting_targets.IndexOf(target);
+				}
+			}
+			bool first_iteration = true;
+			bool done=false; //when done==true, we're ready to return 'result'
+			while(!done){
+				if(!done){ //i moved this around, thus this relic.
+					Screen.ResetColors();
+					if(r == row && c == col){
+						if(!first_iteration){
+							string s = "You're standing here. ";
+							if(M.tile[r,c].inv != null){
+								s = s + "You see " + M.tile[r,c].inv.AName() + " here. ";
+							}
+							else{
+								if(M.tile[r,c].type != TileType.FLOOR){
+									s = s + "You see " + M.tile[r,c].a_name + " here. ";
+								}
+							}
+							B.DisplayNow(s);
+						}
+					}
+					else{
+						if(CanSee(M.tile[r,c])){
+							string s = "";
+							int count = 0;
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+								++count;
+								s = s + M.actor[r,c].a_name;
+							}
+							if(M.tile[r,c].inv != null){
+								++count;
+								if(s == ""){
+									s = s + M.tile[r,c].inv.AName();
+								}
+								else{
+									s = s + " and " + M.tile[r,c].inv.AName();
+								}
+							}
+							if(count == 0){
+								s = s + M.tile[r,c].a_name;
+							}
+							if(count == 1){
+								switch(M.tile[r,c].type){
+								case TileType.STAIRS:
+								case TileType.FLOOR:
+									s = s + " on ";
+									break;
+								case TileType.DOOR_O:
+									s = s + " in ";
+									break;
+								default:
+									s = s + " and ";
+									break;
+								}
+								s = s + M.tile[r,c].a_name;
+							}
+							B.DisplayNow("You see " + s + ". ");
+						}
+						else{
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+								B.DisplayNow("You sense " + M.actor[r,c].a_name + ". ");
+							}
+							else{
+								if(M.tile[r,c].seen){
+									B.DisplayNow("You can no longer see this " + M.tile[r,c].name + ". ");
+								}
+								else{
+									if(lookmode){
+										B.DisplayNow("");
+									}
+									else{
+										B.DisplayNow("Move cursor to choose target, then press Enter. ");
+									}
+								}
+							}
+						}
+					}
+					if(!lookmode){
+						bool blocked=false;
+						Console.CursorVisible = false;
+						line = GetBestLine(r,c);
+						foreach(Tile t in line){
+							if(t.row != row || t.col != col){
+								colorchar cch = mem[t.row,t.col];
+/*colorchar cch;
+cch.color = mem[t.row,t.col].color;
+cch.bgcolor = mem[t.row,t.col].bgcolor;
+cch.c = mem[t.row,t.col].c;*/
+								if(t.row == r && t.col == c){
+									if(!blocked){
+										cch.bgcolor = Color.Green;
+										if(Global.LINUX){ //no bright bg in terminals
+											cch.bgcolor = Color.DarkGreen;
+										}
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+											//cch.color = Color.Yellow;
+											//cch.bgcolor = Color.DarkBlue;
+											//cch.c = '!';
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+									else{
+										cch.bgcolor = Color.Red;
+										if(Global.LINUX){
+											cch.bgcolor = Color.DarkRed;
+										}
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+											//cch.color = Color.Yellow;
+											//cch.bgcolor = Color.DarkBlue;
+											//cch.c = '@';
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 								}
 								else{
@@ -8014,21 +8413,39 @@ cch.c = mem[t.row,t.col].c;
 										}
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
-									if(t.seen && !t.passable){
-										blocked=true;
-									}
+								}
+								if(!blocked){
+									last_good = t;
+								}
+								if(t.seen && !t.passable && (t.row != r || t.col != c)){
+									blocked=true;
 								}
 							}
 							oldline.Remove(t);
 						}
-	//					file.Write("startoldline: ");
+						if(radius > 0 && last_good != null){
+							foreach(Tile t in last_good.TilesAtDistance(radius)){
+								if(!line.Contains(t)){
+									colorchar cch = mem[t.row,t.col];
+									cch.bgcolor = Color.DarkCyan;
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+									oldline.Remove(t);
+								}
+							}
+						}
 						foreach(Tile t in oldline){
-	//						file.Write("{0}+{1}  ",t.row,t.col);
 							Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 						}
-	//					file.WriteLine();
 				//		oldline = line;
 						oldline = new List<Tile>(line);
+						if(radius > 0 && last_good != null){
+							foreach(Tile t in last_good.TilesAtDistance(radius)){
+								oldline.AddUnique(t);
+							}
+						}
 					}
 					first_iteration = false;
 					M.tile[r,c].Cursor();
@@ -8147,20 +8564,63 @@ cch.c = mem[t.row,t.col].c;
 					break;
 				case (char)13:
 					if(r != row || c != col){
-						if(HasBresenhamLine(r,c)){ //uses bresenham until i want symmetrical firing too
+						if(HasBresenhamLine(r,c)){
 							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
 								target = M.actor[r,c];
 							}
-							result = M.tile[r,c];
+							//result = M.tile[r,c];
+							if(radius == 0){
+								result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+								if(max_distance > 0 && result.Count > max_distance+1){
+									result = result.GetRange(0,max_distance+1);
+								}
+							}
+							else{
+								bool nearby_actors = false;
+								foreach(Actor a in M.tile[r,c].ActorsWithinDistance(radius)){
+									if(a != this){
+										nearby_actors = true;
+										break;
+									}
+								}
+								if(nearby_actors || radius == -1){ //radius -1 means "allow targeting the ground", basically.
+									result = GetBestLine(r,c);
+									if(max_distance > 0 && result.Count > max_distance+1){
+										result = result.GetRange(0,max_distance+1);
+									}
+								}
+								else{ //same as for radius 0
+									result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+									if(max_distance > 0 && result.Count > max_distance+1){
+										result = result.GetRange(0,max_distance+1);
+									}
+								}
+							}
+						}
+						else{
+							//result = FirstSolidTileInLine(M.tile[r,c]);
+							//result = M.tile[r,c];
+							result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+							if(max_distance > 0 && result.Count > max_distance+1){
+								result = result.GetRange(0,max_distance+1);
+							}
 						}
 						done = true;
 					}
-					break;
-/*				case ' ':
-					if(lookmode){
-						done = true;
+					else{
+						bool nearby_actors = false;
+						foreach(Actor a in ActorsWithinDistance(radius)){
+							if(a != this){
+								nearby_actors = true;
+								break;
+							}
+						}
+						if(nearby_actors){
+							result = GetBestLine(this);
+							done = true;
+						}
 					}
-					break;*/
+					break;
 				default:
 					break;
 				}
@@ -8169,9 +8629,470 @@ cch.c = mem[t.row,t.col].c;
 					foreach(Tile t in line){
 						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 					}
+					if(radius > 0){
+						foreach(Tile t in last_good.TilesWithinDistance(radius,true)){
+							if(!line.Contains(t)){
+								Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+							}
+						}
+					}
 					Console.CursorVisible = true;
 				}
-	//			file.Close();
+			}
+			return result;
+		}
+		public List<Tile> GetTarget3Temp(bool lookmode,int max_distance,bool start_at_interesting_target,int radius){
+			List<Tile> result = null;
+			ConsoleKeyInfo command;
+			int r,c;
+			int minrow = 0;
+			int maxrow = ROWS-1;
+			int mincol = 0;
+			int maxcol = COLS-1;
+			if(max_distance > 0){
+				minrow = Math.Max(minrow,row - max_distance);
+				maxrow = Math.Min(maxrow,row + max_distance);
+				mincol = Math.Max(mincol,col - max_distance);
+				maxcol = Math.Min(maxcol,col + max_distance);
+			}
+			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
+			int target_idx = 0;
+			for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
+				foreach(Actor a in ActorsAtDistance(i)){
+					if(CanSee(a)){
+						if(lookmode || ((IsWithinSightRangeOf(a) || a.tile().IsLit()) && HasLOS(a))){
+							interesting_targets.Add(a);
+						}
+					}
+				}
+			}
+			/*for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
+				foreach(Tile t in TilesAtDistance(i)){
+					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
+					|| t.type == TileType.STAIRS || t.type == TileType.CHEST
+					|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
+					|| t.type == TileType.QUICKFIRE || t.type == TileType.STALAGMITE
+					|| t.inv != null){
+						if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING) && CanSee(t)){
+							interesting_targets.Add(t);
+						}
+					}
+					if((lookmode || Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING))
+					&& t.IsTrap() && !interesting_targets.Contains(t) && CanSee(t) && t.name != "floor"){
+						interesting_targets.Add(t);
+					}
+				}
+			}*/
+			colorchar[,] mem = new colorchar[ROWS,COLS];
+			List<Tile> line = new List<Tile>();
+			List<Tile> oldline = new List<Tile>();
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					mem[i,j] = Screen.MapChar(i,j);
+				}
+			}
+			if(!start_at_interesting_target || interesting_targets.Count == 0){
+				if(lookmode){
+					B.DisplayNow("Move the cursor to look around. ");
+				}
+				else{
+					B.DisplayNow("Move cursor to choose target, then press Enter. ");
+				}
+			}
+			if(lookmode){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					r = row;
+					c = col;
+					target_idx = -1;
+				}
+				else{
+					r = interesting_targets[0].row;
+					c = interesting_targets[0].col;
+				}
+			}
+			else{
+				if(target == null || !CanSee(target)
+				|| (max_distance > 0 && DistanceFrom(target) > max_distance)){
+					if(!start_at_interesting_target || interesting_targets.Count == 0){
+						r = row;
+						c = col;
+						target_idx = -1;
+					}
+					else{
+						r = interesting_targets[0].row;
+						c = interesting_targets[0].col;
+					}
+				}
+				else{
+					r = target.row;
+					c = target.col;
+					if(Global.Option(OptionType.LAST_TARGET)){
+						//return M.tile[r,c];
+						return GetBestLine(target); //todo: this might break since it doesn't extend to a wall, change this.
+					}
+					target_idx = interesting_targets.IndexOf(target);
+				}
+			}
+			bool first_iteration = true;
+			bool done=false; //when done==true, we're ready to return 'result'
+			while(!done){
+				if(!done){ //i moved this around, thus this relic.
+					Screen.ResetColors();
+					if(r == row && c == col){
+						if(!first_iteration){
+							string s = "You're standing here. ";
+							if(M.tile[r,c].inv != null){
+								s = s + "You see " + M.tile[r,c].inv.AName() + " here. ";
+							}
+							else{
+								if(M.tile[r,c].type != TileType.FLOOR){
+									s = s + "You see " + M.tile[r,c].a_name + " here. ";
+								}
+							}
+							B.DisplayNow(s);
+						}
+					}
+					else{
+						if(CanSee(M.tile[r,c])){
+							string s = "";
+							int count = 0;
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+								++count;
+								s = s + M.actor[r,c].a_name;
+							}
+							if(M.tile[r,c].inv != null){
+								++count;
+								if(s == ""){
+									s = s + M.tile[r,c].inv.AName();
+								}
+								else{
+									s = s + " and " + M.tile[r,c].inv.AName();
+								}
+							}
+							if(count == 0){
+								s = s + M.tile[r,c].a_name;
+							}
+							if(count == 1){
+								switch(M.tile[r,c].type){
+								case TileType.STAIRS:
+								case TileType.FLOOR:
+									s = s + " on ";
+									break;
+								case TileType.DOOR_O:
+									s = s + " in ";
+									break;
+								default:
+									s = s + " and ";
+									break;
+								}
+								s = s + M.tile[r,c].a_name;
+							}
+							B.DisplayNow("You see " + s + ". ");
+						}
+						else{
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+								B.DisplayNow("You sense " + M.actor[r,c].a_name + ". ");
+							}
+							else{
+								if(M.tile[r,c].seen){
+									B.DisplayNow("You can no longer see this " + M.tile[r,c].name + ". ");
+								}
+								else{
+									if(lookmode){
+										B.DisplayNow("");
+									}
+									else{
+										B.DisplayNow("Move cursor to choose target, then press Enter. ");
+									}
+								}
+							}
+						}
+					}
+					if(!lookmode){
+						bool blocked=false;
+						Console.CursorVisible = false;
+						line = GetBestLine(r,c);
+						//Tile last_good = tile();
+						foreach(Tile t in line){
+							if(t.row != row || t.col != col){
+								colorchar cch = mem[t.row,t.col];
+/*colorchar cch;
+cch.color = mem[t.row,t.col].color;
+cch.bgcolor = mem[t.row,t.col].bgcolor;
+cch.c = mem[t.row,t.col].c;*/
+								if(t.row == r && t.col == c){
+									if(!blocked){
+										cch.bgcolor = Color.Green;
+										if(Global.LINUX){ //no bright bg in terminals
+											cch.bgcolor = Color.DarkGreen;
+										}
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+											//cch.color = Color.Yellow;
+											//cch.bgcolor = Color.DarkBlue;
+											//cch.c = '!';
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+									else{
+										cch.bgcolor = Color.Red;
+										if(Global.LINUX){
+											cch.bgcolor = Color.DarkRed;
+										}
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+											//cch.color = Color.Yellow;
+											//cch.bgcolor = Color.DarkBlue;
+											//cch.c = '@';
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+								}
+								else{
+									if(!blocked){
+										cch.bgcolor = Color.DarkGreen;
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+									else{
+										cch.bgcolor = Color.DarkRed;
+										if(cch.color == cch.bgcolor){
+											cch.color = Color.Black;
+										}
+										Screen.WriteMapChar(t.row,t.col,cch);
+									}
+								}
+								/*if(!blocked){
+									last_good = t;
+								}*/
+								if(t.seen && !t.passable && (t.row != r || t.col != c)){
+									blocked=true;
+								}
+							}
+							oldline.Remove(t);
+						}
+						if(radius > 0/* && last_good != null*/){
+							foreach(Tile t in M.tile[r,c].TilesAtDistance(radius)){
+								if(!line.Contains(t)){
+									colorchar cch = mem[t.row,t.col];
+									if(blocked){
+										cch.bgcolor = Color.DarkRed;
+									}
+									else{
+										cch.bgcolor = Color.DarkGreen;
+									}
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+									oldline.Remove(t);
+								}
+							}
+						}
+						foreach(Tile t in oldline){
+							Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+						}
+				//		oldline = line;
+						oldline = new List<Tile>(line);
+						if(radius > 0/* && last_good != null*/){
+							foreach(Tile t in M.tile[r,c].TilesAtDistance(radius)){
+								oldline.AddUnique(t);
+							}
+						}
+					}
+					first_iteration = false;
+					M.tile[r,c].Cursor();
+				}
+				if(lookmode && Screen.MapChar(r,c).c == ' ' && Screen.BackgroundColor == ConsoleColor.Black){
+					//testing for foregroundcolor == black does NOT work
+					//testing for backgroundcolor == black DOES work.
+					Screen.WriteMapChar(r,c,' ');
+					Console.SetCursorPosition(c+Global.MAP_OFFSET_COLS,r+Global.MAP_OFFSET_ROWS);
+				}
+				Console.CursorVisible = true;
+				command = Console.ReadKey(true);
+				char ch = ConvertInput(command);
+				if(Global.Option(OptionType.VI_KEYS)){
+					ch = ConvertVIKeys(ch);
+				}
+				switch(ch){
+				case '7':
+					if(r==minrow){
+						if(c!=mincol){
+							--c;
+						}
+					}
+					else{
+						if(c==mincol){
+							--r;
+						}
+						else{
+							--r;
+							--c;
+						}
+					}
+					break;
+				case '8':
+					if(r!=minrow){
+						--r;
+					}
+					break;
+				case '9':
+					if(r==minrow){
+						if(c!=maxcol){
+							++c;
+						}
+					}
+					else{
+						if(c==maxcol){
+							--r;
+						}
+						else{
+							--r;
+							++c;
+						}
+					}
+					break;
+				case '4':
+					if(c!=mincol){
+						--c;
+					}
+					break;
+				case '6':
+					if(c!=maxcol){
+						++c;
+					}
+					break;
+				case '1':
+					if(r==maxrow){
+						if(c!=mincol){
+							--c;
+						}
+					}
+					else{
+						if(c==mincol){
+							++r;
+						}
+						else{
+							++r;
+							--c;
+						}
+					}
+					break;
+				case '2':
+					if(r!=maxrow){
+						++r;
+					}
+					break;
+				case '3':
+					if(r==maxrow){
+						if(c!=maxcol){
+							++c;
+						}
+					}
+					else{
+						if(c==maxcol){
+							++r;
+						}
+						else{
+							++r;
+							++c;
+						}
+					}
+					break;
+				case (char)9:
+					if(interesting_targets.Count > 0){
+						target_idx++;
+						if(target_idx == interesting_targets.Count){
+							target_idx = 0;
+						}
+						r = interesting_targets[target_idx].row;
+						c = interesting_targets[target_idx].col;
+				//		interesting_targets[target_idx].Cursor();
+					}
+					break;
+				case (char)27:
+				case ' ':
+					done = true;
+					break;
+				case (char)13:
+					if(r != row || c != col){
+						if(HasBresenhamLine(r,c)){
+							if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+								target = M.actor[r,c];
+							}
+							//result = M.tile[r,c];
+							if(radius == 0){
+								result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+								if(max_distance > 0 && result.Count > max_distance+1){
+									result = result.GetRange(0,max_distance+1);
+								}
+							}
+							else{
+								bool nearby_actors = false;
+								foreach(Actor a in M.tile[r,c].ActorsWithinDistance(radius)){
+									if(a != this){
+										nearby_actors = true;
+										break;
+									}
+								}
+								if(nearby_actors || radius == -1){ //radius -1 means "allow targeting the ground", basically.
+									result = GetBestLine(r,c);
+									if(max_distance > 0 && result.Count > max_distance+1){
+										result = result.GetRange(0,max_distance+1);
+									}
+								}
+								else{ //same as for radius 0
+									result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+									if(max_distance > 0 && result.Count > max_distance+1){
+										result = result.GetRange(0,max_distance+1);
+									}
+								}
+							}
+						}
+						else{
+							//result = FirstSolidTileInLine(M.tile[r,c]);
+							//result = M.tile[r,c];
+							result = GetBestExtendedLine(r,c).ToFirstSolidTile();
+							if(max_distance > 0 && result.Count > max_distance+1){
+								result = result.GetRange(0,max_distance+1);
+							}
+						}
+						done = true;
+					}
+					else{
+						bool nearby_actors = false;
+						foreach(Actor a in ActorsWithinDistance(radius)){
+							if(a != this){
+								nearby_actors = true;
+								break;
+							}
+						}
+						if(nearby_actors){
+							result = GetBestLine(this);
+							done = true;
+						}
+					}
+					break;
+				default:
+					break;
+				}
+				if(done){
+					Console.CursorVisible = false;
+					foreach(Tile t in line){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					if(radius > 0){
+						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+							if(!line.Contains(t)){
+								Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+							}
+						}
+					}
+					Console.CursorVisible = true;
+				}
 			}
 			return result;
 		}
@@ -8216,7 +9137,7 @@ cch.c = mem[t.row,t.col].c;
 				i++;
 			}
 			Screen.WriteMapString(i,0,bottom_border);
-			if(i < ROWS){
+			if(i < ROWS-1){
 				Screen.WriteMapString(i+1,0,"".PadRight(COLS));
 			}
 			if(no_ask){
@@ -8254,7 +9175,7 @@ cch.c = mem[t.row,t.col].c;
 		}
 		public void AnimateProjectile(PhysicalObject o,Color color,char c){
 			B.DisplayNow();
-			Screen.AnimateProjectile(GetBresenhamLine(o.row,o.col),new colorchar(color,c));
+			Screen.AnimateProjectile(GetBestLine(o.row,o.col),new colorchar(color,c));
 		}
 		public void AnimateMapCell(PhysicalObject o,Color color,char c){
 			B.DisplayNow();
@@ -8262,7 +9183,7 @@ cch.c = mem[t.row,t.col].c;
 		}
 		public void AnimateBoltProjectile(PhysicalObject o,Color color){
 			B.DisplayNow();
-			Screen.AnimateBoltProjectile(GetBresenhamLine(o.row,o.col),color);
+			Screen.AnimateBoltProjectile(GetBestLine(o.row,o.col),color);
 		}
 		public void AnimateExplosion(PhysicalObject o,int radius,Color color,char c){
 			B.DisplayNow();
@@ -8270,18 +9191,18 @@ cch.c = mem[t.row,t.col].c;
 		}
 		public void AnimateBeam(PhysicalObject o,Color color,char c){
 			B.DisplayNow();
-			Screen.AnimateBeam(GetBresenhamLine(o.row,o.col),new colorchar(color,c));
+			Screen.AnimateBeam(GetBestLine(o.row,o.col),new colorchar(color,c));
 		}
 		public void AnimateBoltBeam(PhysicalObject o,Color color){
 			B.DisplayNow();
-			Screen.AnimateBoltBeam(GetBresenhamLine(o.row,o.col),color);
+			Screen.AnimateBoltBeam(GetBestLine(o.row,o.col),color);
 		}
 		//
 		// i should have made them (char,color) from the start..
 		//
 		public void AnimateProjectile(PhysicalObject o,char c,Color color){
 			B.DisplayNow();
-			Screen.AnimateProjectile(GetBresenhamLine(o.row,o.col),new colorchar(color,c));
+			Screen.AnimateProjectile(GetBestLine(o.row,o.col),new colorchar(color,c));
 		}
 		public void AnimateMapCell(PhysicalObject o,char c,Color color){
 			B.DisplayNow();
@@ -8293,12 +9214,28 @@ cch.c = mem[t.row,t.col].c;
 		}
 		public void AnimateBeam(PhysicalObject o,char c,Color color){
 			B.DisplayNow();
-			Screen.AnimateBeam(GetBresenhamLine(o.row,o.col),new colorchar(color,c));
+			Screen.AnimateBeam(GetBestLine(o.row,o.col),new colorchar(color,c));
 		}
 		//from here forward, i'll just do (char,color)..
 		public void AnimateStorm(int radius,int num_frames,int num_per_frame,char c,Color color){
 			B.DisplayNow();
 			Screen.AnimateStorm(p,radius,num_frames,num_per_frame,new colorchar(c,color));
+		}
+		public void AnimateProjectile(List<Tile> line,char c,Color color){
+			B.DisplayNow();
+			Screen.AnimateProjectile(line,new colorchar(color,c));
+		}
+		public void AnimateBeam(List<Tile> line,char c,Color color){
+			B.DisplayNow();
+			Screen.AnimateBeam(line,new colorchar(color,c));
+		}
+		public void AnimateBoltProjectile(List<Tile> line,Color color){
+			B.DisplayNow();
+			Screen.AnimateBoltProjectile(line,color);
+		}
+		public void AnimateBoltBeam(List<Tile> line,Color color){
+			B.DisplayNow();
+			Screen.AnimateBoltBeam(line,color);
 		}
 	}
 	public static class AttackList{ //consider more descriptive attacks, such as the zealot smashing you with a mace

@@ -11,15 +11,19 @@ using System.Collections.Generic;
 namespace Forays{
 	public class Buffer{
 		private int max_length;
-		private string str,str2;
+		private List<string> str = new List<string>();
+		private string overflow;
 		private string[] log;
 		private int position;
+
 		public static Map M{get;set;}
 		public static Actor player{get;set;}
 		public Buffer(Game g){
 			max_length=Global.COLS; //because the message window runs along the top of the map
-			str = "";
-			str2 = "";
+			//str = "";
+			//str2 = "";
+			str.Add("");
+			overflow = "";
 			log=new string[20];
 			for(int i=0;i<20;++i){
 				log[i] = "";
@@ -47,98 +51,219 @@ namespace Forays{
 					c[0] = Char.ToUpper(s[0]);
 					s = new string(c);
 				}
-				str = str + s;
-				while(str.Length > max_length){
-					for(int i=max_length-7;i>=0;--i){
-						if(str.Substring(i,1)==" "){
-							str2 = str.Substring(i+1);
-							str = str.Substring(0,i+1);
+				int idx = str.Count - 1;
+				str[idx] = str[idx] + s;
+				while(str[idx].Length > max_length){
+					int extra_space_for_more = 7;
+					if(str.Count < 3){
+						extra_space_for_more = 1;
+					}
+					for(int i=max_length-extra_space_for_more;i>=0;--i){
+						if(str[idx].Substring(i,1)==" "){
+							if(str.Count == 3){
+								overflow = str[idx].Substring(i+1);
+							}
+							else{
+								str.Add(str[idx].Substring(i+1)); //todo - this breaks very long lines again.
+							}
+							str[idx] = str[idx].Substring(0,i+1);
 							break;
 						}
 					}
-					Screen.ResetColors();
-					Print(false);
+					if(overflow != ""){
+						Screen.ResetColors();
+						Print(false);
+						idx = 0;
+					}
 				}
 			}
 		}
-		public void DisplayNow(string s){
+		public void DisplayNow(string s){ //might i eventually need a multi-line version?
 			Console.CursorVisible = false;
-			Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
-			Console.Write(s.PadRight(Global.COLS));
-			Console.SetCursorPosition(Global.MAP_OFFSET_COLS + s.Length,1);
-			//Console.CursorVisible = true;
+			for(int i=0;i<2;++i){
+				Screen.WriteMapString(i-3,0,"".PadToMapSize());
+			}
+			Screen.WriteMapString(-1,0,s.PadToMapSize());
+			Console.SetCursorPosition(Global.MAP_OFFSET_COLS + s.Length,2);
 		}
 		public void DisplayNow(){ //displays whatever is in the buffer. used before animations.
 			Console.CursorVisible = false;
 			Screen.ResetColors();
-			Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
-			Console.Write(str.PadRight(Global.COLS));
-			//Console.SetCursorPosition(Global.MAP_OFFSET_COLS + str.Length,1);
-			//Console.CursorVisible = true;
+			int idx = 3-str.Count;
+			/*foreach(string s in str){
+				//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,idx);
+				//Console.Write(s.PadRight(Global.COLS));
+				Screen.WriteMapString(idx-3,0,s.PadToMapSize());
+				++idx;
+			}*/
+			//
+			//
+			if(Global.Option(OptionType.HIDE_OLD_MESSAGES)){
+				for(int i=0;i<3;++i){
+					if(i < str.Count){
+						Screen.WriteMapString(i-3,0,str[i].PadToMapSize());
+					}
+					else{
+						Screen.WriteMapString(i-3,0,"".PadToMapSize());
+					}
+				}
+			}
+			else{
+				int lines = str.Count;
+				if(str.Last() == ""){
+					--lines;
+				}
+				for(int i=0;i<3;++i){
+					bool old_message = true;
+					if(3-i <= lines){
+						old_message = false;
+					}
+					if(old_message){
+						Screen.WriteMapString(i-3,0,PreviousMessage(3-(i+lines)).PadToMapSize(),Color.DarkGray);
+						Screen.ForegroundColor = ConsoleColor.Gray;
+					}
+					else{
+						Screen.WriteMapString(i-3,0,str[(i+lines)-3].PadToMapSize());
+					}
+				}
+			}
+			//
+			//
 		}
 		public void Print(bool special_message){
 			Console.CursorVisible = false;
-			if(str != ""){
-				//if(str != "You regenerate. " && player.HasAttr(AttrType.RUNNING)){
-				//	player.attrs[AttrType.RUNNING] = 0;
-				//}
-				if(str != "You regenerate. " && str != "You rest... "){
+			//if(str.Last() != ""){
+			foreach(string s in str){
+				if(s != "You regenerate. " && s != "You rest... " && s != ""){
 					player.Interrupt();
 				}
-				int last = position-1;
-				if(last == -1){ last = 19; }
-				string prev = log[last];
-				string count = "1";
-				int pos = prev.LastIndexOf(" (x");
-				if(pos != -1){
-					count = prev.Substring(pos+3);
-					count = count.Substring(0,count.Length-1);
-					prev = prev.Substring(0,pos+1);
-				}
-				if(prev == str){
-					log[last] = prev + "(x" + (Convert.ToInt32(count)+1).ToString() + ")";
-				}
-				else{
-					log[position] = str;
-					++position;
-					if(position == 20){ position = 0; }
-				}
-				Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
-				Console.Write("".PadRight(Global.COLS));
-				Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
-				Console.Write(str);
-				if(str2 != "" || special_message == true){
-					int cursor = Console.CursorLeft;
-					if(Screen.MapChar(0,0).c == '-'){ //hack
-						M.RedrawWithStrings();
+			}
+			bool repeated_message = false;
+			foreach(string s in str){
+				if(s != ""){
+					int last = position-1;
+					if(last == -1){ last = 19; }
+					string prev = log[last];
+					string count = "1";
+					int pos = prev.LastIndexOf(" (x");
+					if(pos != -1){
+						count = prev.Substring(pos+3);
+						count = count.Substring(0,count.Length-1);
+						prev = prev.Substring(0,pos+1);
+					}
+					if(prev == s && str.Count == 1){ //trying this - only add the (x2) part if it's a single-line message, for ease of reading
+						log[last] = prev + "(x" + (Convert.ToInt32(count)+1).ToString() + ")";
+						repeated_message = true;
 					}
 					else{
-						M.Draw();
+						log[position] = s;
+						++position;
+						if(position == 20){ position = 0; }
+						repeated_message = false;
 					}
-					Console.SetCursorPosition(cursor,1);
-					Screen.ForegroundColor = ConsoleColor.Yellow;
-					Console.Write("[more]");
-					Screen.ForegroundColor = ConsoleColor.Gray;
-					Console.CursorVisible = true; //untested
-					Console.ReadKey();
 				}
-				str = str2;
-				str2 = "";
+			}
+/*			for(int i=0;i<3;++i){
+				//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
+				//Console.Write("".PadRight(Global.COLS));
+				Screen.WriteMapString(i-3,0,"".PadToMapSize());
+			}*/
+			if(Global.Option(OptionType.HIDE_OLD_MESSAGES)){
+				for(int i=0;i<3;++i){
+					if(i <= str.Count-1){
+						//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
+						//Console.Write(str[i]);
+						Screen.WriteMapString(i-3,0,str[i].PadToMapSize());
+					}
+					else{
+						Screen.WriteMapString(i-3,0,"".PadToMapSize());
+					}
+				}
 			}
 			else{
-				Console.SetCursorPosition(Global.MAP_OFFSET_COLS,1);
-				Console.Write("".PadRight(Global.COLS));
+				int lines = str.Count;
+				if(str.Last() == ""){
+					--lines;
+				}
+				for(int i=0;i<3;++i){
+					//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
+/*					if(i >= 3-lines && str[(i+lines)-3] != ""){
+						Console.Write(str[(i+lines)-3]);
+					}
+					else{
+						Screen.ForegroundColor = ConsoleColor.DarkGray;
+						Console.Write(PreviousMessage(3-(i+lines)));
+						Screen.ForegroundColor = ConsoleColor.Gray;
+					}*/
+					bool old_message = true;
+					if(3-i <= lines){
+						old_message = false;
+					}
+					if(old_message){
+						//Screen.ForegroundColor = ConsoleColor.DarkGray;
+						//Console.Write(PreviousMessage(3-i));
+						Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize(),Color.DarkGray);
+						Screen.ForegroundColor = ConsoleColor.Gray;
+					}
+					else{
+						if(repeated_message){
+							int pos = PreviousMessage(3-i).LastIndexOf(" (x");
+							if(pos != -1){
+								//Console.Write(PreviousMessage(3-i).Substring(0,pos));
+								//Screen.ForegroundColor = ConsoleColor.DarkGray;
+								//Console.Write(PreviousMessage(3-i).Substring(pos));
+								Screen.WriteMapString(i-3,0,PreviousMessage(3-i).Substring(0,pos));
+								Screen.WriteMapString(i-3,pos,PreviousMessage(3-i).Substring(pos).PadToMapSize(),Color.DarkGray);
+								Screen.ForegroundColor = ConsoleColor.Gray;
+							}
+							else{
+								//Console.Write(PreviousMessage(3-i));
+								Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize());
+							}
+						}
+						else{
+							//Console.Write(PreviousMessage(3-i));
+							Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize());
+						}
+					}
+				}
 			}
-			//Console.CursorVisible = true;
+			if(overflow != "" || special_message == true){
+				int cursor_col = str.Last().Length + Global.MAP_OFFSET_COLS;
+				int cursor_row = Console.CursorTop;
+				if(Screen.MapChar(0,0).c == '-'){ //hack
+					M.RedrawWithStrings();
+				}
+				else{
+					M.Draw();
+				}
+				//Console.SetCursorPosition(cursor_col,cursor_row);
+				//Screen.ForegroundColor = ConsoleColor.Yellow;
+				//Console.Write("[more]");
+				Screen.WriteString(cursor_row,cursor_col,"[more]",Color.Yellow);
+				Screen.ForegroundColor = ConsoleColor.Gray;
+				Console.CursorVisible = true;
+				Console.ReadKey(true);
+			}
+			str.Clear();
+			str.Add(overflow);
+			overflow = "";
+/*			}
+			else{
+				for(int i=0;i<3;++i){
+					Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
+					Console.Write("".PadRight(Global.COLS));
+				}
+			}*/
 		}
 		public void PrintAll(){
 			Screen.ResetColors();
-			if(str != ""){
-				if(str.Length > max_length-7){
+			if(str.Last() != ""){
+				if(str.Last().Length > max_length-7){
 					for(int i=max_length-7;i>=0;--i){
-						if(str.Substring(i,1)==" "){
-							str2 = str.Substring(i+1);
-							str = str.Substring(0,i+1);
+						if(str.Last().Substring(i,1)==" "){
+							overflow = str.Last().Substring(i+1);
+							str[str.Count-1] = str.Last().Substring(0,i+1);
 							break;
 						}
 					}
@@ -150,7 +275,14 @@ namespace Forays{
 				}
 			}
 		}
-		public string Printed(int num){ return log[(position+num)%20]; }
+		public string Printed(int num){ return log[(position+num)%20]; } //like PreviousMessage, but starting at the oldest
+		public string PreviousMessage(int num){
+			int idx = position - num;
+			if(idx < 0){
+				idx += 20;
+			}
+			return log[idx];
+		}
 		public List<string> GetMessages(){
 			List<string> result = new List<string>();
 			for(int i=0;i<20;++i){
@@ -159,12 +291,12 @@ namespace Forays{
 			return result;
 		}
 		public void AddDependingOnLastPartialMessage(string s){ //   =|
-			if(!str.EndsWith(s,true,null)){
+			if(!str.Last().EndsWith(s,true,null)){
 				Add(s);
 			}
 		}
 		public void AddIfEmpty(string s){
-			if(str.Length == 0){
+			if(str.Last().Length == 0){
 				Add(s);
 			}
 		}

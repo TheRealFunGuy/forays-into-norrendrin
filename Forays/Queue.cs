@@ -513,7 +513,7 @@ namespace Forays{
 									}
 									if(tiles.Count > 0){
 										Tile t = tiles[Global.Roll(tiles.Count)-1];
-										List<Tile> line = t.GetExtendedBresenhamLine(player.row,player.col);
+										List<Tile> line = t.GetBestExtendedLine(player.row,player.col);
 										t = line[0];
 										int i = 1;
 										while(t.passable && t.DistanceFrom(line[0]) <= 9 && line[i].passable){
@@ -531,7 +531,8 @@ namespace Forays{
 												B.Add("The orb rises into the air and sails toward you! ",line[0],t);
 												Item item = line[0].inv;
 												line[0].inv = null;
-												List<Tile> anim_line = line[0].GetBresenhamLine(t.row,t.col);
+												List<Tile> anim_line = line[0].GetBestLine(t.row,t.col);
+												B.DisplayNow();
 												Screen.AnimateProjectile(anim_line,new colorchar(item.color,item.symbol));
 												string qhit = item.quantity > 1? "shatter " : "shatters ";
 												if(t.actor() != null){
@@ -571,7 +572,8 @@ namespace Forays{
 											Item item = line[0].inv;
 											B.Add(item.TheName() + " rises into the air and sails toward you! ",line[0],t);
 											line[0].inv = null;
-											List<Tile> anim_line = line[0].GetBresenhamLine(t.row,t.col);
+											List<Tile> anim_line = line[0].GetBestLine(t.row,t.col);
+											B.DisplayNow();
 											Screen.AnimateProjectile(anim_line,new colorchar(item.color,item.symbol));
 											t.GetItem(item);
 											string qhit = item.quantity > 1? "hit " : "hits ";

@@ -10,7 +10,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomPrismatic};
+	/*public interface ICoord{ //Now uses ICoords, so it'll work with anything that has row and column
+		int row{get;set;}
+		int col{get;set;} //scratch that, c# doesn't make this easy enough yet.
+	}*/
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomPrismatic,RandomDark,RandomBright};
 	public struct colorchar{ //todo: engine code version should be char,color
 		public Color color;
 		public Color bgcolor;
@@ -210,7 +214,6 @@ namespace Forays{
 					memory[i,j].bgcolor = Color.Black;
 				}
 			}
-			//Console.CursorVisible = true; //not turning it back on until i need it
 		}
 		public static void WriteChar(int r,int c,char ch){
 			WriteChar(r,c,new colorchar(Color.Gray,ch));
@@ -423,7 +426,7 @@ namespace Forays{
 					cpos += s.s.Length;
 				}
 				if(cpos-Global.MAP_OFFSET_COLS < Global.COLS){
-					WriteMapString(r,cpos,"".PadRight(Global.COLS-(cpos-Global.MAP_OFFSET_COLS)));
+					WriteString(r,cpos,"".PadRight(Global.COLS-(cpos-Global.MAP_OFFSET_COLS)));
 				}
 			}
 		}
@@ -719,6 +722,8 @@ namespace Forays{
 			case Color.RandomIce:
 			case Color.RandomLightning:
 			case Color.RandomPrismatic:
+			case Color.RandomDark:
+			case Color.RandomBright:
 				return GetColor(ResolveColor(c));
 			default:
 				return ConsoleColor.Black;
@@ -771,6 +776,46 @@ namespace Forays{
 					return Color.Blue;
 				case 3:
 					return Color.Yellow;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomDark:
+				switch(Global.Roll(7)){
+				case 1:
+					return Color.DarkBlue;
+				case 2:
+					return Color.DarkCyan;
+				case 3:
+					return Color.DarkGray;
+				case 4:
+					return Color.DarkGreen;
+				case 5:
+					return Color.DarkMagenta;
+				case 6:
+					return Color.DarkRed;
+				case 7:
+					return Color.DarkYellow;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomBright:
+				switch(Global.Roll(8)){
+				case 1:
+					return Color.Blue;
+				case 2:
+					return Color.Cyan;
+				case 3:
+					return Color.Gray;
+				case 4:
+					return Color.Green;
+				case 5:
+					return Color.Magenta;
+				case 6:
+					return Color.Red;
+				case 7:
+					return Color.Yellow;
+				case 8:
+					return Color.White;
 				default:
 					return Color.Black;
 				}
