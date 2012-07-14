@@ -10,8 +10,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 namespace Forays{
-	public static class Global{public static int temporary = 0;
-		public const string VERSION = "version 0.6.1 ";
+	public static class Global{
+		public const string VERSION = "version 0.6.2 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -385,12 +385,12 @@ namespace Forays{
 				break;
 			case Help.Commands:
 				path = "help.txt";
-				if(Option(OptionType.VI_KEYS)){
+				/*if(Option(OptionType.VI_KEYS)){
 					startline = 85;
 				}
-				else{
-					startline = 57;
-				}
+				else{*/
+				startline = 57;
+				//}
 				num_lines = 26;
 				break;
 			case Help.Items:
@@ -459,7 +459,7 @@ namespace Forays{
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options:");
-			file.WriteLine("last_target vi_keys open_chests no_blood_boil_message autopickup no_roman_numerals hide_old_messages");
+			file.WriteLine("last_target autopickup no_roman_numerals hide_old_messages hide_commands");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");

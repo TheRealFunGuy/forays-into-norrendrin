@@ -132,13 +132,13 @@ namespace Forays{
 			Define(ActorType.OGRE,"ogre",'O',Color.Green,55,100,0,7,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION,AttrType.SMALL_GROUP);
 			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,45,100,0,7,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DIM_VISION_HIT,AttrType.DARKVISION);
 			Define(ActorType.BERSERKER,"berserker",'p',Color.Red,40,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,45,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,50,100,0,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,50,100,0,8,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,60,120,0,9,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,65,120,0,9,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
 			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,40,100,0,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,50,100,0,9,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
+			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,55,100,0,9,0,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
 			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,50,100,0,10,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH,AttrType.RESIST_FIRE,AttrType.DARKVISION);
-			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,45,100,0,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,50,100,0,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.FORCE_BEAM,SpellType.IMMOLATE,SpellType.VOLTAIC_SURGE,SpellType.MAGIC_HAMMER,SpellType.GLACIAL_BLAST,SpellType.BLOODSCENT,SpellType.PASSAGE);
 			Prototype(ActorType.ORC_WARMAGE).skills[SkillType.MAGIC] = 10;
 			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,75,120,0,10,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD,AttrType.STUN_HIT);
@@ -242,6 +242,9 @@ namespace Forays{
 					M.actor[r,c] = this;
 					if(row>=0 && row<ROWS && col>=0 && col<COLS){
 						M.actor[row,col] = null;
+						if(this == player && M.tile[row,col].inv != null){
+							M.tile[row,col].inv.ignored = true;
+						}
 					}
 					row = r;
 					col = c;
@@ -263,6 +266,11 @@ namespace Forays{
 					if(a.LightRadius() > 0){
 						other_torch = true;
 						a.UpdateRadius(a.LightRadius(),0);
+					}
+					if(row>=0 && row<ROWS && col>=0 && col<COLS){
+						if(this == player && M.tile[row,col].inv != null){
+							M.tile[row,col].inv.ignored = true;
+						}
 					}
 					M.actor[r,c] = this;
 					M.actor[row,col] = a;
@@ -727,18 +735,23 @@ namespace Forays{
 			case 'n':
 			case 'N':
 				return '3';
-			//case 'x':
-			//	return 'l';
 			default:
 				return ch;
 			}
 		}
 		public void InputHuman(){
-			DisplayStats();
+			DisplayStats(true);
 			if(HasFeat(FeatType.DANGER_SENSE)){
 				M.UpdateDangerValues();
 			}
 			M.Draw();
+			if(HasAttr(AttrType.AUTOEXPLORE)){
+				if(path.Count == 0){
+					if(!FindAutoexplorePath()){
+						B.Add("You don't see a path for further exploration. ");
+					}
+				}
+			}
 			if(!HasAttr(AttrType.AFRAID) && !HasAttr(AttrType.PARALYZED) && !HasAttr(AttrType.FROZEN)){
 				B.Print(false);
 			}
@@ -747,11 +760,6 @@ namespace Forays{
 			}
 			Cursor();
 			Console.CursorVisible = true;
-			if(HasAttr(AttrType.AUTOEXPLORE)){
-				if(path.Count == 0){
-					FindAutoexplorePath();
-				}
-			}
 			if(HasAttr(AttrType.PARALYZED) || HasAttr(AttrType.AFRAID)){
 				if(HasAttr(AttrType.AFRAID)){
 					Thread.Sleep(250);
@@ -774,6 +782,46 @@ namespace Forays{
 				Q1();
 				return;
 			}
+			if(Global.Option(OptionType.AUTOPICKUP) && tile().inv != null && !tile().inv.ignored && tile().type != TileType.QUICKFIRE){
+				bool grenade = false;
+				foreach(Tile t in TilesWithinDistance(1)){
+					if(t.type == TileType.GRENADE){
+						grenade = true;
+					}
+				}
+				if(!grenade && !HasAttr(AttrType.ON_FIRE) && !HasAttr(AttrType.CATCHING_FIRE)){
+					bool monster = false;
+					foreach(Actor a in M.AllActors()){
+						if(a != this && CanSee(a)){
+							monster = true;
+							break;
+						}
+					}
+					if(!monster){
+						if(StunnedThisTurn()){
+							return;
+						}
+						Item i = tile().inv;
+						i.row = -1;
+						i.col = -1;
+						tile().inv = null;
+						B.Add("You pick up " + i.TheName() + ". ");
+						bool added = false;
+						foreach(Item item in inv){
+							if(item.type == i.type){
+								item.quantity += i.quantity;
+								added = true;
+								break;
+							}
+						}
+						if(!added){
+							inv.Add(i);
+						}
+						Q1();
+						return;
+					}
+				}
+			}
 			if(path.Count > 0){
 				bool monsters_visible = false;
 				foreach(Actor a in M.AllActors()){
@@ -787,13 +835,14 @@ namespace Forays{
 						Interrupt();
 					}
 					else{
-						AI_Step(M.tile[path[0]]);
+						//AI_Step(M.tile[path[0]]);
+						PlayerWalk(DirectionOf(path[0]));
 						if(path.Count > 0){
 							if(DistanceFrom(path[0].row,path[0].col) == 0){
 								path.RemoveAt(0);
 							}
 						}
-						QS();
+						//QS();
 						return;
 					}
 				}
@@ -875,51 +924,9 @@ namespace Forays{
 					}
 				}
 			}
-			if(Global.Option(OptionType.AUTOPICKUP) && tile().inv != null && tile().type != TileType.QUICKFIRE){
-				bool grenade = false;
-				foreach(Tile t in TilesWithinDistance(1)){
-					if(t.type == TileType.GRENADE){
-						grenade = true;
-					}
-				}
-				if(!grenade && !HasAttr(AttrType.ON_FIRE) && !HasAttr(AttrType.CATCHING_FIRE)){
-					bool monster = false;
-					foreach(Actor a in M.AllActors()){
-						if(a != this && CanSee(a)){
-							monster = true;
-							break;
-						}
-					}
-					if(!monster){
-						if(StunnedThisTurn()){
-							return;
-						}
-						Item i = tile().inv;
-						i.row = -1;
-						i.col = -1;
-						tile().inv = null;
-						B.Add("You pick up " + i.TheName() + ". ");
-						bool added = false;
-						foreach(Item item in inv){
-							if(item.type == i.type){
-								item.quantity += i.quantity;
-								added = true;
-								break;
-							}
-						}
-						if(!added){
-							inv.Add(i);
-						}
-						Q1();
-						return;
-					}
-				}
-			}
 			ConsoleKeyInfo command = Console.ReadKey(true);
 			char ch = ConvertInput(command);
-			if(Global.Option(OptionType.VI_KEYS)){
-				ch = ConvertVIKeys(ch);
-			}
+			ch = ConvertVIKeys(ch);
 			bool alt = false;
 			bool ctrl = false;
 			bool shift = false;
@@ -1028,76 +1035,96 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'o': //todo - change to 'o'perate
+			case 'o':
 				{
-				int door = DirectionOfOnlyUnblocked(TileType.DOOR_C);
-				int chest = DirectionOfOnlyUnblocked(TileType.CHEST);
-				bool ask=false;
-				if(door == -1){
-					ask = true;
-				}
-				else{
-					if(door == 0){
-						if(chest == -1){
-							ask=true;
+				int dir = 0;
+				int total = 0;
+				foreach(Tile t in TilesAtDistance(1)){
+					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O || t.type == TileType.RUBBLE
+					|| (HasFeat(FeatType.DISARM_TRAP) && t.IsTrap() && t.name != "floor")){
+						if(t.actor() == null && (t.inv == null || t.IsTrap())){
+							dir = DirectionOf(t);
+							++total;
 						}
-						else{
-							if(chest == 0){
-								if(tile().type == TileType.CHEST){
-									if(StunnedThisTurn()){
-										break;
-									}
-									tile().OpenChest();
+					}
+				}
+				if(total == 1){
+					if(StunnedThisTurn()){
+						return;
+					}
+					Tile t = TileInDirection(dir);
+					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O || t.type == TileType.RUBBLE){
+						t.Toggle(this);
+						Q1();
+					}
+					else{
+						if(t.IsTrap()){
+							if(Global.Roll(5) <= 4){
+								B.Add("You disarm " + Tile.Prototype(t.type).the_name + ". ");
+								t.Toggle(this);
+								Q1();
+							}
+							else{
+								if(Global.Roll(20) <= TotalSkill(Forays.SkillType.DEFENSE)){ //changed to totalskill
+									B.Add("You almost set off " + Tile.Prototype(t.type).the_name + "! ");
 									Q1();
 								}
 								else{
-									B.Add("There's nothing to open here. ");
-									Q0();
+									B.Add("You set off " + Tile.Prototype(t.type).the_name + "! ");
+									Move(t.row,t.col);
+									Q1();
 								}
 							}
-							else{
-								if(StunnedThisTurn()){
-									break;
-								}
-								TileInDirection(chest).OpenChest();
-								Q1();
-							}
-						}
-					}
-					else{
-						if(chest == 0){
-							if(StunnedThisTurn()){
-								break;
-							}
-							TileInDirection(door).Toggle(this);
-							Q1();
 						}
 						else{
-							ask=true;
+							Q0(); //shouldn't happen
 						}
 					}
 				}
-				if(ask){
-					int dir = GetDirection("Open in which direction? ",false,true);
+				else{
+					dir = GetDirection("Operate something in which direction? ");
 					if(dir != -1){
 						Tile t = TileInDirection(dir);
-						if(t.type == TileType.CHEST){
-							if(StunnedThisTurn()){
-								break;
+						if(t.IsTrap() && HasFeat(FeatType.DISARM_TRAP) && t.name != "floor"){
+							if(Global.Roll(5) <= 4){
+								B.Add("You disarm " + Tile.Prototype(t.type).the_name + ". ");
+								t.Toggle(this);
+								Q1();
 							}
-							t.OpenChest();
-							Q1();
+							else{
+								if(Global.Roll(20) <= TotalSkill(Forays.SkillType.DEFENSE)){ //changed to totalskill
+									B.Add("You almost set off " + Tile.Prototype(t.type).the_name + "! ");
+									Q1();
+								}
+								else{
+									B.Add("You set off " + Tile.Prototype(t.type).the_name + "! ");
+									Move(t.row,t.col);
+									Q1();
+								}
+							}
 						}
 						else{
-							if(t.type == TileType.DOOR_C){
+							switch(t.type){
+							case TileType.DOOR_C:
+							case TileType.DOOR_O:
+							case TileType.RUBBLE:
 								if(StunnedThisTurn()){
 									break;
 								}
 								t.Toggle(this);
 								Q1();
-							}
-							else{
+								break;
+							case TileType.CHEST:
+								B.Add("Stand on the chest and press 'g' to retrieve its contents. ");
 								Q0();
+								break;
+							case TileType.STAIRS:
+								B.Add("Stand on the stairs and press '>' to descend. ");
+								Q0();
+								break;
+							default:
+								Q0();
+								break;
 							}
 						}
 					}
@@ -1107,7 +1134,7 @@ namespace Forays{
 				}
 				break;
 				}
-			case 'c': //todo - remove: replaced by operate
+			/*case 'c':
 				{
 				int door = DirectionOfOnlyUnblocked(TileType.DOOR_O);
 				if(door == -1){
@@ -1142,7 +1169,7 @@ namespace Forays{
 					}
 				}
 				break;
-				}
+				}*/
 			case 's':
 				{
 				if(Weapon.BaseWeapon(weapons.First.Value) == WeaponType.BOW || HasFeat(FeatType.QUICK_DRAW)){
@@ -1420,11 +1447,11 @@ namespace Forays{
 					bool can_recover_spells = false;
 					foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
 						if(spells[spell] > 1){
-							can_recover_spells = true;
+							can_recover_spells = true; //todo - this seems to be old code
 						}
 					}
 					if(attrs[AttrType.RESTING] != -1 && (curhp < maxhp || can_recover_spells)){
-						B.DisplayNow("Really take the stairs without resting first?(Y/N): ");
+						B.DisplayNow("Really take the stairs without resting first?(y/n): ");
 						Console.CursorVisible = true;
 						bool done = false;
 						while(!done){
@@ -1446,8 +1473,37 @@ namespace Forays{
 					Q0();
 				}
 				else{
-					B.Add("There are no stairs here. ");
-					Q0();
+					Tile stairs = null;
+					foreach(Tile t in M.AllTiles()){
+						if(t.type == TileType.STAIRS && t.seen){
+							stairs = t;
+							break;
+						}
+					}
+					if(stairs != null){
+						B.DisplayNow("Travel to the stairs?(y/n): ");
+						Console.CursorVisible = true;
+						bool done = false;
+						while(!done){
+							command = Console.ReadKey(true);
+							switch(command.KeyChar){
+							case 'y':
+							case 'Y':
+							case '>':
+								done = true;
+								break;
+							default:
+								Q0();
+								return;
+							}
+						}
+						FindPath(stairs,-1,true);
+						Q0();
+					}
+					else{
+						B.Add("You don't see any stairs here. ");
+						Q0();
+					}
 				}
 				break;
 			case 'x':
@@ -1545,6 +1601,7 @@ namespace Forays{
 							if(tile().GetItem(i)){
 								B.Add("You drop " + i.TheName() + ". ");
 								inv.Remove(i);
+								i.ignored = true;
 								Q1();
 							}
 							else{
@@ -1563,6 +1620,7 @@ namespace Forays{
 									if(tile().GetItem(i)){
 										B.Add("You drop " + i.TheName() + ". ");
 										inv.Remove(i);
+										i.ignored = true;
 										Q1();
 									}
 									else{
@@ -1576,6 +1634,7 @@ namespace Forays{
 									if(tile().GetItem(newitem)){
 										i.quantity -= count;
 										B.Add("You drop " + newitem.TheName() + ". ");
+										newitem.ignored = true;
 										Q1();
 									}
 									else{
@@ -1695,114 +1754,6 @@ namespace Forays{
 					}
 				}
 				break;
-/*			case 'W':
-				{
-				if(StunnedThisTurn()){
-					break;
-				}
-				WeaponType old_weapon = weapons.First.Value;
-				bool done=false;
-				while(!done){
-					DisplayStats(true,false);
-					Console.SetCursorPosition(4,7);
-					ConsoleKeyInfo command2 = Console.ReadKey(true);
-					char ch2 = ConvertInput(command2);
-					if(Global.Option(OptionType.VI_KEYS)){
-						ch2 = ConvertVIKeys(ch2);
-					}
-					switch(ch2){
-					case '8':
-						{
-						WeaponType w = weapons.Last.Value;
-						weapons.Remove(w);
-						weapons.AddFirst(w);
-						break;
-						}
-					case '2':
-						{
-						WeaponType w = weapons.First.Value;
-						weapons.Remove(w);
-						weapons.AddLast(w);
-						break;
-						}
-					case (char)27:
-					case ' ':
-						Q0();
-						return;
-					case (char)13:
-						done=true;
-						break;
-					default:
-						break;
-					}
-				}
-				if(old_weapon == weapons.First.Value){
-					Q0();
-				}
-				else{
-					if(HasFeat(FeatType.QUICK_DRAW)){
-						B.Add("You quickly ready your " + Weapon.Name(weapons.First.Value) + ". ");
-						Q0();
-					}
-					else{
-						B.Add("You ready your " + Weapon.Name(weapons.First.Value) + ". ");
-						Q1();
-					}
-					UpdateOnEquip(old_weapon,weapons.First.Value);
-				}
-				break;
-				}
-			case 'A':
-				{
-				if(StunnedThisTurn()){
-					break;
-				}
-				ArmorType old_armor = armors.First.Value;
-				bool done=false;
-				while(!done){
-					DisplayStats(false,true);
-					Console.SetCursorPosition(4,8);
-					ConsoleKeyInfo command2 = Console.ReadKey(true);
-					char ch2 = ConvertInput(command2);
-					if(Global.Option(OptionType.VI_KEYS)){
-						ch2 = ConvertVIKeys(ch2);
-					}
-					switch(ch2){
-					case '8':
-						{
-						ArmorType a = armors.Last.Value;
-						armors.Remove(a);
-						armors.AddFirst(a);
-						break;
-						}
-					case '2':
-						{
-						ArmorType a = armors.First.Value;
-						armors.Remove(a);
-						armors.AddLast(a);
-						break;
-						}
-					case (char)27:
-					case ' ':
-						Q0();
-						return;
-					case (char)13:
-						done=true;
-						break;
-					default:
-						break;
-					}
-				}
-				if(old_armor == armors.First.Value){
-					Q0();
-				}
-				else{
-					B.Add("You wear your " + Armor.Name(armors.First.Value) + ". ");
-					Q1();
-					UpdateOnEquip(old_armor,armors.First.Value);
-				}
-				break;
-				}*/
 			case 'e':
 			{
 				int[] changes = DisplayEquipment();
@@ -1981,7 +1932,7 @@ namespace Forays{
 				}
 				Q1();
 				break;
-			case (char)9: //todo - remove: make 'tab' the best of both worlds
+			case (char)9:
 				GetTarget(true,-1,true);
 				Q0();
 				break;
@@ -2017,7 +1968,7 @@ namespace Forays{
 				Q0();
 				break;
 				}
-			case 'C': //todo - change to 'c'
+			case 'c':
 				DisplayCharacterInfo();
 				Q0();
 				break;
@@ -2026,13 +1977,14 @@ namespace Forays{
 			{
 				for(bool done=false;!done;){
 					List<string> ls = new List<string>();
-					ls.Add("Use vi-style keys".PadRight(58) + (Global.Option(OptionType.VI_KEYS)? "yes ":"no ").PadLeft(4));
+					//ls.Add("Use vi-style keys".PadRight(58) + (Global.Option(OptionType.VI_KEYS)? "yes ":"no ").PadLeft(4));
 					ls.Add("Use last target when possible".PadRight(58) + (Global.Option(OptionType.LAST_TARGET)? "yes ":"no ").PadLeft(4));
 					ls.Add("Automatically pick up items (if safe)".PadRight(58) + (Global.Option(OptionType.AUTOPICKUP)? "yes ":"no ").PadLeft(4));
-					ls.Add("Open chests by walking into them".PadRight(58) + (Global.Option(OptionType.OPEN_CHESTS)? "yes ":"no ").PadLeft(4));
+					//ls.Add("Open chests by walking into them".PadRight(58) + (Global.Option(OptionType.OPEN_CHESTS)? "yes ":"no ").PadLeft(4));
 					ls.Add("Hide old messages instead of darkening them".PadRight(58) + (Global.Option(OptionType.HIDE_OLD_MESSAGES)? "yes ":"no ").PadLeft(4));
+					ls.Add("Hide the command hints on the side".PadRight(58) + (Global.Option(OptionType.HIDE_COMMANDS)? "yes ":"no ").PadLeft(4));
 					ls.Add("Cast a spell instead of attacking".PadRight(46) + (F[0]==SpellType.NO_SPELL? "no ":Spell.Name(F[0])).PadLeft(16));
-					ls.Add("Don't print a message for the Blood boil feat".PadRight(58) + (Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE)? "yes ":"no ").PadLeft(4));
+					//ls.Add("Don't print a message for the Blood boil feat".PadRight(58) + (Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE)? "yes ":"no ").PadLeft(4));
 					ls.Add("Don't use roman numerals for automatic naming".PadRight(58) + (Global.Option(OptionType.NO_ROMAN_NUMERALS)? "yes ":"no ").PadLeft(4));
 					//ls.Add("Make unseen walls and floors dark gray".PadRight(58) + (Global.Option(OptionType.DARK_GRAY_UNSEEN)? "yes ":"no ").PadLeft(4));
 					//ls.Add("Consider items and tiles interesting".PadRight(58) + (Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING)? "yes ":"no ").PadLeft(4));
@@ -2040,56 +1992,61 @@ namespace Forays{
 					Console.CursorVisible = true;
 					ch = ConvertInput(Console.ReadKey(true));
 					switch(ch){
-					case 'a':
+					/*case 'a':
 						Global.Options[OptionType.VI_KEYS] = !Global.Option(OptionType.VI_KEYS);
-						break;
-					case 'b':
+						break;*/
+					case 'a':
 						Global.Options[OptionType.LAST_TARGET] = !Global.Option(OptionType.LAST_TARGET);
 						break;
-					case 'c':
+					case 'b':
 						Global.Options[OptionType.AUTOPICKUP] = !Global.Option(OptionType.AUTOPICKUP);
 						break;
-					case 'd':
+					/*case 'd':
 						Global.Options[OptionType.OPEN_CHESTS] = !Global.Option(OptionType.OPEN_CHESTS);
-						break;
-					case 'e':
+						break;*/
+					case 'c':
 						Global.Options[OptionType.HIDE_OLD_MESSAGES] = !Global.Option(OptionType.HIDE_OLD_MESSAGES);
 						break;
-					case 'f':
+					case 'd':
+						Global.Options[OptionType.HIDE_COMMANDS] = !Global.Option(OptionType.HIDE_COMMANDS);
+						break;
+					case 'e':
 					{
-						M.RedrawWithStrings();
-						List<string> list = new List<string>();
-						List<SpellType> sp = new List<SpellType>();
-						foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
-							if(HasSpell(spell)){
-								string s = Spell.Name(spell).PadRight(15) + Spell.Level(spell).ToString().PadLeft(3);
-								s = s + FailRate(spell).ToString().PadLeft(9) + "%";
-								s = s + Spell.Description(spell).PadLeft(34);
-								list.Add(s);
-								sp.Add(spell);
+						if(skills[Forays.SkillType.MAGIC] > 0){
+							M.RedrawWithStrings();
+							List<string> list = new List<string>();
+							List<SpellType> sp = new List<SpellType>();
+							foreach(SpellType spell in Enum.GetValues(typeof(SpellType))){
+								if(HasSpell(spell)){
+									string s = Spell.Name(spell).PadRight(15) + Spell.Level(spell).ToString().PadLeft(3);
+									s = s + FailRate(spell).ToString().PadLeft(9) + "%";
+									s = s + Spell.Description(spell).PadLeft(34);
+									list.Add(s);
+									sp.Add(spell);
+								}
 							}
-						}
-						if(sp.Count > 0){
-							string topborder = "------------------Level---Fail rate--------Description------------";
-							int basefail = magic_penalty * 5;
-							if(!HasFeat(FeatType.ARMORED_MAGE)){
-								basefail += Armor.AddedFailRate(armors.First.Value);
-							}
-							string bottomborder = "-------------Base fail rate: " + (basefail.ToString().PadLeft(2) + "%").PadRight(37,'-');
-							int i = Select("Automatically cast which spell? ",topborder,bottomborder,list);
-							if(i != -1){
-								F[0] = sp[i];
-							}
-							else{
-								F[0] = SpellType.NO_SPELL;
+							if(sp.Count > 0){
+								string topborder = "------------------Level---Fail rate--------Description------------";
+								int basefail = magic_penalty * 5;
+								if(!HasFeat(FeatType.ARMORED_MAGE)){
+									basefail += Armor.AddedFailRate(armors.First.Value);
+								}
+								string bottomborder = "-------------Base fail rate: " + (basefail.ToString().PadLeft(2) + "%").PadRight(37,'-');
+								int i = Select("Automatically cast which spell? ",topborder,bottomborder,list);
+								if(i != -1){
+									F[0] = sp[i];
+								}
+								else{
+									F[0] = SpellType.NO_SPELL;
+								}
 							}
 						}
 						break;
 					}
-					case 'g':
+					/*case 'g':
 						Global.Options[OptionType.NO_BLOOD_BOIL_MESSAGE] = !Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE);
-						break;
-					case 'h':
+						break;*/
+					case 'f':
 						Global.Options[OptionType.NO_ROMAN_NUMERALS] = !Global.Option(OptionType.NO_ROMAN_NUMERALS);
 						break;
 					case (char)27:
@@ -2169,7 +2126,7 @@ namespace Forays{
 				Q0();
 				break;*/
 			case '~': //debug mode 
-				if(true){
+				if(false){
 				List<string> l = new List<string>();
 				l.Add("Throw a prismatic orb");
 				l.Add("create chests");
@@ -2383,6 +2340,9 @@ namespace Forays{
 				Q0();
 				break;
 			}
+			if(ch != 'x'){
+				attrs[Forays.AttrType.AUTOEXPLORE] = 0;
+			}
 		}
 		public void PlayerWalk(int dir){
 			if(dir > 0){
@@ -2412,20 +2372,23 @@ namespace Forays{
 				}
 				else{
 					if(TileInDirection(dir).passable){
-						if(Global.Option(OptionType.OPEN_CHESTS) && TileInDirection(dir).type==TileType.CHEST){
+						/*if(Global.Option(OptionType.OPEN_CHESTS) && TileInDirection(dir).type==TileType.CHEST){
 							if(StunnedThisTurn()){
 								return;
 							}
 							TileInDirection(dir).OpenChest();
 							Q1();
 						}
-						else{
-							if(TileInDirection(dir).inv != null){
-								B.Add("You see " + TileInDirection(dir).inv.AName() + ". ");
-							}
-							Move(TileInDirection(dir).row,TileInDirection(dir).col);
-							QS();
+						else{*/
+						if(TileInDirection(dir).type == TileType.STAIRS && !Global.Option(OptionType.HIDE_COMMANDS)){
+							B.Add("There are stairs here - press > to descend. ");
 						}
+						if(TileInDirection(dir).inv != null){
+							B.Add("You see " + TileInDirection(dir).inv.AName() + ". ");
+						}
+						Move(TileInDirection(dir).row,TileInDirection(dir).col);
+						QS();
+						//}
 					}
 					else{
 						if(TileInDirection(dir).type == TileType.DOOR_C || TileInDirection(dir).type == TileType.RUBBLE){
@@ -3691,7 +3654,7 @@ namespace Forays{
 					}
 					else{
 						if(t.inv != null){
-							B.Add("It lands under " + t.inv.the_name + ". ",t);
+							B.Add("It lands under " + t.inv.TheName() + ". ",t);
 						}
 					}
 					TileType oldtype = t.type;
@@ -4465,7 +4428,7 @@ namespace Forays{
 							B.Add(a.YouAre() + " poisoned. ",this,a);
 						}
 						a.attrs[AttrType.POISONED]++;
-						Q.Add(new Event(a,(Global.Roll(6)+6)*100,AttrType.POISONED)); //todo balance check on phase spiders (they're probably okay)
+						Q.Add(new Event(a,(Global.Roll(6)+6)*100,AttrType.POISONED));
 					}
 				}
 				if(HasAttr(AttrType.PARALYSIS_HIT) && attack_idx==1 && type == ActorType.CARRION_CRAWLER && M.actor[r,c] != null){
@@ -4955,9 +4918,9 @@ namespace Forays{
 					dmg.source.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,amount,this); //doesn't yet prevent loops involving 2 holy shields.
 				}
 				if(HasFeat(FeatType.BOILING_BLOOD) && dmg.type != DamageType.POISON && attrs[AttrType.BLOOD_BOILED] < 5){
-					if(!Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE)){
+					//if(!Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE)){
 						B.Add("Your blood boils! ");
-					}
+					//}
 					speed -= 10;
 					attrs[AttrType.BLOOD_BOILED]++;
 					Q.KillEvents(this,AttrType.BLOOD_BOILED);
@@ -5066,7 +5029,7 @@ namespace Forays{
 				if(magic_items.Contains(MagicItemType.CLOAK_OF_DISAPPEARANCE) && damage_dealt && dmg.amount >= curhp){
 					B.PrintAll();
 					M.Draw();
-					B.DisplayNow("Your cloak starts to vanish. Use your cloak to escape?(Y/N): ");
+					B.DisplayNow("Your cloak starts to vanish. Use your cloak to escape?(y/n): ");
 					Console.CursorVisible = true;
 					ConsoleKeyInfo command;
 					bool done = false;
@@ -5972,7 +5935,7 @@ namespace Forays{
 						else{
 							TileType prev = chosen.type;
 							chosen.TransformTo(TileType.RUBBLE);
-							chosen.toggles_into = prev; //todo make sure this works
+							chosen.toggles_into = prev;
 						}
 					}
 				}
@@ -6685,8 +6648,8 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			return result;
 		}
-		public void DisplayStats(){ DisplayStats(false,false); }
-		public void DisplayStats(bool expand_weapons,bool expand_armors){
+		public void DisplayStats(){ DisplayStats(false); }
+		public void DisplayStats(bool cyan_letters){
 			Console.CursorVisible = false;
 			Screen.WriteStatsString(2,0,"HP: ");
 			if(curhp < 50){
@@ -6701,20 +6664,94 @@ effect as standing still, if you're on fire or catching fire. */
 				Screen.WriteStatsString(2,4,curhp.ToString() + "  ");
 			}
 			Screen.WriteStatsString(3,0,"Level: " + level + "  ");
-			Screen.WriteStatsString(4,0,"XP: " + xp + "  ");
-			Screen.WriteStatsString(5,0,"Depth: " + M.current_level + "  ");
-			Screen.WriteStatsString(6,0,"AC: " + ArmorClass() + "  ");
+			Screen.WriteStatsString(4,0,"Depth: " + M.current_level + "  ");
+			Screen.WriteStatsString(5,0,"AC: " + ArmorClass() + "  ");
+			int magic_item_lines = magic_items.Count;
+			cstr cs = Weapon.StatsName(weapons.First.Value);
+			cs.s = cs.s.PadRight(12);
+			Screen.WriteStatsString(6,0,cs);
+			cs = Armor.StatsName(armors.First.Value);
+			cs.s = cs.s.PadRight(12);
+			Screen.WriteStatsString(7,0,cs);
+			int line = 8;
+			foreach(MagicItemType m in magic_items){
+				cs = MagicItem.StatsName(m);
+				cs.s = cs.s.PadRight(12);
+				Screen.WriteStatsString(line,0,cs);
+				++line;
+			}
+			if(!Global.Option(OptionType.HIDE_COMMANDS)){
+				string[] commandhints = new string[]{"[i]nventory ","[e]quipment ","[c]haracter ","SPECIAL",
+					"Use [f]eat  ","Cast [z]    ","[s]hoot     ","[a]pply item","[g]et item  ","[r]est      ",
+					"[w]alk      ","e[x]plore   ","[o]perate   "};
+				if(light_radius > 0){
+					commandhints[3] = "[t]orch off ";
+				}
+				else{
+					commandhints[3] = "[t]orch on  ";
+				}
+				Color lettercolor = cyan_letters? Color.Cyan : Color.Gray;
+				for(int i=0;i<commandhints.Length;++i){
+					int open = commandhints[i].LastIndexOf('[');
+					cstr front = new cstr(commandhints[i].Substring(0,open+1),Color.Gray);
+					int close = commandhints[i].LastIndexOf(']');
+					cstr middle = new cstr(commandhints[i].Substring(open+1,(close - open)-1),lettercolor);
+					cstr end = new cstr(commandhints[i].Substring(close),Color.Gray);
+					Screen.WriteString(12+i,0,new colorstring(front,middle,end));
+				}
+			}
+			else{
+				for(int i=8+magic_item_lines;i<Global.SCREEN_H;++i){
+					Screen.WriteStatsString(i,0,"".PadRight(12));
+				}
+			}
+			Screen.ResetColors();
+		}
+		public void DisplayStats(bool expand_weapons,bool expand_armors){
+/*[i]nventory
+[e]quipment
+[c]haracter
+[t]orch off
+Use [f]eat
+Cast [z]
+[s]hoot			todo - here is the full list, to be completed when there's enough room.
+[a]pply item
+[g]et item
+[d]rop item
+[r]est
+[w]alk
+E[x]plore
+[o]perate
+[tab] Look
+*/
+			Console.CursorVisible = false;
+			Screen.WriteStatsString(2,0,"HP: ");
+			if(curhp < 50){
+				if(curhp < 20){
+					Screen.WriteStatsString(2,4,new cstr(Color.DarkRed,curhp.ToString() + "  "));
+				}
+				else{
+					Screen.WriteStatsString(2,4,new cstr(Color.Red,curhp.ToString() + "  "));
+				}
+			}
+			else{
+				Screen.WriteStatsString(2,4,curhp.ToString() + "  ");
+			}
+			Screen.WriteStatsString(3,0,"Level: " + level + "  ");
+			//Screen.WriteStatsString(4,0,"XP: " + xp + "  ");
+			Screen.WriteStatsString(4,0,"Depth: " + M.current_level + "  ");
+			Screen.WriteStatsString(5,0,"AC: " + ArmorClass() + "  ");
 			int weapon_lines = 1;
 			int armor_lines = 1;
 			int magic_item_lines = magic_items.Count;
-			string divider = "~~~".PadRight(12);
-			Screen.WriteStatsString(7,0,divider);
+			string divider = "---".PadRight(12);
+			//Screen.WriteStatsString(6,0,divider);
 			cstr cs = Weapon.StatsName(weapons.First.Value);
 			cs.s = cs.s.PadRight(12);
-			Screen.WriteStatsString(8,0,cs);
+			Screen.WriteStatsString(6,0,cs);
 			if(expand_weapons){ //this can easily be extended to handle a variable number of weapons
 				weapon_lines = 5;
-				int i = 9;
+				int i = 7;
 				foreach(WeaponType w in weapons){
 					if(w != weapons.First.Value){
 						cs = Weapon.StatsName(w);
@@ -6725,13 +6762,13 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 				
 			}
-			Screen.WriteStatsString(8+weapon_lines,0,divider);
+			//Screen.WriteStatsString(7+weapon_lines,0,divider);
 			cs = Armor.StatsName(armors.First.Value);
 			cs.s = cs.s.PadRight(12);
-			Screen.WriteStatsString(9+weapon_lines,0,cs);
+			Screen.WriteStatsString(6+weapon_lines,0,cs);
 			if(expand_armors){
 				armor_lines = 3;
-				int i = 10 + weapon_lines;
+				int i = 7 + weapon_lines;
 				foreach(ArmorType a in armors){
 					if(a != armors.First.Value){
 						cs = Armor.StatsName(a);
@@ -6741,22 +6778,22 @@ effect as standing still, if you're on fire or catching fire. */
 					}
 				}
 			}
-			Screen.WriteStatsString(9+weapon_lines+armor_lines,0,divider);
-			int line = 10 + weapon_lines + armor_lines;
+			//Screen.WriteStatsString(8+weapon_lines+armor_lines,0,divider);
+			int line = 6 + weapon_lines + armor_lines;
 			foreach(MagicItemType m in magic_items){
 				cs = MagicItem.StatsName(m);
 				cs.s = cs.s.PadRight(12);
 				Screen.WriteStatsString(line,0,cs);
 				++line;
 			}
-			for(int i=10+weapon_lines+armor_lines+magic_item_lines;i<ROWS-1;++i){
+			for(int i=6+weapon_lines+armor_lines+magic_item_lines;i<ROWS-1;++i){
 				Screen.WriteStatsString(i,0,"".PadRight(12));
 			}
 			Screen.ResetColors();
 		}
 		public void DisplayCharacterInfo(){ DisplayCharacterInfo(true); }
 		public void DisplayCharacterInfo(bool readkey){
-			DisplayStats(true,true);
+			DisplayStats();
 			for(int i=1;i<ROWS-1;++i){
 				Screen.WriteMapString(i,0,"".PadRight(COLS));
 			}
@@ -7498,18 +7535,27 @@ effect as standing still, if you're on fire or catching fire. */
 		}
 		public void FindPath(PhysicalObject o){ path = GetPath(o); }
 		public void FindPath(PhysicalObject o,int max_distance){ path = GetPath(o,max_distance); }
+		public void FindPath(PhysicalObject o,int max_distance,bool path_around_seen_traps){ path = GetPath(o,max_distance,path_around_seen_traps); }
 		public void FindPath(int r,int c){ path = GetPath(r,c); }
 		public void FindPath(int r,int c,int max_distance){ path = GetPath(r,c,max_distance); }
-		public List<pos> GetPath(PhysicalObject o){ return GetPath(o.row,o.col,Math.Max(ROWS,COLS)); }
-		public List<pos> GetPath(PhysicalObject o,int max_distance){ return GetPath(o.row,o.col,max_distance); }
-		public List<pos> GetPath(int r,int c){ return GetPath(r,c,Math.Max(ROWS,COLS)); }
-		public List<pos> GetPath(int r,int c,int max_distance){ //tiles past this distance are ignored entirely
+		public void FindPath(int r,int c,int max_distance,bool path_around_seen_traps){ path = GetPath(r,c,max_distance,path_around_seen_traps); }
+		public List<pos> GetPath(PhysicalObject o){ return GetPath(o.row,o.col,-1,false); }
+		public List<pos> GetPath(PhysicalObject o,int max_distance){ return GetPath(o.row,o.col,max_distance,false); }
+		public List<pos> GetPath(PhysicalObject o,int max_distance,bool path_around_seen_traps){ return GetPath(o.row,o.col,max_distance,path_around_seen_traps); }
+		public List<pos> GetPath(int r,int c){ return GetPath(r,c,-1,false); }
+		public List<pos> GetPath(int r,int c,int max_distance){ return GetPath(r,c,max_distance,false); }
+		public List<pos> GetPath(int r,int c,int max_distance,bool path_around_seen_traps){ //tiles past this distance are ignored entirely
 			List<pos> path = new List<pos>();
 			int[,] values = new int[ROWS,COLS];
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					if(M.tile[i,j].passable){
-						values[i,j] = 0;
+						if(path_around_seen_traps && M.tile[i,j].IsTrap() && M.tile[i,j].name != "floor"){
+							values[i,j] = -1;
+						}
+						else{
+							values[i,j] = 0;
+						}
 					}
 					else{
 						values[i,j] = -1;
@@ -7520,6 +7566,12 @@ effect as standing still, if you're on fire or catching fire. */
 			int maxrow = Math.Min(ROWS-2,row+max_distance);
 			int mincol = Math.Max(1,col-max_distance);
 			int maxcol = Math.Min(COLS-2,col+max_distance);
+			if(max_distance == -1){
+				minrow = 1;
+				maxrow = ROWS-2;
+				mincol = 1;
+				maxcol = COLS-2;
+			}
 			values[row,col] = 1;
 			int val = 1;
 			bool done = false;
@@ -7559,9 +7611,6 @@ effect as standing still, if you're on fire or catching fire. */
 							best = neighbor;
 						}
 						else{
-							/*if(neighbor.DistanceFrom(r,c) < best.Value.DistanceFrom(r,c)){ //todo: change?
-								best = neighbor;
-							}*/
 							if(neighbor.EstimatedEuclideanDistanceFromX10(p) < best.Value.EstimatedEuclideanDistanceFromX10(p)){
 								best = neighbor;
 							}
@@ -7597,6 +7646,7 @@ effect as standing still, if you're on fire or catching fire. */
 			int maxcol = COLS-2;
 			values[row,col] = 1;
 			int val = 1;
+			bool val_plus_one = false; //a bit hacky; changes based on whether you're going to an item or not.
 			List<pos> frontiers = new List<pos>();
 			while(frontiers.Count == 0){
 				for(int i=minrow;i<=maxrow;++i){
@@ -7608,9 +7658,13 @@ effect as standing still, if you're on fire or catching fire. */
 										if(values[s,t] == 0){
 											values[s,t] = val + 1;
 											if(!M.tile[s,t].seen && (M.tile[s,t].passable || M.tile[s,t].type == TileType.DOOR_C)){
-												if(!frontiers.Contains(new pos(i,j))){
-													frontiers.Add(new pos(i,j));
-												}
+												//frontiers.AddUnique(new pos(i,j));
+												frontiers.AddUnique(new pos(s,t));
+												val_plus_one = true;
+											}
+											if(M.tile[s,t].inv != null && !M.tile[s,t].inv.ignored){
+												frontiers.AddUnique(new pos(s,t));
+												val_plus_one = true;
 											}
 										}
 									}
@@ -7624,6 +7678,9 @@ effect as standing still, if you're on fire or catching fire. */
 					this.path.Clear();
 					return false;
 				}
+			}
+			if(val_plus_one){
+				++val;
 			}
 			//val is now equal to the value of the unseen tile's position
 			pos frontier = new pos(-1,-1);
@@ -7650,7 +7707,7 @@ effect as standing still, if you're on fire or catching fire. */
 							best = neighbor;
 						}
 						else{
-							if(neighbor.DistanceFrom(frontier) < best.Value.DistanceFrom(frontier)){ //todo: change?
+							if(neighbor.EstimatedEuclideanDistanceFromX10(current) < best.Value.EstimatedEuclideanDistanceFromX10(current)){
 								best = neighbor;
 							}
 						}
@@ -7692,9 +7749,7 @@ effect as standing still, if you're on fire or catching fire. */
 				if(command.KeyChar == '.'){
 					ch = '5';
 				}
-				if(Global.Option(OptionType.VI_KEYS)){
-					ch = ConvertVIKeys(ch);
-				}
+				ch = ConvertVIKeys(ch);
 				int i = (int)Char.GetNumericValue(ch);
 				if(i>=1 && i<=9){
 					if(i != 5){
@@ -8009,9 +8064,7 @@ cch.c = mem[t.row,t.col].c;*/
 				Console.CursorVisible = true;
 				command = Console.ReadKey(true);
 				char ch = ConvertInput(command);
-				if(Global.Option(OptionType.VI_KEYS)){
-					ch = ConvertVIKeys(ch);
-				}
+				ch = ConvertVIKeys(ch);
 				switch(ch){
 				case '7':
 					if(r==minrow){
@@ -8191,7 +8244,7 @@ cch.c = mem[t.row,t.col].c;*/
 			}
 			return result;
 		}
-		public List<Tile> GetTarget2Temp(bool lookmode,int max_distance,bool start_at_interesting_target,int radius){
+/*		public List<Tile> GetTarget2Temp(bool lookmode,int max_distance,bool start_at_interesting_target,int radius){
 			List<Tile> result = null;
 			ConsoleKeyInfo command;
 			int r,c;
@@ -8216,23 +8269,6 @@ cch.c = mem[t.row,t.col].c;*/
 					}
 				}
 			}
-			/*for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
-				foreach(Tile t in TilesAtDistance(i)){
-					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
-					|| t.type == TileType.STAIRS || t.type == TileType.CHEST
-					|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
-					|| t.type == TileType.QUICKFIRE || t.type == TileType.STALAGMITE
-					|| t.inv != null){
-						if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING) && CanSee(t)){
-							interesting_targets.Add(t);
-						}
-					}
-					if((lookmode || Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING))
-					&& t.IsTrap() && !interesting_targets.Contains(t) && CanSee(t) && t.name != "floor"){
-						interesting_targets.Add(t);
-					}
-				}
-			}*/
 			colorchar[,] mem = new colorchar[ROWS,COLS];
 			List<Tile> line = new List<Tile>();
 			List<Tile> oldline = new List<Tile>();
@@ -8366,10 +8402,6 @@ cch.c = mem[t.row,t.col].c;*/
 						foreach(Tile t in line){
 							if(t.row != row || t.col != col){
 								colorchar cch = mem[t.row,t.col];
-/*colorchar cch;
-cch.color = mem[t.row,t.col].color;
-cch.bgcolor = mem[t.row,t.col].bgcolor;
-cch.c = mem[t.row,t.col].c;*/
 								if(t.row == r && t.col == c){
 									if(!blocked){
 										cch.bgcolor = Color.Green;
@@ -8666,23 +8698,6 @@ cch.c = mem[t.row,t.col].c;*/
 					}
 				}
 			}
-			/*for(int i=1;(i<=max_distance || max_distance==-1) && i<=COLS;++i){
-				foreach(Tile t in TilesAtDistance(i)){
-					if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O
-					|| t.type == TileType.STAIRS || t.type == TileType.CHEST
-					|| t.type == TileType.GRENADE || t.type == TileType.FIREPIT
-					|| t.type == TileType.QUICKFIRE || t.type == TileType.STALAGMITE
-					|| t.inv != null){
-						if(Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING) && CanSee(t)){
-							interesting_targets.Add(t);
-						}
-					}
-					if((lookmode || Global.Option(OptionType.ITEMS_AND_TILES_ARE_INTERESTING))
-					&& t.IsTrap() && !interesting_targets.Contains(t) && CanSee(t) && t.name != "floor"){
-						interesting_targets.Add(t);
-					}
-				}
-			}*/
 			colorchar[,] mem = new colorchar[ROWS,COLS];
 			List<Tile> line = new List<Tile>();
 			List<Tile> oldline = new List<Tile>();
@@ -8816,10 +8831,6 @@ cch.c = mem[t.row,t.col].c;*/
 						foreach(Tile t in line){
 							if(t.row != row || t.col != col){
 								colorchar cch = mem[t.row,t.col];
-/*colorchar cch;
-cch.color = mem[t.row,t.col].color;
-cch.bgcolor = mem[t.row,t.col].bgcolor;
-cch.c = mem[t.row,t.col].c;*/
 								if(t.row == r && t.col == c){
 									if(!blocked){
 										cch.bgcolor = Color.Green;
@@ -8864,16 +8875,13 @@ cch.c = mem[t.row,t.col].c;*/
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 								}
-								/*if(!blocked){
-									last_good = t;
-								}*/
 								if(t.seen && !t.passable && (t.row != r || t.col != c)){
 									blocked=true;
 								}
 							}
 							oldline.Remove(t);
 						}
-						if(radius > 0/* && last_good != null*/){
+						if(radius > 0){
 							foreach(Tile t in M.tile[r,c].TilesAtDistance(radius)){
 								if(!line.Contains(t)){
 									colorchar cch = mem[t.row,t.col];
@@ -8896,7 +8904,7 @@ cch.c = mem[t.row,t.col].c;*/
 						}
 				//		oldline = line;
 						oldline = new List<Tile>(line);
-						if(radius > 0/* && last_good != null*/){
+						if(radius > 0){
 							foreach(Tile t in M.tile[r,c].TilesAtDistance(radius)){
 								oldline.AddUnique(t);
 							}
@@ -9095,7 +9103,7 @@ cch.c = mem[t.row,t.col].c;*/
 				}
 			}
 			return result;
-		}
+		}*/
 		public int Select(string message,List<string> strings){ return Select(message,"".PadLeft(COLS,'-'),"".PadLeft(COLS,'-'),strings,false,false,true); }
 		public int Select(string message,List<string> strings,bool no_ask,bool no_cancel,bool easy_cancel){ return Select(message,"".PadLeft(COLS,'-'),"".PadLeft(COLS,'-'),strings,no_ask,no_cancel,easy_cancel); }
 		public int Select(string message,string top_border,List<string> strings){ return Select(message,top_border,"".PadLeft(COLS,'-'),strings,false,false,true); }

@@ -336,7 +336,8 @@ namespace Forays{
 			}
 			return dir;
 		}
-		public int DirectionOf(PhysicalObject obj){
+		public int DirectionOf(PhysicalObject obj){ return DirectionOf(obj.p); }
+		public int DirectionOf(pos obj){
 			int dy = Math.Abs(obj.row - row);
 			int dx = Math.Abs(obj.col - col);
 			if(dy == 0){
@@ -490,7 +491,7 @@ compare this number to 1/2:  if less than 1/2, major.
 			int dir=0;
 			for(int i=1;i<=9;++i){
 				if(i != 5){
-					if(TileInDirection(i).type == tiletype && ActorInDirection(i) == null){
+					if(TileInDirection(i).type == tiletype && ActorInDirection(i) == null && TileInDirection(i).inv == null){
 						if(!orth || i%2==0){
 							++total;
 							dir = i;

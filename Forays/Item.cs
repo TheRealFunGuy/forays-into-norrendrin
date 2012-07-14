@@ -13,6 +13,7 @@ namespace Forays{
 	public class Item : PhysicalObject{
 		public ConsumableType type{get; private set;}
 		public int quantity{get;set;}
+		public bool ignored{get;set;} //whether autoexplore and autopickup should ignore this item
 		
 		private static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
 		public static Item Prototype(ConsumableType type){ return proto[type]; }
@@ -40,6 +41,7 @@ namespace Forays{
 		public Item(ConsumableType type_,string name_,char symbol_,Color color_){
 			type = type_;
 			quantity = 1;
+			ignored = false;
 			name = name_;
 			the_name = "the " + name;
 			switch(name[0]){
@@ -67,6 +69,7 @@ namespace Forays{
 		public Item(Item i,int r,int c){
 			type = i.type;
 			quantity = 1;
+			ignored = false;
 			name = i.name;
 			a_name = i.a_name;
 			the_name = i.the_name;
@@ -157,10 +160,11 @@ namespace Forays{
 			case ConsumableType.TOXIN_IMMUNITY:
 			case ConsumableType.CLARITY:
 			case ConsumableType.TELEPORTATION:
-			case ConsumableType.DETECT_MONSTERS:
 			case ConsumableType.SUNLIGHT:
 			case ConsumableType.DARKNESS:
 			case ConsumableType.PRISMATIC:
+			case ConsumableType.HEALING:
+			case ConsumableType.REGENERATION:
 				//plus the potion of 'brutish strength'
 				return 2;
 			default:

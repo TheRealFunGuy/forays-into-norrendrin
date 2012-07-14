@@ -318,7 +318,7 @@ namespace Forays{
 					}
 					else{
 						if(t.inv != null){
-							B.Add("It lands under " + t.inv.the_name + ". ",t);
+							B.Add("It lands under " + t.inv.TheName() + ". ",t);
 						}
 					}
 					TileType oldtype = t.type;

@@ -159,7 +159,7 @@ namespace Forays{
 		}
 		public static colorchar Char(int r,int c){ return memory[r,c]; }
 		public static colorchar MapChar(int r,int c){ return memory[r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS]; }
-		public static colorchar StatsChar(int r,int c){ return memory[r+1,c]; }
+		public static colorchar StatsChar(int r,int c){ return memory[r,c]; } //changed from r+1,c
 		static Screen(){
 			memory = new colorchar[Global.SCREEN_H,Global.SCREEN_W];
 			for(int i=0;i<Global.SCREEN_H;++i){
@@ -430,7 +430,7 @@ namespace Forays{
 				}
 			}
 		}
-		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r+1,c,ch); }
+		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r,c,ch); } //was r+1,c
 		public static void WriteStatsString(int r,int c,string s){
 			cstr cs;
 			cs.color = Color.Gray;
@@ -453,8 +453,7 @@ namespace Forays{
 				s.s = s.s.Substring(0,12 - c);
 			}
 			if(s.s.Length > 0){
-				++r;
-				//++c;
+				//++r; //was ++r
 				s.color = ResolveColor(s.color);
 				s.bgcolor = ResolveColor(s.bgcolor);
 				colorchar cch;
