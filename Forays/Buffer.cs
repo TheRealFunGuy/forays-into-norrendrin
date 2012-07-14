@@ -79,6 +79,7 @@ namespace Forays{
 			}
 		}
 		public void DisplayNow(string s){ //might i eventually need a multi-line version?
+			player.DisplayStats();
 			Console.CursorVisible = false;
 			for(int i=0;i<2;++i){
 				Screen.WriteMapString(i-3,0,"".PadToMapSize());
