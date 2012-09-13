@@ -1,10 +1,9 @@
 Options:
 Any line that starts with [TtFf] and a space MUST be one of the valid options:
-last_target vi_keys open_chests no_blood_boil_message autopickup no_roman_numerals
+last_target autopickup no_roman_numerals hide_old_messages hide_commands
 f last_target
-f vi_keys
-f open_chests
-f no_blood_boil_message
 f autopickup
 f no_roman_numerals
+f hide_old_messages
+f hide_commands
 --

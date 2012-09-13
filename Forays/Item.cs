@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Threading;
 namespace Forays{
 	public class Item : PhysicalObject{
-		public ConsumableType type{get; private set;}
+		public ConsumableType type{get;set;}
 		public int quantity{get;set;}
 		public bool ignored{get;set;} //whether autoexplore and autopickup should ignore this item
 		
@@ -38,6 +38,7 @@ namespace Forays{
 			proto[ConsumableType.FREEZING] = new Item(ConsumableType.FREEZING,"orb~ of freezing",'*',Color.RandomIce);
 			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'~',Color.White);
 		}
+		public Item(){}
 		public Item(ConsumableType type_,string name_,char symbol_,Color color_){
 			type = type_;
 			quantity = 1;
@@ -366,7 +367,15 @@ namespace Forays{
 				break;
 			}
 			case ConsumableType.MAGIC_MAP:
+			{
 				B.Add("The scroll reveals the layout of this level. ");
+				Event hiddencheck = null;
+				foreach(Event e in Q.list){
+					if(!e.dead && e.type == EventType.CHECK_FOR_HIDDEN){
+						hiddencheck = e;
+						break;
+					}
+				}
 				foreach(Tile t in M.AllTiles()){
 					if(t.type != TileType.FLOOR){
 						bool good = false;
@@ -377,6 +386,11 @@ namespace Forays{
 						}
 						if(good){
 							t.seen = true;
+							if(t.IsTrap() || t.Is(TileType.HIDDEN_DOOR)){
+								if(hiddencheck != null){
+									hiddencheck.area.Remove(t);
+								}
+							}
 							if(t.IsTrap()){
 								t.name = Tile.Prototype(t.type).name;
 								t.a_name = Tile.Prototype(t.type).a_name;
@@ -384,10 +398,14 @@ namespace Forays{
 								t.symbol = Tile.Prototype(t.type).symbol;
 								t.color = Tile.Prototype(t.type).color;
 							}
+							if(t.Is(TileType.HIDDEN_DOOR)){
+								t.Toggle(null);
+							}
 						}
 					}
 				}
 				break;
+			}
 			case ConsumableType.SUNLIGHT:
 				if(!M.wiz_lite){
 					M.wiz_lite = true;
@@ -429,7 +447,7 @@ namespace Forays{
 					dmg.Add(DamageType.COLD);
 					dmg.Add(DamageType.ELECTRIC);
 					while(dmg.Count > 0){
-						DamageType damtype = dmg[Global.Roll(1,dmg.Count)-1];
+						DamageType damtype = dmg.Random();
 						colorchar ch = new colorchar(Color.Black,'*');
 						switch(damtype){
 						case DamageType.FIRE:
@@ -445,14 +463,26 @@ namespace Forays{
 						B.DisplayNow();
 						Screen.AnimateExplosion(t,1,ch,100);
 						if(t.passable){
-							foreach(Actor a in t.ActorsWithinDistance(1)){
-								a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+							foreach(Tile t2 in t.TilesWithinDistance(1)){
+								if(t2.actor() != null){
+									t2.actor().TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+								}
+								if(damtype == DamageType.FIRE && t2.Is(FeatureType.TROLL_CORPSE)){
+									t2.features.Remove(FeatureType.TROLL_CORPSE);
+									B.Add("The troll corpse burns to ashes! ",t2);
+								}
 							}
 						}
 						else{
-							foreach(Actor a in t.ActorsWithinDistance(1)){
-								if(prev != null && prev.HasBresenhamLine(a.row,a.col)){
-									a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+							foreach(Tile t2 in t.TilesWithinDistance(1)){
+								if(prev != null && prev.HasBresenhamLine(t2.row,t2.col)){
+									if(t2.actor() != null){
+										t2.actor().TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+									}
+									if(damtype == DamageType.FIRE && t2.Is(FeatureType.TROLL_CORPSE)){
+										t2.features.Remove(FeatureType.TROLL_CORPSE);
+										B.Add("The troll corpse burns to ashes! ",t2);
+									}
 								}
 							}
 						}

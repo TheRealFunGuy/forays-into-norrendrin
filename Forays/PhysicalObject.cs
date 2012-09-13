@@ -43,6 +43,31 @@ namespace Forays{
 			symbol='%';
 			color=Color.White;
 		}
+		public PhysicalObject(string name_,char symbol_,Color color_){
+			row = -1;
+			col = -1;
+			name = name_;
+			the_name = "the " + name_;
+			switch(name_[0]){
+			case 'a':
+			case 'e':
+			case 'i':
+			case 'o':
+			case 'u':
+			case 'A':
+			case 'E':
+			case 'I':
+			case 'O':
+			case 'U':
+				a_name = "an " + name_;
+				break;
+			default:
+				a_name = "a " + name_;
+				break;
+			}
+			symbol = symbol_;
+			color = color_;
+		}
 		public void Cursor(){
 			Console.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);
 		}
@@ -588,6 +613,15 @@ compare this number to 1/2:  if less than 1/2, major.
 		public bool IsAdjacentTo(TileType type,bool consider_origin){
 			foreach(Tile t in TilesWithinDistance(1,!consider_origin)){
 				if(t.type == type){
+					return true;
+				}
+			}
+			return false;
+		}
+		public bool IsAdjacentTo(FeatureType type){ return IsAdjacentTo(type,false); } //didn't need an Actor (or Item) version yet
+		public bool IsAdjacentTo(FeatureType type,bool consider_origin){
+			foreach(Tile t in TilesWithinDistance(1,!consider_origin)){
+				if(t.features.Contains(type)){
 					return true;
 				}
 			}
