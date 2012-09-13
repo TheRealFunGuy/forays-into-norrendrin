@@ -11,7 +11,8 @@ using System.Collections.Generic;
 namespace Forays{
 	public class Queue{
 		public LinkedList<Event> list;
-		public int turn{get; private set;}public int Count(){return list.Count; }
+		public int turn{get;set;}
+		public int Count(){return list.Count; }
 		public static Buffer B{get;set;}
 		public Queue(Game g){
 			list = new LinkedList<Event>();
@@ -70,20 +71,21 @@ namespace Forays{
 		}
 	}
 	public class Event{
-		private PhysicalObject target;
-		private List<Tile> area;
-		private int delay;
-		public EventType type{get;private set;}
-		private AttrType attr;
-		private int value;
-		private string msg;
-		private List<PhysicalObject> msg_objs; //used to determine visibility of msg
-		private int time_created;
-		private bool dead;
+		public PhysicalObject target{get;set;}
+		public List<Tile> area = null;
+		public int delay{get;set;}
+		public EventType type{get;set;}
+		public AttrType attr{get;set;}
+		public int value{get;set;}
+		public string msg{get;set;}
+		public List<PhysicalObject> msg_objs; //used to determine visibility of msg
+		public int time_created{get;set;}
+		public bool dead{get;set;}
 		public static Queue Q{get;set;}
 		public static Buffer B{get;set;}
 		public static Map M{get;set;}
 		public static Actor player{get;set;}
+		public Event(){}
 		public Event(PhysicalObject target_,int delay_){
 			target=target_;
 			delay=delay_;
@@ -561,7 +563,7 @@ namespace Forays{
 													}
 													B.DisplayNow();
 													Screen.AnimateExplosion(t,1,ch,100);
-													foreach(Actor a in t.ActorsWithinDistance(1)){
+													foreach(Actor a in t.ActorsWithinDistance(1)){ //todo ALL this is getting reworked
 														a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),null);
 													}
 													dmg.Remove(damtype);
@@ -674,9 +676,9 @@ namespace Forays{
 				case EventType.GRENADE:
 					{
 					Tile t = target as Tile;
-					if(t.type == TileType.GRENADE){
+					if(t.Is(FeatureType.GRENADE)){
 						B.Add("The grenade explodes! ",t);
-						t.Toggle(null);
+						t.features.Remove(FeatureType.GRENADE);
 						foreach(Actor a in t.ActorsWithinDistance(1)){
 							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),null);
 						}
@@ -685,7 +687,7 @@ namespace Forays{
 							t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
 						}
 						if(player.DistanceFrom(t) <= 3){
-							player.MakeNoise(); //hacky
+							player.MakeNoise(); //hacky - todo change
 						}
 					}
 					break;
@@ -714,45 +716,48 @@ namespace Forays{
 					break;
 					}
 				case EventType.REGENERATING_FROM_DEATH:
-					{
-					value++;
-					if(value > 0 && target.actor() == null){
-						Actor.Create(ActorType.TROLL,target.row,target.col);
-						target.actor().curhp = value;
-						target.actor().level = 0;
-						B.Add("The troll stands up! ",target);
-						target.actor().player_visibility_duration = -1;
-						if(target.tile().type == TileType.DOOR_C){
-							target.tile().Toggle(target.actor());
+				{
+					if(target.tile().Is(FeatureType.TROLL_CORPSE)){ //otherwise, assume it was destroyed by fire
+						value++;
+						if(value > 0 && target.actor() == null){
+							Actor.Create(ActorType.TROLL,target.row,target.col);
+							target.actor().curhp = value;
+							target.actor().level = 0;
+							B.Add("The troll stands up! ",target);
+							target.actor().player_visibility_duration = -1;
+							if(target.tile().type == TileType.DOOR_C){
+								target.tile().Toggle(target.actor());
+							}
+							target.tile().features.Remove(FeatureType.TROLL_CORPSE);
 						}
-					}
-					else{
-						int roll = Global.Roll(20);
-						if(value == -1){
-							roll = 1;
+						else{
+							int roll = Global.Roll(20);
+							if(value == -1){
+								roll = 1;
+							}
+							if(value == 0){
+								roll = 3;
+							}
+							switch(roll){
+							case 1:
+							case 2:
+								B.Add("The troll's corpse twitches. ",target);
+								break;
+							case 3:
+							case 4:
+								B.Add("You hear sounds coming from the troll's corpse. ",target);
+								break;
+							case 5:
+								B.Add("The troll on the floor regenerates. ",target);
+								break;
+							default:
+								break;
+							}
+							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
 						}
-						if(value == 0){
-							roll = 3;
-						}
-						switch(roll){
-						case 1:
-						case 2:
-							B.Add("The troll's corpse twitches. ",target);
-							break;
-						case 3:
-						case 4:
-							B.Add("You hear sounds coming from the troll's corpse. ",target);
-							break;
-						case 5:
-							B.Add("The troll on the floor regenerates. ",target);
-							break;
-						default:
-							break;
-						}
-						Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
 					}
 					break;
-					}
+				}
 				case EventType.QUICKFIRE:
 				{
 					List<Actor> actors = new List<Actor>();
@@ -761,24 +766,24 @@ namespace Forays{
 							if(t.actor() != null){
 								actors.Add(t.actor());
 							}
+							if(t.Is(FeatureType.TROLL_CORPSE)){
+								t.features.Remove(FeatureType.TROLL_CORPSE);
+								B.Add("The troll corpse burns to ashes! ",t);
+							}
 						}
 					}
 					if(value > 0){
 						int radius = 4 - value;
 						List<Tile> added = new List<Tile>();
 						foreach(Tile t in target.TilesWithinDistance(radius)){
-							if(t.passable && t.type != TileType.QUICKFIRE && t.type != TileType.GRENADE
-							&& t.IsAdjacentTo(TileType.QUICKFIRE) && !area.Contains(t)){ //the interaction between grenades and
-								added.Add(t);		//				quickfire is hacky
+							if(t.passable && !t.Is(FeatureType.QUICKFIRE)
+							&& t.IsAdjacentTo(FeatureType.QUICKFIRE) && !area.Contains(t)){
+								added.Add(t);
 							}
 						}
 						foreach(Tile t in added){
 							area.Add(t);
-							TileType oldtype = t.type;
-							t.TransformTo(TileType.QUICKFIRE);
-							t.toggles_into = oldtype;
-							t.passable = Tile.Prototype(oldtype).passable;
-							t.opaque = Tile.Prototype(oldtype).opaque;
+							t.features.Add(FeatureType.QUICKFIRE);
 						}
 					}
 					if(value < 0){
@@ -792,11 +797,15 @@ namespace Forays{
 								if(t.actor() != null){
 									actors.Add(t.actor());
 								}
+								if(t.Is(FeatureType.TROLL_CORPSE)){
+									t.features.Remove(FeatureType.TROLL_CORPSE);
+									B.Add("The troll corpse burns to ashes! ",t);
+								}
 							}
 						}
 						foreach(Tile t in removed){
 							area.Remove(t);
-							t.Toggle(null);
+							t.features.Remove(FeatureType.QUICKFIRE);
 						}
 					}
 					foreach(Actor a in actors){
@@ -821,7 +830,8 @@ namespace Forays{
 							}
 						}
 						foreach(Tile troll in trolls){
-							B.Add("The troll corpse on the ground burns to ashes! ",troll);
+							B.Add("The troll corpse burns to ashes! ",troll);
+							troll.features.Remove(FeatureType.TROLL_CORPSE);
 						}
 						Q.KillEvents(null,EventType.REGENERATING_FROM_DEATH);
 						B.Add("You hear a loud crash and a nearby roar! ");

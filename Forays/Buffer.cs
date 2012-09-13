@@ -45,7 +45,7 @@ namespace Forays{
 			else{
 				add = true;
 			}
-			if(add){
+			if(add && s.Length > 0){
 				if(Char.IsLetter(s[0])){
 					char[] c = s.ToCharArray();
 					c[0] = Char.ToUpper(s[0]);
@@ -78,27 +78,52 @@ namespace Forays{
 				}
 			}
 		}
-		public void DisplayNow(string s){ //might i eventually need a multi-line version?
-			player.DisplayStats();
-			Console.CursorVisible = false;
-			for(int i=0;i<2;++i){
-				Screen.WriteMapString(i-3,0,"".PadToMapSize());
+		public void DisplayNow(string s){ DisplayNow(s,true); }
+		public void DisplayNow(string s,bool display_stats){
+			if(display_stats){
+				player.DisplayStats();
 			}
-			Screen.WriteMapString(-1,0,s.PadToMapSize());
+			Console.CursorVisible = false;
+			List<string> strings = new List<string>();
+			if(s.Length > max_length){
+				for(int i=max_length-1;i>=0;--i){
+					if(s.Substring(i,1)==" "){
+						strings.Add(s.Substring(0,i+1));
+						s = s.Substring(i+1);
+						break;
+					}
+				}
+			}
+			if(s.Length > max_length){
+				for(int i=max_length-1;i>=0;--i){
+					if(s.Substring(i,1)==" "){
+						strings.Add(s.Substring(0,i+1));
+						s = s.Substring(i+1);
+						break;
+					}
+				}
+			}
+			strings.Add(s);
+			for(int i=0;i<3;++i){
+				if(3-i > strings.Count){
+					Screen.WriteMapString(i-3,0,"".PadToMapSize());
+				}
+				else{
+					Screen.WriteMapString(i-3,0,strings[(i+strings.Count)-3].PadToMapSize());
+				}
+			}
 			Console.SetCursorPosition(Global.MAP_OFFSET_COLS + s.Length,2);
 		}
 		public void DisplayNow(){ //displays whatever is in the buffer. used before animations.
 			Console.CursorVisible = false;
 			Screen.ResetColors();
-			int idx = 3-str.Count;
-			/*foreach(string s in str){
+			/*int idx = 3-str.Count;
+			foreach(string s in str){
 				//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,idx);
 				//Console.Write(s.PadRight(Global.COLS));
 				Screen.WriteMapString(idx-3,0,s.PadToMapSize());
 				++idx;
 			}*/
-			//
-			//
 			if(Global.Option(OptionType.HIDE_OLD_MESSAGES)){
 				for(int i=0;i<3;++i){
 					if(i < str.Count){
@@ -128,8 +153,6 @@ namespace Forays{
 					}
 				}
 			}
-			//
-			//
 		}
 		public void Print(bool special_message){
 			Console.CursorVisible = false;

@@ -18,9 +18,12 @@ namespace Forays{
 		public int light_value{get;set;}
 		public TileType? toggles_into;
 		public Item inv{get;set;}
+		public List<FeatureType> features = new List<FeatureType>();
 		
 		private static Dictionary<TileType,Tile> proto= new Dictionary<TileType, Tile>();
 		public static Tile Prototype(TileType type){ return proto[type]; }
+		private static Dictionary<FeatureType,PhysicalObject> proto_feature = new Dictionary<FeatureType, PhysicalObject>();
+		public static PhysicalObject Feature(FeatureType type){ return proto_feature[type]; }
 		private static int ROWS = Global.ROWS;
 		private static int COLS = Global.COLS;
 		//public static Map M{get;set;} //inherited
@@ -36,8 +39,6 @@ namespace Forays{
 			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'=',Color.DarkYellow,true,false,null);
 			proto[TileType.FIREPIT] = new Tile(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
 			proto[TileType.STALAGMITE] = new Tile(TileType.STALAGMITE,"stalagmite",'^',Color.White,false,true,TileType.FLOOR);
-			proto[TileType.GRENADE] = new Tile(TileType.GRENADE,"grenade(dud)",',',Color.Red,true,false,null); //special treatment
-			proto[TileType.QUICKFIRE] = new Tile(TileType.QUICKFIRE,"quickfire",'&',Color.RandomFire,true,false,TileType.FLOOR);
 			proto[TileType.QUICKFIRE_TRAP] = new Tile(TileType.QUICKFIRE_TRAP,"quickfire trap",'^',Color.RandomFire,true,false,TileType.FLOOR);
 			proto[TileType.LIGHT_TRAP] = new Tile(TileType.LIGHT_TRAP,"light trap",'^',Color.Yellow,true,false,TileType.FLOOR);
 			proto[TileType.TELEPORT_TRAP] = new Tile(TileType.TELEPORT_TRAP,"teleport trap",'^',Color.Magenta,true,false,TileType.FLOOR);
@@ -46,6 +47,19 @@ namespace Forays{
 			proto[TileType.STUN_TRAP] = new Tile(TileType.STUN_TRAP,"stun trap",'^',Color.Red,true,false,TileType.FLOOR);
 			proto[TileType.HIDDEN_DOOR] = new Tile(TileType.HIDDEN_DOOR,"wall",'#',Color.Gray,false,true,TileType.DOOR_C);
 			Define(TileType.RUBBLE,"pile of rubble",':',Color.Gray,false,true,TileType.FLOOR);
+			Define(TileType.RUINED_SHRINE,"ruined shrine",'_',Color.DarkGray,true,false,null);
+			Define(TileType.COMBAT_SHRINE,"shrine of combat",'_',Color.DarkRed,true,false,TileType.RUINED_SHRINE);
+			Define(TileType.DEFENSE_SHRINE,"shrine of defense",'_',Color.White,true,false,TileType.RUINED_SHRINE);
+			Define(TileType.MAGIC_SHRINE,"shrine of magic",'_',Color.Magenta,true,false,TileType.RUINED_SHRINE);
+			Define(TileType.SPIRIT_SHRINE,"shrine of spirit",'_',Color.Yellow,true,false,TileType.RUINED_SHRINE);
+			Define(TileType.STEALTH_SHRINE,"shrine of stealth",'_',Color.Blue,true,false,TileType.RUINED_SHRINE);
+
+			proto_feature[FeatureType.GRENADE] = new PhysicalObject("grenade",',',Color.Red);
+			proto_feature[FeatureType.QUICKFIRE] = new PhysicalObject("quickfire",'&',Color.RandomFire);
+			proto_feature[FeatureType.QUICKFIRE].a_name = "quickfire";
+			proto_feature[FeatureType.TROLL_CORPSE] = new PhysicalObject("troll corpse",'%',Color.DarkGreen);
+			proto_feature[FeatureType.RUNE_OF_RETREAT] = new PhysicalObject("rune of retreat",'&',Color.RandomPrismatic);
+
 			//mimic
 			//not an actual trap, but arena rooms, too. perhaps you'll see the opponent, in stasis.
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
@@ -54,6 +68,7 @@ namespace Forays{
 		private static void Define(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
 			proto[type_] = new Tile(type_,name_,symbol_,color_,passable_,opaque_,toggles_into_);
 		}
+		public Tile(){}
 		public Tile(Tile t,int r,int c){
 			type = t.type;
 			name = t.name;
@@ -118,8 +133,8 @@ namespace Forays{
 				return "~";
 			case TileType.FIREPIT:
 				return "0";
-			case TileType.GRENADE:
-				return ",";
+			/*case TileType.GRENADE:
+				return ",";*/
 			default:
 				return ".";
 			}
@@ -131,6 +146,35 @@ namespace Forays{
 				M.tile[r,c] = t; //bounds checking here?
 			}
 			return t;
+		}
+		public static TileType RandomTrap(){ //todo add new traps as needed
+			int i = Global.Roll(6) + 7;
+			return (TileType)i;
+		}
+		public bool Is(TileType t){
+			if(type == t){
+				return true;
+			}
+			return false;
+		}
+		public bool Is(FeatureType t){
+			foreach(FeatureType feature in features){
+				if(feature == t){
+					return true;
+				}
+			}
+			return false;
+		}
+		public string Preposition(){
+			switch(type){
+			case TileType.FLOOR:
+			case TileType.STAIRS:
+				return " on ";
+			case TileType.DOOR_O:
+				return " in ";
+			default:
+				return " and ";
+			}
 		}
 		public bool GetItem(Item item){
 			if(inv == null){
@@ -201,9 +245,9 @@ namespace Forays{
 				}
 			}
 			if(toggler != null && toggler != player){
-				if(type == TileType.DOOR_C){
+				if(type == TileType.DOOR_C && original_type == TileType.DOOR_O){
 					if(player.CanSee(this)){
-						B.Add(toggler.the_name + " closes " + the_name + ". ");
+						B.Add(toggler.the_name + " closes the door. ");
 					}
 					else{
 						if(seen || player.DistanceFrom(this) <= 12){
@@ -211,9 +255,9 @@ namespace Forays{
 						}
 					}
 				}
-				if(type == TileType.DOOR_O){
+				if(type == TileType.DOOR_O && original_type == TileType.DOOR_C){
 					if(player.CanSee(this)){
-						B.Add(toggler.the_name + " opens " + the_name + ". ");
+						B.Add(toggler.the_name + " opens the door. ");
 					}
 					else{
 						if(seen || player.DistanceFrom(this) <= 12){
@@ -222,7 +266,6 @@ namespace Forays{
 					}
 				}
 			}
-
 			if(toggler != null){
 				if(original_type == TileType.RUBBLE){
 					B.Add(toggler.You("shift") + " the rubble aside. ",toggler);
@@ -283,7 +326,12 @@ namespace Forays{
 		}
 		public void TriggerTrap(){
 			if(actor().type == ActorType.FIRE_DRAKE){
-				B.Add(actor().the_name + " smashes " + the_name + ". ",this);
+				if(name == "floor"){
+					B.Add(actor().the_name + " smashes " + Tile.Prototype(type).a_name + ". ",this);
+				}
+				else{
+					B.Add(actor().the_name + " smashes " + the_name + ". ",this);
+				}
 				TransformTo(TileType.FLOOR);
 				return;
 			}
@@ -298,13 +346,13 @@ namespace Forays{
 				bool nade_here = false;
 				List<Tile> valid = new List<Tile>();
 				foreach(Tile t in TilesWithinDistance(1)){
-					if(t.passable && t.type != TileType.GRENADE){
+					if(t.passable && !t.Is(FeatureType.GRENADE)){
 						valid.Add(t);
 					}
 				}
-				int count = Global.Roll(10) == 10? 3 : 2;
+				int count = Global.OneIn(10)? 3 : 2;
 				for(;count>0 & valid.Count > 0;--count){
-					Tile t = valid[Global.Roll(valid.Count)-1];
+					Tile t = valid.Random();
 					if(t == this){
 						nade_here = true;
 					}
@@ -318,39 +366,10 @@ namespace Forays{
 					}
 					else{
 						if(t.inv != null){
-							B.Add("It lands under " + t.inv.TheName() + ". ",t);
+							B.Add("One lands under " + t.inv.TheName() + ". ",t);
 						}
 					}
-					TileType oldtype = t.type;
-					t.TransformTo(TileType.GRENADE);
-					if(t == this){
-						t.toggles_into = TileType.FLOOR;
-						t.passable = true;
-						t.opaque = false;
-					}
-					else{
-						t.toggles_into = oldtype;
-						t.passable = Tile.Prototype(oldtype).passable;
-						t.opaque = Tile.Prototype(oldtype).opaque;
-					}
-					switch(oldtype){
-					case TileType.FLOOR:
-						t.the_name = "the grenade on the floor";
-						t.a_name = "a grenade on a floor";
-						break;
-					case TileType.STAIRS:
-						t.the_name = "the grenade on the stairway";
-						t.a_name = "a grenade on a stairway";
-						break;
-					case TileType.DOOR_O:
-						t.the_name = "the grenade in the open door";
-						t.a_name = "a grenade in an open door";
-						break;
-					default:
-						t.the_name = "the grenade and " + Tile.Prototype(oldtype).the_name;
-						t.a_name = "a grenade and " + Tile.Prototype(oldtype).a_name;
-						break;
-					}
+					t.features.Add(FeatureType.GRENADE);
 					valid.Remove(t);
 					if(actor() == player){ //this hack demonstrates the sort of tweak i might need to do to my timing system
 						Q.Add(new Event(t,101,EventType.GRENADE));
@@ -359,9 +378,7 @@ namespace Forays{
 						Q.Add(new Event(t,100,EventType.GRENADE));
 					}
 				}
-				if(!nade_here){
-					Toggle(actor());
-				}
+				Toggle(actor());
 				break;
 			}
 			case TileType.UNDEAD_TRAP:
@@ -474,10 +491,8 @@ namespace Forays{
 						B.Add(a.You("start") + " to catch fire. ",a);
 					}
 				}
-				TransformTo(TileType.QUICKFIRE);
-				toggles_into = TileType.FLOOR;
-				passable = true;
-				opaque = false;
+				features.Add(FeatureType.QUICKFIRE);
+				Toggle(actor());
 				List<Tile> newarea = new List<Tile>();
 				newarea.Add(this);
 				if(actor() == player){ //hack
@@ -632,6 +647,9 @@ namespace Forays{
 				return false;
 			}
 			if(light_value > 0){
+				return true;
+			}
+			if(features.Contains(FeatureType.QUICKFIRE)){
 				return true;
 			}
 			if(opaque){

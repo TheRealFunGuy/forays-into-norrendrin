@@ -1,24 +1,17 @@
 
 add headers to overview help - 'Regaining Health, Attacking Monsters, Exploring the Dungeon...'
 
-make quickfire give off light
-maybe check for movement before printing level 20 messages. maybe not.
-
-DisplayNow() is still a bit wonky with show_old_messages, but i don't know if it's worth changing.
-	-do this: check whether the contents of str match part of the previous msg
-	-if so, print that PART in gray and the rest in dark gray.
--also, in msg_clear mode, if 3 messages are printed..
-	-what i'm saying is, in hideOldMessages mode, consider starting the next line at a position based on the last printed.
-	-or don't.
-
-remove 'm' and GetTargetXTemp()
-
 add more items, make healing & regen rarity 2. <--this
 
 TEST LOOKMODE AND NEW TARGETING ON LINUX BEFORE RELEASE
 
 probably make animals twice as observant right now (when shrines are added)
+trapped chests. maybe doors too?
 
+think about adding (slightly damaged), but only used in targeting/looking.
+
+if there's going to be an undead fast animal, the necromancer should summon it.
+drake's fire breath should catch you on fire, too.
 #
 
 
@@ -121,8 +114,6 @@ should all crits stun?
 		-pathfinding at distance 2?
 
 some monsters need to carry items.
-when targeting a burst effect, the radius should be shown...somehow.
-when targeting Lunge, you should be able to lunge if the tile next to you is a wall. (use alternate targeting lines)
 change feat list to only include ones you've learned? but what about the letters?
 
 
@@ -143,9 +134,7 @@ then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
 
 update your screenshots and videos!
 
-new keys: 'f' for 'use selected ranged attack on chosen target, picking a random closest target if you don't have one already'  and 'F' for 'use selected ranged attack on a target i'll choose right now'
-	-this will let me remove the lasttarget option, too
-
+'S' for picking target before shooting. this might let me remove the 'last target' option.
 #
 
 probably not going in: different trap triggers.
@@ -176,8 +165,6 @@ replace old spell?
 
 shadow should reduce the light radius of zealots, too
 
-if the line is blocked while targeting, perhaps the alternate line could be considered.
-
 Select() needs a rewrite, and to be moved out of Actor.
 
 group 'major' and 'minor' options
@@ -188,14 +175,9 @@ add more numbers to the equipment screen
 there's a good reason to make animals act more realistically
 	-no, having them avoid the player would be kinda bad for gameplay.
 		-just make them notice the player more often, because THEY don't carry items.
-try --- over ~~~ again
 (most) monsters need to wander, somehow.
 many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
 "the arrow hits the goblin" x2   should become "the arrow hits something" x2 "something dies"
-weird: there might be something strange happening in the buffer, with extra [more]. for instance, "You attempt to break free. You attempt to break free. You [more] --> break free! [more] ...this could use some debugging.
-not being able to target a wall you can see mid-corridor is crappy. change it.
-	-at LEAST use a FirstTileInLine method
-		-this would let you target far into the darkness, too.
 "You are burned. You are unburnt." <--being attacked by burning enemy while Tough
 think about scaling Spirit's duration reduction to more than 50%
 luminous avenger: fast, holy shield, gives off light. when injured, darkens the level to fully heal.
@@ -204,8 +186,6 @@ a few more open areas! chances to use lightning bolt, and take advantage of the 
 	-borrowing brush from LoL would be neat even if it doesn't make sense.
 undead animal?
 what about a 'default ranged attack' in addition to the 'default melee attack' spell?
-remove the 'g'et command and the 'o'pen command, relying instead on autopickup and auto-open? what about 'c'lose, then?
-more than one line for messages!
 fire drake should come with a quickfire event
 is the minimum number of enemies really 4? eww, too low.
 ...just...just remove scarecrows and poltergeists if they're not interesting. but instead, make them interesting!
@@ -230,7 +210,6 @@ an enemy that breaks Frenzy(conviction?) somehow. burst knockback on death?
 update help files - add more description to feats and such.
 support for multiple sub-tile elements, such as quickfire, traps, troll corpses, grenades, slime...
 slime-trail-leaving group enemies. (slugmen?)
-autopickup while autoexploring would be nice
 things other than the player should be able to call MakeNoise
 generate rats at start.
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
@@ -247,6 +226,10 @@ no 2nd wave of light if already wiz_lit
 
 beamos-inspired mob OR trap
 	-but mounted in the wall.
+
+shrine- or chest- triggered or otherwise special event where you defend an area for a short while, for some purpose.
+
+round rooms
 
 
 bugs: 
@@ -339,3 +322,29 @@ idea for pangolin special level: giant pangolins tear open giant termite mounds.
 
 voltaic rapture was too badass
 -this spell wasn't voltaic rapture, but was lightning-based: each time you're hit in melee you release a radius 2 burst of electricity
+
+secrets
+silence
+mystery
+concealment
+
+onslaught
+battle
+conflict
+assault
+
+protection
+security
+shielding
+warding
+
+heart
+energy
+will
+essence
+
+wizardry
+sorcery
+conjuring
+evocation
+

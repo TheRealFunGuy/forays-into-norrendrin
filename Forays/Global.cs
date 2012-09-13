@@ -24,6 +24,7 @@ namespace Forays{
 		public static bool GAME_OVER = false;
 		public static bool BOSS_KILLED = false;
 		public static bool QUITTING = false;
+		public static bool SAVING = false;
 		public static List<string> quickstartinfo = null;
 		public static Dictionary<OptionType,bool> Options = new Dictionary<OptionType, bool>();
 		public static bool Option(OptionType option){
@@ -470,6 +471,180 @@ namespace Forays{
 				file.WriteLine(Enum.GetName(typeof(OptionType),op).ToLower());
 			}
 			file.WriteLine("--");
+			file.Close();
+		}
+		public delegate int IDMethod(PhysicalObject o);
+		public static void SaveGame(Buffer B,Map M,Queue Q){ //games are loaded in Main.cs
+			FileStream file = new FileStream("forays.sav",FileMode.CreateNew);
+			BinaryWriter b = new BinaryWriter(file);
+			Dictionary<PhysicalObject,int> id = new Dictionary<PhysicalObject, int>();
+			int next_id = 1;
+			IDMethod GetID = delegate(PhysicalObject o){
+				if(o == null){
+					return 0;
+				}
+				if(!id.ContainsKey(o)){
+					id.Add(o,next_id);
+					++next_id;
+				}
+				return id[o];
+			};
+			b.Write(Actor.player_name);
+			b.Write(M.current_level);
+			b.Write(M.wiz_lite);
+			b.Write(M.wiz_dark);
+			//skipping danger_sensed
+			b.Write(M.AllActors().Count);
+			foreach(Actor a in M.AllActors()){
+				b.Write(GetID(a));
+				b.Write(a.row);
+				b.Write(a.col);
+				b.Write(a.name);
+				b.Write(a.the_name);
+				b.Write(a.a_name);
+				b.Write(a.symbol);
+				b.Write((int)a.color);
+				b.Write((int)a.type);
+				b.Write(a.maxhp);
+				b.Write(a.curhp);
+				b.Write(a.speed);
+				b.Write(a.xp);
+				b.Write(a.level);
+				b.Write(a.light_radius);
+				b.Write(GetID(a.target));
+				b.Write(a.inv.Count);
+				foreach(Item i in a.inv){
+					b.Write(i.name);
+					b.Write(i.the_name);
+					b.Write(i.a_name);
+					b.Write(i.symbol);
+					b.Write((int)i.color);
+					b.Write((int)i.type);
+					b.Write(i.quantity);
+					b.Write(i.ignored);
+				}
+				for(int i=0;i<13;++i){
+					b.Write((int)a.F[i]);
+				}
+				b.Write(a.attrs.d.Count);
+				foreach(AttrType at in a.attrs.d.Keys){
+					b.Write((int)at);
+					b.Write(a.attrs[at]);
+				}
+				b.Write(a.skills.d.Count);
+				foreach(SkillType st in a.skills.d.Keys){
+					b.Write((int)st);
+					b.Write(a.skills[st]);
+				}
+				b.Write(a.feats.d.Count);
+				foreach(FeatType ft in a.feats.d.Keys){
+					b.Write((int)ft);
+					b.Write(a.feats[ft]);
+				}
+				b.Write(a.spells.d.Count);
+				foreach(SpellType sp in a.spells.d.Keys){
+					b.Write((int)sp);
+					b.Write(a.spells[sp]);
+				}
+				b.Write(a.magic_penalty);
+				b.Write(a.time_of_last_action);
+				b.Write(a.recover_time);
+				b.Write(a.path.Count);
+				foreach(pos p in a.path){
+					b.Write(p.row);
+					b.Write(p.col);
+				}
+				b.Write(GetID(a.target_location));
+				b.Write(a.player_visibility_duration);
+				b.Write(a.weapons.Count);
+				foreach(WeaponType w in a.weapons){
+					b.Write((int)w);
+				}
+				b.Write(a.armors.Count);
+				foreach(ArmorType ar in a.armors){
+					b.Write((int)ar);
+				}
+				b.Write(a.magic_items.Count);
+				foreach(MagicItemType m in a.magic_items){
+					b.Write((int)m);
+				}
+			}
+			b.Write(M.AllTiles().Count);
+			foreach(Tile t in M.AllTiles()){
+				b.Write(GetID(t));
+				b.Write(t.row);
+				b.Write(t.col);
+				b.Write(t.name);
+				b.Write(t.the_name);
+				b.Write(t.a_name);
+				b.Write(t.symbol);
+				b.Write((int)t.color);
+				b.Write((int)t.type);
+				b.Write(t.passable);
+				b.Write(t.opaque);
+				b.Write(t.seen);
+				b.Write(t.solid_rock);
+				b.Write(t.light_value);
+				if(t.toggles_into.HasValue){
+					b.Write(true);
+					b.Write((int)t.toggles_into.Value);
+				}
+				else{
+					b.Write(false);
+				}
+				if(t.inv != null){
+					b.Write(true);
+					b.Write(t.inv.name);
+					b.Write(t.inv.the_name);
+					b.Write(t.inv.a_name);
+					b.Write(t.inv.symbol);
+					b.Write((int)t.inv.color);
+					b.Write((int)t.inv.type);
+					b.Write(t.inv.quantity);
+					b.Write(t.inv.ignored);
+				}
+				else{
+					b.Write(false);
+				}
+				b.Write(t.features.Count);
+				foreach(FeatureType f in t.features){
+					b.Write((int)f);
+				}
+			}
+			b.Write(Q.turn);
+			b.Write(Q.list.Count);
+			foreach(Event e in Q.list){
+				b.Write(GetID(e.target));
+				if(e.area == null){
+					b.Write(0);
+				}
+				else{
+					b.Write(e.area.Count);
+					foreach(Tile t in e.area){
+						b.Write(GetID(t));
+					}
+				}
+				b.Write(e.delay);
+				b.Write((int)e.type);
+				b.Write((int)e.attr);
+				b.Write(e.value);
+				b.Write(e.msg);
+				if(e.msg_objs == null){
+					b.Write(0);
+				}
+				else{
+					b.Write(e.msg_objs.Count);
+					foreach(PhysicalObject o in e.msg_objs){
+						b.Write(GetID(o));
+					}
+				}
+				b.Write(e.time_created);
+				b.Write(e.dead);
+			}
+			for(int i=0;i<20;++i){
+				b.Write(B.Printed(i));
+			}
+			b.Close();
 			file.Close();
 		}
 		public static void Quit(){

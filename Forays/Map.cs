@@ -38,11 +38,11 @@ namespace Forays{
 		//public Actor[,] actor{get;set;} 
 		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);  //note for dungeon generator overhaul: make sure there's something to hide behind.
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
-		public int current_level{get; private set;}
+		public int current_level{get;set;}
 		public bool wiz_lite{get;set;}
 		public bool wiz_dark{get;set;}
 		private bool[,] danger_sensed{get;set;}
-		private List<Tile> alltiles = new List<Tile>();
+		//private List<Tile> alltiles = new List<Tile>();
 		private static List<pos> allpositions = new List<pos>();
 		
 		private const int ROWS = Global.ROWS; //hax lol
@@ -116,7 +116,7 @@ namespace Forays{
 					else{
 						tile[i,j] = Tile.Create(TileType.FLOOR,i,j);
 					}
-					alltiles.Add(tile[i,j]);
+					//alltiles.Add(tile[i,j]);
 				}
 			}
 		}
@@ -151,7 +151,7 @@ namespace Forays{
 						Tile.Create(TileType.FLOOR,i,j);
 						break;
 					}
-					alltiles.Add(tile[i,j]);
+					//alltiles.Add(tile[i,j]);
 				}
 				file.ReadLine();
 			}
@@ -271,20 +271,50 @@ namespace Forays{
 						ch.color = tile[r,c].inv.color;
 					}
 					else{
-						ch.c = tile[r,c].symbol;
-						ch.color = tile[r,c].color;
-						if(ch.c=='.' || ch.c=='#'){
-							if(tile[r,c].IsLit()){
-								ch.color = Color.Yellow;
+						if(tile[r,c].features.Count > 0){
+							if(tile[r,c].Is(FeatureType.GRENADE)){
+								ch.c = Tile.Feature(FeatureType.GRENADE).symbol;
+								ch.color = Tile.Feature(FeatureType.GRENADE).color;
 							}
 							else{
-								ch.color = Color.DarkCyan;
+								if(tile[r,c].Is(FeatureType.QUICKFIRE)){
+									ch.c = Tile.Feature(FeatureType.QUICKFIRE).symbol;
+									ch.color = Tile.Feature(FeatureType.QUICKFIRE).color;
+								}
+								else{
+									if(tile[r,c].Is(FeatureType.TROLL_CORPSE)){
+										ch.c = Tile.Feature(FeatureType.TROLL_CORPSE).symbol;
+										ch.color = Tile.Feature(FeatureType.TROLL_CORPSE).color;
+									}
+									else{
+										if(tile[r,c].Is(FeatureType.RUNE_OF_RETREAT)){
+											ch.c = Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
+											ch.color = Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
+										}
+										else{
+											ch.c = '#';
+											ch.color = Color.RandomBright; //this shouldn't happen
+										}
+									}
+								}
 							}
 						}
-						if(player.HasAttr(AttrType.DANGER_SENSE_ON) && danger_sensed != null
-						&& danger_sensed[r,c] && player.LightRadius() == 0
-						&& !wiz_lite){
-							ch.color = Color.Red;
+						else{
+							ch.c = tile[r,c].symbol;
+							ch.color = tile[r,c].color;
+							if(ch.c=='.' || ch.c=='#'){
+								if(tile[r,c].IsLit()){
+									ch.color = Color.Yellow;
+								}
+								else{
+									ch.color = Color.DarkCyan;
+								}
+							}
+							if(player.HasAttr(AttrType.DANGER_SENSE_ON) && danger_sensed != null
+							   && danger_sensed[r,c] && player.LightRadius() == 0
+							   && !wiz_lite){
+								ch.color = Color.Red;
+							}
 						}
 					}
 				}
@@ -301,15 +331,16 @@ namespace Forays{
 							ch.color = tile[r,c].inv.color;
 						}
 						else{
-							ch.c = tile[r,c].symbol;
-							ch.color = tile[r,c].color;
-							if(ch.c=='.' || ch.c=='#'){
-								//if(Global.Option(OptionType.DARK_GRAY_UNSEEN)){
-								ch.color = Color.DarkGray;
-								/*}
+							if(tile[r,c].Is(FeatureType.RUNE_OF_RETREAT)){ //because runes should stay visible when out of sight, unlike other features
+								ch.c = Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
+								ch.color = Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
+							}
 							else{
-								ch.color = Color.White;
-							}*/
+								ch.c = tile[r,c].symbol;
+								ch.color = tile[r,c].color;
+								if(ch.c=='.' || ch.c=='#'){
+									ch.color = Color.DarkGray;
+								}
 							}
 						}
 					}
@@ -458,7 +489,7 @@ namespace Forays{
 			wiz_dark = false;
 			Q.KillEvents(null,EventType.RELATIVELY_SAFE);
 			Q.KillEvents(null,EventType.POLTERGEIST);
-			alltiles.Clear();
+			//alltiles.Clear();
 			DungeonGen.Dungeon dungeon = new DungeonGen.Dungeon();
 			char[,] charmap = dungeon.Generate();
 			int attempts = 0;
@@ -479,6 +510,44 @@ namespace Forays{
 					}
 				}
 				if(attempts > 500){ Actor.B.Add("Trying to place stairs.... "); }
+			}
+			if(current_level%2 == 1){
+				for(int i=0;i<5;++i){
+					bool done = false;
+					while(!done){
+						int rr = Global.Roll(ROWS-4) + 1;
+						int rc = Global.Roll(COLS-4) + 1;
+						if(charmap[rr,rc] == '.'){
+							bool floors = true;
+							pos temp = new pos(rr,rc);
+							foreach(pos p in temp.PositionsAtDistance(1)){
+								if(charmap[p.row,p.col] != '.'){
+									floors = false;
+								}
+							}
+							if(floors){
+								switch(i){
+								case 0:
+									charmap[rr,rc] = 'a';
+									break;
+								case 1:
+									charmap[rr,rc] = 'b';
+									break;
+								case 2:
+									charmap[rr,rc] = 'c';
+									break;
+								case 3:
+									charmap[rr,rc] = 'd';
+									break;
+								case 4:
+									charmap[rr,rc] = 'e';
+									break;
+								}
+								done = true;
+							}
+						}
+					}
+				}
 			}
 			int num_chests = Global.Roll(2);
 			if(Global.Roll(50) == 50){
@@ -577,7 +646,7 @@ namespace Forays{
 						Tile.Create(TileType.CHEST,i,j);
 						break;
 					case '^':
-						Tile.Create((TileType)(Global.Roll(6)+9),i,j);
+						Tile.Create(Tile.RandomTrap(),i,j);
 						tile[i,j].name = "floor";
 						tile[i,j].the_name = "the floor";
 						tile[i,j].a_name = "a floor";
@@ -589,11 +658,26 @@ namespace Forays{
 						Tile.Create(TileType.HIDDEN_DOOR,i,j);
 						hidden.Add(tile[i,j]);
 						break;
+					case 'a':
+						Tile.Create(Forays.TileType.COMBAT_SHRINE,i,j);
+						break;
+					case 'b':
+						Tile.Create(Forays.TileType.DEFENSE_SHRINE,i,j);
+						break;
+					case 'c':
+						Tile.Create(Forays.TileType.MAGIC_SHRINE,i,j);
+						break;
+					case 'd':
+						Tile.Create(Forays.TileType.SPIRIT_SHRINE,i,j);
+						break;
+					case 'e':
+						Tile.Create(Forays.TileType.STEALTH_SHRINE,i,j);
+						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
 						break;
 					}
-					alltiles.Add(tile[i,j]);
+					//alltiles.Add(tile[i,j]);
 					tile[i,j].solid_rock = true;
 				}
 			}
@@ -808,7 +892,7 @@ namespace Forays{
 									else{
 										TileType tt = TileType.FLOOR;
 										if(Global.CoinFlip()){
-											tt = (TileType)(Global.Roll(6)+9);
+											tt = Tile.RandomTrap();
 											hidden.Add(t);
 										}
 										t.TransformTo(tt);
@@ -842,7 +926,7 @@ namespace Forays{
 							}
 							else{
 								foreach(Tile t in tile[rr,rc].TilesAtDistance(1)){
-									t.TransformTo((TileType)(Global.Roll(6)+9));
+									t.TransformTo(Tile.RandomTrap());
 									t.name = "floor";
 									t.the_name = "the floor";
 									t.a_name = "a floor";

@@ -81,31 +81,3 @@ Q : quit
 (You can also switch weapons with 1-5 on the top row of the
  keyboard, and armor with 8-0. You can press Tab to cycle
  between interesting targets.)
-
-
-Vi-keys command list:
-
-x : look around                                Z : cast a spell 
-R : rest to recover health and spells          F : use a feat
-T : turn your torch on/off                     f : fire an arrow
-e : view and change equipment
-
-i : view your inventory
-a : use a consumable item
-g : pick up an item                        d : drop an item
-
-> : take stairs to next level              o : open a door/chest
-w : walk automatically in a direction      c : close a door
-
-C : view character information
-P : view previous messages
-
-= : change options
-Q : quit
-? : view the help screen
-- : view this command list
-
-
-(You can also switch weapons with 1-5 on the top row of the
- keyboard, and armor with 8-0. You can press Tab to cycle
- between interesting targets.)
