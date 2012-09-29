@@ -1,29 +1,38 @@
 Potions:
-Healing - Instantly heals half of your maximum health.
-Regeneration - You regenerate 1HP each turn for the next 70
-                turns. Stronger than healing if you can wait.
-Toxin immunity - Grants complete immunity to biological toxins
+
+Healing         - Instantly heals half of your maximum health.
+Regeneration    - You regenerate 1HP each turn for the next 60
+                  turns. Stronger than healing if you can wait.
+Toxin immunity  - Grants complete immunity to biological toxins
                   and poisons for 50 turns.
-Clarity - Restores your drained magic reserves to full potency.
+Clarity         - Fully restores your drained magic reserves.
+
 
 Runes:
-Blinking - Magically transports you a few spaces away.
-Teleportation - Magically transports you far away.
-Passage - You travel through an adjacent wall.
+
+Blinking        - Magically transports you a few spaces away.
+Teleportation   - Magically transports you far away.
+Passage         - You travel through an adjacent wall.
+
 
 Scrolls:
+
 Detect monsters - Reveals the location of enemies on the
-                   current level for around 40 turns.
-Magic map - Shows the layout of the current level.
+                  current level for around 40 turns.
+Magic map       - Shows the layout of the current level.
+
 
 Orbs:
-Sunlight - Lights the entire level.
-Darkness - Darkens the entire level, extinguishing all light
-            sources.
-Prismatic - An elemental burst weapon. When thrown, deals 2d6
-             fire, cold, and electrical damage (radius 1).
-Freezing - When thrown, everything within 3 spaces is encased
-            in ice.
+
+Sunlight        - Lights the entire level.
+Darkness        - Darkens the entire level, extinguishing all
+                  light sources.
+Prismatic       - An elemental burst weapon. When thrown, deals
+                  2d6 fire, cold, & electrical damage(radius 1).
+Freezing        - When thrown, everything within 3 spaces is
+                  encased in ice.
 
 Other:
-Bandage - Restores one hit point. Use it with natural recovery.
+
+Bandage         - Restores one hit point. Use it with natural
+                  recovery.

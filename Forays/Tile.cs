@@ -343,7 +343,7 @@ namespace Forays{
 			case TileType.GRENADE_TRAP:
 			{
 				B.Add("Grenades fall from the ceiling above " + actor().the_name + "! ",this);
-				bool nade_here = false;
+				//bool nade_here = false;
 				List<Tile> valid = new List<Tile>();
 				foreach(Tile t in TilesWithinDistance(1)){
 					if(t.passable && !t.Is(FeatureType.GRENADE)){
@@ -353,15 +353,17 @@ namespace Forays{
 				int count = Global.OneIn(10)? 3 : 2;
 				for(;count>0 & valid.Count > 0;--count){
 					Tile t = valid.Random();
-					if(t == this){
+					/*if(t == this){
 						nade_here = true;
-					}
+					}*/
 					if(t.actor() != null){
 						if(t.actor() == player){
 							B.Add("One lands under you! ");
 						}
 						else{
-							B.Add("One lands under " + t.actor().the_name + ". ",t.actor());
+							if(player.CanSee(this)){
+								B.Add("One lands under " + t.actor().the_name + ". ",t.actor());
+							}
 						}
 					}
 					else{
@@ -371,12 +373,12 @@ namespace Forays{
 					}
 					t.features.Add(FeatureType.GRENADE);
 					valid.Remove(t);
-					if(actor() == player){ //this hack demonstrates the sort of tweak i might need to do to my timing system
+					/*if(actor() == player){
 						Q.Add(new Event(t,101,EventType.GRENADE));
 					}
-					else{
+					else{*/
 						Q.Add(new Event(t,100,EventType.GRENADE));
-					}
+					//}
 				}
 				Toggle(actor());
 				break;
@@ -429,7 +431,7 @@ namespace Forays{
 					}
 					first.TileInDirection(dir).TurnToFloor();
 					ActorType ac = Global.CoinFlip()? ActorType.SKELETON : ActorType.ZOMBIE;
-					Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col);
+					Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col,true,true);
 					first.TurnToFloor();
 					foreach(Tile t in first.TileInDirection(dir).TilesWithinDistance(1)){
 						t.solid_rock = false;
@@ -467,14 +469,16 @@ namespace Forays{
 				if(actor() == player || player.DistanceFrom(this) <= 4){ //kinda hacky until other things can MakeNoise
 					player.MakeNoise();
 				}
-				if(player.HasLOS(row,col)){
-					B.Add("A wave of light washes out from above " + actor().the_name + "! ");
+				if(M.wiz_lite == false){
+					if(player.HasLOS(row,col)){
+						B.Add("A wave of light washes out from above " + actor().the_name + "! ");
+					}
+					else{
+						B.Add("A wave of light washes over the area! ");
+					}
+					M.wiz_lite = true;
+					M.wiz_dark = false;
 				}
-				else{
-					B.Add("A wave of light washes over the area! ");
-				}
-				M.wiz_lite = true;
-				M.wiz_dark = false;
 				Toggle(actor());
 				break;
 			case TileType.QUICKFIRE_TRAP:
@@ -488,19 +492,21 @@ namespace Forays{
 						else{
 							a.attrs[AttrType.CATCHING_FIRE] = 1;
 						}
-						B.Add(a.You("start") + " to catch fire. ",a);
+						if(player.CanSee(a.tile())){
+							B.Add(a.You("start") + " to catch fire. ",a);
+						}
 					}
 				}
 				features.Add(FeatureType.QUICKFIRE);
 				Toggle(actor());
 				List<Tile> newarea = new List<Tile>();
 				newarea.Add(this);
-				if(actor() == player){ //hack
+				/*if(actor() == player){
 					Q.Add(new Event(this,newarea,101,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
 				}
-				else{
+				else{*/
 					Q.Add(new Event(this,newarea,100,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
-				}
+				//}
 				break;
 			default:
 				break;
@@ -681,6 +687,12 @@ namespace Forays{
 				return false;
 			}
 		}
+		public bool IsKnownTrap(){
+			if(IsTrap() && name != "floor"){
+				return true;
+			}
+			return false;
+		}
 		public bool IsShrine(){
 			switch(type){
 			case TileType.COMBAT_SHRINE:
@@ -694,7 +706,7 @@ namespace Forays{
 			}
 		}
 		public bool ConductsElectricity(){
-			if(IsShrine() || type == TileType.CHEST){
+			if(IsShrine() || type == TileType.CHEST || type == TileType.RUINED_SHRINE){
 				return true;
 			}
 			return false;

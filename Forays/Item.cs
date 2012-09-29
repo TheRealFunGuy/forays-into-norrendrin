@@ -81,15 +81,20 @@ namespace Forays{
 		}
 		public static Item Create(ConsumableType type,int r,int c){
 			Item i = null;
-			if(M.tile[r,c].inv == null){
-				i = new Item(proto[type],r,c);
-				M.tile[r,c].inv = i;
+			if(Global.BoundsCheck(r,c)){
+				if(M.tile[r,c].inv == null){
+					i = new Item(proto[type],r,c);
+					M.tile[r,c].inv = i;
+				}
+				else{
+					if(M.tile[r,c].inv.type == type){
+						M.tile[r,c].inv.quantity++;
+						return M.tile[r,c].inv;
+					}
+				}
 			}
 			else{
-				if(M.tile[r,c].inv.type == type){
-					M.tile[r,c].inv.quantity++;
-					return M.tile[r,c].inv;
-				}
+				i = new Item(proto[type],r,c);
 			}
 			return i;
 		}
@@ -722,23 +727,23 @@ namespace Forays{
 		public static string Description(WeaponType type){
 			switch(type){
 			case WeaponType.SWORD:
-				return "Sword -- A high-damage slashing weapon.";
+				return "Sword -- A powerful 3d6 damage slashing weapon.";
 			case WeaponType.FLAMEBRAND:
 				return "Flamebrand -- Deals extra fire damage.";
 			case WeaponType.MACE:
-				return "Mace -- A high-damage bashing weapon.";
+				return "Mace -- A powerful 3d6 damage bashing weapon.";
 			case WeaponType.MACE_OF_FORCE:
 				return "Mace of force -- Chance to knock back or stun.";
 			case WeaponType.DAGGER:
-				return "Dagger -- Medium damage. Extra chance for critical hits.";
+				return "Dagger -- 2d6 damage. Extra chance for critical hits.";
 			case WeaponType.VENOMOUS_DAGGER:
 				return "Venomous dagger -- Chance to poison any foe it hits.";
 			case WeaponType.STAFF:
-				return "Staff -- Low damage. Grants a small bonus to defense.";
+				return "Staff -- 1d6 damage. Grants a small bonus to defense.";
 			case WeaponType.STAFF_OF_MAGIC:
 				return "Staff of magic -- Grants a bonus to magic skill.";
 			case WeaponType.BOW:
-				return "Bow -- A high-damage ranged weapon.";
+				return "Bow -- 3d6 damage at range. Less accurate than melee.";
 			case WeaponType.HOLY_LONGBOW:
 				return "Holy longbow - Deals extra damage to undead and demons.";
 			default:

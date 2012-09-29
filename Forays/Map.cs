@@ -97,7 +97,8 @@ namespace Forays{
 					foreach(Tile t in AllTiles()){
 						if(danger_sensed[t.row,t.col] == false && t.passable && !t.opaque){
 							if(a.CanSee(t)){
-								int value = (player.Stealth(t.row,t.col) * a.DistanceFrom(t) * 10) - 5 * a.player_visibility_duration;
+								int multiplier = a.HasAttr(AttrType.KEEN_SENSES)? 5 : 10;
+								int value = (player.Stealth(t.row,t.col) * a.DistanceFrom(t) * multiplier) - 5 * a.player_visibility_duration;
 								if(value < 100 || a.player_visibility_duration < 0){
 									danger_sensed[t.row,t.col] = true;
 								}
@@ -157,7 +158,9 @@ namespace Forays{
 			}
 			file.Close();
 			if(hidden.Count > 0){
-				Q.Add(new Event(hidden,100,EventType.CHECK_FOR_HIDDEN));
+				Event e = new Event(hidden,100,EventType.CHECK_FOR_HIDDEN);
+				e.tiebreaker = 0;
+				Q.Add(e);
 			}
 		}
 		public void Draw(){
@@ -259,7 +262,7 @@ namespace Forays{
 				if(actor[r,c] != null && player.CanSee(actor[r,c])){
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
-					if(actor[r,c] == player && player.HasAttr(AttrType.DANGER_SENSE_ON)
+					if(actor[r,c] == player && player.HasFeat(FeatType.DANGER_SENSE) //was danger_sense_on
 					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
 					&& !wiz_lite){
 						ch.color = Color.Red;
@@ -310,9 +313,9 @@ namespace Forays{
 									ch.color = Color.DarkCyan;
 								}
 							}
-							if(player.HasAttr(AttrType.DANGER_SENSE_ON) && danger_sensed != null
+							if(player.HasFeat(FeatType.DANGER_SENSE) && danger_sensed != null //was danger_sense_on
 							   && danger_sensed[r,c] && player.LightRadius() == 0
-							   && !wiz_lite){
+							   && !wiz_lite && !tile[r,c].IsKnownTrap() && !tile[r,c].IsShrine()){
 								ch.color = Color.Red;
 							}
 						}
@@ -361,18 +364,19 @@ namespace Forays{
 				}
 			}
 		}
-		public ConsumableType SpawnItem(){
+		public Item SpawnItem(){
 			ConsumableType result = Item.RandomItem();
 			for(bool done=false;!done;){
 				int rr = Global.Roll(ROWS-2);
 				int rc = Global.Roll(COLS-2);
 				Tile t = tile[rr,rc];
 				if(t.passable && t.inv == null && t.type != TileType.CHEST && t.type != TileType.FIREPIT && t.type != TileType.STAIRS){
-					Item.Create(result,rr,rc);
-					done = true;
+					return Item.Create(result,rr,rc);
+					//done = true;
 				}
 			}
-			return result;
+			//return result;
+			return null;
 		}
 		public ActorType MobType(){
 			List<ActorType> types = new List<ActorType>();
@@ -390,8 +394,9 @@ namespace Forays{
 			}
 			return types.Random();
 		}
-		public ActorType SpawnMob(){ return SpawnMob(MobType()); }
-		public ActorType SpawnMob(ActorType type){
+		public Actor SpawnMob(){ return SpawnMob(MobType()); }
+		public Actor SpawnMob(ActorType type){
+			Actor result = null;
 			if(type == ActorType.POLTERGEIST){
 				while(true){
 					int rr = Global.Roll(ROWS-4) + 1;
@@ -403,11 +408,15 @@ namespace Forays{
 						}
 					}
 					if(tiles.Count >= 15){
-						Q.Add(new Event(null,tiles,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
-						return type;
+						Actor.tiebreakers.Add(null); //a placeholder for the poltergeist once it manifests
+						Event e = new Event(null,tiles,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,"");
+						e.tiebreaker = Actor.tiebreakers.Count - 1;
+						Q.Add(e);
+						//return type;
+						return null;
 					}
 				}
-			}
+			} //todo: mimic gets the same treatment as poltergeist.
 			int number = 1;
 			if(Actor.Prototype(type).HasAttr(AttrType.SMALL_GROUP)){
 				number = Global.Roll(2)+1;
@@ -419,6 +428,10 @@ namespace Forays{
 				number = Global.Roll(3)+4;
 			}
 			List<Tile> group_tiles = new List<Tile>();
+			List<Actor> group = null;
+			if(number > 1){
+				group = new List<Actor>();
+			}
 			for(int i=0;i<number;++i){
 				if(i == 0){
 					for(int j=0;j<9999;++j){
@@ -431,9 +444,11 @@ namespace Forays{
 							}
 						}
 						if(good && tile[rr,rc].passable && actor[rr,rc] == null){
-							Actor.Create(type,rr,rc);
+							result = Actor.Create(type,rr,rc,true,false);
 							if(number > 1){
 								group_tiles.Add(tile[rr,rc]);
+								group.Add(result);
+								result.group = group;
 							}
 							break;
 						}
@@ -442,7 +457,12 @@ namespace Forays{
 				else{
 					for(int j=0;j<9999;++j){
 						if(group_tiles.Count == 0){ //no space left!
-							return type;
+							if(group.Count > 0){
+								return group[0];
+							}
+							else{
+								return result;
+							}
 						}
 						Tile t = group_tiles.Random();
 						List<Tile> empty_neighbors = new List<Tile>();
@@ -453,8 +473,10 @@ namespace Forays{
 						}
 						if(empty_neighbors.Count > 0){
 							t = empty_neighbors.Random();
-							Actor.Create(type,t.row,t.col);
+							result = Actor.Create(type,t.row,t.col,true,false);
 							group_tiles.Add(t);
+							group.Add(result);
+							result.group = group;
 							break;
 						}
 						else{
@@ -463,7 +485,13 @@ namespace Forays{
 					}
 				}
 			}
-			return type;
+			//return type;
+			if(number > 1){
+				return group[0];
+			}
+			else{
+				return result;
+			}
 		}
 		public void GenerateLevel(){
 			if(current_level < 20){
@@ -476,6 +504,10 @@ namespace Forays{
 							actor[i,j].inv.Clear();
 							actor[i,j].target = null;
 							Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
+							if(actor[i,j].group != null){
+								actor[i,j].group.Clear();
+								actor[i,j].group = null;
+							}
 						}
 						actor[i,j] = null;
 					}
@@ -489,6 +521,7 @@ namespace Forays{
 			wiz_dark = false;
 			Q.KillEvents(null,EventType.RELATIVELY_SAFE);
 			Q.KillEvents(null,EventType.POLTERGEIST);
+			Actor.tiebreakers = new List<Actor>{player};
 			//alltiles.Clear();
 			DungeonGen.Dungeon dungeon = new DungeonGen.Dungeon();
 			char[,] charmap = dungeon.Generate();
@@ -512,45 +545,82 @@ namespace Forays{
 				if(attempts > 500){ Actor.B.Add("Trying to place stairs.... "); }
 			}
 			if(current_level%2 == 1){
-				for(int i=0;i<5;++i){
+				List<int> ints = new List<int>{0,1,2,3,4};
+				while(ints.Count > 0){
 					bool done = false;
 					while(!done){
 						int rr = Global.Roll(ROWS-4) + 1;
 						int rc = Global.Roll(COLS-4) + 1;
-						if(charmap[rr,rc] == '.'){
-							bool floors = true;
-							pos temp = new pos(rr,rc);
-							foreach(pos p in temp.PositionsAtDistance(1)){
-								if(charmap[p.row,p.col] != '.'){
-									floors = false;
+						if(ints.Count > 1){
+							if(charmap[rr,rc] == '.'){
+								bool floors = true;
+								pos temp = new pos(rr,rc);
+								foreach(pos p in temp.PositionsAtDistance(1)){
+									if(charmap[p.row,p.col] != '.'){
+										floors = false;
+									}
+								}
+								foreach(pos p in temp.PositionsWithinDistance(3)){
+									char ch = charmap[p.row,p.col];
+									if(ch == 'a' || ch == 'b' || ch == 'c' || ch == 'd' || ch == 'e'){
+										floors = false;
+									}
+								}
+								if(floors){
+									if(Global.CoinFlip()){
+										charmap[rr-1,rc] = (char)(((char)ints.RemoveRandom()) + 'a');
+										charmap[rr+1,rc] = (char)(((char)ints.RemoveRandom()) + 'a');
+									}
+									else{
+										charmap[rr,rc-1] = (char)(((char)ints.RemoveRandom()) + 'a');
+										charmap[rr,rc+1] = (char)(((char)ints.RemoveRandom()) + 'a');
+									}
+									charmap[rr,rc] = '#';
+									done = true;
 								}
 							}
-							if(floors){
-								switch(i){
-								case 0:
-									charmap[rr,rc] = 'a';
-									break;
-								case 1:
-									charmap[rr,rc] = 'b';
-									break;
-								case 2:
-									charmap[rr,rc] = 'c';
-									break;
-								case 3:
-									charmap[rr,rc] = 'd';
-									break;
-								case 4:
-									charmap[rr,rc] = 'e';
-									break;
+						}
+						else{
+							if(charmap[rr,rc] == '#'){
+								if(charmap[rr+1,rc] != '.' && charmap[rr-1,rc] != '.' && charmap[rr,rc-1] != '.' && charmap[rr,rc+1] != '.'){
+									continue; //no floors? retry.
 								}
-								done = true;
+								int walls = 0;
+								pos temp = new pos(rr,rc);
+								foreach(pos p in temp.PositionsAtDistance(1)){
+									if(charmap[p.row,p.col] == '#'){
+										++walls;
+									}
+								}
+								if(walls >= 5){
+									int successive_walls = 0;
+									char[] rotated = new char[8];
+									for(int i=0;i<8;++i){
+										pos temp2;
+										temp2 = temp.PositionInDirection(Global.RotateDirection(8,true,i));
+										rotated[i] = charmap[temp2.row,temp2.col];
+									}
+									for(int i=0;i<15;++i){
+										if(rotated[i%8] == '#'){
+											++successive_walls;
+										}
+										else{
+											successive_walls = 0;
+										}
+										if(successive_walls == 5){
+											done = true;
+											charmap[rr,rc] = (char)(((char)ints.RemoveRandom()) + 'a');
+											break;
+										}
+									}
+								}
 							}
 						}
 					}
 				}
 			}
 			int num_chests = Global.Roll(2);
-			if(Global.Roll(50) == 50){
+			if(Global.OneIn(50)){
 				num_chests = 3;
 			}
 			for(int i=0;i<num_chests;++i){
@@ -575,7 +645,7 @@ namespace Forays{
 				}
 			}
 			int num_firepits = 0;
-			switch(Global.Roll(4)){
+			switch(Global.Roll(5)){
 			case 1:
 				num_firepits = 1;
 				break;
@@ -689,7 +759,16 @@ namespace Forays{
 					}
 				}
 			}
-			for(int i=Global.Roll(2,2);i>0;--i){
+			int num_items = 1;
+			switch(Global.Roll(5)){
+			case 1:
+				num_items = 0;
+				break;
+			case 5:
+				num_items = 2;
+				break;
+			}
+			for(int i=num_items;i>0;--i){
 				SpawnItem();
 			}
 			bool poltergeist_spawned = false;
@@ -705,7 +784,15 @@ namespace Forays{
 					}
 				}
 				else{
-					SpawnMob(type);
+					Actor a = SpawnMob(type);
+					if(Global.CoinFlip() && a.CanWander()){
+						a.attrs[Forays.AttrType.WANDERING]++;
+					}
+					else{
+						if(a.type == ActorType.SKULKING_KILLER){ //todo: add new always-wanderers, like the entrancer
+							a.attrs[Forays.AttrType.WANDERING]++;
+						}
+					}
 				}
 			}
 			bool[,] good_location = new bool[ROWS,COLS];
@@ -949,12 +1036,20 @@ namespace Forays{
 				}
 			}
 			if(hidden.Count > 0){
-				Q.Add(new Event(hidden,100,EventType.CHECK_FOR_HIDDEN));
+				Event e = new Event(hidden,100,EventType.CHECK_FOR_HIDDEN);
+				e.tiebreaker = 0;
+				Q.Add(e);
 			}
 			if(current_level == 20){
-				Q.Add(new Event(1099,EventType.BOSS_ARRIVE));
+				Event e = new Event(1066,EventType.BOSS_ARRIVE);
+				e.tiebreaker = 0;
+				Q.Add(e);
 			}
-			Q.Add(new Event(10000,EventType.RELATIVELY_SAFE));
+			{
+			Event e = new Event(10000,EventType.RELATIVELY_SAFE);
+			e.tiebreaker = 0;
+			Q.Add(e);
+			}
 		}
 	}
 }

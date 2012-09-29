@@ -326,6 +326,10 @@ namespace Forays{
 		}
 		public int RotateDirection(int dir,bool clockwise){ return RotateDirection(dir,clockwise,1); }
 		public int RotateDirection(int dir,bool clockwise,int num){
+			if(num < 0){
+				num = -(num);
+				clockwise = !clockwise;
+			}
 			for(int i=0;i<num;++i){
 				switch(dir){
 				case 7:

@@ -3,9 +3,21 @@ Tips and advanced topics:
 Be sure to take advantage of your natural recovery. Press 'w5'
 or 'w.' to wait in place until you've recovered.
 
+Stealth:
+
 Several factors determine whether you'll be spotted on a given
 turn: Your stealth skill, your distance from enemies, whether
 you're in darkness or light, and how long you've been within the
-sight range of enemies. You're much more likely to remain unseen
+sight range of enemies. 
+
+Here's the formula:
+Skill * Distance * 10  -  TurnsVisible * 5
+The result is your chance to remain unnoticed, in percentage.
+(100 and above will always succeed.)
+Darkness gives a +2 bonus to stealth skill in this calculation.
+Animals are harder to sneak past - they use a 5 instead of 10 in
+the formula.
+
+Because of this, you're much more likely to remain unseen
 if you stay two or more spaces away. Enemies automatically see
 you if you're carrying a light source.

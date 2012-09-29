@@ -6,8 +6,8 @@
 How to play:
 
 After choosing New Game, follow the instructions to pick your
-name, trait, skills, and feats. Every time your experience level
-increases, you'll choose 3 of the 5 skills to increase, and put
+character's name and trait. By finding shrines within the
+dungeon, you'll be able to increase your skills, and put
 a point toward mastering one of that skill's associated feats.
 (If you increase your Magic skill, you'll also choose one new
  spell.)
@@ -15,32 +15,31 @@ a point toward mastering one of that skill's associated feats.
 
 Important commands to remember are 'e' to examine and change
 your equipment, and 'a' to use your consumable items.
-If your health drops, press 'R' to rest - but only once per
+If your health drops, press 'r' to rest - but only once per
 level!
 
 
 Your torch illuminates your surroundings, but also gives away
-your position. If you wish to avoid notice, deactivate your
-torch with 'T'.
+your position. If you wish to avoid notice, put away your
+torch with 't'. ('t' will also bring it back out again.)
 
 
-Press 'l' to look at your surroundings. (Pressing escape or
+Press tab to look at your surroundings. (Pressing escape or
  space will exit most menus and selections.)
 
 
-If you've learned a spell, you can cast it by pressing 'Z'. If
+If you've learned a spell, you can cast it by pressing 'z'. If
 your magic skill isn't high enough compared to the spell's
 level, you'll have trouble casting it repeatedly. (Heavy armor
  also makes casting harder.)
 
 
-You can view and activate feats by pressing 'F'. (Some feats are
- activated, while some are entirely passive. Certain feats can
- be toggled on and off.)
+You can view and activate feats by pressing 'f'. (Some feats are
+ activated, while some are entirely passive.)
 
 
 Try switching to your bow and firing some arrows('e' to switch,
-'f' to fire). You always have access to five different weapons
+'s' to shoot). You always have access to five different weapons
 and three different armors. You can find better versions of each
 in the dungeon.
 
@@ -57,27 +56,27 @@ Press 'e' now to see the command help page. (The command list
 
 Command list:
 
-l : look around                                Z : cast a spell 
-R : rest to recover health and spells          F : use a feat
-T : turn your torch on/off                     f : fire an arrow
+tab : look around                              z : cast a spell 
+r : rest to recover health and spells          f : use a feat
+t : turn your torch on/off                     s : fire an arrow
 e : view and change equipment
 
 i : view your inventory
 a : use a consumable item
 g : pick up an item                        d : drop an item
 
-> : take stairs to next level              o : open a door/chest
-w : walk automatically in a direction      c : close a door
+> : take stairs to next level              o : operate terrain
+w : walk automatically in a direction      x : explore
 
-C : view character information
-P : view previous messages
+c : view character information
+p : view previous messages
 
 = : change options
-Q : quit
+q : quit
 ? : view the help screen
 - : view this command list
 
 
 (You can also switch weapons with 1-5 on the top row of the
- keyboard, and armor with 8-0. You can press Tab to cycle
+ keyboard, and armor with 8-0. You can press tab to cycle
  between interesting targets.)
