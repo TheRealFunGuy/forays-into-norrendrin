@@ -14,10 +14,10 @@ namespace Forays{
 	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,QUICKFIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,UNDEAD_TRAP,GRENADE_TRAP,STUN_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,RUBBLE};
 	public enum FeatureType{GRENADE,TROLL_CORPSE,QUICKFIRE,RUNE_OF_RETREAT};
 	public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,LARGE_BAT,SHAMBLING_SCARECROW,SKELETON,CULTIST,POLTERGEIST,ZOMBIE,WOLF,FROSTLING,GOBLIN_ARCHER,GOBLIN_SHAMAN,SWORDSMAN,DIRE_RAT,DREAM_WARRIOR,BANSHEE,WARG,ROBED_ZEALOT,SKULKING_KILLER,CARRION_CRAWLER,OGRE,SHADOW,BERSERKER,ORC_GRENADIER,PHASE_SPIDER,STONE_GOLEM,NECROMANCER,TROLL,ORC_WARMAGE,LASHER_FUNGUS,CORPSETOWER_BEHEMOTH,DREAM_CLONE};
-	public enum AttrType{STEALTHY,UNDEAD,CONSTRUCT,PLANTLIKE,DEMON,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,SMALL,FLYING,ENHANCED_TORCH,MAGICAL_BLOOD,KEEN_EYES,TOUGH,LONG_STRIDE,RUNIC_BIRTHMARK,LOW_LIGHT_VISION,DARKVISION,REGENERATING,REGENERATES_FROM_DEATH,STUNNED,PARALYZED,POISONED,FROZEN,ON_FIRE,CATCHING_FIRE,STARTED_CATCHING_FIRE_THIS_TURN,AFRAID,SLOWED,DETECTING_MONSTERS,BLOODSCENT,TELEPORTING,DIM_VISION,DIM_LIGHT,FIRE_HIT,COLD_HIT,POISON_HIT,PARALYSIS_HIT,FORCE_HIT,DIM_VISION_HIT,STALAGMITE_HIT,STUN_HIT,RESIST_SLASH,RESIST_PIERCE,RESIST_BASH,RESIST_FIRE,RESIST_COLD,RESIST_ELECTRICITY,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ARROWS,IMMUNE_TOXINS,COOLDOWN_1,COOLDOWN_2,BLESSED,HOLY_SHIELDED,SPORE_BURST,TURNS_VISIBLE,RESTING,RUNNING,AUTOEXPLORE,DEFENSIVE_STANCE,DRIVE_BACK_ON,TUMBLING,DANGER_SENSE_ON,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,DISTRACTED,ALERTED,AMNESIA_STUN,UNFROZEN,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
+	public enum AttrType{STEALTHY,UNDEAD,CONSTRUCT,PLANTLIKE,DEMON,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,KEEN_SENSES,SMALL,FLYING,WANDERING,ENHANCED_TORCH,MAGICAL_BLOOD,KEEN_EYES,TOUGH,LONG_STRIDE,RUNIC_BIRTHMARK,LOW_LIGHT_VISION,DARKVISION,REGENERATING,REGENERATES_FROM_DEATH,STUNNED,PARALYZED,POISONED,FROZEN,ON_FIRE,CATCHING_FIRE,STARTED_CATCHING_FIRE_THIS_TURN,AFRAID,SLOWED,DETECTING_MONSTERS,BLOODSCENT,TELEPORTING,DIM_VISION,DIM_LIGHT,FIRE_HIT,COLD_HIT,POISON_HIT,PARALYSIS_HIT,FORCE_HIT,DIM_VISION_HIT,STALAGMITE_HIT,STUN_HIT,RESIST_SLASH,RESIST_PIERCE,RESIST_BASH,RESIST_FIRE,RESIST_COLD,RESIST_ELECTRICITY,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ARROWS,IMMUNE_TOXINS,COOLDOWN_1,COOLDOWN_2,BLESSED,HOLY_SHIELDED,ARCANE_SHIELDED,SPORE_BURST,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,DEFENSIVE_STANCE,/*DRIVE_BACK_ON,DANGER_SENSE_ON,*/TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,DISTRACTED,ALERTED,AMNESIA_STUN,UNFROZEN,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
 	public enum SpellType{SHINE,IMMOLATE,FORCE_PALM,FREEZE,BLINK,SCORCH,BLOODSCENT,LIGHTNING_BOLT,SHADOWSIGHT,VOLTAIC_SURGE,MAGIC_HAMMER,RETREAT,GLACIAL_BLAST,PASSAGE,FLASHFIRE,SONIC_BOOM,COLLAPSE,FORCE_BEAM,AMNESIA,BLIZZARD,BLESS,MINOR_HEAL,HOLY_SHIELD,NUM_SPELLS,NO_SPELL};
 	public enum SkillType{COMBAT,DEFENSE,MAGIC,SPIRIT,STEALTH,NUM_SKILLS,NO_SKILL};
-	public enum FeatType{QUICK_DRAW,LETHALITY,LUNGE,DRIVE_BACK,SILENT_CHAINMAIL,ARMORED_MAGE,FULL_DEFENSE,TUMBLE,MASTERS_EDGE,STUDENTS_LUCK,ARCANE_HEALING,FORCE_OF_WILL,CONVICTION,ENDURING_SOUL,FEEL_NO_PAIN,BOILING_BLOOD,DISTRACT,DISARM_TRAP,NECK_SNAP,DANGER_SENSE,NUM_FEATS,NO_FEAT};
+	public enum FeatType{QUICK_DRAW,LETHALITY,LUNGE,DRIVE_BACK,SILENT_CHAINMAIL,ARMORED_MAGE,FULL_DEFENSE,TUMBLE,MASTERS_EDGE,STUDENTS_LUCK,ARCANE_SHIELD,FORCE_OF_WILL,CONVICTION,ENDURING_SOUL,FEEL_NO_PAIN,BOILING_BLOOD,DISTRACT,DISARM_TRAP,NECK_SNAP,DANGER_SENSE,NUM_FEATS,NO_FEAT};
 	public enum ConsumableType{HEALING,REGENERATION,TOXIN_IMMUNITY,CLARITY,BLINKING,TELEPORTATION,PASSAGE,DETECT_MONSTERS,MAGIC_MAP,SUNLIGHT,DARKNESS,PRISMATIC,FREEZING,BANDAGE};
 	public enum WeaponType{SWORD,MACE,DAGGER,STAFF,BOW,FLAMEBRAND,MACE_OF_FORCE,VENOMOUS_DAGGER,STAFF_OF_MAGIC,HOLY_LONGBOW,NUM_WEAPONS,NO_WEAPON};
 	public enum ArmorType{LEATHER,CHAINMAIL,FULL_PLATE,ELVEN_LEATHER,CHAINMAIL_OF_ARCANA,FULL_PLATE_OF_RESISTANCE,NUM_ARMORS,NO_ARMOR};
@@ -85,7 +85,6 @@ namespace Forays{
 			ConsoleKeyInfo command;
 			string recentname = "".PadRight(30);
 			int recentdepth = -1;
-			int recentxp = -1;
 			char recentwin = '-';
 			while(true){
 				Screen.Blank();
@@ -97,7 +96,7 @@ namespace Forays{
 				else{
 					Screen.WriteMapString(4,0,"[a] Resume saved game");
 				}
-				Screen.WriteMapString(5,0,"[b] Overview");
+				Screen.WriteMapString(5,0,"[b] How to play");
 				Screen.WriteMapString(6,0,"[c] High scores");
 				Screen.WriteMapString(7,0,"[d] Quit");
 				for(int i=0;i<4;++i){
@@ -117,6 +116,9 @@ namespace Forays{
 					if(!saved_game){
 						game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,-1,0,0,AttrType.HUMANOID_INTELLIGENCE);
 						game.player.inv = new List<Item>();
+						Actor.feats_in_order = new List<FeatType>();
+						Actor.partial_feats_in_order = new List<FeatType>();
+						Actor.spells_in_order = new List<SpellType>();
 						game.player.weapons.Remove(WeaponType.NO_WEAPON);
 						game.player.weapons.AddLast(WeaponType.SWORD);
 						game.player.weapons.AddLast(WeaponType.MACE);
@@ -138,11 +140,11 @@ namespace Forays{
 					Actor.B = game.B;
 					Actor.player = game.player;
 					Item.M = game.M;
-					Item.Q = game.Q; //this part is so ugly
+					Item.Q = game.Q;
 					Item.B = game.B;
 					Item.player = game.player;
 					Event.Q = game.Q;
-					Event.B = game.B; //i want to change it somehow
+					Event.B = game.B;
 					Event.M = game.M;
 					Event.player = game.player;
 					Tile.M = game.M;
@@ -185,10 +187,12 @@ namespace Forays{
 						Screen.WriteMapString(4,0,"[d] Keen eyes - You're better at spotting traps and aiming arrows.");
 						Screen.WriteMapString(5,0,"[e] Long stride - You walk a good bit faster than normal.");
 						Screen.WriteMapString(6,0,"".PadRight(Global.COLS,'-'));
-						if(File.Exists("quickstart.txt")){
+						Screen.WriteMapString(9,4,"(Your character will keep the chosen trait");
+						Screen.WriteMapString(10,4,"     for his or her entire adventuring career.)");
+						/*if(File.Exists("quickstart.txt")){
 							Screen.WriteMapString(16,5,"[ ] Repeat previous choices and start immediately.");
 							Screen.WriteMapChar(16,6,new colorchar('p',Color.Cyan));
-						}
+						}*/
 						if(!File.Exists("name.txt")){
 							Screen.WriteMapString(18,5,"[ ] Automatically name future characters after this one.");
 							Screen.WriteMapChar(18,6,new colorchar('n',Color.Cyan));
@@ -229,7 +233,7 @@ namespace Forays{
 								game.player.speed = 80;
 								Global.quickstartinfo.Add("long_stride");
 								break;
-							case 'p':
+							/*case 'p':
 							{
 								if(File.Exists("quickstart.txt")){
 									quickstarted = true;
@@ -262,7 +266,7 @@ namespace Forays{
 									file.Close();
 								}
 								break;
-							}
+							}*/
 							case 'n':
 								if(!File.Exists("name.txt")){
 									StreamWriter fileout = new StreamWriter("name.txt",false);
@@ -280,7 +284,12 @@ namespace Forays{
 								break;
 							}
 						}
-						game.player.Q0();
+						//game.player.Q0();
+						{
+							Event e = new Event(game.player,0,EventType.MOVE);
+							e.tiebreaker = 0;
+							game.Q.Add(e);
+						}
 						//game.player.Move(10,20,false); //this is why the voodoo was needed before: the player must be moved onto the map *before*
 						game.player.UpdateRadius(0,6,true); //gaining a light radius.
 						Item.Create(ConsumableType.HEALING,game.player);
@@ -292,7 +301,7 @@ namespace Forays{
 							game.player.level = 1;
 						}
 						else{
-							game.player.GainXP(1);
+							//game.player.GainXP(1);
 							var fileout = new StreamWriter("quickstart.txt",false);
 							foreach(string s in Global.quickstartinfo){
 								fileout.WriteLine(s.ToLower());
@@ -315,6 +324,21 @@ namespace Forays{
 						game.M.wiz_lite = b.ReadBoolean();
 						game.M.wiz_dark = b.ReadBoolean();
 						//skipping danger_sensed
+						Actor.feats_in_order = new List<FeatType>();
+						Actor.partial_feats_in_order = new List<FeatType>();
+						Actor.spells_in_order = new List<SpellType>();
+						int num_featlist = b.ReadInt32();
+						for(int i=0;i<num_featlist;++i){
+							Actor.feats_in_order.Add((FeatType)b.ReadInt32());
+						}
+						int num_partialfeatlist = b.ReadInt32();
+						for(int i=0;i<num_partialfeatlist;++i){
+							Actor.partial_feats_in_order.Add((FeatType)b.ReadInt32());
+						}
+						int num_spelllist = b.ReadInt32();
+						for(int i=0;i<num_spelllist;++i){
+							Actor.spells_in_order.Add((SpellType)b.ReadInt32());
+						}
 						int num_actors = b.ReadInt32();
 						for(int i=0;i<num_actors;++i){
 							Actor a = new Actor();
@@ -419,6 +443,17 @@ namespace Forays{
 								a.magic_items.AddLast((MagicItemType)b.ReadInt32());
 							}
 						}
+						int num_groups = b.ReadInt32();
+						for(int i=0;i<num_groups;++i){
+							List<Actor> group = new List<Actor>();
+							int group_size = b.ReadInt32();
+							for(int j=0;j<group_size;++j){
+								group.Add((Actor)id[b.ReadInt32()]);
+							}
+							foreach(Actor a in group){
+								a.group = group;
+							}
+						}
 						int num_tiles = b.ReadInt32();
 						for(int i=0;i<num_tiles;++i){
 							Tile t = new Tile();
@@ -473,13 +508,25 @@ namespace Forays{
 						}
 						foreach(Actor a in need_location){
 							if(id.ContainsKey(missing_location_id[a])){
-								a.target_location = (Tile)id[missing_target_id[a]];
+								a.target_location = (Tile)id[missing_location_id[a]];
 							}
 							else{
 								throw new Exception("Error: some tiles weren't loaded(2). ");
 							}
 						}
-						game.Q.turn = b.ReadInt32();
+						int game_turn = b.ReadInt32();
+						game.Q.turn = -1; //this keeps events from being added incorrectly to the front of the queue while loading. turn is set correctly after events are all loaded.
+						int num_tiebreakers = b.ReadInt32();
+						Actor.tiebreakers = new List<Actor>(num_tiebreakers);
+						for(int i=0;i<num_tiebreakers;++i){
+							int tiebreaker_ID = b.ReadInt32();
+							if(id.ContainsKey(tiebreaker_ID)){
+								Actor.tiebreakers.Add((Actor)id[tiebreaker_ID]);
+							}
+							else{
+								throw new Exception("Error: some actors weren't loaded(3). ");
+							}
+						}
 						int num_events = b.ReadInt32();
 						for(int i=0;i<num_events;++i){
 							Event e = new Event();
@@ -488,7 +535,7 @@ namespace Forays{
 								e.target = id[target_ID];
 							}
 							else{
-								throw new Exception("Error: some tiles/actors weren't loaded(3). ");
+								throw new Exception("Error: some tiles/actors weren't loaded(4). ");
 							}
 							int area_count = b.ReadInt32();
 							for(int j=0;j<area_count;++j){
@@ -500,7 +547,7 @@ namespace Forays{
 									e.area.Add((Tile)id[tile_ID]);
 								}
 								else{
-									throw new Exception("Error: some tiles weren't loaded(4). ");
+									throw new Exception("Error: some tiles weren't loaded(5). ");
 								}
 							}
 							e.delay = b.ReadInt32();
@@ -518,17 +565,20 @@ namespace Forays{
 									e.msg_objs.Add(id[obj_ID]);
 								}
 								else{
-									throw new Exception("Error: some actors/tiles weren't loaded(5). ");
+									throw new Exception("Error: some actors/tiles weren't loaded(6). ");
 								}
 							}
 							e.time_created = b.ReadInt32();
 							e.dead = b.ReadBoolean();
+							e.tiebreaker = b.ReadInt32();
 							game.Q.Add(e);
 						}
+						game.Q.turn = game_turn;
+						string[] messages = new string[20];
 						for(int i=0;i<20;++i){
-							game.B.Add(b.ReadString());
-							game.B.Print(false);
+							messages[i] = b.ReadString();
 						}
+						game.B.SetPreviousMessages(messages);
 						b.Close();
 						file.Close();
 						File.Delete("forays.sav");
@@ -537,7 +587,6 @@ namespace Forays{
 					Console.CursorVisible = false;
 					Global.SaveOptions();
 					recentdepth = game.M.current_level;
-					recentxp = game.player.xp;
 					recentname = Actor.player_name;
 					recentwin = Global.BOSS_KILLED? 'W' : '-';
 					if(!Global.SAVING){
@@ -554,101 +603,31 @@ namespace Forays{
 						while(s.Substring(0,2) != "--"){
 							s = file.ReadLine();
 							if(s.Substring(0,2) == "--"){
-								if(!added && num_scores < 20){
+								if(!added && num_scores < 22){
 									char symbol = Global.BOSS_KILLED? 'W' : '-';
-									newhighscores.Add(game.player.level.ToString() + " " + game.M.current_level.ToString() + " "
-										+ game.player.xp + " " + symbol + " " + Actor.player_name);
+									newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name);
 								}
 								newhighscores.Add(s);
 								break;
 							}
-							if(num_scores < 20){
-								string[] tokens = s.Split(' ');
-								int dlev = Convert.ToInt32(tokens[1]);
-								int xp = Convert.ToInt32(tokens[2]);
-								if(xp < game.player.xp){
-									if(!added){
-										char symbol = Global.BOSS_KILLED? 'W' : '-';
-										newhighscores.Add(game.player.level.ToString() + " " + game.M.current_level.ToString() + " "
-											+ game.player.xp + " " + symbol + " " + Actor.player_name);
-										++num_scores;
-										added = true;
-									}
-									if(num_scores < 20){
-										newhighscores.Add(s);
-										++num_scores;
-									}
-								}
-								else{
-									if(xp == game.player.xp && dlev < game.M.current_level){
-										if(!added){
-											char symbol = Global.BOSS_KILLED? 'W' : '-';
-											newhighscores.Add(game.player.level.ToString() + " " + game.M.current_level.ToString() + " "
-												+ game.player.xp + " " + symbol + " " + Actor.player_name);
-											++num_scores;
-											added = true;
-										}
-										if(num_scores < 20){
-											newhighscores.Add(s);
-											++num_scores;
-										}
-									}
-									else{
-										newhighscores.Add(s);
-										++num_scores;
-									}
-								}
-							}
-						}
-						s = "!!";
-						num_scores = 0;
-						added = false;
-						while(s.Substring(0,2) != "--"){
-							s = file.ReadLine();
-							if(s.Substring(0,2) == "--"){
-								if(!added && num_scores < 20){
-									char symbol = Global.BOSS_KILLED? 'W' : '-';
-									newhighscores.Add(game.M.current_level.ToString() + " " + game.player.level.ToString() + " "
-										+ game.player.xp + " " + symbol + " " + Actor.player_name);
-								}
-								newhighscores.Add(s);
-								break;
-							}
-							if(num_scores < 20){
+							if(num_scores < 22){
 								string[] tokens = s.Split(' ');
 								int dlev = Convert.ToInt32(tokens[0]);
-								int xp = Convert.ToInt32(tokens[2]);
 								if(dlev < game.M.current_level){
 									if(!added){
 										char symbol = Global.BOSS_KILLED? 'W' : '-';
-										newhighscores.Add(game.M.current_level.ToString() + " " + game.player.level.ToString() + " "
-											+ game.player.xp + " " + symbol + " " + Actor.player_name);
+										newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name);
 										++num_scores;
 										added = true;
 									}
-									if(num_scores < 20){
+									if(num_scores < 22){
 										newhighscores.Add(s);
 										++num_scores;
 									}
 								}
 								else{
-									if(dlev == game.M.current_level && xp < game.player.xp){
-										if(!added){
-											char symbol = Global.BOSS_KILLED? 'W' : '-';
-											newhighscores.Add(game.M.current_level.ToString() + " " + game.player.level.ToString() + " "
-												+ game.player.xp + " " + symbol + " " + Actor.player_name);
-											++num_scores;
-											added = true;
-										}
-										if(num_scores < 20){
-											newhighscores.Add(s);
-											++num_scores;
-										}
-									}
-									else{
-										newhighscores.Add(s);
-										++num_scores;
-									}
+									newhighscores.Add(s);
+									++num_scores;
 								}
 							}
 						}
@@ -671,7 +650,7 @@ namespace Forays{
 						ls.Add("Done");
 						for(bool done=false;!done;){
 							game.player.Select("Would you like to examine your character! ","".PadRight(Global.COLS),"".PadRight(Global.COLS),ls,true,false,false);
-							int sel = game.player.GetSelection("Would you like to examine your character? ",7,true,false);
+							int sel = game.player.GetSelection("Would you like to examine your character? ",7,true,false,false);
 							switch(sel){
 							case 0:
 								foreach(Tile t in game.M.AllTiles()){
@@ -730,7 +709,6 @@ namespace Forays{
 								}
 								StreamWriter file = new StreamWriter(filename,true);
 								game.player.DisplayCharacterInfo(false);
-								file.WriteLine("             Character information: ");
 								colorchar[,] screen = Screen.GetCurrentScreen();
 								for(int i=2;i<Global.SCREEN_H;++i){
 									for(int j=0;j<Global.SCREEN_W;++j){
@@ -810,81 +788,41 @@ namespace Forays{
 				{
 					StreamReader file = new StreamReader("highscore.txt");
 					Screen.Blank();
-					Color title = Color.Red;
 					Color primary = Color.Green;
-					Color secondary = Color.DarkGreen;
 					Color recent = Color.Cyan;
-					Screen.WriteString(0,34,new cstr("HIGH SCORES",Color.Magenta));
-					Screen.WriteString(1,34,new cstr("-----------",Color.Blue));
-					Screen.WriteString(2,11,new cstr("Most experienced:",title));
-					Screen.WriteString(2,56,new cstr("Deepest:",title));
-					Screen.WriteString(3,26,new cstr("Level",primary));
-					Screen.WriteString(3,33,new cstr("Depth",secondary));
-					Screen.WriteString(3,68,new cstr("Depth",primary));
-					Screen.WriteString(3,75,new cstr("Level",secondary));
+					Screen.WriteString(0,34,new cstr("HIGH SCORES",Color.Yellow));
+					Screen.WriteString(1,34,new cstr("-----------",Color.Cyan));
+					Screen.WriteString(2,21,new cstr("Character",primary));
+					Screen.WriteString(2,49,new cstr("Depth",primary));
 					bool written_recent = false;
 					string s = "";
 					while(s.Length < 2 || s.Substring(0,2) != "--"){
 						s = file.ReadLine();
 					}
-					int line = 4;
+					int line = 3;
 					s = "!!";
 					while(s.Substring(0,2) != "--"){
 						s = file.ReadLine();
 						if(s.Substring(0,2) == "--"){
 							break;
 						}
-						if(line > 23){
-							continue;
-						}
-						string[] tokens = s.Split(' ');
-						int clev = Convert.ToInt32(tokens[0]);
-						int dlev = Convert.ToInt32(tokens[1]);
-						int xp = Convert.ToInt32(tokens[2]);
-						char winning = tokens[3][0];
-						string name = s.Substring(tokens[0].Length + tokens[1].Length + tokens[2].Length + 5);
-						if(!written_recent && xp == recentxp && name == recentname && dlev == recentdepth && winning == recentwin){
-							Screen.WriteString(line,0,new cstr(name,recent));
-							written_recent = true;
-						}
-						else{
-							Screen.WriteString(line,0,new cstr(name,Color.White));
-						}
-						Screen.WriteString(line,27,new cstr(clev.ToString().PadLeft(2),Color.White));
-						Screen.WriteString(line,34,new cstr(dlev.ToString().PadLeft(2),Color.DarkGray));
-						if(winning == 'W'){
-							Screen.WriteString(line,37,new cstr("W",Color.Yellow));
-						}
-						++line;
-					}
-					written_recent = false;
-					line = 4;
-					s = "!!";
-					while(s.Substring(0,2) != "--"){
-						s = file.ReadLine();
-						if(s.Substring(0,2) == "--"){
-							break;
-						}
-						if(line > 23){
+						if(line > 24){
 							continue;
 						}
 						string[] tokens = s.Split(' ');
 						int dlev = Convert.ToInt32(tokens[0]);
-						int clev = Convert.ToInt32(tokens[1]);
-						int xp = Convert.ToInt32(tokens[2]);
-						char winning = tokens[3][0];
-						string name = s.Substring(tokens[0].Length + tokens[1].Length + tokens[2].Length + 5);
-						if(!written_recent && xp == recentxp && name == recentname && dlev == recentdepth && winning == recentwin){
-							Screen.WriteString(line,42,new cstr(name,recent));
+						char winning = tokens[1][0];
+						string name = s.Substring(tokens[0].Length + 3);
+						if(!written_recent && name == recentname && dlev == recentdepth && winning == recentwin){
+							Screen.WriteString(line,18,new cstr(name,recent));
 							written_recent = true;
 						}
 						else{
-							Screen.WriteString(line,42,new cstr(name,Color.White));
+							Screen.WriteString(line,18,new cstr(name,Color.White));
 						}
-						Screen.WriteString(line,69,new cstr(dlev.ToString().PadLeft(2),Color.White));
-						Screen.WriteString(line,76,new cstr(clev.ToString().PadLeft(2),Color.DarkGray));
+						Screen.WriteString(line,50,new cstr(dlev.ToString().PadLeft(2),Color.White));
 						if(winning == 'W'){
-							Screen.WriteString(line,79,new cstr("W",Color.Yellow));
+							Screen.WriteString(line,53,new cstr("W",Color.Yellow));
 						}
 						++line;
 					}

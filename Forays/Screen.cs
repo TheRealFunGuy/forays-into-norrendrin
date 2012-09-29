@@ -114,6 +114,16 @@ namespace Forays{
 				}
 			}
 		}
+		public static colorstring operator +(colorstring one,colorstring two){
+			colorstring result = new colorstring();
+			foreach(cstr s in one.strings){
+				result.strings.Add(s);
+			}
+			foreach(cstr s in two.strings){
+				result.strings.Add(s);
+			}
+			return result;
+		}
 	}
 	public static class Screen{
 		private static colorchar[,] memory;

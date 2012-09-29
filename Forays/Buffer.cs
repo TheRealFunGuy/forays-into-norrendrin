@@ -255,6 +255,9 @@ namespace Forays{
 			if(overflow != "" || special_message == true){
 				int cursor_col = str.Last().Length + Global.MAP_OFFSET_COLS;
 				int cursor_row = Console.CursorTop;
+				if(cursor_row > 2){
+					cursor_row = 2; //hack - attempts a quick fix for the [more] appearing at the player's row
+				}
 				if(Screen.MapChar(0,0).c == '-'){ //hack
 					M.RedrawWithStrings();
 				}
@@ -306,6 +309,11 @@ namespace Forays{
 				idx += 20;
 			}
 			return log[idx];
+		}
+		public void SetPreviousMessages(string[] s){
+			for(int i=0;i<20;++i){
+				log[i] = s[i];
+			}
 		}
 		public List<string> GetMessages(){
 			List<string> result = new List<string>();

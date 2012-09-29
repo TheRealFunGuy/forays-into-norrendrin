@@ -110,56 +110,101 @@ namespace Forays{
 				return "unknown spell";
 			}
 		}
-		public static string Description(SpellType spell){
+		public static bool IsDamaging(SpellType spell){
+			switch(spell){
+			case SpellType.BLIZZARD:
+			case SpellType.COLLAPSE:
+			case SpellType.FLASHFIRE:
+			case SpellType.FORCE_BEAM:
+			case SpellType.FORCE_PALM:
+			case SpellType.GLACIAL_BLAST:
+			case SpellType.LIGHTNING_BOLT:
+			case SpellType.MAGIC_HAMMER:
+			case SpellType.SCORCH:
+			case SpellType.SONIC_BOOM:
+			case SpellType.VOLTAIC_SURGE:
+				return true;
+			}
+			return false;
+		}
+		public static colorstring Description(SpellType spell){
 			switch(spell){
 			case SpellType.SHINE:
-				return "Doubles your torch's radius     ";
+				return new colorstring("  Doubles your torch's radius     ",Color.Gray);
 			case SpellType.IMMOLATE:
-				return "Throws flame to ignite an enemy ";
+				return new colorstring("  Throws flame to ignite an enemy ",Color.Gray);
 			case SpellType.FORCE_PALM:
-				return "1d6 damage, range 1, knockback  ";
+				return new colorstring("  1d6 damage, range 1, knockback  ",Color.Gray);
 			case SpellType.FREEZE:
-				return "Encases an enemy in ice         ";
+				return new colorstring("  Encases an enemy in ice         ",Color.Gray);
 			case SpellType.BLINK:
-				return "Teleports you a short distance  ";
+				return new colorstring("  Teleports you a short distance  ",Color.Gray);
 			case SpellType.SCORCH:
-				return "2d6 fire damage, ranged         ";
+				return new colorstring("  2d6 fire damage, ranged         ",Color.Gray);
 			case SpellType.BLOODSCENT:
-				return "Tracks one nearby living enemy  ";
+				return new colorstring("  Tracks one nearby living enemy  ",Color.Gray);
 			case SpellType.LIGHTNING_BOLT:
-				return "2d6 electric, leaps between foes";
+				return new colorstring("  2d6 electric, leaps between foes",Color.Gray);
 			case SpellType.SHADOWSIGHT:
-				return "Grants better vision in the dark";
+				return new colorstring("  Grants better vision in the dark",Color.Gray);
 			case SpellType.VOLTAIC_SURGE:
-				return "3d6 electric, radius 2 burst    ";
+				return new colorstring("  3d6 electric, radius 2 burst    ",Color.Gray);
 			case SpellType.MAGIC_HAMMER:
-				return "4d6 damage, range 1, stun       ";
+				return new colorstring("  4d6 damage, range 1, stun       ",Color.Gray);
 			case SpellType.RETREAT:
-				return "Marks a spot, then returns to it";
+				return new colorstring("  Marks a spot, then returns to it",Color.Gray);
 			case SpellType.GLACIAL_BLAST:
-				return "3d6 cold damage, ranged         ";
+				return new colorstring("  3d6 cold damage, ranged         ",Color.Gray);
 			case SpellType.PASSAGE:
-				return "Move to the other side of a wall";
+				return new colorstring("  Move to the other side of a wall",Color.Gray);
 			case SpellType.FLASHFIRE:
-				return "3d6 fire damage, ranged radius 2";
+				return new colorstring("  3d6 fire damage, ranged radius 2",Color.Gray);
 			case SpellType.SONIC_BOOM:
-				return "3d6 magic damage, can stun foes ";
+				return new colorstring("  3d6 magic damage, can stun foes ",Color.Gray);
 			case SpellType.COLLAPSE:
-				return "4d6, breaks walls, leaves rubble";
+				return new colorstring("  4d6, breaks walls, leaves rubble",Color.Gray);
 			case SpellType.FORCE_BEAM:
-				return "Three 1d6 beams knock foes back ";
+				return new colorstring("  Three 1d6 beams knock foes back ",Color.Gray);
 			case SpellType.AMNESIA:
-				return "An enemy forgets your presence  ";
+				return new colorstring("  An enemy forgets your presence  ",Color.Gray);
 			case SpellType.BLIZZARD:
-				return "5d6 radius 5 burst, freezes foes";
+				return new colorstring("  5d6 radius 5 burst, freezes foes",Color.Gray);
 			case SpellType.BLESS:
-				return "Increases Combat skill briefly  ";
+				return new colorstring("  Increases Combat skill briefly  ",Color.Gray);
 			case SpellType.MINOR_HEAL:
-				return "Heals 4d6 damage                ";
+				return new colorstring("  Heals 4d6 damage                ",Color.Gray);
 			case SpellType.HOLY_SHIELD:
-				return "Attackers take 2d6 magic damage ";
+				return new colorstring("  Attackers take 2d6 magic damage ",Color.Gray);
 			default:
-				return "Unknown.                        ";
+				return new colorstring("  Unknown.                        ",Color.Gray);
+			}
+		}
+		public static colorstring DescriptionWithIncreasedDamage(SpellType spell){
+			switch(spell){
+			case SpellType.FORCE_PALM:
+				return new colorstring("  2d6",Color.Yellow," damage, range 1, knockback  ",Color.Gray);
+			case SpellType.SCORCH:
+				return new colorstring("  3d6",Color.Yellow," fire damage, ranged         ",Color.Gray);
+			case SpellType.LIGHTNING_BOLT:
+				return new colorstring("  3d6",Color.Yellow," electric, leaps between foes",Color.Gray);
+			case SpellType.VOLTAIC_SURGE:
+				return new colorstring("  4d6",Color.Yellow," electric, radius 2 burst    ",Color.Gray);
+			case SpellType.MAGIC_HAMMER:
+				return new colorstring("  5d6",Color.Yellow," damage, range 1, stun       ",Color.Gray);
+			case SpellType.GLACIAL_BLAST:
+				return new colorstring("  4d6",Color.Yellow," cold damage, ranged         ",Color.Gray);
+			case SpellType.FLASHFIRE:
+				return new colorstring("  4d6",Color.Yellow," fire damage, ranged radius 2",Color.Gray);
+			case SpellType.SONIC_BOOM:
+				return new colorstring("  4d6",Color.Yellow," magic damage, can stun foes ",Color.Gray);
+			case SpellType.COLLAPSE:
+				return new colorstring("  5d6",Color.Yellow,", breaks walls, leaves rubble",Color.Gray);
+			case SpellType.FORCE_BEAM:
+				return new colorstring("  Three ",Color.Gray,"2d6",Color.Yellow," beams knock foes back ",Color.Gray);
+			case SpellType.BLIZZARD:
+				return new colorstring("  6d6",Color.Yellow," radius 5 burst, freezes foes",Color.Gray);
+			default:
+				return Description(spell);
 			}
 		}
 	}

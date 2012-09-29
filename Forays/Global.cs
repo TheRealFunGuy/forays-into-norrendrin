@@ -11,7 +11,7 @@ using System.IO;
 using System.Collections.Generic;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.6.2 ";
+		public const string VERSION = "version 0.6.3 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -67,6 +67,43 @@ namespace Forays{
 				result = 9;
 			}
 			return result;
+		}
+		public static int RotateDirection(int dir,bool clockwise){ return RotateDirection(dir,clockwise,1); }
+		public static int RotateDirection(int dir,bool clockwise,int num){
+			for(int i=0;i<num;++i){
+				switch(dir){
+				case 7:
+					dir = clockwise?8:4;
+					break;
+				case 8:
+					dir = clockwise?9:7;
+					break;
+				case 9:
+					dir = clockwise?6:8;
+					break;
+				case 4:
+					dir = clockwise?7:1;
+					break;
+				case 5:
+					break;
+				case 6:
+					dir = clockwise?3:9;
+					break;
+				case 1:
+					dir = clockwise?4:2;
+					break;
+				case 2:
+					dir = clockwise?1:3;
+					break;
+				case 3:
+					dir = clockwise?2:6;
+					break;
+				default:
+					dir = 0;
+					break;
+				}
+			}
+			return dir;
 		}
 		public static bool BoundsCheck(int r,int c){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
@@ -257,7 +294,7 @@ namespace Forays{
 					more = true;
 				}
 				if(more){
-					Screen.WriteString(23,77,new colorstring("[",Color.Yellow,"-",Color.Cyan,"]",Color.Yellow));
+					Screen.WriteString(23,77,new colorstring("[",Color.Yellow,"+",Color.Cyan,"]",Color.Yellow));
 				}
 				else{
 					Screen.WriteString(23,77,"---");
@@ -382,7 +419,7 @@ namespace Forays{
 			switch(h){
 			case Help.Overview:
 				path = "help.txt";
-				num_lines = 55;
+				num_lines = 54;
 				break;
 			case Help.Commands:
 				path = "help.txt";
@@ -390,7 +427,7 @@ namespace Forays{
 					startline = 85;
 				}
 				else{*/
-				startline = 57;
+				startline = 56;
 				//}
 				num_lines = 26;
 				break;
@@ -494,6 +531,19 @@ namespace Forays{
 			b.Write(M.wiz_lite);
 			b.Write(M.wiz_dark);
 			//skipping danger_sensed
+			b.Write(Actor.feats_in_order.Count);
+			foreach(FeatType ft in Actor.feats_in_order){
+				b.Write((int)ft);
+			}
+			b.Write(Actor.partial_feats_in_order.Count);
+			foreach(FeatType ft in Actor.partial_feats_in_order){
+				b.Write((int)ft);
+			}
+			b.Write(Actor.spells_in_order.Count);
+			foreach(SpellType sp in Actor.spells_in_order){
+				b.Write((int)sp);
+			}
+			List<List<Actor>> groups = new List<List<Actor>>();
 			b.Write(M.AllActors().Count);
 			foreach(Actor a in M.AllActors()){
 				b.Write(GetID(a));
@@ -556,6 +606,9 @@ namespace Forays{
 				}
 				b.Write(GetID(a.target_location));
 				b.Write(a.player_visibility_duration);
+				if(a.group != null){
+					groups.AddUnique(a.group);
+				}
 				b.Write(a.weapons.Count);
 				foreach(WeaponType w in a.weapons){
 					b.Write((int)w);
@@ -567,6 +620,13 @@ namespace Forays{
 				b.Write(a.magic_items.Count);
 				foreach(MagicItemType m in a.magic_items){
 					b.Write((int)m);
+				}
+			}
+			b.Write(groups.Count);
+			foreach(List<Actor> group in groups){
+				b.Write(group.Count);
+				foreach(Actor a in group){
+					b.Write(GetID(a));
 				}
 			}
 			b.Write(M.AllTiles().Count);
@@ -612,6 +672,10 @@ namespace Forays{
 				}
 			}
 			b.Write(Q.turn);
+			b.Write(Actor.tiebreakers.Count);
+			foreach(Actor a in Actor.tiebreakers){
+				b.Write(GetID(a));
+			}
 			b.Write(Q.list.Count);
 			foreach(Event e in Q.list){
 				b.Write(GetID(e.target));
@@ -640,6 +704,7 @@ namespace Forays{
 				}
 				b.Write(e.time_created);
 				b.Write(e.dead);
+				b.Write(e.tiebreaker);
 			}
 			for(int i=0;i<20;++i){
 				b.Write(B.Printed(i));
@@ -728,6 +793,30 @@ namespace Forays{
 			}
 			return result;
 		}
+		public pos PositionInDirection(int dir){
+			switch(dir){
+			case 1:
+				return new pos(row+1,col-1);
+			case 2:
+				return new pos(row+1,col);
+			case 3:
+				return new pos(row+1,col+1);
+			case 4:
+				return new pos(row,col-1);
+			case 5:
+				return new pos(row,col);
+			case 6:
+				return new pos(row,col+1);
+			case 7:
+				return new pos(row-1,col-1);
+			case 8:
+				return new pos(row-1,col);
+			case 9:
+				return new pos(row-1,col+1);
+			default:
+				return new pos(-2,-2);
+			}
+		}
 		public bool BoundsCheck(){
 			if(row>=0 && row<Global.ROWS && col>=0 && col<Global.COLS){
 				return true;
@@ -754,6 +843,13 @@ namespace Forays{
 				return default(T);
 			}
 			return l[l.Count-1];
+		}
+		public static void Randomize<T>(this List<T> l){
+			List<T> temp = new List<T>(l);
+			l.Clear();
+			while(temp.Count > 0){
+				l.Add(temp.RemoveRandom());
+			}
 		}
 		public static string PadOuter(this string s,int totalWidth){
 			return s.PadOuter(totalWidth,' ');

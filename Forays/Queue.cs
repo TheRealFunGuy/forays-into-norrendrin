@@ -13,6 +13,15 @@ namespace Forays{
 		public LinkedList<Event> list;
 		public int turn{get;set;}
 		public int Count(){return list.Count; }
+		public int Tiebreaker{get{
+				if(list.Count > 0){
+					return list.First.Value.tiebreaker;
+				}
+				else{
+					return -1;
+				}
+			}
+		}
 		public static Buffer B{get;set;}
 		public Queue(Game g){
 			list = new LinkedList<Event>();
@@ -35,12 +44,54 @@ namespace Forays{
 						if(e < list.First.Value){
 							list.AddFirst(e);
 						}
-						else{ //guaranteed to fall in the middle:
+						else{ //it's going between two events
 							LinkedListNode<Event> current = list.Last;
-							while(e < current.Previous.Value){
-								current = current.Previous;
+							while(true){
+								if(e >= current.Previous.Value){
+									list.AddAfter(current.Previous,e);
+									return;
+								}
+								else{
+									current = current.Previous;
+								}
 							}
-							list.AddBefore(current,e);
+								/*if(e.TimeToExecute() == current.Value.TimeToExecute()){
+									if(e.type != EventType.MOVE){
+										list.AddAfter(current,e);
+										return;
+									}
+									else{
+										while(current.Value.type != EventType.MOVE){
+											if(current == list.First){
+												list.AddFirst(e);
+												return;
+											}
+											else{
+												if(e.TimeToExecute() != current.Previous.Value.TimeToExecute()){
+													list.AddBefore(current,e);
+													return;
+												}
+												else{
+													current = current.Previous;
+												}
+											}
+										}
+										list.AddAfter(current,e);
+										return;
+									}
+								}
+								else{
+									if(e < current.Value){
+										if(e > current.Previous.Value){
+											list.AddBefore(current,e);
+											return;
+										}
+										else{
+											current = current.Previous;
+										}
+									}
+								}
+							}*/
 						}
 					}
 				}
@@ -69,6 +120,13 @@ namespace Forays{
 			}
 			return false;
 		}
+		public void UpdateTiebreaker(int new_tiebreaker){
+			for(LinkedListNode<Event> current = list.First;current!=null;current = current.Next){
+				if(current.Value.tiebreaker >= new_tiebreaker){
+					current.Value.tiebreaker++;
+				}
+			}
+		}
 	}
 	public class Event{
 		public PhysicalObject target{get;set;}
@@ -81,6 +139,7 @@ namespace Forays{
 		public List<PhysicalObject> msg_objs; //used to determine visibility of msg
 		public int time_created{get;set;}
 		public bool dead{get;set;}
+		public int tiebreaker{get;set;}
 		public static Queue Q{get;set;}
 		public static Buffer B{get;set;}
 		public static Map M{get;set;}
@@ -95,6 +154,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,AttrType attr_){
 			target=target_;
@@ -106,6 +166,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,AttrType attr_,int value_){
 			target=target_;
@@ -117,6 +178,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,AttrType attr_,string msg_){
 			target=target_;
@@ -128,6 +190,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,AttrType attr_,int value_,string msg_){
 			target=target_;
@@ -139,6 +202,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,AttrType attr_,string msg_,params PhysicalObject[] objs){
 			target=target_;
@@ -153,6 +217,7 @@ namespace Forays{
 			}
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,AttrType attr_,int value_,string msg_,params PhysicalObject[] objs){
 			target=target_;
@@ -167,6 +232,7 @@ namespace Forays{
 			}
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(int delay_,EventType type_){
 			target=null;
@@ -178,6 +244,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,EventType type_){
 			target=target_;
@@ -189,6 +256,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,int delay_,EventType type_,int value_){
 			target=target_;
@@ -200,6 +268,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(int delay_,string msg_){
 			target=null;
@@ -211,6 +280,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(List<Tile> area_,int delay_,EventType type_){
 			target=null;
@@ -227,6 +297,7 @@ namespace Forays{
 			msg_objs = null;
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(List<Tile> area_,int delay_,EventType type_,string msg_,params PhysicalObject[] objs){
 			target=null;
@@ -242,6 +313,7 @@ namespace Forays{
 			}
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public Event(PhysicalObject target_,List<Tile> area_,int delay_,EventType type_,AttrType attr_,int value_,string msg_,params PhysicalObject[] objs){
 			target=target_;
@@ -257,6 +329,7 @@ namespace Forays{
 			}
 			time_created=Q.turn;
 			dead=false;
+			tiebreaker = Q.Tiebreaker;
 		}
 		public int TimeToExecute(){ return delay + time_created; }
 		public void Kill(PhysicalObject target_,EventType type_){
@@ -334,7 +407,7 @@ namespace Forays{
 					else{
 						temp.attrs[attr] -= value;
 					}
-					if(attr == AttrType.TELEPORTING){
+					if(attr == AttrType.TELEPORTING || attr == AttrType.ARCANE_SHIELDED){
 						temp.attrs[attr] = 0;
 					}
 					if(attr==AttrType.ENHANCED_TORCH && temp.light_radius > 0){
@@ -370,6 +443,11 @@ namespace Forays{
 								B.Add("You wipe off your weapon. ");
 							}
 							temp.attrs[Forays.AttrType.KILLSTREAK] = 0;
+						}
+					}
+					if(attr==AttrType.STUNNED && msg.Contains("disoriented")){
+						if(!player.CanSee(target)){
+							msg = "";
 						}
 					}
 					if(attr==AttrType.POISONED && temp == player){
@@ -651,7 +729,14 @@ namespace Forays{
 							for(int tries=0;tries<999;++tries){
 								Tile t = area[Global.Roll(area.Count)-1];
 								if(t.passable && t.actor() == null && player.CanSee(t)){
-									Actor.Create(ActorType.POLTERGEIST,t.row,t.col);
+									Actor a = Actor.Create(ActorType.POLTERGEIST,t.row,t.col);
+									foreach(Event e in Q.list){
+										if(e.target == a && e.type == EventType.MOVE){
+											e.tiebreaker = this.tiebreaker;
+											break;
+										}
+									}
+									Actor.tiebreakers[tiebreaker] = a;
 									t.actor().player_visibility_duration = -1;
 									B.Add("A poltergeist manifests in front of you! ");
 									return;
@@ -678,6 +763,8 @@ namespace Forays{
 					Tile t = target as Tile;
 					if(t.Is(FeatureType.GRENADE)){
 						B.Add("The grenade explodes! ",t);
+						B.DisplayNow();
+						Screen.AnimateExplosion(t,1,new colorchar('*',Color.DarkRed));
 						t.features.Remove(FeatureType.GRENADE);
 						foreach(Actor a in t.ActorsWithinDistance(1)){
 							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),null);
@@ -720,7 +807,14 @@ namespace Forays{
 					if(target.tile().Is(FeatureType.TROLL_CORPSE)){ //otherwise, assume it was destroyed by fire
 						value++;
 						if(value > 0 && target.actor() == null){
-							Actor.Create(ActorType.TROLL,target.row,target.col);
+							Actor a = Actor.Create(ActorType.TROLL,target.row,target.col);
+							foreach(Event e in Q.list){
+								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
+									e.tiebreaker = this.tiebreaker;
+									break;
+								}
+							}
+							Actor.tiebreakers[tiebreaker] = a;
 							target.actor().curhp = value;
 							target.actor().level = 0;
 							B.Add("The troll stands up! ",target);
@@ -810,7 +904,9 @@ namespace Forays{
 					}
 					foreach(Actor a in actors){
 						if(!a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.INVULNERABLE)){
-							B.Add("The quickfire burns " + a.the_name + ". ",a);
+							if(player.CanSee(a.tile())){
+								B.Add("The quickfire burns " + a.the_name + ". ",a);
+							}
 							a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(6),null);
 						}
 					}
@@ -848,16 +944,16 @@ namespace Forays{
 						}
 						if(goodtiles.Count > 0){
 							Tile t = goodtiles[Global.Roll(goodtiles.Count)-1];
-							Actor.Create(ActorType.FIRE_DRAKE,t.row,t.col);
-							M.actor[t.row,t.col].player_visibility_duration = -1;
+							Actor.Create(ActorType.FIRE_DRAKE,t.row,t.col,true,false);
+							//M.actor[t.row,t.col].player_visibility_duration = -1;
 						}
 						else{
 							for(bool done=false;!done;){
 								int rr = Global.Roll(Global.ROWS-2);
 								int rc = Global.Roll(Global.COLS-2);
 								if(M.tile[rr,rc].passable && M.actor[rr,rc] == null && player.DistanceFrom(rr,rc) >= 6){
-									Actor.Create(ActorType.FIRE_DRAKE,rr,rc);
-									M.actor[rr,rc].player_visibility_duration = -1;
+									Actor.Create(ActorType.FIRE_DRAKE,rr,rc,true,false);
+									//M.actor[rr,rc].player_visibility_duration = -1;
 									done = true;
 								}
 							}
@@ -910,7 +1006,7 @@ namespace Forays{
 				}
 			}
 		}
-		public static bool operator <(Event one,Event two){
+		/*public static bool operator <(Event one,Event two){
 			return one.TimeToExecute() < two.TimeToExecute();
 		}
 		public static bool operator >(Event one,Event two){
@@ -921,6 +1017,84 @@ namespace Forays{
 		}
 		public static bool operator >=(Event one,Event two){
 			return one.TimeToExecute() >= two.TimeToExecute();
+		}*/
+		public static bool operator <(Event one,Event two){
+			if(one.TimeToExecute() < two.TimeToExecute()){
+				return true;
+			}
+			if(one.TimeToExecute() > two.TimeToExecute()){
+				return false;
+			}
+			if(one.tiebreaker < two.tiebreaker){
+				return true;
+			}
+			if(one.tiebreaker > two.tiebreaker){
+				return false;
+			}
+			if(one.type == EventType.MOVE && two.type != EventType.MOVE){
+				return true;
+			}
+			return false;
+		}
+		public static bool operator >(Event one,Event two){ //currently unused
+			if(one.TimeToExecute() > two.TimeToExecute()){
+				return true;
+			}
+			if(one.TimeToExecute() < two.TimeToExecute()){
+				return false;
+			}
+			if(one.tiebreaker > two.tiebreaker){
+				return true;
+			}
+			if(one.tiebreaker < two.tiebreaker){
+				return false;
+			}
+			if(one.type != EventType.MOVE && two.type == EventType.MOVE){
+				return true;
+			}
+			return false;
+		}
+		public static bool operator <=(Event one,Event two){ //currently unused
+			if(one.TimeToExecute() < two.TimeToExecute()){
+				return true;
+			}
+			if(one.TimeToExecute() > two.TimeToExecute()){
+				return false;
+			}
+			if(one.tiebreaker < two.tiebreaker){
+				return true;
+			}
+			if(one.tiebreaker > two.tiebreaker){
+				return false;
+			}
+			if(one.type == EventType.MOVE){
+				return true;
+			}
+			if(one.type != EventType.MOVE && two.type != EventType.MOVE){
+				return true;
+			}
+			return false;
+		}
+		public static bool operator >=(Event one,Event two){
+			if(one.TimeToExecute() > two.TimeToExecute()){
+				return true;
+			}
+			if(one.TimeToExecute() < two.TimeToExecute()){
+				return false;
+			}
+			if(one.tiebreaker > two.tiebreaker){
+				return true;
+			}
+			if(one.tiebreaker < two.tiebreaker){
+				return false;
+			}
+			if(one.type != EventType.MOVE){
+				return true;
+			}
+			if(one.type == EventType.MOVE && two.type == EventType.MOVE){
+				return true;
+			}
+			return false;
 		}
 	}
 }

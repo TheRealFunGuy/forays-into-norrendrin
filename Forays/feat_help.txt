@@ -9,8 +9,8 @@ Magic   - Measures your ability to cast spells.
           Each level grants another spell and makes casting less
           likely to fail.
 
-Spirit  - Measures your willpower and ability to make use of
-          your emotions, whether devotion or rage.
+Spirit  - Measures your willpower and ability to tap into your
+          emotions, whether devotion or rage.
           Each level increases your resistance to magic damage
           and effects(at rank 10, 5 fewer damage & 50% effect).
 
@@ -21,17 +21,21 @@ Stealth - Measures your ability to avoid notice.
 
 Combat feats:
 
-Quick draw - Instantly swap between weapons. (2 points, passive)
+Quick draw - Instantly swap between weapons. 
+             Fire arrows without needing to explicitly switch
+             to your bow first. (2 points, passive)
 
 Lethality - Increases your chance to score a critical hit by 10%
             plus an additional 5% for each 20% health that the
             target is missing. (3 points, passive)
 
-Lunge - Leap from one space away to deal extra damage.
-        (3 points, active)
+Lunge - Leap from one space away to deal extra damage. You get
+        +4 to Combat during this attack, but the space in
+        between must be unoccupied. (3 points, active)
 
 Drive back - Enemies must yield ground in order to avoid your
-             attacks. (2 points, toggle)
+             attacks. If the enemy has no space to retreat,
+             you'll automatically hit. (3 points, passive)
 
 
 Defense feats:
@@ -42,32 +46,42 @@ Silent chainmail - Removes chainmail's stealth penalty.
 Armored mage - Cast spells with no penalty from your armor.
                (3 points, passive)
 
-Full defense - Stand still to ready yourself for attack. Enemies
-               that try to hit you might hit other adjacent
-               enemies. (4 points, passive)
+Full defense - Stand still('5' or '.') to ready yourself for
+               attack. You gain an extra 50% chance to avoid
+               attacks, and any enemy that misses you will
+               have its attack redirected to another adjacent
+               enemy. (4 points, passive)
 
-Tumble - Move up to 2 spaces while avoiding arrows. (Also useful
-         for slipping behind enemies and putting out fires.)
+Tumble - Move up to 2 spaces while avoiding arrows. You'll dodge
+         the first arrow fired at you before your next turn. If
+         you're on fire, you'll put some of it out, and if you
+         move past an enemy, they might lose track of you.
          (3 points, active)
 
 
 Magic feats:
 
-Master's edge - Spells you've mastered deal extra damage.
-                (5 points, passive)
+Master's edge - The first damaging spell in your spell list will
+                deal 1d6 extra magic damage. (4 points, passive)
 
 Student's luck - Casting a spell of higher level than your Magic
                  skill will now only drain your magic half the
-                 time. (3 points, passive)
+                 time (instead of every time).
+                 (3 points, passive)
 
-Arcane healing - Drain your magic reserves to heal some of your
-                 wounds. (3 points, active)
+Arcane shield - Drain your magic reserves to shield yourself.
+                (+25% fail rate which is restored when you rest
+                to block 25 damage, plus 1d6 for every two
+                points of Magic skill you have. Lasts for 20
+                turns.) (3 points, active)
 
 Force of will - Drain your magic reserves to flawlessly cast a
                 spell. (Draining your magic reserves still
-                decreases your chance of success, but nothing
-                else does. If you have skill in Spirit, your
-                chances are increased. ) (3 points, active)
+                decreases your chance of success, but the
+                spell's level and the weight of your armor
+                don't matter. If you have skill in Spirit, your
+                chances are increased - 2% for each point.)
+                (3 points, active)
 
 
 Spirit feats:
@@ -77,27 +91,35 @@ Conviction - Each turn you're engaged in combat, you gain bonus
              (3 points, passive)
 
 Enduring soul - Improves the amount by which your natural
-                recovery can heal you. (4 points, passive)
+                recovery can heal you - your health will stop
+                recovering at a multiple of 20 instead of 10.
+                (4 points, passive)
 
-Feel no pain - When your health is very low, you briefly enter a
-               state of invulnerability. (3 points, passive)
+Feel no pain - When your health drops under 20%, you briefly
+               enter a state of invulnerability where you take
+               no damage (but other effects still happen).
+               (3 points, passive)
 
-Boiling blood - Taking damage briefly increases your speed.
-                (2 points, passive)
+Boiling blood - Taking damage briefly increases your movement
+                speed. (Up to five stacks. At 5 stacks, your
+                speed is doubled. (2 points, passive)
 
 
 Stealth feats:
+
 Distract - You attempt to misdirect an unaware enemy, causing it
-           to investigate the source of the sound.
+           to investigate the source of the sound(radius 3).
            (2 points, passive)
 
 Disarm trap - Attempt to disable a trap without setting it
-              off. (If you have skill in Defense, you're more
-              likely to avoid damage.) (3 points, active)
+              off. (80% success rate. If you fail, Defense skill
+              might let you avoid triggering the trap - 5%
+              chance for each point.) (2 points, active)
 
-Neck snap - Perform a stealth kill on a medium humanoid.
-            (5 points, passive)
+Neck snap - Perform a stealth kill on a medium humanoid. (Living
+            enemies of approximately human size.)
+            (4 points, passive)
 
 Danger sense - You see where it's safe and where enemies might
                detect you, if you extinguish your light sources.
-               (2 points, toggle)
+               (4 points, passive)
