@@ -14,6 +14,7 @@ namespace Forays{
 		public ConsumableType type{get;set;}
 		public int quantity{get;set;}
 		public bool ignored{get;set;} //whether autoexplore and autopickup should ignore this item
+		public bool do_not_stack{get;set;} //whether the item should be combined with other stacks. used for mimic items too.
 		
 		private static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
 		public static Item Prototype(ConsumableType type){ return proto[type]; }
@@ -37,12 +38,20 @@ namespace Forays{
 			proto[ConsumableType.PRISMATIC] = new Item(ConsumableType.PRISMATIC,"prismatic orb~",'*',Color.RandomPrismatic);
 			proto[ConsumableType.FREEZING] = new Item(ConsumableType.FREEZING,"orb~ of freezing",'*',Color.RandomIce);
 			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'~',Color.White);
+			Define(ConsumableType.QUICKFIRE,"orb~ of quickfire",'*',Color.RandomFire);
+			Define(ConsumableType.CLOAKING,"potion~ of cloaking",'!',Color.DarkBlue);
+			Define(ConsumableType.SMOKE,"orb~ of smoke",'*',Color.Gray);
+			Define(ConsumableType.TIME,"rune~ of time",'&',Color.Green);
+		}
+		private static void Define(ConsumableType type_,string name_,char symbol_,Color color_){
+			proto[type_] = new Item(type_,name_,symbol_,color_);
 		}
 		public Item(){}
 		public Item(ConsumableType type_,string name_,char symbol_,Color color_){
 			type = type_;
 			quantity = 1;
 			ignored = false;
+			do_not_stack = false;
 			name = name_;
 			the_name = "the " + name;
 			switch(name[0]){
@@ -66,11 +75,13 @@ namespace Forays{
 			color = color_;
 			row = -1;
 			col = -1;
+			light_radius = 0;
 		}
 		public Item(Item i,int r,int c){
 			type = i.type;
 			quantity = 1;
 			ignored = false;
+			do_not_stack = false;
 			name = i.name;
 			a_name = i.a_name;
 			the_name = i.the_name;
@@ -78,12 +89,16 @@ namespace Forays{
 			color = i.color;
 			row = r;
 			col = c;
+			light_radius = i.light_radius;
 		}
 		public static Item Create(ConsumableType type,int r,int c){
 			Item i = null;
 			if(Global.BoundsCheck(r,c)){
 				if(M.tile[r,c].inv == null){
 					i = new Item(proto[type],r,c);
+					if(i.light_radius > 0){
+						i.UpdateRadius(0,i.light_radius);
+					}
 					M.tile[r,c].inv = i;
 				}
 				else{
@@ -100,13 +115,13 @@ namespace Forays{
 		}
 		public static Item Create(ConsumableType type,Actor a){
 			Item i = null;
-			foreach(Item held in a.inv){
-				if(held.type == type){
-					held.quantity++;
-					return held;
+			if(a.InventoryCount() < Global.MAX_INVENTORY_SIZE){
+				foreach(Item held in a.inv){
+					if(held.type == type){
+						held.quantity++;
+						return held;
+					}
 				}
-			}
-			if(a.inv.Count < Global.MAX_INVENTORY_SIZE){
 				i = new Item(proto[type],-1,-1);
 				a.inv.Add(i);
 			}
@@ -171,6 +186,8 @@ namespace Forays{
 			case ConsumableType.PRISMATIC:
 			case ConsumableType.HEALING:
 			case ConsumableType.REGENERATION:
+			case ConsumableType.CLOAKING:
+			case ConsumableType.SMOKE:
 				//plus the potion of 'brutish strength'
 				return 2;
 			default:
@@ -189,7 +206,7 @@ namespace Forays{
 					}
 				}
 			}
-			return list[Global.Roll(1,list.Count)-1];
+			return list.Random();
 		}
 		public bool Use(Actor user){
 			bool used = true;
@@ -254,6 +271,15 @@ namespace Forays{
 				else{
 					B.Add(user.the_name + " seems focused. ",user);
 				}
+				break;
+			case ConsumableType.CLOAKING:
+				if(user.tile().IsLit()){
+					B.Add("You would feel at home in the shadows. ");
+				}
+				else{
+					B.Add("You fade away in the darkness. ");
+				}
+				user.GainAttrRefreshDuration(AttrType.SHADOW_CLOAK,(Global.Roll(41)+29)*100,"You are no longer cloaked. ",user);
 				break;
 			case ConsumableType.BLINKING:
 				for(int i=0;i<9999;++i){
@@ -363,6 +389,10 @@ namespace Forays{
 				}
 				break;
 				}
+			case ConsumableType.TIME:
+				B.Add("Time stops for a moment. ");
+				Q.turn -= 200;
+				break;
 			case ConsumableType.DETECT_MONSTERS:
 			{
 				user.attrs[AttrType.DETECTING_MONSTERS]++;
@@ -519,12 +549,14 @@ namespace Forays{
 					List<Actor> targets = new List<Actor>();
 					if(t.passable){
 						foreach(Actor ac in t.ActorsWithinDistance(3)){
-							targets.Add(ac);
+							if(t.HasLOE(ac)){
+								targets.Add(ac);
+							}
 						}
 					}
 					else{
 						foreach(Actor ac in t.ActorsWithinDistance(3)){
-							if(prev != null && prev.HasBresenhamLine(ac.row,ac.col)){
+							if(prev != null && prev.HasLOE(ac)){
 								targets.Add(ac);
 							}
 						}
@@ -534,6 +566,80 @@ namespace Forays{
 						B.Add(ac.YouAre() + " encased in ice. ",ac);
 						ac.attrs[Forays.AttrType.FROZEN] = 15;
 					}
+				}
+				else{
+					used = false;
+				}
+				break;
+			}
+			case ConsumableType.QUICKFIRE:
+			{
+				List<Tile> line = user.GetTarget(12,-1);
+				if(line != null){
+					Tile t = line.Last();
+					Tile prev = line.LastBeforeSolidTile();
+					Actor first = user.FirstActorInLine(line);
+					B.Add(user.You("throw") + " the orb of quickfire. ",user);
+					if(first != null){
+						t = first.tile();
+						B.Add("It shatters on " + first.the_name + "! ",first);
+					}
+					else{
+						B.Add("It shatters on " + t.the_name + "! ",t);
+					}
+					user.AnimateProjectile(line.ToFirstObstruction(),'*',Color.RandomFire);
+					if(t.passable){
+						t.features.Add(FeatureType.QUICKFIRE);
+						Q.Add(new Event(t,new List<Tile>{t},100,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
+					}
+					else{
+						prev.features.Add(FeatureType.QUICKFIRE);
+						Q.Add(new Event(prev,new List<Tile>{prev},100,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
+					}
+				}
+				else{
+					used = false;
+				}
+				break;
+			}
+			case ConsumableType.SMOKE:
+			{
+				List<Tile> line = user.GetTarget(12,-3);
+				if(line != null){
+					Tile t = line.Last();
+					Tile prev = line.LastBeforeSolidTile();
+					Actor first = user.FirstActorInLine(line);
+					B.Add(user.You("throw") + " the orb of smoke. ",user);
+					if(first != null){
+						t = first.tile();
+						B.Add("It shatters on " + first.the_name + "! ",first);
+					}
+					else{
+						B.Add("It shatters on " + t.the_name + "! ",t);
+					}
+					user.AnimateProjectile(line.ToFirstObstruction(),'*',Color.Gray);
+					List<Tile> area = new List<Tile>();
+					List<pos> cells = new List<pos>();
+					if(t.passable){
+						foreach(Tile tile in t.TilesWithinDistance(3)){
+							if(tile.passable && t.HasLOE(tile)){
+								tile.AddOpaqueFeature(FeatureType.SMOKE);
+								area.Add(tile);
+								cells.Add(tile.p);
+							}
+						}
+					}
+					else{
+						foreach(Tile tile in t.TilesWithinDistance(3)){
+							if(prev != null && tile.passable && prev.HasLOE(tile)){
+								tile.AddOpaqueFeature(FeatureType.SMOKE);
+								area.Add(tile);
+								cells.Add(tile.p);
+							}
+						}
+					}
+					Screen.AnimateMapCells(cells,new colorchar('*',Color.Gray));
+					Q.Add(new Event(area,400,EventType.SMOKE));
 				}
 				else{
 					used = false;

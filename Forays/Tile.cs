@@ -12,10 +12,22 @@ namespace Forays{
 	public class Tile : PhysicalObject{
 		public TileType type{get;set;}
 		public bool passable{get;set;}
-		public bool opaque{get;set;}
+		public bool opaque{get{ return internal_opaque || features.Contains(FeatureType.SMOKE); } set{ internal_opaque = value; }}
+		private bool internal_opaque; //no need to ever access this directly
 		public bool seen{get;set;}
 		public bool solid_rock{get;set;} //used for walls that will never be seen, to speed up LOS checks
-		public int light_value{get;set;}
+		public int light_value{get{ return internal_light_value; }
+			set{
+				internal_light_value = value;
+				if(value > 0 && features.Contains(FeatureType.FUNGUS)){
+					Q.Add(new Event(this,200,EventType.BLAST_FUNGUS));
+					B.Add("The blast fungus starts to smolder in the light. ",this);
+					features.Remove(FeatureType.FUNGUS);
+					features.Add(FeatureType.FUNGUS_ACTIVE);
+				}
+			}
+		}
+		private int internal_light_value; //no need to ever access this directly, either
 		public TileType? toggles_into;
 		public Item inv{get;set;}
 		public List<FeatureType> features = new List<FeatureType>();
@@ -38,6 +50,7 @@ namespace Forays{
 			proto[TileType.STAIRS] = new Tile(TileType.STAIRS,"stairway",'>',Color.White,true,false,null);
 			proto[TileType.CHEST] = new Tile(TileType.CHEST,"treasure chest",'=',Color.DarkYellow,true,false,null);
 			proto[TileType.FIREPIT] = new Tile(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
+			proto[TileType.FIREPIT].light_radius = 1;
 			proto[TileType.STALAGMITE] = new Tile(TileType.STALAGMITE,"stalagmite",'^',Color.White,false,true,TileType.FLOOR);
 			proto[TileType.QUICKFIRE_TRAP] = new Tile(TileType.QUICKFIRE_TRAP,"quickfire trap",'^',Color.RandomFire,true,false,TileType.FLOOR);
 			proto[TileType.LIGHT_TRAP] = new Tile(TileType.LIGHT_TRAP,"light trap",'^',Color.Yellow,true,false,TileType.FLOOR);
@@ -53,12 +66,19 @@ namespace Forays{
 			Define(TileType.MAGIC_SHRINE,"shrine of magic",'_',Color.Magenta,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.SPIRIT_SHRINE,"shrine of spirit",'_',Color.Yellow,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.STEALTH_SHRINE,"shrine of stealth",'_',Color.Blue,true,false,TileType.RUINED_SHRINE);
+			Define(TileType.FIRE_GEYSER,"fire geyser",'~',Color.Red,true,false,null);
 
 			proto_feature[FeatureType.GRENADE] = new PhysicalObject("grenade",',',Color.Red);
 			proto_feature[FeatureType.QUICKFIRE] = new PhysicalObject("quickfire",'&',Color.RandomFire);
 			proto_feature[FeatureType.QUICKFIRE].a_name = "quickfire";
 			proto_feature[FeatureType.TROLL_CORPSE] = new PhysicalObject("troll corpse",'%',Color.DarkGreen);
 			proto_feature[FeatureType.RUNE_OF_RETREAT] = new PhysicalObject("rune of retreat",'&',Color.RandomPrismatic);
+			proto_feature[FeatureType.POISON_GAS] = new PhysicalObject("cloud of poison gas",'*',Color.DarkGreen);
+			proto_feature[FeatureType.SMOKE] = new PhysicalObject("cloud of smoke",'*',Color.Gray);
+			proto_feature[FeatureType.SLIME] = new PhysicalObject("slime",',',Color.Green);
+			proto_feature[FeatureType.FUNGUS] = new PhysicalObject("blast fungus",'"',Color.DarkRed);
+			proto_feature[FeatureType.FUNGUS_ACTIVE] = new PhysicalObject("blast fungus(active)",'"',Color.Red);
+			proto_feature[FeatureType.FUNGUS_PRIMED] = new PhysicalObject("blast fungus(exploding)",'"',Color.Yellow);
 
 			//mimic
 			//not an actual trap, but arena rooms, too. perhaps you'll see the opponent, in stasis.
@@ -85,6 +105,7 @@ namespace Forays{
 			inv = null;
 			row = r;
 			col = c;
+			light_radius = t.light_radius;
 		}
 		public Tile(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
 			type = type_;
@@ -116,6 +137,7 @@ namespace Forays{
 			light_value = 0;
 			toggles_into = toggles_into_;
 			inv = null;
+			light_radius = 0;
 		}
 		public override string ToString(){
 			switch(type){
@@ -133,8 +155,6 @@ namespace Forays{
 				return "~";
 			case TileType.FIREPIT:
 				return "0";
-			/*case TileType.GRENADE:
-				return ",";*/
 			default:
 				return ".";
 			}
@@ -165,6 +185,112 @@ namespace Forays{
 			}
 			return false;
 		}
+		public char FeatureSymbol(){
+			if(Is(FeatureType.FUNGUS_PRIMED)){
+				return Tile.Feature(FeatureType.FUNGUS_PRIMED).symbol;
+			}
+			else{
+				if(Is(FeatureType.GRENADE)){
+					return Tile.Feature(FeatureType.GRENADE).symbol;
+				}
+				else{
+					if(Is(FeatureType.QUICKFIRE)){
+						return Tile.Feature(FeatureType.QUICKFIRE).symbol;
+					}
+					else{
+						if(Is(FeatureType.POISON_GAS)){
+							return Tile.Feature(FeatureType.POISON_GAS).symbol;
+						}
+						else{
+							if(Is(FeatureType.FUNGUS_ACTIVE)){
+								return Tile.Feature(FeatureType.FUNGUS_ACTIVE).symbol;
+							}
+							else{
+								if(Is(FeatureType.SMOKE)){
+									return Tile.Feature(FeatureType.SMOKE).symbol;
+								}
+								else{
+									if(Is(FeatureType.FUNGUS)){
+										return Tile.Feature(FeatureType.FUNGUS).symbol;
+									}
+									else{
+										if(Is(FeatureType.TROLL_CORPSE)){
+											return Tile.Feature(FeatureType.TROLL_CORPSE).symbol;
+										}
+										else{
+											if(Is(FeatureType.RUNE_OF_RETREAT)){
+												return Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
+											}
+											else{
+												if(Is(FeatureType.SLIME)){
+													return Tile.Feature(FeatureType.SLIME).symbol;
+												}
+												else{
+													return symbol;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		public Color FeatureColor(){
+			if(Is(FeatureType.FUNGUS_PRIMED)){
+				return Tile.Feature(FeatureType.FUNGUS_PRIMED).color;
+			}
+			else{
+				if(Is(FeatureType.GRENADE)){
+					return Tile.Feature(FeatureType.GRENADE).color;
+				}
+				else{
+					if(Is(FeatureType.QUICKFIRE)){
+						return Tile.Feature(FeatureType.QUICKFIRE).color;
+					}
+					else{
+						if(Is(FeatureType.POISON_GAS)){
+							return Tile.Feature(FeatureType.POISON_GAS).color;
+						}
+						else{
+							if(Is(FeatureType.FUNGUS_ACTIVE)){
+								return Tile.Feature(FeatureType.FUNGUS_ACTIVE).color;
+							}
+							else{
+								if(Is(FeatureType.SMOKE)){
+									return Tile.Feature(FeatureType.SMOKE).color;
+								}
+								else{
+									if(Is(FeatureType.FUNGUS)){
+										return Tile.Feature(FeatureType.FUNGUS).color;
+									}
+									else{
+										if(Is(FeatureType.TROLL_CORPSE)){
+											return Tile.Feature(FeatureType.TROLL_CORPSE).color;
+										}
+										else{
+											if(Is(FeatureType.RUNE_OF_RETREAT)){
+												return Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
+											}
+											else{
+												if(Is(FeatureType.SLIME)){
+													return Tile.Feature(FeatureType.SLIME).color;
+												}
+												else{
+													return color;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		public string Preposition(){
 			switch(type){
 			case TileType.FLOOR:
@@ -178,13 +304,16 @@ namespace Forays{
 		}
 		public bool GetItem(Item item){
 			if(inv == null){
-				inv = item;
 				item.row = row;
 				item.col = col;
+				if(item.light_radius > 0){
+					item.UpdateRadius(0,item.light_radius);
+				}
+				inv = item;
 				return true;
 			}
 			else{
-				if(inv.type == item.type){
+				if(inv.type == item.type && !inv.do_not_stack && !item.do_not_stack){
 					inv.quantity += item.quantity;
 					return true;
 				}
@@ -192,11 +321,14 @@ namespace Forays{
 					for(int i=1;i<COLS;++i){
 						List<Tile> tiles = TilesAtDistance(i);
 						while(tiles.Count > 0){
-							Tile t = tiles[Global.Roll(tiles.Count)-1];
+							Tile t = tiles.Random();
 							if(t.passable && t.inv == null){
-								t.inv = item;
 								item.row = t.row;
 								item.col = t.col;
+								if(item.light_radius > 0){
+									item.UpdateRadius(0,item.light_radius);
+								}
+								t.inv = item;
 								return true;
 							}
 							tiles.Remove(t);
@@ -213,7 +345,7 @@ namespace Forays{
 		}
 		public void Toggle(PhysicalObject toggler,TileType toggle_to){
 			bool lighting_update = false;
-			List<Actor> actors = new List<Actor>();
+			List<PhysicalObject> light_sources = new List<PhysicalObject>();
 			TileType original_type = type;
 			if(opaque != Prototype(toggle_to).opaque){
 				for(int i=row-1;i<=row+1;++i){
@@ -229,8 +361,16 @@ namespace Forays{
 					for(int j=col-Global.MAX_LIGHT_RADIUS;j<=col+Global.MAX_LIGHT_RADIUS;++j){
 						if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
 							if(M.actor[i,j] != null && M.actor[i,j].LightRadius() > 0){
-								actors.Add(M.actor[i,j]);
+								light_sources.Add(M.actor[i,j]);
 								M.actor[i,j].UpdateRadius(M.actor[i,j].LightRadius(),0);
+							}
+							if(M.tile[i,j].inv != null && M.tile[i,j].inv.light_radius > 0){
+								light_sources.Add(M.tile[i,j].inv);
+								M.tile[i,j].inv.UpdateRadius(M.tile[i,j].inv.light_radius,0);
+							}
+							if(M.tile[i,j].light_radius > 0){
+								light_sources.Add(M.tile[i,j]);
+								M.tile[i,j].UpdateRadius(M.tile[i,j].light_radius,0);
 							}
 						}
 					}
@@ -240,14 +380,20 @@ namespace Forays{
 			TransformTo(toggle_to);
 
 			if(lighting_update){
-				foreach(Actor a in actors){
-					a.UpdateRadius(0,a.LightRadius());
+				foreach(PhysicalObject o in light_sources){
+					if(o is Actor){
+						Actor a = o as Actor;
+						a.UpdateRadius(0,a.LightRadius());
+					}
+					else{
+						o.UpdateRadius(0,o.light_radius);
+					}
 				}
 			}
 			if(toggler != null && toggler != player){
 				if(type == TileType.DOOR_C && original_type == TileType.DOOR_O){
 					if(player.CanSee(this)){
-						B.Add(toggler.the_name + " closes the door. ");
+						B.Add(toggler.TheVisible() + " closes the door. ");
 					}
 					else{
 						if(seen || player.DistanceFrom(this) <= 12){
@@ -257,7 +403,7 @@ namespace Forays{
 				}
 				if(type == TileType.DOOR_O && original_type == TileType.DOOR_C){
 					if(player.CanSee(this)){
-						B.Add(toggler.the_name + " opens the door. ");
+						B.Add(toggler.TheVisible() + " opens the door. ");
 					}
 					else{
 						if(seen || player.DistanceFrom(this) <= 12){
@@ -268,7 +414,7 @@ namespace Forays{
 			}
 			if(toggler != null){
 				if(original_type == TileType.RUBBLE){
-					B.Add(toggler.You("shift") + " the rubble aside. ",toggler);
+					B.Add(toggler.YouVisible("shift") + " the rubble aside. ",this);
 				}
 			}
 		}
@@ -285,31 +431,36 @@ namespace Forays{
 			if(opaque){
 				light_value = 0;
 			}
+			if(light_radius != Prototype(type_).light_radius){
+				UpdateRadius(light_radius,Prototype(type_).light_radius);
+			}
+			light_radius = Prototype(type_).light_radius;
 		}
 		public void TurnToFloor(){
 			bool lighting_update = false;
-			List<Actor> actors = new List<Actor>();
+			List<PhysicalObject> light_sources = new List<PhysicalObject>();
 			if(opaque){
 				foreach(Tile t in TilesWithinDistance(1)){
 					if(t.IsLit()){
 						lighting_update = true;
 					}
 				}
-/*				for(int i=row-1;i<=row+1;++i){
-					for(int j=col-1;j<=col+1;++j){
-						if(M.tile[i,j].IsLit()){
-							lighting_update = true;
-						}
-					}
-				}*/
 			}
 			if(lighting_update){
 				for(int i=row-Global.MAX_LIGHT_RADIUS;i<=row+Global.MAX_LIGHT_RADIUS;++i){
 					for(int j=col-Global.MAX_LIGHT_RADIUS;j<=col+Global.MAX_LIGHT_RADIUS;++j){
-						if(M.BoundsCheck(i,j)){
-							if(M.actor[i,j] != null && M.actor[i,j].light_radius > 0){
-								actors.Add(M.actor[i,j]);
-								M.actor[i,j].UpdateRadius(M.actor[i,j].light_radius,0);
+						if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
+							if(M.actor[i,j] != null && M.actor[i,j].LightRadius() > 0){
+								light_sources.Add(M.actor[i,j]);
+								M.actor[i,j].UpdateRadius(M.actor[i,j].LightRadius(),0);
+							}
+							if(M.tile[i,j].inv != null && M.tile[i,j].inv.light_radius > 0){
+								light_sources.Add(M.tile[i,j].inv);
+								M.tile[i,j].inv.UpdateRadius(M.tile[i,j].inv.light_radius,0);
+							}
+							if(M.tile[i,j].light_radius > 0){
+								light_sources.Add(M.tile[i,j]);
+								M.tile[i,j].UpdateRadius(M.tile[i,j].light_radius,0);
 							}
 						}
 					}
@@ -319,8 +470,108 @@ namespace Forays{
 			TransformTo(TileType.FLOOR);
 			
 			if(lighting_update){
-				foreach(Actor a in actors){
-					a.UpdateRadius(0,a.light_radius);
+				foreach(PhysicalObject o in light_sources){
+					if(o is Actor){
+						Actor a = o as Actor;
+						a.UpdateRadius(0,a.LightRadius());
+					}
+					else{
+						o.UpdateRadius(0,o.light_radius);
+					}
+				}
+			}
+		}
+		public void AddOpaqueFeature(FeatureType f){
+			if(!features.Contains(f)){
+				bool lighting_update = false;
+				List<PhysicalObject> light_sources = new List<PhysicalObject>();
+				for(int i=row-1;i<=row+1;++i){
+					for(int j=col-1;j<=col+1;++j){
+						if(M.tile[i,j].IsLit()){
+							lighting_update = true;
+						}
+					}
+				}
+				if(lighting_update){
+					for(int i=row-Global.MAX_LIGHT_RADIUS;i<=row+Global.MAX_LIGHT_RADIUS;++i){
+						for(int j=col-Global.MAX_LIGHT_RADIUS;j<=col+Global.MAX_LIGHT_RADIUS;++j){
+							if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
+								if(M.actor[i,j] != null && M.actor[i,j].LightRadius() > 0){
+									light_sources.Add(M.actor[i,j]);
+									M.actor[i,j].UpdateRadius(M.actor[i,j].LightRadius(),0);
+								}
+								if(M.tile[i,j].inv != null && M.tile[i,j].inv.light_radius > 0){
+									light_sources.Add(M.tile[i,j].inv);
+									M.tile[i,j].inv.UpdateRadius(M.tile[i,j].inv.light_radius,0);
+								}
+								if(M.tile[i,j].light_radius > 0){
+									light_sources.Add(M.tile[i,j]);
+									M.tile[i,j].UpdateRadius(M.tile[i,j].light_radius,0);
+								}
+							}
+						}
+					}
+				}
+	
+				features.Add(f);
+	
+				if(lighting_update){
+					foreach(PhysicalObject o in light_sources){
+						if(o is Actor){
+							Actor a = o as Actor;
+							a.UpdateRadius(0,a.LightRadius());
+						}
+						else{
+							o.UpdateRadius(0,o.light_radius);
+						}
+					}
+				}
+			}
+		}
+		public void RemoveOpaqueFeature(FeatureType f){
+			if(features.Contains(f)){
+				bool lighting_update = false;
+				List<PhysicalObject> light_sources = new List<PhysicalObject>();
+				for(int i=row-1;i<=row+1;++i){
+					for(int j=col-1;j<=col+1;++j){
+						if(M.tile[i,j].IsLit()){
+							lighting_update = true;
+						}
+					}
+				}
+				if(lighting_update){
+					for(int i=row-Global.MAX_LIGHT_RADIUS;i<=row+Global.MAX_LIGHT_RADIUS;++i){
+						for(int j=col-Global.MAX_LIGHT_RADIUS;j<=col+Global.MAX_LIGHT_RADIUS;++j){
+							if(i>0 && i<ROWS-1 && j>0 && j<COLS-1){
+								if(M.actor[i,j] != null && M.actor[i,j].LightRadius() > 0){
+									light_sources.Add(M.actor[i,j]);
+									M.actor[i,j].UpdateRadius(M.actor[i,j].LightRadius(),0);
+								}
+								if(M.tile[i,j].inv != null && M.tile[i,j].inv.light_radius > 0){
+									light_sources.Add(M.tile[i,j].inv);
+									M.tile[i,j].inv.UpdateRadius(M.tile[i,j].inv.light_radius,0);
+								}
+								if(M.tile[i,j].light_radius > 0){
+									light_sources.Add(M.tile[i,j]);
+									M.tile[i,j].UpdateRadius(M.tile[i,j].light_radius,0);
+								}
+							}
+						}
+					}
+				}
+	
+				features.Remove(f);
+	
+				if(lighting_update){
+					foreach(PhysicalObject o in light_sources){
+						if(o is Actor){
+							Actor a = o as Actor;
+							a.UpdateRadius(0,a.LightRadius());
+						}
+						else{
+							o.UpdateRadius(0,o.light_radius);
+						}
+					}
 				}
 			}
 		}
@@ -342,7 +593,12 @@ namespace Forays{
 			switch(type){
 			case TileType.GRENADE_TRAP:
 			{
-				B.Add("Grenades fall from the ceiling above " + actor().the_name + "! ",this);
+				if(player.CanSee(actor())){
+					B.Add("Grenades fall from the ceiling above " + actor().the_name + "! ",this);
+				}
+				else{
+					B.Add("Grenades fall from the ceiling! ",this);
+				}
 				//bool nade_here = false;
 				List<Tile> valid = new List<Tile>();
 				foreach(Tile t in TilesWithinDistance(1)){
@@ -452,14 +708,19 @@ namespace Forays{
 				break;
 			}
 			case TileType.TELEPORT_TRAP:
-				B.Add("An unstable energy covers " + actor().the_name + ". ",actor());
+				B.Add("An unstable energy covers " + actor().TheVisible() + ". ",actor());
 				actor().attrs[AttrType.TELEPORTING] = Global.Roll(4);
 				Q.KillEvents(actor(),AttrType.TELEPORTING);
 				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(10)+25)*100,AttrType.TELEPORTING,actor().YouFeel() + " more stable. ",actor()));
 				Toggle(actor());
 				break;
 			case TileType.STUN_TRAP:
-				B.Add("A disorienting flash assails " + actor().the_name + ". ",this);
+				if(player.CanSee(actor())){
+					B.Add("A disorienting flash assails " + actor().the_name + ". ",this);
+				}
+				else{
+					B.Add("You notice a flash of light. ",this);
+				}
 				actor().attrs[AttrType.STUNNED]++;
 				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(5)+7)*100,AttrType.STUNNED,(actor().YouFeel() + " less disoriented. "),(this.actor())));
 				Toggle(actor());
@@ -470,7 +731,7 @@ namespace Forays{
 					player.MakeNoise();
 				}
 				if(M.wiz_lite == false){
-					if(player.HasLOS(row,col)){
+					if(player.HasLOS(row,col) && !actor().IsHiddenFrom(player)){
 						B.Add("A wave of light washes out from above " + actor().the_name + "! ");
 					}
 					else{
@@ -482,7 +743,7 @@ namespace Forays{
 				Toggle(actor());
 				break;
 			case TileType.QUICKFIRE_TRAP:
-				B.Add("Fire pours over " + actor().the_name + " and starts to spread! ",this);
+				B.Add("Fire pours over " + actor().TheVisible() + " and starts to spread! ",this);
 				foreach(Actor a in ActorsWithinDistance(1)){
 					if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE) && !a.HasAttr(AttrType.ON_FIRE)
 					&& !a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
@@ -634,9 +895,16 @@ namespace Forays{
 					}
 				}
 				else{
+					bool no_room = false;
+					if(player.InventoryCount() >= Global.MAX_INVENTORY_SIZE){
+						no_room = true;
+					}
 					Item i = Item.Create(Item.RandomItem(),player);
 					if(i != null){
 						B.Add("You find " + Item.Prototype(i.type).AName() + ". ");
+						if(no_room){
+							B.Add("Your pack is too full to pick it up. ");
+						}
 					}
 				}
 				TurnToFloor();

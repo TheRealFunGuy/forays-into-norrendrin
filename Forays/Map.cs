@@ -39,7 +39,22 @@ namespace Forays{
 		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);  //note for dungeon generator overhaul: make sure there's something to hide behind.
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
 		public int current_level{get;set;}
-		public bool wiz_lite{get;set;}
+		public bool wiz_lite{get{ return internal_wiz_lite; }
+			set{
+				internal_wiz_lite = value;
+				if(value == true){
+					foreach(Tile t in AllTiles()){
+						if(t.Is(FeatureType.FUNGUS)){
+							Q.Add(new Event(t,200,EventType.BLAST_FUNGUS));
+							Actor.B.Add("The blast fungus starts to smolder in the light. ",t);
+							t.features.Remove(FeatureType.FUNGUS);
+							t.features.Add(FeatureType.FUNGUS_ACTIVE);
+						}
+					}
+				}
+			}
+		}
+		private bool internal_wiz_lite;
 		public bool wiz_dark{get;set;}
 		private bool[,] danger_sensed{get;set;}
 		//private List<Tile> alltiles = new List<Tile>();
@@ -262,6 +277,9 @@ namespace Forays{
 				if(actor[r,c] != null && player.CanSee(actor[r,c])){
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
+					if(actor[r,c] == player && player.HasAttr(AttrType.SHADOW_CLOAK) && !player.tile().IsLit()){
+						ch.color = Color.DarkBlue;
+					}
 					if(actor[r,c] == player && player.HasFeat(FeatType.DANGER_SENSE) //was danger_sense_on
 					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
 					&& !wiz_lite){
@@ -275,32 +293,8 @@ namespace Forays{
 					}
 					else{
 						if(tile[r,c].features.Count > 0){
-							if(tile[r,c].Is(FeatureType.GRENADE)){
-								ch.c = Tile.Feature(FeatureType.GRENADE).symbol;
-								ch.color = Tile.Feature(FeatureType.GRENADE).color;
-							}
-							else{
-								if(tile[r,c].Is(FeatureType.QUICKFIRE)){
-									ch.c = Tile.Feature(FeatureType.QUICKFIRE).symbol;
-									ch.color = Tile.Feature(FeatureType.QUICKFIRE).color;
-								}
-								else{
-									if(tile[r,c].Is(FeatureType.TROLL_CORPSE)){
-										ch.c = Tile.Feature(FeatureType.TROLL_CORPSE).symbol;
-										ch.color = Tile.Feature(FeatureType.TROLL_CORPSE).color;
-									}
-									else{
-										if(tile[r,c].Is(FeatureType.RUNE_OF_RETREAT)){
-											ch.c = Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
-											ch.color = Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
-										}
-										else{
-											ch.c = '#';
-											ch.color = Color.RandomBright; //this shouldn't happen
-										}
-									}
-								}
-							}
+							ch.c = tile[r,c].FeatureSymbol();
+							ch.color = tile[r,c].FeatureColor();
 						}
 						else{
 							ch.c = tile[r,c].symbol;
@@ -334,15 +328,33 @@ namespace Forays{
 							ch.color = tile[r,c].inv.color;
 						}
 						else{
-							if(tile[r,c].Is(FeatureType.RUNE_OF_RETREAT)){ //because runes should stay visible when out of sight, unlike other features
+							if(tile[r,c].Is(FeatureType.RUNE_OF_RETREAT)){ //some features stay visible when out of sight
 								ch.c = Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
 								ch.color = Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
 							}
 							else{
-								ch.c = tile[r,c].symbol;
-								ch.color = tile[r,c].color;
-								if(ch.c=='.' || ch.c=='#'){
-									ch.color = Color.DarkGray;
+								if(tile[r,c].Is(FeatureType.FUNGUS)){
+									ch.c = Tile.Feature(FeatureType.FUNGUS).symbol;
+									ch.color = Tile.Feature(FeatureType.FUNGUS).color;
+								}
+								else{
+									if(tile[r,c].Is(FeatureType.FUNGUS_ACTIVE)){
+										ch.c = Tile.Feature(FeatureType.FUNGUS_ACTIVE).symbol;
+										ch.color = Tile.Feature(FeatureType.FUNGUS_ACTIVE).color;
+									}
+									else{
+										if(tile[r,c].Is(FeatureType.FUNGUS_PRIMED)){
+											ch.c = Tile.Feature(FeatureType.FUNGUS_PRIMED).symbol;
+											ch.color = Tile.Feature(FeatureType.FUNGUS_PRIMED).color;
+										}
+										else{
+											ch.c = tile[r,c].symbol;
+											ch.color = tile[r,c].color;
+											if(ch.c=='.' || ch.c=='#'){
+												ch.color = Color.DarkGray;
+											}
+										}
+									}
 								}
 							}
 						}
@@ -370,7 +382,8 @@ namespace Forays{
 				int rr = Global.Roll(ROWS-2);
 				int rc = Global.Roll(COLS-2);
 				Tile t = tile[rr,rc];
-				if(t.passable && t.inv == null && t.type != TileType.CHEST && t.type != TileType.FIREPIT && t.type != TileType.STAIRS){
+				if(t.passable && t.inv == null && t.type != TileType.CHEST && t.type != TileType.FIREPIT
+				&& t.type != TileType.STAIRS && !t.IsShrine()){
 					return Item.Create(result,rr,rc);
 					//done = true;
 				}
@@ -519,6 +532,7 @@ namespace Forays{
 			}
 			wiz_lite = false;
 			wiz_dark = false;
+			Q.KillEvents(null,EventType.BLAST_FUNGUS);
 			Q.KillEvents(null,EventType.RELATIVELY_SAFE);
 			Q.KillEvents(null,EventType.POLTERGEIST);
 			Actor.tiebreakers = new List<Actor>{player};
@@ -637,7 +651,7 @@ namespace Forays{
 							}
 						}
 						if(floors){
-							charmap[rr,rc] = '~';
+							charmap[rr,rc] = '=';
 							done = true;
 						}
 					}
@@ -712,8 +726,11 @@ namespace Forays{
 					case '0':
 						Tile.Create(TileType.FIREPIT,i,j);
 						break;
-					case '~':
+					case '=':
 						Tile.Create(TileType.CHEST,i,j);
+						break;
+					case '~':
+						Tile.Create(TileType.FIRE_GEYSER,i,j);
 						break;
 					case '^':
 						Tile.Create(Tile.RandomTrap(),i,j);
@@ -753,11 +770,14 @@ namespace Forays{
 			}
 			player.ResetForNewLevel();
 			foreach(Tile t in AllTiles()){
-				if(t.type == TileType.FIREPIT){
+				if(t.light_radius > 0){
+					t.UpdateRadius(0,t.light_radius);
+				}
+				/*if(t.type == TileType.FIREPIT){
 					foreach(Tile tt in t.TilesWithinDistance(1)){
 						tt.light_value++;
 					}
-				}
+				}*/
 			}
 			int num_items = 1;
 			switch(Global.Roll(5)){
