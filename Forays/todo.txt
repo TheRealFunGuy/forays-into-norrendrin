@@ -1,24 +1,147 @@
 
+move this note:
+in a big(!) superhero RL, you could sometimes be unmasked instead of killed (especially by the cops). this would make the game much harder, but still winnable.
+
+no items on shrines!
+
+tutorial hints
+	-weapon switching
+	-armor switching
+	-fire
+	-recovery
+	-movement
+	-bump to attack
+	-resistance
+
+pack limit of 20? new carrying capacity trait?
+
+move cultists and zombies down a few levels. find easier enemies for level 1.
+
+lower HP for goblins? lower HP or damage for zombies?
+
+why am i suddenly getting many 'notices' messages for groups, when I previously got just one?
+	-i think this happens when they notice but the player isn't close enough
+	 to 'makeNoise' and they follow the leader. hm.
+		-no, following is not necessary. they do it when you step into LOS
+		-group members should be alerted directly, then. do this.
+			-done?
+
 update help: add headers to overview help - 'Regaining Health, Attacking Monsters, Exploring the Dungeon...'
+	-resistance is half damage
+
+include a goal at the start
+
+rename resting to 'catching your second wind' ?
 
 TEST LOOKMODE AND NEW TARGETING ON LINUX BEFORE RELEASE
 
+new code:
+brutish strength
+	-smash known traps, stalagmites, doors, statues. anything useful?
+
+done(maybe):
+smoke feature
+armored enemies have different miss message
+shadow cloak
+fungus feature - will they spread at all?
+mimic event - just needs a mimic monster.
+spell disruption - radius-based only.
+magical sleepiness
+poison gas feature
+fire vent tile
+quickfire orb	
+shadow cloak item
+smoke bomb: self-targeting would be nice to have.
+rune of time (gives a free turn)
+
 
 new items:
-quickfire orb
-invisibility or shadow cloak item
-smoke bomb
-  creates smoke, which is a tile feature that blocks LOS(hmm) and gives 50% miss
-  chance.
 potion of brutish strength
   no items, spells, or certain feats, but lots of damage and the ability to smash
   doors, statues, and other features?
-rune of time (gives a free turn)
-  (Q.turn += 200;)
 explosive fungus orb-type item? or orcish grenades?
+
+
+(rat) goblin large_bat shambling_scarecrow skeleton cultist poltergeist zombie wolf frostling goblin_archer goblin_shaman swordsman dire_rat dream_warrior banshee warg robed_zealot skulking_killer carrion_crawler ogre shadow berserker orc_grenadier phase_spider stone_golem necromancer troll lasher_fungus orc_warmage corpsetower_behemoth (fire_drake) skeletal_sabertooth luminous_avenger crusading_knight entrancer shadowveil_duelist mimic deranged_ascetic/unhinged_ascetic/chaos_monk chaos_fairy/chaos_pixie/dissonant pixie/chaos_moth/chaos_butterfly troll_soothsayer mechanical_knight marble_horror/granite_horror pyren_archer mud_elemental orc_assassin cavern_witch vampire compy noxious_worm PLACEHOLDER_1 PLACEHOLDER_2
+
+ -- Instead of picking a number for HP, I'll instead pick low/med/high and adjust for depth -- 
+ -- melee damage will work the same way. -- 
+
+(skeletal horse)
+skeletal sabertooth!
+fast. (medium health, medium damage. These will be assumed from now on, if not stated).
+elemental resistance. slashing and piercing resistance. undead. darkvision. wait, is this guy going to be just a fast skeleton(with better stealth detection)? increase damage a bit.
+
+luminous avenger
+fast. lowish HP. permanent holy shield. gives off light. when severely injured, darkens the level to fully heal.
+
+crusading knight
+med-high health. strong slow attack. torch. heavy armor. if attacked but unable to see attacker, lights the level.
+
+entrancer
+low health, low damage. always wanders. upon encountering a non-group monster, it enslaves it. in combat, the entrancer increases its servant's strength, regeneration, speed...
+ranged attack?
+
+(shadow-cloaked duelist)
+shadow cloak. upon attacking, moves to a space that's adjacent to itself & the player. prefers orthogonal directions.
+
+mimic
+appears to be an item until it attacks. low-med health, low-med attack. slow. successful attacks grab their target.
+(grabs usually work both ways and prevent normal movement. any OTHER movement breaks the grab.)
+
+(spell disrupting fighter)
+'raving/babbling/mad/ranting/frenetic/aberrant/demented/deranged/lunatic/psychotic ascetic'
+or possibly 'chaos monk'
+prevents casting within a short distance.
+
+(spell disrupting pixie)
+i might unify the concept as a 'chaos' effect. otherwise it'll have a different msg than the monk
+prevents casting within a short distance. small, flying. either fast OR it moves like a bat(probably fast, because bats tend to take a long time to reach you). definitely attacks like a bat.
+
+troll magician/seer/soothsayer/etc.
+(same stats as troll.) might be able to cast glacial blast and sonic boom, but doesn't keep distance. when injured enough, teleports the player away (once?).
+
+mechanical knight / clockwork knight / other
+low HP. its shield makes it invulnerable to most attacks. Critical hits and sneak attacks still work, and the knight drops its guard if it misses on an attack. When a certain portion of its health is gone, its arms or legs will be destroyed. It can't use its shield without arms, and moves slowly while it has no legs.
+
+marble horror / granite horror / etc.
+in normal light, it is a statue indistinguishable from the normal dungeon feature. sunlight (from the spell, item, or trap) destroys it instantly. in darkness, it animates. construct, resists slashing & piercing damage & the elements. darkvision. Good candidate for the dim-vision touch effect, shrinking the player's vision radius while in darkness.
+
+pyren archer
+med-high health. weak attack + fire hit. fires flaming arrows. acts like an archer. possibly has a fire-related trick to use when cornered. immune to fire, of course.
+
+mud elemental
+low-med HP. resists all weapon types, i think. elemental attacks should work better.
+if the player is next to any walls during the mud elemental's turn, those walls will grow muddy tentacles/hands/whatever and attack & try to hold the player.
+
+orc assassin? even more basic than the skulking killer? (but more dangerous because it sneak attacks.) Needs an AI enhancement: when moving toward the player, if there is a spot that the player can't see (but it's at the same distance as the spot you would have stepped to), step there to stay out of sight. shadowsight?
+
+(witch/hag)
+(weak attack. stays at range. does one of 3 things: light allergy, magical sleepiness, immolate.
+	-but that's the 5th monster that can catch you on fire! that might not be SO bad, but
+	 this has other issues, too: if you have both curses already, does the witch immolate you
+	 every turn? also, hags are fairly strong. start over on this one.)
+
+(witch)
+weak attack. stays at range. (some subtle form of damage at range? i'd like the witch to have a go-to damaging spell, and then:) ONCE, the witch can place a curse on the player. this tends to have a fairly long duration, up to 100 turns(?)
+curses: light allergy, magical sleepiness, aggravate, ...
+
+vampire (descriptive name?)
+flying. somewhat fast? light allergy. destroyed by sunlight. drains life on hit (the damage doesn't matter; the vampire probably regains 10-20% health on a successful attack.)
+
+procompsognathus (name? i wonder if i could just call them compys.)
+small, low hp, weak attack. instead of rushing to attack, they stay back unless they're injured, or the player is below 40%(?) health. poisonous bite. (normal poison, or magical sleepiness?)
+
+noxious worm
+high hp. slow. breathes small clouds of poison every few turns. (could burrow into a wall and koolaid out when the player walks by. maybe.)
+
+
+
+
 
 new monsters:
 undead fast animal - summoned by necro
+	-skeletal horse? melee beast plus resistances.
 mechanical knight
   would be invulnerable until it misses. at certain hp values, its arms or legs
   fall off. "~'s arms fall off! ~ kicks you." with no legs, he does nothing.
@@ -55,6 +178,45 @@ entrancer
 mud monster
   makes walls attack or grab at you, encouraging you to fight it in the open
 remake: poltergeist. item-thrower. can yank items from the player's pack.
+	-doesn't throw mimic items (with do_not_stack == true)
+(anything that doesn't care about how much damage you deal)
+
+ 1 goblin large_bat PLACEHOLDER_3
+ 2 skeleton cultist poltergeist
+ 3 zombie wolf frostling  4 goblin_archer goblin_shaman swordsman 
+ 5 dire_rat dream_warrior banshee 
+ 6 warg robed_zealot skulking_killer 
+ 7 carrion_crawler ogre shadow 
+ 8 berserker orc_grenadier phase_spider 
+ 9 stone_golem necromancer troll 
+10 lasher_fungus orc_warmage corpsetower_behemoth
+
+should be moved deeper:    cultist, poltergeist, zombie
+should be moved shallower: wolf, swordsman, dream_warrior, skulking killer, shadow
+
+COULD be moved deeper, maybe:    banshee, ogre, necromancer(depending on summons)
+COULD be moved shallower, maybe: skeleton, frostling, banshee(yep), robed_zealot, berserker,
+				 orc_grenadier, phase_spider, troll
+
+ skeletal_sabertooth luminous_avenger crusading_knight entrancer shadowveil_duelist mimic deranged_ascetic/unhinged_ascetic/chaos_monk chaos_fairy/chaos_pixie/dissonant pixie/chaos_moth/chaos_butterfly troll_soothsayer mechanical_knight marble_horror/granite_horror pyren_archer mud_elemental orc_assassin cavern_witch vampire compy noxious_worm PLACEHOLDER_1 PLACEHOLDER_2
+
+next step: diving the new ones into common/rare. 60% should be common.
+
+common: sabertooth, asceticmonk, compy, noxious worm, duelist, pyren, mud_elemental
+
+rare: entrancer, mimic, soothsayer, mechaknight, witch
+
+either: avenger, crusading_knight, pixie, marble_horror, assassin, vampire, placeholder1 & 2
+
+'upgrades' should appear at least 3 (if not more) levels deeper.
+
+ 1 goblin large_bat wolf skeleton ???
+ 2 swordsman ??? ??? frostling dream_warrior
+ 3 cultist ??? ?????????????
+?????
+  ??
+?
+
 
 
 new dungeon features:
@@ -64,6 +226,7 @@ trapped chests or doors?
 fungus (fuse fungus? bomb fungus?) that explodes a few turns after being lit up
 doors that open when lit (stone slab type)
 torches
+	-implemented as walls that actually shed light from an adjacent tile?
 fire vents/firespouts that occasionally burn things on top of them, and give off
   more light than firepits.
 separate alarm from light trap
@@ -71,6 +234,7 @@ separate alarm from light trap
 add darkness trap
 periodic stun trap that affects everything in its LOS
 poison trap. darts or gas?
+	-dart trap for dim vision?
 ice trap?
 sleep trap
 bombable walls to hide some hidden rooms.
@@ -80,6 +244,11 @@ beamos-inspired mob/trap/feature. probably mounted in the wall. might hit an
   entire direction instead of just a line.
 round rooms
 any other active dungeon elements or 'moving parts'
+some other features that can be found in corridors.
+deity statues. these would be colored instead of gray, and would have an associated event and terrain effect. the event simply checks the area and prints the appropriate descriptive message, then stops. the terrain effect depends on which type of statue it is. flat bonus to that skill? no, probably just set it to 10. that would lead to rooms where it's easy to hit & damage, rooms where it's hard to hit, rooms where magic is easy, rooms where magical/supernatural effects are diminished, and rooms where everything is stealthy. are there other good effects besides these?
+anyway, these would appear near the center of rooms, and could replace the walls between shrines.
+should rubble become nonopaque? that would allow me to put some along a corridor, making groups harder to fight there. (i could do it anyway, but the player would move it)
+pillars, to match the shrine pillars.
 
 
 other:
@@ -90,6 +259,7 @@ sunlight (Shine now makes your torch give off sunlight) can destroy light-
   sensitive enemies outright
 an event (possibly triggered by shrines or chests) where you defend an area for a
   short while, for some purpose.
+light and dark sensitivity - i'm thinking blind-in-darkness and damaged-in-light.
 
 
 #
@@ -148,6 +318,8 @@ counter for fail rate, sure.
 [bloodboil-]
 
 
+what about a 'blank' Event that takes a lambda? sounds great, but how the heck could I save/restore it?
+
 #
 
 make sure to always consider the old stuff when adding new stuff - it can use updates too, or receive some of these new ideas.
@@ -194,11 +366,11 @@ Select() needs a rewrite, and to be moved out of Actor.
 
 0.7.0 should have: (focus on gameplay)
 many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
-"the arrow hits the goblin" x2   should become "the arrow hits something" x2 "something dies"
 "You are burned. You are unburnt." <--being attacked by burning enemy while Tough
 think about scaling Spirit's duration reduction to more than 50%
 what about a 'default ranged attack' in addition to the 'default melee attack' spell?
 fire drake should come with a quickfire event
+	-not just a quickfire event, but the level should practically fall apart!
 is the minimum number of enemies really 4? eww, too low.
 	-it's actually 5.
 	-spread them out more!
@@ -210,6 +382,7 @@ generate rats at start?
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
 	-this would make a good candidate for generalization: printing a message if the player can see an object OR if that object is within a certain distance. perhaps a distance that implies that the message is a sound, not a visual.
 kills list
+'killed by' in highscore?
 make shadows appear earlier? make swordsmen appear earlier?
 
 

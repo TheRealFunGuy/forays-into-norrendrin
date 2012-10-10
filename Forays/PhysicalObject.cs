@@ -32,6 +32,7 @@ namespace Forays{
 		public string the_name{get;set;}
 		public char symbol{get;set;}
 		public Color color{get;set;}
+		public int light_radius{get;set;}
 		
 		public static Map M{get;set;}
 		public PhysicalObject(){
@@ -42,6 +43,7 @@ namespace Forays{
 			the_name="";
 			symbol='%';
 			color=Color.White;
+			light_radius = 0;
 		}
 		public PhysicalObject(string name_,char symbol_,Color color_){
 			row = -1;
@@ -67,9 +69,38 @@ namespace Forays{
 			}
 			symbol = symbol_;
 			color = color_;
+			light_radius = 0;
 		}
 		public void Cursor(){
 			Console.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);
+		}
+		public void UpdateRadius(int from,int to){ UpdateRadius(from,to,false); }
+		public void UpdateRadius(int from,int to,bool change){
+			if(from > 0){
+				for(int i=row-from;i<=row+from;++i){
+					for(int j=col-from;j<=col+from;++j){
+						if(i>0 && i<Global.ROWS-1 && j>0 && j<Global.COLS-1){
+							if(!M.tile[i,j].opaque && HasBresenhamLine(i,j)){
+								M.tile[i,j].light_value--;
+							}
+						}
+					}
+				}
+			}
+			if(to > 0){
+				for(int i=row-to;i<=row+to;++i){
+					for(int j=col-to;j<=col+to;++j){
+						if(i>0 && i<Global.ROWS-1 && j>0 && j<Global.COLS-1){
+							if(!M.tile[i,j].opaque && HasBresenhamLine(i,j)){
+								M.tile[i,j].light_value++;
+							}
+						}
+					}
+				}
+			}
+			if(change){
+				light_radius = to;
+			}
 		}
 		public string YouAre(){
 			if(name == "you"){
@@ -101,6 +132,20 @@ namespace Forays{
 				}
 			}
 		}
+		virtual public string YouVisible(string s){ return YouVisible(s,false); }
+		virtual public string YouVisible(string s,bool ends_in_es){ //same as You(). overridden by Actor.
+			if(name == "you"){
+				return "you " + s;
+			}
+			else{
+				if(ends_in_es){
+					return the_name + " " + s + "es";
+				}
+				else{
+					return the_name + " " + s + "s";
+				}
+			}
+		}
 		public string YouFeel(){
 			if(name == "you"){
 				return "you feel";
@@ -108,6 +153,12 @@ namespace Forays{
 			else{
 				return the_name + " looks";
 			}
+		}
+		virtual public string TheVisible(){ //always returns the_name. overridden by Actor.
+			return the_name;
+		}
+		virtual public string AVisible(){ //always returns a_name. overridden by Actor.
+			return a_name;
 		}
 		public int DistanceFrom(PhysicalObject o){ return DistanceFrom(o.row,o.col); }
 		public int DistanceFrom(pos p){ return DistanceFrom(p.row,p.col); }
@@ -660,8 +711,8 @@ compare this number to 1/2:  if less than 1/2, major.
 			if(length == 1){
 				return true;
 			}
-			for(int i=0;i<length-1;++i){
-				if(line[i].opaque){
+			for(int i=1;i<length-1;++i){ //todo: experimentally changed i=0 to i=1, to skip the first tile.
+				if(line[i].opaque){ // this should allow actors to see out of solid tiles.
 					return false;
 				}
 			}
@@ -1374,6 +1425,70 @@ compare this number to 1/2:  if less than 1/2, major.
 					}
 				}
 			}
+		}
+		public bool HasLOE(PhysicalObject o){ return HasLOE(o.row,o.col); }
+		public bool HasLOE(int r,int c){
+			int y1 = row;
+			int x1 = col;
+			int y2 = r;
+			int x2 = c;
+			int dx = Math.Abs(x2-x1);
+			int dy = Math.Abs(y2-y1);
+			if(dx<=1 && dy<=1){ //everything adjacent
+				return true;
+			}
+			if(HasBresenhamLineOfEffect(r,c)){ //basic LOE check
+				return true;
+			}
+			if(!M.tile[r,c].passable){ //for walls, check nearby tiles
+				foreach(Tile t in M.tile[r,c].NeighborsBetween(row,col)){
+					if(HasBresenhamLineOfEffect(t.row,t.col)){
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		public bool HasBresenhamLineOfEffect(int r,int c){
+			List<Tile> line = GetBestLineOfEffect(r,c);
+			int length = line.Count;
+			if(length == 1){
+				return true;
+			}
+			for(int i=1;i<length-1;++i){ //todo: experimentally changed i=0 to i=1, to skip the first tile.
+				if(!line[i].passable){ // this should allow actors to fire out of solid tiles.
+					return false;
+				}
+			}
+			return true;
+		}
+		public List<Tile> GetBestLineOfEffect(PhysicalObject o){ return GetBestLineOfEffect(o.row,o.col); }
+		public List<Tile> GetBestLineOfEffect(int r,int c){
+			List<Tile> list = GetBresenhamLine(r,c);
+			List<Tile> list2 = GetAlternateBresenhamLine(r,c);
+			for(int i=0;i<list.Count;++i){
+				if(!list2[i].passable){
+					return list;
+				}
+				if(!list[i].passable){
+					return list2;
+				}
+			}
+			return list;
+		}
+		public List<Tile> GetBestExtendedLineOfEffect(PhysicalObject o){ return GetBestExtendedLineOfEffect(o.row,o.col); }
+		public List<Tile> GetBestExtendedLineOfEffect(int r,int c){
+			List<Tile> list = GetExtendedBresenhamLine(r,c);
+			List<Tile> list2 = GetAlternateExtendedBresenhamLine(r,c);
+			for(int i=0;i<list.Count;++i){
+				if(!list2[i].passable){
+					return list;
+				}
+				if(!list[i].passable){
+					return list2;
+				}
+			}
+			return list;
 		}
 	}
 }

@@ -20,7 +20,7 @@ namespace Forays{
 		public const int MAP_OFFSET_ROWS = 3;
 		public const int MAP_OFFSET_COLS = 13;
 		public const int MAX_LIGHT_RADIUS = 12; //the maximum POSSIBLE light radius. used in light calculations.
-		public const int MAX_INVENTORY_SIZE = ROWS-2;
+		public const int MAX_INVENTORY_SIZE = 20;
 		public static bool GAME_OVER = false;
 		public static bool BOSS_KILLED = false;
 		public static bool QUITTING = false;
@@ -143,7 +143,7 @@ namespace Forays{
 						else{
 							if(command.Key == ConsoleKey.Enter){
 								if(s.Length == 0){
-									return 0;
+									return -1;
 								}
 								done = true;
 							}

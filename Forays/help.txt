@@ -50,7 +50,7 @@ down them with '>'. (It's a one-way trip, so don't leave
  anything behind!)
 
 
-Press 'e' now to see the command help page. (The command list
+Press 'f' now to see the command help page. (The command list
  can be accessed directly in-game by pressing '-'.)
 
 
