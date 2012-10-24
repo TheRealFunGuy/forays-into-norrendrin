@@ -56,33 +56,94 @@ namespace DungeonGen{
 				else{
 					d.Draw();
 				}
-				Console.SetCursorPosition(20,22);
-				Console.Write("generate 'C'orridor; generate 'R'oom; 'G'enerate room/corridor; remove 'D'iagonals;");
-				Console.SetCursorPosition(20,23);
-				Console.Write("remove 'U'nconnected; remove dead 'E'nds; re'J'ect map if floors < count;");
-				Console.SetCursorPosition(20,24);
-				Console.Write("1:toggle allow_all_corner_connections ("+d.allow_all_corner_connections+"); 2:toggle rooms_overwrite_corridors ("+d.rooms_overwrite_corridors+");  ");
-				Console.SetCursorPosition(20,25);
-				Console.Write("3:toggle show_converted ("+show_converted+"); reject ma'P' if too empty;  ");
-				Console.SetCursorPosition(20,26);
-				Console.Write("ESC: End program; 'S'ave to file; Z:Reset map; X:Clear map; choose cou'N't: " + count + "              ");
+				//Console.SetCursorPosition(0,22);
+				//Console.Write("generate 'C'orridor; generate 'R'oom; 'G'enerate room/corridor; remove 'D'iagonals;");
+				//Console.SetCursorPosition(0,23);
+				//Console.Write("remove 'U'nconnected; remove dead 'E'nds; re'J'ect map if floors < count;");
+				//Console.SetCursorPosition(0,24);
+				//Console.Write("1:toggle allow_all_corner_connections ("+d.allow_all_corner_connections+"); 2:toggle rooms_overwrite_corridors ("+d.rooms_overwrite_corridors+");  ");
+				//Console.SetCursorPosition(0,25);
+				//Console.Write("3:toggle show_converted ("+show_converted+"); reject ma'P' if too empty;  ");
+				//Console.SetCursorPosition(0,26);
+				//Console.Write("ESC: End program; 'S'ave to file; Z:Reset map; X:Clear map; choose cou'N't: " + count + "              ");
+				Console.SetCursorPosition(67,0);
+				Console.Write("q: corridor");
+				Console.SetCursorPosition(67,1);
+				Console.Write("w: room");
+				Console.SetCursorPosition(67,2);
+				Console.Write("e: room / cor");
+				Console.SetCursorPosition(67,4);
+				if(d.allow_all_corner_connections){
+					Console.ForegroundColor = ConsoleColor.Green;
+				}
+				else{
+					Console.ForegroundColor = ConsoleColor.Red;
+				}
+				Console.Write("1: corner");
+				Console.SetCursorPosition(67,5);
+				Console.Write(" connections?");
+				Console.SetCursorPosition(67,6);
+				if(d.rooms_overwrite_corridors){
+					Console.ForegroundColor = ConsoleColor.Green;
+				}
+				else{
+					Console.ForegroundColor = ConsoleColor.Red;
+				}
+				Console.Write("2: rooms");
+				Console.SetCursorPosition(67,7);
+				Console.Write(" overwrite");
+				Console.SetCursorPosition(67,8);
+				Console.Write(" corridors?");
+				Console.SetCursorPosition(67,9);
+				if(show_converted){
+					Console.ForegroundColor = ConsoleColor.Green;
+				}
+				else{
+					Console.ForegroundColor = ConsoleColor.Red;
+				}
+				Console.Write("3: display");
+				Console.SetCursorPosition(67,10);
+				Console.Write(" converted?");
+				Console.ForegroundColor = ConsoleColor.Gray;
+				Console.SetCursorPosition(67,12);
+				Console.Write("a: remove");
+				Console.SetCursorPosition(67,13);
+				Console.Write(" diagonals");
+				Console.SetCursorPosition(67,14);
+				Console.Write("s: remove");
+				Console.SetCursorPosition(67,15);
+				Console.Write(" unconnected");
+				Console.SetCursorPosition(67,16);
+				Console.Write("d: remove");
+				Console.SetCursorPosition(67,17);
+				Console.Write(" dead ends");
+				Console.SetCursorPosition(67,19);
+				Console.Write("z: reset map");
+				Console.SetCursorPosition(67,20);
+				Console.Write("x: fill map");
+				Console.SetCursorPosition(67,21);
+				Console.Write(" with walls");
+				Console.SetCursorPosition(0,22);
+				Console.Write("  c: reject map if too empty   v: reject map if floors < count");
+				Console.SetCursorPosition(0,23);
+				Console.Write("  ESC: end program   b: save to file   n: choose count: " + count + "     ");
 				ConsoleKeyInfo command = Console.ReadKey(true);
 				switch(command.Key){
-				case ConsoleKey.C:
+				case ConsoleKey.Q:
 					{
 					for(int i=0;i<count;++i){
 						d.GenerateCorridor(d.Roll(4));
 					}
 					break;
 					}
-				case ConsoleKey.R:
+				case ConsoleKey.W:
 					{
 					for(int i=0;i<count;++i){
 						d.GenerateRoom();
 					}
 					break;
 					}
-				case ConsoleKey.G:
+				case ConsoleKey.E:
 					{
 					for(int i=0;i<count;++i){
 						if(d.CoinFlip()){
@@ -94,27 +155,27 @@ namespace DungeonGen{
 					}
 					break;
 					}
-				case ConsoleKey.D:
+				case ConsoleKey.A:
 					{
 					d.RemoveDiagonals();
 					break;
 					}
-				case ConsoleKey.U:
+				case ConsoleKey.S:
 					{
 					d.RemoveUnconnected();
 					break;
 					}
-				case ConsoleKey.E:
+				case ConsoleKey.D:
 					{
 					d.RemoveDeadEnds();
 					break;
 					}
-				case ConsoleKey.V:
+				case ConsoleKey.P:
 					{
 					d.Convert();
 					break;
 					}
-				case ConsoleKey.J:
+				case ConsoleKey.V:
 					{
 					//if(d.NumberOfFloors() < count || d.HasLargeUnusedSpaces()){
 					if(d.NumberOfFloors() < count){
@@ -122,14 +183,14 @@ namespace DungeonGen{
 					}
 					break;
 					}
-				case ConsoleKey.P:
+				case ConsoleKey.C:
 					{
 					if(d.HasLargeUnusedSpaces()){
 						d.Clear();
 					}
 					break;
 					}
-				case ConsoleKey.S:
+				case ConsoleKey.B:
 					{
 					string s;
 					for(int i=0;i<Dungeon.H;++i){
@@ -157,9 +218,16 @@ namespace DungeonGen{
 					break;
 				case ConsoleKey.N:
 					{
-					Console.SetCursorPosition(102,26);
+					Console.SetCursorPosition(56,23);
+					Console.Write("          ");
+					Console.SetCursorPosition(56,23);
 					Console.CursorVisible = true;
-					count = int.Parse(Console.ReadLine());
+					try{
+						count = int.Parse(Console.ReadLine());
+					}
+					catch(System.FormatException){
+						//do nothing
+					}
 					Console.CursorVisible = false;
 					break;
 					}
@@ -186,7 +254,7 @@ namespace DungeonGen{
 				d.Draw();
 			}
 			file.Close();
-			Console.SetCursorPosition(0,28);
+			Console.SetCursorPosition(0,21);
 			Console.CursorVisible = true;
 		}
 	}
@@ -229,17 +297,19 @@ public Dungeon(){
 }
 public char Map(pos p){ return map[p.r,p.c]; }
 public void Draw(){
+			Console.CursorVisible = false;
 	for(int i=0;i<H;++i){
 		for(int j=0;j<W;++j){
-			Console.SetCursorPosition(25+j,i);
+			Console.SetCursorPosition(j,i);
 			Console.Write(map[i,j]);
 		}
 	}
 }
 public void DrawConverted(){
+			Console.CursorVisible = false;
 	for(int i=0;i<H;++i){
 		for(int j=0;j<W;++j){
-			Console.SetCursorPosition(25+j,i);
+			Console.SetCursorPosition(j,i);
 			Console.Write(ConvertedChar(map[i,j]));
 		}
 	}
@@ -262,7 +332,7 @@ public void Clear(){
 		}
 	}
 }
-public bool HasLargeUnusedSpaces(){ //couldn't think of a good name
+public bool HasLargeUnusedSpaces(){
 for(int i=1;i<H-1;++i){
 	for(int j=1;j<W-1;++j){
 		bool good = true;
@@ -629,7 +699,7 @@ public bool IsLegal(int r,int c){
 		break;
 		}
 	case 'i':
-		{
+	{
 		char[] rotated = new char[8];
 		for(int i=0;i<8;++i){
 			rotated[i] = Map(PosInDir(r,c,RotateDir(8,true,i)));
@@ -656,7 +726,23 @@ public bool IsLegal(int r,int c){
 			}
 		}
 		break;
-		}
+	}
+			case 'h':
+				if(r > H-3 || Map(PosInDir(PosInDir(r,c,2),2)) == 'h'){
+					return false;
+				}
+				if(r < 2 || Map(PosInDir(PosInDir(r,c,8),8)) == 'h'){
+					return false;
+				}
+				break;
+			case 'v':
+				if(c > W-3 || Map(PosInDir(PosInDir(r,c,6),6)) == 'v'){
+					return false;
+				}
+				if(c < 2 || Map(PosInDir(PosInDir(r,c,4),4)) == 'v'){
+					return false;
+				}
+				break;
 	case 'X': //in case there is a need to block off an area
 		for(int i=1;i<=8;++i){
 			int dir = i;
@@ -1118,6 +1204,11 @@ public void GenerateInitial(){
 			Console.ReadKey(true);
 			Console.Write('X');
 		}*/
+	}
+	foreach(pos p in points){
+		if(map[p.r,p.c] == 'X'){
+			map[p.r,p.c] = '#';
+		}
 	}
 	for(int count=100;count<200;++count){
 		int rr = -1;

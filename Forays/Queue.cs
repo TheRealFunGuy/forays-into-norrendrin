@@ -399,15 +399,15 @@ namespace Forays{
 			if(!dead){
 				switch(type){
 				case EventType.MOVE:
-					{
+				{
 					Actor temp = target as Actor;
 					temp.Input();
-					}
 					break;
+				}
 				case EventType.REMOVE_ATTR:
-					{
+				{
 					Actor temp = target as Actor;
-					if(temp.type == ActorType.BERSERKER && attr == AttrType.COOLDOWN_2){ //hack
+					if(temp.type == ActorType.BERSERKER && attr == AttrType.COOLDOWN_2){
 						temp.attrs[attr] = 0;
 					}
 					else{
@@ -433,6 +433,11 @@ namespace Forays{
 							else{
 								temp.speed = 100;
 							}
+						}
+					}
+					if(attr==AttrType.AFRAID && target == player){
+						while(Console.KeyAvailable){
+							Console.ReadKey(true);
 						}
 					}
 					if(attr==AttrType.BLOOD_BOILED){
@@ -470,7 +475,7 @@ namespace Forays{
 						temp.TakeDamage(DamageType.NORMAL,DamageClass.NO_TYPE,8888,null);
 					}
 					break;
-					}
+				}
 				case EventType.CHECK_FOR_HIDDEN:
 				{
 					List<Tile> removed = new List<Tile>();
@@ -774,10 +779,12 @@ namespace Forays{
 								B.Add(item.TheName() + " suddenly grows tentacles! ");
 								attacked = true;
 								area[0].inv = null;
-								Actor a = Actor.Create(ActorType.RAT,area[0].row,area[0].col); //todo mimic
+								Actor a = Actor.Create(ActorType.MIMIC,area[0].row,area[0].col);
 								Q.KillEvents(a,EventType.MOVE);
 								a.Q0();
 								a.player_visibility_duration = -1;
+								a.symbol = item.symbol;
+								a.color = item.color;
 								foreach(Event e in Q.list){
 									if(e.target == a && e.type == EventType.MOVE){
 										e.tiebreaker = this.tiebreaker;
@@ -801,10 +808,12 @@ namespace Forays{
 						if(open.Count > 0){
 							Tile t = open.Random();
 							B.Add(item.TheName() + " suddenly grows tentacles! ");
-							Actor a = Actor.Create(ActorType.RAT,t.row,t.col); //todo mimic
+							Actor a = Actor.Create(ActorType.MIMIC,t.row,t.col);
 							Q.KillEvents(a,EventType.MOVE);
 							a.Q0();
 							a.player_visibility_duration = -1;
+							a.symbol = item.symbol;
+							a.color = item.color;
 							foreach(Event e in Q.list){
 								if(e.target == a && e.type == EventType.MOVE){
 									e.tiebreaker = this.tiebreaker;
@@ -973,6 +982,10 @@ namespace Forays{
 								t.features.Remove(FeatureType.TROLL_CORPSE);
 								B.Add("The troll corpse burns to ashes! ",t);
 							}
+							if(t.Is(FeatureType.TROLL_SEER_CORPSE)){
+								t.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+								B.Add("The troll seer corpse burns to ashes! ",t);
+							}
 						}
 						Q.Add(new Event(target,100,EventType.FIRE_GEYSER_ERUPTION,value - 1));
 					}
@@ -981,12 +994,12 @@ namespace Forays{
 					}
 					break;
 				}
-				case EventType.SMOKE:
+				case EventType.FOG:
 				{
 					List<Tile> removed = new List<Tile>();
 					foreach(Tile t in area){
-						if(t.Is(FeatureType.SMOKE) && Global.OneIn(4)){ //can change this to OneIn(value) if necessary
-							t.RemoveOpaqueFeature(FeatureType.SMOKE);
+						if(t.Is(FeatureType.FOG) && Global.OneIn(4)){
+							t.RemoveOpaqueFeature(FeatureType.FOG);
 							removed.Add(t);
 						}
 					}
@@ -994,7 +1007,24 @@ namespace Forays{
 						area.Remove(t);
 					}
 					if(area.Count > 0){
-						Q.Add(new Event(area,100,EventType.SMOKE));
+						Q.Add(new Event(area,100,EventType.FOG));
+					}
+					break;
+				}
+				case EventType.POISON_GAS:
+				{
+					List<Tile> removed = new List<Tile>();
+					foreach(Tile t in area){
+						if(t.Is(FeatureType.POISON_GAS) && Global.OneIn(6)){
+							t.RemoveOpaqueFeature(FeatureType.POISON_GAS);
+							removed.Add(t);
+						}
+					}
+					foreach(Tile t in removed){
+						area.Remove(t);
+					}
+					if(area.Count > 0){
+						Q.Add(new Event(area,100,EventType.POISON_GAS));
 					}
 					break;
 				}
@@ -1013,6 +1043,7 @@ namespace Forays{
 							Actor.tiebreakers[tiebreaker] = a;
 							target.actor().curhp = value;
 							target.actor().level = 0;
+							target.actor().attrs[Forays.AttrType.NO_ITEM]++;
 							B.Add("The troll stands up! ",target);
 							target.actor().player_visibility_duration = -1;
 							if(target.tile().type == TileType.DOOR_C){
@@ -1046,6 +1077,53 @@ namespace Forays{
 							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
 						}
 					}
+					if(target.tile().Is(FeatureType.TROLL_SEER_CORPSE)){ //otherwise, assume it was destroyed by fire
+						value++;
+						if(value > 0 && target.actor() == null){
+							Actor a = Actor.Create(ActorType.TROLL_SEER,target.row,target.col);
+							foreach(Event e in Q.list){
+								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
+									e.tiebreaker = this.tiebreaker;
+									break;
+								}
+							}
+							Actor.tiebreakers[tiebreaker] = a;
+							target.actor().curhp = value;
+							target.actor().level = 0;
+							target.actor().attrs[Forays.AttrType.NO_ITEM]++;
+							B.Add("The troll seer stands up! ",target);
+							target.actor().player_visibility_duration = -1;
+							if(target.tile().type == TileType.DOOR_C){
+								target.tile().Toggle(target.actor());
+							}
+							target.tile().features.Remove(FeatureType.TROLL_SEER_CORPSE);
+						}
+						else{
+							int roll = Global.Roll(20);
+							if(value == -1){
+								roll = 1;
+							}
+							if(value == 0){
+								roll = 3;
+							}
+							switch(roll){
+							case 1:
+							case 2:
+								B.Add("The troll seer's corpse twitches. ",target);
+								break;
+							case 3:
+							case 4:
+								B.Add("You hear sounds coming from the troll seer's corpse. ",target);
+								break;
+							case 5:
+								B.Add("The troll seer on the floor regenerates. ",target);
+								break;
+							default:
+								break;
+							}
+							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
+						}
+					}
 					break;
 				}
 				case EventType.QUICKFIRE:
@@ -1059,6 +1137,10 @@ namespace Forays{
 							if(t.Is(FeatureType.TROLL_CORPSE)){
 								t.features.Remove(FeatureType.TROLL_CORPSE);
 								B.Add("The troll corpse burns to ashes! ",t);
+							}
+							if(t.Is(FeatureType.TROLL_SEER_CORPSE)){
+								t.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+								B.Add("The troll seer corpse burns to ashes! ",t);
 							}
 							if(t.Is(FeatureType.FUNGUS)){
 								Q.Add(new Event(t,200,EventType.BLAST_FUNGUS));
@@ -1097,6 +1179,10 @@ namespace Forays{
 									t.features.Remove(FeatureType.TROLL_CORPSE);
 									B.Add("The troll corpse burns to ashes! ",t);
 								}
+								if(t.Is(FeatureType.TROLL_SEER_CORPSE)){
+									t.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+									B.Add("The troll seer corpse burns to ashes! ",t);
+								}
 								if(t.Is(FeatureType.FUNGUS)){
 									Q.Add(new Event(t,200,EventType.BLAST_FUNGUS));
 									Actor.B.Add("The blast fungus starts to smolder in the light. ",t);
@@ -1134,8 +1220,16 @@ namespace Forays{
 							}
 						}
 						foreach(Tile troll in trolls){
-							B.Add("The troll corpse burns to ashes! ",troll);
-							troll.features.Remove(FeatureType.TROLL_CORPSE);
+							if(troll.Is(FeatureType.TROLL_CORPSE)){
+								B.Add("The troll corpse burns to ashes! ",troll);
+								troll.features.Remove(FeatureType.TROLL_CORPSE);
+							}
+							else{
+								if(troll.Is(FeatureType.TROLL_SEER_CORPSE)){
+									B.Add("The troll seer corpse burns to ashes! ",troll);
+									troll.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+								}
+							}
 						}
 						Q.KillEvents(null,EventType.REGENERATING_FROM_DEATH);
 						B.Add("You hear a loud crash and a nearby roar! ");

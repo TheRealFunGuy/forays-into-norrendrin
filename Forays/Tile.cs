@@ -12,7 +12,7 @@ namespace Forays{
 	public class Tile : PhysicalObject{
 		public TileType type{get;set;}
 		public bool passable{get;set;}
-		public bool opaque{get{ return internal_opaque || features.Contains(FeatureType.SMOKE); } set{ internal_opaque = value; }}
+		public bool opaque{get{ return internal_opaque || features.Contains(FeatureType.FOG); } set{ internal_opaque = value; }}
 		private bool internal_opaque; //no need to ever access this directly
 		public bool seen{get;set;}
 		public bool solid_rock{get;set;} //used for walls that will never be seen, to speed up LOS checks
@@ -72,9 +72,10 @@ namespace Forays{
 			proto_feature[FeatureType.QUICKFIRE] = new PhysicalObject("quickfire",'&',Color.RandomFire);
 			proto_feature[FeatureType.QUICKFIRE].a_name = "quickfire";
 			proto_feature[FeatureType.TROLL_CORPSE] = new PhysicalObject("troll corpse",'%',Color.DarkGreen);
+			proto_feature[FeatureType.TROLL_SEER_CORPSE] = new PhysicalObject("troll seer corpse",'%',Color.Cyan);
 			proto_feature[FeatureType.RUNE_OF_RETREAT] = new PhysicalObject("rune of retreat",'&',Color.RandomPrismatic);
 			proto_feature[FeatureType.POISON_GAS] = new PhysicalObject("cloud of poison gas",'*',Color.DarkGreen);
-			proto_feature[FeatureType.SMOKE] = new PhysicalObject("cloud of smoke",'*',Color.Gray);
+			proto_feature[FeatureType.FOG] = new PhysicalObject("cloud of fog",'*',Color.Gray);
 			proto_feature[FeatureType.SLIME] = new PhysicalObject("slime",',',Color.Green);
 			proto_feature[FeatureType.FUNGUS] = new PhysicalObject("blast fungus",'"',Color.DarkRed);
 			proto_feature[FeatureType.FUNGUS_ACTIVE] = new PhysicalObject("blast fungus(active)",'"',Color.Red);
@@ -206,27 +207,32 @@ namespace Forays{
 								return Tile.Feature(FeatureType.FUNGUS_ACTIVE).symbol;
 							}
 							else{
-								if(Is(FeatureType.SMOKE)){
-									return Tile.Feature(FeatureType.SMOKE).symbol;
+								if(Is(FeatureType.FOG)){
+									return Tile.Feature(FeatureType.FOG).symbol;
 								}
 								else{
 									if(Is(FeatureType.FUNGUS)){
 										return Tile.Feature(FeatureType.FUNGUS).symbol;
 									}
 									else{
-										if(Is(FeatureType.TROLL_CORPSE)){
-											return Tile.Feature(FeatureType.TROLL_CORPSE).symbol;
+										if(Is(FeatureType.TROLL_SEER_CORPSE)){
+											return Tile.Feature(FeatureType.TROLL_SEER_CORPSE).symbol;
 										}
 										else{
-											if(Is(FeatureType.RUNE_OF_RETREAT)){
-												return Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
+											if(Is(FeatureType.TROLL_CORPSE)){
+												return Tile.Feature(FeatureType.TROLL_CORPSE).symbol;
 											}
 											else{
-												if(Is(FeatureType.SLIME)){
-													return Tile.Feature(FeatureType.SLIME).symbol;
+												if(Is(FeatureType.RUNE_OF_RETREAT)){
+													return Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
 												}
 												else{
-													return symbol;
+													if(Is(FeatureType.SLIME)){
+														return Tile.Feature(FeatureType.SLIME).symbol;
+													}
+													else{
+														return symbol;
+													}
 												}
 											}
 										}
@@ -259,27 +265,32 @@ namespace Forays{
 								return Tile.Feature(FeatureType.FUNGUS_ACTIVE).color;
 							}
 							else{
-								if(Is(FeatureType.SMOKE)){
-									return Tile.Feature(FeatureType.SMOKE).color;
+								if(Is(FeatureType.FOG)){
+									return Tile.Feature(FeatureType.FOG).color;
 								}
 								else{
 									if(Is(FeatureType.FUNGUS)){
 										return Tile.Feature(FeatureType.FUNGUS).color;
 									}
 									else{
-										if(Is(FeatureType.TROLL_CORPSE)){
-											return Tile.Feature(FeatureType.TROLL_CORPSE).color;
+										if(Is(FeatureType.TROLL_SEER_CORPSE)){
+											return Tile.Feature(FeatureType.TROLL_SEER_CORPSE).color;
 										}
 										else{
-											if(Is(FeatureType.RUNE_OF_RETREAT)){
-												return Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
+											if(Is(FeatureType.TROLL_CORPSE)){
+												return Tile.Feature(FeatureType.TROLL_CORPSE).color;
 											}
 											else{
-												if(Is(FeatureType.SLIME)){
-													return Tile.Feature(FeatureType.SLIME).color;
+												if(Is(FeatureType.RUNE_OF_RETREAT)){
+													return Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
 												}
 												else{
-													return color;
+													if(Is(FeatureType.SLIME)){
+														return Tile.Feature(FeatureType.SLIME).color;
+													}
+													else{
+														return color;
+													}
 												}
 											}
 										}

@@ -41,7 +41,7 @@ namespace Forays{
 			}
 			return total;
 		}
-		public static int Roll(int sides){
+		public static int Roll(int sides){ //note that Roll(0) returns 1. I think I should eventually change that.
 			int total = 0;
 			total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
 			return total;
@@ -558,7 +558,6 @@ namespace Forays{
 				b.Write(a.maxhp);
 				b.Write(a.curhp);
 				b.Write(a.speed);
-				b.Write(a.xp);
 				b.Write(a.level);
 				b.Write(a.light_radius);
 				b.Write(GetID(a.target));
@@ -877,6 +876,16 @@ namespace Forays{
 			foreach(T t in l){
 				del(t);
 			}
+		}
+		public delegate bool BooleanDelegate<T>(T t);
+		public static List<T> Where<T>(this List<T> l,BooleanDelegate<T> condition){ //now THIS one is useful. probably the same as the official version.
+			List<T> result = new List<T>();
+			foreach(T t in l){
+				if(condition(t)){
+					result.Add(t);
+				}
+			}
+			return result;
 		}
 		public static List<Tile> ToFirstSolidTile(this List<Tile> line){
 			List<Tile> result = new List<Tile>();
