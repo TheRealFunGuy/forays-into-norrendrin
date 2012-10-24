@@ -36,7 +36,7 @@ namespace Forays{
 		}
 		//public Tile[,] tile{get;set;} 
 		//public Actor[,] actor{get;set;} 
-		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);  //note for dungeon generator overhaul: make sure there's something to hide behind.
+		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
 		public int current_level{get;set;}
 		public bool wiz_lite{get{ return internal_wiz_lite; }
@@ -392,20 +392,59 @@ namespace Forays{
 			return null;
 		}
 		public ActorType MobType(){
-			List<ActorType> types = new List<ActorType>();
+			/*List<ActorType> types = new List<ActorType>();
 			while(types.Count == 0){
 				foreach(ActorType atype in Enum.GetValues(typeof(ActorType))){
 					if(atype != ActorType.PLAYER){
 						int i = 1 + Math.Abs(Actor.Prototype(atype).level - (current_level+1)/2);
-						if(i <= 3 && Global.Roll(i) == i){ //level-based check
-							if(Global.Roll(Actor.Rarity(atype)) == Actor.Rarity(atype)){
-								types.Add(atype);
+						if(i <= 3 && Global.OneIn(i)){ //level-based check
+							if(Global.Roll(Actor.Rarity(atype)) == Actor.Rarity(atype)){ //note that Roll(0) apparently returns 1. hmm.
+								types.Add(atype); // at least that has the nice side effect of not generating 0-rarity monsters.
 							}
 						}
 					}
 				}
 			}
-			return types.Random();
+			return types.Random();*/
+			int level = 1;
+			int monster_depth = (current_level+1) / 2; //1-10, not 1-20
+			if(current_level != 1){ //depth 1 only generates level 1 monsters
+				List<int> levels = new List<int>();
+				for(int i=-2;i<=2;++i){
+					if(monster_depth + i >= 1 && monster_depth + i <= 10){
+						int j = 1 + Math.Abs(i);
+						if(Global.OneIn(j)){ //current depth is considered 1 out of 1 times, depth+1 and depth-1 one out of 2 times, etc.
+							levels.Add(monster_depth + i);
+						}
+					}
+				}
+				level = levels.Random();
+			}
+			if(monster_depth == 1){
+				return (ActorType)(level*5 + Global.Roll(5) - 3); //equal probability for the level 1 monsters
+			}
+			if(Global.OneIn(5)){ //rarer types
+				if(Global.CoinFlip()){
+					return (ActorType)(level*5 + 1);
+				}
+				else{
+					return (ActorType)(level*5 + 2);
+				}
+			}
+			else{
+				int roll = Global.Roll(3);
+				if(roll == 1){
+					return (ActorType)(level*5 - 2);
+				}
+				else{
+					if(roll == 2){
+						return (ActorType)(level*5 - 1);
+					}
+					else{
+						return (ActorType)(level*5);
+					}
+				}
+			}
 		}
 		public Actor SpawnMob(){ return SpawnMob(MobType()); }
 		public Actor SpawnMob(ActorType type){
@@ -429,7 +468,23 @@ namespace Forays{
 						return null;
 					}
 				}
-			} //todo: mimic gets the same treatment as poltergeist.
+			}
+			if(type == ActorType.MIMIC){
+				while(true){
+					int rr = Global.Roll(ROWS-2);
+					int rc = Global.Roll(COLS-2);
+					Tile t = tile[rr,rc];
+					if(t.passable && t.inv == null && t.type != TileType.CHEST && t.type != TileType.FIREPIT
+					&& t.type != TileType.STAIRS && !t.IsShrine()){
+						Item item = Item.Create(Item.RandomItem(),rr,rc);
+						Actor.tiebreakers.Add(null); //placeholder
+						Event e = new Event(item,new List<Tile>{t},100,EventType.MIMIC,AttrType.NO_ATTR,0,"");
+						e.tiebreaker = Actor.tiebreakers.Count - 1;
+						Q.Add(e);
+						return null;
+					}
+				}
+			}
 			int number = 1;
 			if(Actor.Prototype(type).HasAttr(AttrType.SMALL_GROUP)){
 				number = Global.Roll(2)+1;
@@ -791,7 +846,8 @@ namespace Forays{
 			for(int i=num_items;i>0;--i){
 				SpawnItem();
 			}
-			bool poltergeist_spawned = false;
+			bool poltergeist_spawned = false; //i'm not sure this is the right call, but for now
+			bool mimic_spawned = false; // i'm limiting these guys, to avoid "empty" levels
 			for(int i=Global.Roll(2,2)+3;i>0;--i){
 				ActorType type = MobType();
 				if(type == ActorType.POLTERGEIST){
@@ -804,13 +860,75 @@ namespace Forays{
 					}
 				}
 				else{
-					Actor a = SpawnMob(type);
-					if(Global.CoinFlip() && a.CanWander()){
-						a.attrs[Forays.AttrType.WANDERING]++;
+					if(type == ActorType.MIMIC){
+						if(!mimic_spawned){
+							SpawnMob(type);
+							mimic_spawned = true;
+						}
+						else{
+							++i;
+						}
 					}
 					else{
-						if(a.type == ActorType.SKULKING_KILLER){ //todo: add new always-wanderers, like the entrancer
-							a.attrs[Forays.AttrType.WANDERING]++;
+						if(type == ActorType.ENTRANCER){
+							if(i >= 2){ //need 2 slots here
+								Actor entrancer = SpawnMob(type);
+								entrancer.attrs[Forays.AttrType.WANDERING]++;
+								List<Tile> tiles = new List<Tile>();
+								int dist = 1;
+								while(tiles.Count == 0 && dist < 100){
+									foreach(Tile t in entrancer.TilesAtDistance(dist)){
+										if(t.passable && !t.IsTrap() && t.actor() == null){
+											tiles.Add(t);
+										}
+									}
+									++dist;
+								}
+								if(tiles.Count > 0){
+									ActorType thralltype = ActorType.RAT;
+									bool done = false;
+									while(!done){
+										thralltype = MobType();
+										switch(thralltype){
+										case ActorType.ZOMBIE:
+										case ActorType.ROBED_ZEALOT:
+										case ActorType.BANSHEE:
+										case ActorType.WARG:
+										case ActorType.DERANGED_ASCETIC:
+										case ActorType.NOXIOUS_WORM:
+										case ActorType.BERSERKER:
+										case ActorType.TROLL:
+										case ActorType.VAMPIRE:
+										case ActorType.CRUSADING_KNIGHT:
+										case ActorType.SKELETAL_SABERTOOTH:
+										case ActorType.OGRE:
+										case ActorType.SHADOWVEIL_DUELIST:
+										case ActorType.STONE_GOLEM:
+										case ActorType.LUMINOUS_AVENGER:
+										case ActorType.CORPSETOWER_BEHEMOTH:
+											done = true;
+											break;
+										}
+									}
+									Tile t = tiles.Random();
+									Actor thrall = Actor.Create(thralltype,t.row,t.col,true,true);
+									if(entrancer.group == null){
+										entrancer.group = new List<Actor>{entrancer};
+									}
+									entrancer.group.Add(thrall);
+									thrall.group = entrancer.group;
+									--i;
+								}
+							}
+							else{
+								++i;
+							}
+						}
+						else{
+							Actor a = SpawnMob(type);
+							if(a.AlwaysWanders() || (Global.CoinFlip() && a.CanWander())){
+								a.attrs[Forays.AttrType.WANDERING]++;
+							}
 						}
 					}
 				}

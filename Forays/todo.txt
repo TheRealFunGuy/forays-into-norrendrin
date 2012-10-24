@@ -1,8 +1,235 @@
 
+big list of features:
+current standard generator
+cave generator (possibly 'wide' and 'narrow' cave generators)
+standard generator with more restrictions on corridor placement (corridors must be 3+ away)
+maze generator
+corridors-only generator
+rooms-only generator
+
+ruined template
+doors
+statues
+fungus
+fog
+fog generator tile: searches outwards for a spot, so disappearance of fog makes it random
+poison gas
+firepit
+fire geyser
+traps incl. on chests and doors, or alarms on items.
+rubble
+slab doors
+torches
+poison gas vent
+bombable walls
+rocks?
+mirrors
+mud?
+wind (works like conveyors)
+levers?
+candlelit altar. like a solid fire pit.
+tunnels that allow travel to possibly-disconnected parts of the level. would remove you from the map for several turns. 
+
+single-use (or one-way) corridors
+2- and 3-wide corridors, with possible statues or other features
+
+round rooms
+diamond rooms
+triangular rooms
+rooms with rectangular sections missing from a corner (the easy way to do 'combined' rooms)
+rooms filled with pillars (or statues, or etc.)
+rooms with 2 rows or columns of pillars in the middle
+rooms with pillars around the edges
+rooms with single pillars
+rooms with a symmetrical arrangement of pillars or other tiles
+rooms that aren't carved out in the middle (i.e. a large central 'pillar')
+'starburst' rooms
+unangband's overlapping rooms: 2 random rectangles within a larger one.
+this type of room: (even dimensions in both directions, and at least 6x6)
+  ########  
+  #..##..#  		  ####
+###..##..###		 ##..##
++..........#		###..###
+#..........#		#......#
+###......###		+..@...#
+###......###		###..###
+#..........####		 ##..##
+#.............		  #.##
+###......######		  #.#
+###......###		  # #
+#..........#
+#..........#
+###..##..###
+  #..##..#  
+  ########  
+
+features that MIGHT or MIGHT NOT be unaffected by level type: (stairs, healing pools, fire geysers) (but fire geysers probably will be)
+
+
+more: moving parts? corridor features?
+
+
+
+
+"This level is (description)."
+"The walls here are (description)."
+"You notice (description) on this floor."
+"You feel (description)."
+"(former level's description) is/are gone."
+
+model 1:
+
+each level has a type. each type has its own generation rules. example types are 
+
+
+
+leveltype-specific monsters that can only appear in the proper "biome"
+
+don't increase in power, but rather in number.
+
+
+ITEMS you can only find on certain level types? :o
+
+
+
+
+new concept for compys:
+
+rather than being passive, they will coordinate to nip at the player. 
+
+one compy at a time will set an 'attacking' flag. only this one will approach the player and attack.
+upon attacking, the flag is removed. compys without the 'attacking' flag will flee instead of attacking.
+this will allow them to hover at 2-3 tiles away. (they'll mostly flee rather than attack if the player steps next to them.)
+
+if there is no room to flee, they'll still attack (so corridors work properly)
+
+if the player is helpless(paralyzed, afraid, or asleep) or severely injured(<20hp), they'll all set their 'attacking' flag. (so, at least 1 attack from each.) 
+
+if none are attacking
+
+no, wait. come back to this.
+
+
+
+
+
+vampire:
+(doesn't step into light while wandering.)
+
+
+
+entrancer:
+
+in battle:
+shields and teleports it closer to the player. hides behind it by checking the extended line from player to entranced. switches places if player is closer to entrancer. 
+teleports 2 spaces at a time. shields for about 25-30 damage.
+separate cooldowns for 2 effects: shield is about 15 turns, teleport is about 4 turns.
+so:
+teleporting vs shielding? teleporting first.
+teleporting vs nothing? teleport if the thrall is far away, or if it can be placed well.
+shielding vs nothing? always shield. (assuming the previous shield is gone)
+walking vs nothing? walk toward the extended line from player to thrall.
+
+
+
+
+autoexplore that tries to avoid leaving far-away dead ends behind.
+
+levelgen:
+what sort of separations? would a level have only 2 'types'?
+what about 'templates' in the form of functions that could be applied, like 'ruined'?
+
+
+
+		     old hp  new hp  old dmg  new dmg	message			notices message
+
+GOBLIN			25	25	2	2	hits			-
+LARGE_BAT		20	20	1	1	bites/scratches		-
+BLOOD_MOTH		 -	25	-	3	bites		    (nothing)/"notices your light"
+WOLF			30	25	2	2	bites			-
+SKELETON		30	30	2	2	hits			-
+SWORDSMAN		40	35	3	2	hits			-
+DARKNESS_DWELLER	 -	45	-	2	hits			notices?
+CARNIVOROUS_BRAMBLE	 -	35	-	3	rakes			(nothing)
+FROSTLING		35	35    3*,2*,4*	<--	hits/blasts/bursts	-
+DREAM_WARRIOR		40	40	3	2	hits			-
+
+CULTIST			35	35	2	2	hits			-
+GOBLIN_ARCHER		25	25	2	2	hits			-
+GOBLIN_SHAMAN		25	25	2	2	hits			-
+MIMIC			 -	30	-	2*	hits			(nothing)
+SKULKING_KILLER		40	35	3	3	hits			-
+ZOMBIE			50	50     2*,3	<--	lunges / bites		-
+DIRE_RAT		25	25	1	1	bites			-
+ROBED_ZEALOT		40	40	3	3	hammers			-
+SHADOW			45	40	2	2	touches			-
+BANSHEE			40	40	2	2	claws			-
+
+WARG			40	40	2	2	bites			-
+PHASE_SPIDER		50	45	1*	1*	bites			-
+ASCETICMONK_		 -	40	-	3	punches/kicks/strikes	"babbles incoherently"
+POLTERGEIST		40	35     2,1	1*?	slimes/grabs item	-
+CAVERN_HAG		 -	40	-	3?	clutches at?		"cackles"
+COMPY			 -	25	-	1* or 2*bites			"squeaks"
+NOXIOUS_WORM		 -	55	-	3	bites/slams		"notices"
+BERSERKER		40	40	3	3	hits			-
+TROLL			55	50	3	3	claws			-
+VAMPIRE			 -	40	-	2	bites?			"notices"
+
+CRUSADING_KNIGHT	 -	45	-	5*	mace			"shouts"
+SKELETAL_SABERTOOTH	 -	40	-	3	bites			notices?
+MUD_ELEMENTAL		 -	35	-	2	hits			notices?
+ENTRANCER		 -	35	-	2	hits		  (in the same style as the necro)
+MARBLE_HORROR		 -	?	-	?	hits		  (nothing? is it ever unaware?)
+OGRE			55	55	4	4	hits			-
+ORC_GRENADIER		50	50	3	3	hits			-
+SHADOWVEIL_DUELIST	 -	40	-	3	hits? or slashes?	notices
+CARRION_CRAWLER		35	35     0*,1	<--	bites/lashes		-
+SP_D_PIXIE		 -	35	-	1 or 2?	?			notices
+
+STONE_GOLEM		65	65	4	4	slams			-
+PYREN_ARCHER		 -	55	-	3*	hits			notices
+ORC_ASSASSIN		 -	50	-	3	hits			snarls
+TROLL_SOOTHSAYER	 -	50	-	3	claws			growls viciously
+MECHANICAL_KNIGHT	 -	?	-	3	hits?		 (starts moving? nothing?)
+ORC_WARMAGE		50	50	3	3	hits			-
+LASHER_FUNGUS		50	50     3,1*	<--	tentacle/tentacle	-
+NECROMANCER		40	40	2	2	hits			-
+LUMINOUS_AVENGER	 -	40	-	3	hits or strikes		notices
+CORPSETOWER_BEHEMOTH	75	75	5	5	clobbers		-
+
+
 move this note:
 in a big(!) superhero RL, you could sometimes be unmasked instead of killed (especially by the cops). this would make the game much harder, but still winnable.
+	-factions. when you enter a 'mission', the game determines which factions have an
+	 interest in this, and they'll make an appearance. lots of rival clashes and stuff.
 
-no items on shrines!
+
+
+ MECHANICAL_SHIELD.  then start AI.
+	-make sure the right guys are dropping items
+		-vampires? humanoid int? (med_humanoid? are they neck-snappable?)
+
+AI: finish seek: vampire. entrancer?
+	finish idle: vampire, entrancer.
+		-instead of vampire avoiding light, anything that is light-sensitive should avoid it (at the top of active/seek)
+
+healing pools. throw an item in to heal to 100%. one use, of course.
+
+tweak message "something babbles incoherently"
+	-maybe "you hear incoherent babbling" or smth
+
+vampires shouldn't just die when they get kited.
+
+poltergeists *could* drop items. hmm.
+
+50% miss chance against cloaked enemies, too? how exactly should fog work here?
+
+to prevent the player from getting stuck, knock down some walls around marble horrors when the level is lit up.
+
+hag's curse: welded/sticky/cursed weapon/armor? yes please.
+
+levelgen messages that reflect the changing nature of the dungeon.
 
 tutorial hints
 	-weapon switching
@@ -13,11 +240,7 @@ tutorial hints
 	-bump to attack
 	-resistance
 
-pack limit of 20? new carrying capacity trait?
-
-move cultists and zombies down a few levels. find easier enemies for level 1.
-
-lower HP for goblins? lower HP or damage for zombies?
+animations for new content?
 
 why am i suddenly getting many 'notices' messages for groups, when I previously got just one?
 	-i think this happens when they notice but the player isn't close enough
@@ -30,6 +253,8 @@ update help: add headers to overview help - 'Regaining Health, Attacking Monster
 	-resistance is half damage
 
 include a goal at the start
+
+can trolls wander after getting back up? at least 1/3 should
 
 rename resting to 'catching your second wind' ?
 
@@ -116,26 +341,37 @@ if the player is next to any walls during the mud elemental's turn, those walls 
 
 orc assassin? even more basic than the skulking killer? (but more dangerous because it sneak attacks.) Needs an AI enhancement: when moving toward the player, if there is a spot that the player can't see (but it's at the same distance as the spot you would have stepped to), step there to stay out of sight. shadowsight?
 
-(witch/hag)
-(weak attack. stays at range. does one of 3 things: light allergy, magical sleepiness, immolate.
-	-but that's the 5th monster that can catch you on fire! that might not be SO bad, but
-	 this has other issues, too: if you have both curses already, does the witch immolate you
-	 every turn? also, hags are fairly strong. start over on this one.)
-
-(witch)
-weak attack. stays at range. (some subtle form of damage at range? i'd like the witch to have a go-to damaging spell, and then:) ONCE, the witch can place a curse on the player. this tends to have a fairly long duration, up to 100 turns(?)
+(hag)
+weak attack? ONCE, the hag can place a curse on the player. this tends to have a fairly long duration, up to 100 turns(?)
 curses: light allergy, magical sleepiness, aggravate, ...
+	-cursed weapon. no changing for...several turns.
+-usually curses as soon as it takes dmg
 
 vampire (descriptive name?)
 flying. somewhat fast? light allergy. destroyed by sunlight. drains life on hit (the damage doesn't matter; the vampire probably regains 10-20% health on a successful attack.)
 
 procompsognathus (name? i wonder if i could just call them compys.)
 small, low hp, weak attack. instead of rushing to attack, they stay back unless they're injured, or the player is below 40%(?) health. poisonous bite. (normal poison, or magical sleepiness?)
+	-stays at distance 2 if there are no enemies next to the player and if it's uninjured.
+		-what about distance 3?
 
 noxious worm
-high hp. slow. breathes small clouds of poison every few turns. (could burrow into a wall and koolaid out when the player walks by. maybe.)
+high hp. slow. breathes small clouds of poison every few turns. (could burrow into a wall and koolaid out when the player walks by. if it's a level 10 monster, it definitely should.)
 
+blood moth
+high damage. moves toward the brightest light source it can see. hovers around fire pits/fire geysers/zealots, but attacks the player.
+if there's no light source, picks a random direction.
+	if that direction is open, the moth moves.
+	if that direction is blocked:
+		if not injured, the moth brushes up against whatever is in the way.
+		if injured, the moth will attack any actor in the way.
 
+darkness dweller
+high HP.
+if it has been in darkness for at least 5 turns, starting its turn in light will cause it to become blind for ~3 turns. while blind, it staggers every turn.
+
+carnivorous bramble
+med-high HP, high damage. does not move. plant.
 
 
 
@@ -179,11 +415,13 @@ mud monster
   makes walls attack or grab at you, encouraging you to fight it in the open
 remake: poltergeist. item-thrower. can yank items from the player's pack.
 	-doesn't throw mimic items (with do_not_stack == true)
+		-it could throw them if the mimic event could then find them.
 (anything that doesn't care about how much damage you deal)
 
  1 goblin large_bat PLACEHOLDER_3
  2 skeleton cultist poltergeist
- 3 zombie wolf frostling  4 goblin_archer goblin_shaman swordsman 
+ 3 zombie wolf frostling 
+ 4 goblin_archer goblin_shaman swordsman 
  5 dire_rat dream_warrior banshee 
  6 warg robed_zealot skulking_killer 
  7 carrion_crawler ogre shadow 
@@ -197,27 +435,49 @@ should be moved shallower: wolf, swordsman, dream_warrior, skulking killer, shad
 COULD be moved deeper, maybe:    banshee, ogre, necromancer(depending on summons)
 COULD be moved shallower, maybe: skeleton, frostling, banshee(yep), robed_zealot, berserker,
 				 orc_grenadier, phase_spider, troll
-
+COULD be changed in rarity, maybe: carrion_crawler, stone_golem, lasher, frostling
  skeletal_sabertooth luminous_avenger crusading_knight entrancer shadowveil_duelist mimic deranged_ascetic/unhinged_ascetic/chaos_monk chaos_fairy/chaos_pixie/dissonant pixie/chaos_moth/chaos_butterfly troll_soothsayer mechanical_knight marble_horror/granite_horror pyren_archer mud_elemental orc_assassin cavern_witch vampire compy noxious_worm PLACEHOLDER_1 PLACEHOLDER_2
 
-next step: diving the new ones into common/rare. 60% should be common.
+'upgrades' should appear at least 3 (or more) levels deeper. skeleton->sabertooth, bat->pixie & asceticmonk->pixie, wolf->warg, killer->assassin, shadow->duelist, troll->soothsayer, 
+g.archer->p.archer, mimic->mud_elemental(similar mechanic), dire_rat->compy.
 
-common: sabertooth, asceticmonk, compy, noxious worm, duelist, pyren, mud_elemental
-
-rare: entrancer, mimic, soothsayer, mechaknight, witch
-
-either: avenger, crusading_knight, pixie, marble_horror, assassin, vampire, placeholder1 & 2
-
-'upgrades' should appear at least 3 (if not more) levels deeper.
 
  1 goblin large_bat wolf skeleton ???
  2 swordsman ??? ??? frostling dream_warrior
- 3 cultist ??? ?????????????
-?????
-  ??
-?
+ 3 cultist goblin_archer goblin_shaman ??? ???
+ 4 zombie skulking_killer robed_zealot mimic banshee
+ 5 dire_rat ??? asceticmonk shadow phase_spider
+ 6 warg crusading_knight berserker troll vampire
+ 7 carrion_crawler sabertooth mud_elemental ??? marble_horror
+ 8 ogre orc_grenadier duelist compy witch
+ 9 necromancer pyren assassin ??? mechaknight
+10 warmage lasher ??? avenger behemoth
+left out: poltergeist(5-6), golem(6-9), worm(7-8),
+entrancer(6-8), soothsayer(9-10), pixie(8-9), 3 placeholders
 
+ 1 goblin bat wolf skeleton PH1
+ 2 swordsman PH2 PH3 frostling d.warrior
+ 3 cultist g.archer shaman mimic killer
+ 4 zombie d.rat zealot shadow banshee
+ 5 warg ??? asceticmonk poltergeist spider
+ 6 compy c.knight berserker troll vampire
+ 7 crawler sabertooth m.elemental entrancer m.horror
+ 8 ogre grenadier duelist golem avenger
+ 9 necro ??? assassin soothsayer m.knight
+10 warmage lasher ??? ??? behemoth
+left out: worm(7-8), pixie(8-9), witch(5-7), pyren(7-9)
 
+ 1 goblin bat wolf skeleton PH1
+ 2 swordsman PH2 PH3 frostling d.warrior
+ 3 cultist g.archer shaman mimic killer
+ 4 zombie d.rat zealot shadow banshee
+ 5 warg spider asceticmonk poltergeist witch
+ 6 compy worm berserker troll vampire
+ 7 c.knight sabertooth m.elemental entrancer m.horror
+ 8 ogre grenadier duelist crawler pixie
+ 9 golem pyren assassin soothsayer m.knight
+10 warmage lasher necro avenger behemoth
+ ! done for now ! minus placeholders, of course.
 
 new dungeon features:
 doors -_-
@@ -248,8 +508,10 @@ some other features that can be found in corridors.
 deity statues. these would be colored instead of gray, and would have an associated event and terrain effect. the event simply checks the area and prints the appropriate descriptive message, then stops. the terrain effect depends on which type of statue it is. flat bonus to that skill? no, probably just set it to 10. that would lead to rooms where it's easy to hit & damage, rooms where it's hard to hit, rooms where magic is easy, rooms where magical/supernatural effects are diminished, and rooms where everything is stealthy. are there other good effects besides these?
 anyway, these would appear near the center of rooms, and could replace the walls between shrines.
 should rubble become nonopaque? that would allow me to put some along a corridor, making groups harder to fight there. (i could do it anyway, but the player would move it)
+	-OTOH, if the player moves it, monsters don't have to. also, secret rooms can be here
 pillars, to match the shrine pillars.
-
+One-way and/or single-use corridors. (thanks to .orphle. in #br.gue)
+sometimes, monsters should actually guard corridors
 
 other:
 magical sleep status - lasts for a good while. any time you don't spend your turn
@@ -267,6 +529,18 @@ light and dark sensitivity - i'm thinking blind-in-darkness and damaged-in-light
 considering a 'slimed' status that would put out fires but leave you clumsy or something. fire melts ice, ice freezes slime, slime douses fire. slime traps, slime enemies, slime orbs that you can employ to extinguish fires on yourself.
 	-being on fire makes you immune to freezing, being frozen makes you immune to slime, and being slimed makes you immune to burning? sounds decent.
 	-then i would add slime orb and orb of burning at the same time.
+being slimed could give you a 50% chance to drop items rather than use them.
+
+i think i've figured out slime:
+	-any fire damage or catching fire breaks FROZEN.
+	-any cold damage or being frozen breaks SLIMED.
+	-FROZEN makes you immune to being SLIMED. SLIMED makes you immune to being on fire.
+		being on fire makes you immune to being frozen.
+	-walking on slime fails 1/3 of the time. The effect is identical to being stunned, 
+		except that the message is "you slide" instead of "you stagger"
+	-attacking on slime has a 1/3 chance of making you fall into the slime. this doesn't
+		affect your attack, nor does it take time to stand up, but it SLIMES you.
+	-while SLIMED, any item you try to use has a 50% chance to be dropped instead. evil!
 
 
              
@@ -324,11 +598,11 @@ what about a 'blank' Event that takes a lambda? sounds great, but how the heck c
 
 make sure to always consider the old stuff when adding new stuff - it can use updates too, or receive some of these new ideas.
 
-make sure there's a light-sensitive feature early on.
-
 decide which changes should go into 0.7.0!
 probably split all these into 0.7.0 and 0.8.0.
 then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
+	-equipment update: better identities for weapons and armor. chainmail would resist slashing, 
+		weapons would have different crit effects, plate would ... etc
 	-well, so far i have:
 		new map gen
 		new monsters
@@ -341,6 +615,7 @@ then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
 
 update your screenshots and videos!
 
+in ForaysSuperClass: public ActorType ZOMBIE = ActorType.ZOMBIE;
 
 
 things to do between 0.5 and 1.0:
@@ -363,6 +638,12 @@ shadow should reduce the light radius of zealots, too
 
 Select() needs a rewrite, and to be moved out of Actor.
 
+mirrors: can be generated when there is solid rock behind a wall.
+		-or, if I wanted to generate them anywhere, I could have a can_be_reflection thing.
+			then what you see depends on where you stand.
+	-they just show what is opposite them. doesn't show vampires. doesn't show the player's reflection 
+		if the player is shadow cloaked.
+
 
 0.7.0 should have: (focus on gameplay)
 many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
@@ -377,13 +658,12 @@ is the minimum number of enemies really 4? eww, too low.
 a stealth enemy that can teleport from shadows on ONE side of you to shadows on the OTHER side, and re-stealth while doing so.
 	-limited somehow. does he need to escape first?
 a group enemy that slightly punishes fighting in corridors?
+potion of vampirism? life drain, light allergy, flying.
 things other than the player should be able to call MakeNoise
-generate rats at start?
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
 	-this would make a good candidate for generalization: printing a message if the player can see an object OR if that object is within a certain distance. perhaps a distance that implies that the message is a sound, not a visual.
 kills list
 'killed by' in highscore?
-make shadows appear earlier? make swordsmen appear earlier?
 
 
 
@@ -403,9 +683,6 @@ there still might be a bug related to being on fire and catching fire at the sam
 			-happened again with "the skeleton looks more stable". debug the trap messages, then do the msg_obj fix.
 		-above theory is probably wrong: happened with a
 		 goblin that was alive
-stalagmites, because they are solid, leave UNLIT tiles next to fire pits. simple enough to check as a one-off hack.
-lashers can still move somehow, probably by pathing.
-	-not reproduced
 "You fire an arrow. The arrow hits the cultist. The cultist [more]
 dies."
 	-note that the [more] takes up exactly as much space as "dies. " - what gives?
@@ -413,7 +690,6 @@ dies."
 
 
 --generate the list of monsters first, THEN generate the level. then verify that i.e. a troll has a proper lair.
-	-now i'm not sure i want trolls to be confined
 
 
 
@@ -456,6 +732,11 @@ room mimic
 idea for the cultist's special level: a receptacle fills as cultists die to fire damage. you don't want it to fill up.
 idea for pangolin special level: giant pangolins tear open giant termite mounds. the pangolins use their armor to avoid harm as the termites swarm you.
 battle of the titans special level: a brawl between titans that don't care about you. avoid being stepped on or destroyed by AOEs.
+ <.agikm.> Maybe some wormlike creatures that would merge together and create more powerful variant of the same thing.
+ <.agikm.> So you'd better just kill them one by one fast.
+special level brainstorm idea dump:
+skeleton jelly
+
 
 voltaic rapture was too badass
 -this spell wasn't voltaic rapture, but was lightning-based: each time you're hit in melee you release a radius 2 burst of electricity

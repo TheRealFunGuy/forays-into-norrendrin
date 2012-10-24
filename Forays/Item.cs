@@ -40,7 +40,7 @@ namespace Forays{
 			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'~',Color.White);
 			Define(ConsumableType.QUICKFIRE,"orb~ of quickfire",'*',Color.RandomFire);
 			Define(ConsumableType.CLOAKING,"potion~ of cloaking",'!',Color.DarkBlue);
-			Define(ConsumableType.SMOKE,"orb~ of smoke",'*',Color.Gray);
+			Define(ConsumableType.FOG,"orb~ of fog",'*',Color.Gray);
 			Define(ConsumableType.TIME,"rune~ of time",'&',Color.Green);
 		}
 		private static void Define(ConsumableType type_,string name_,char symbol_,Color color_){
@@ -187,7 +187,7 @@ namespace Forays{
 			case ConsumableType.HEALING:
 			case ConsumableType.REGENERATION:
 			case ConsumableType.CLOAKING:
-			case ConsumableType.SMOKE:
+			case ConsumableType.FOG:
 				//plus the potion of 'brutish strength'
 				return 2;
 			default:
@@ -506,6 +506,10 @@ namespace Forays{
 									t2.features.Remove(FeatureType.TROLL_CORPSE);
 									B.Add("The troll corpse burns to ashes! ",t2);
 								}
+								if(damtype == DamageType.FIRE && t2.Is(FeatureType.TROLL_SEER_CORPSE)){
+									t2.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+									B.Add("The troll seer corpse burns to ashes! ",t2);
+								}
 							}
 						}
 						else{
@@ -517,6 +521,10 @@ namespace Forays{
 									if(damtype == DamageType.FIRE && t2.Is(FeatureType.TROLL_CORPSE)){
 										t2.features.Remove(FeatureType.TROLL_CORPSE);
 										B.Add("The troll corpse burns to ashes! ",t2);
+									}
+									if(damtype == DamageType.FIRE && t2.Is(FeatureType.TROLL_SEER_CORPSE)){
+										t2.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+										B.Add("The troll seer corpse burns to ashes! ",t2);
 									}
 								}
 							}
@@ -602,14 +610,14 @@ namespace Forays{
 				}
 				break;
 			}
-			case ConsumableType.SMOKE:
+			case ConsumableType.FOG:
 			{
 				List<Tile> line = user.GetTarget(12,-3);
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("throw") + " the orb of smoke. ",user);
+					B.Add(user.You("throw") + " the orb of fog. ",user);
 					if(first != null){
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
@@ -623,7 +631,7 @@ namespace Forays{
 					if(t.passable){
 						foreach(Tile tile in t.TilesWithinDistance(3)){
 							if(tile.passable && t.HasLOE(tile)){
-								tile.AddOpaqueFeature(FeatureType.SMOKE);
+								tile.AddOpaqueFeature(FeatureType.FOG);
 								area.Add(tile);
 								cells.Add(tile.p);
 							}
@@ -632,14 +640,14 @@ namespace Forays{
 					else{
 						foreach(Tile tile in t.TilesWithinDistance(3)){
 							if(prev != null && tile.passable && prev.HasLOE(tile)){
-								tile.AddOpaqueFeature(FeatureType.SMOKE);
+								tile.AddOpaqueFeature(FeatureType.FOG);
 								area.Add(tile);
 								cells.Add(tile.p);
 							}
 						}
 					}
 					Screen.AnimateMapCells(cells,new colorchar('*',Color.Gray));
-					Q.Add(new Event(area,400,EventType.SMOKE));
+					Q.Add(new Event(area,400,EventType.FOG));
 				}
 				else{
 					used = false;
