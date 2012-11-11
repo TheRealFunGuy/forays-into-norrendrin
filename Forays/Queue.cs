@@ -105,6 +105,15 @@ namespace Forays{
 			e.Execute();
 			list.Remove(e);
 		}
+		public void ResetForNewLevel(){
+			LinkedList<Event> newlist = new LinkedList<Event>();
+			for(LinkedListNode<Event> current = list.First;current!=null;current = current.Next){
+				if(current.Value.target == Event.player){
+					newlist.AddLast(current.Value);
+				}
+			}
+			list = newlist;
+		}
 		public void KillEvents(PhysicalObject target,EventType type){
 			for(LinkedListNode<Event> current = list.First;current!=null;current = current.Next){
 				current.Value.Kill(target,type);
@@ -774,7 +783,7 @@ namespace Forays{
 					Item item = target as Item;
 					if(area[0].inv == item){
 						bool attacked = false;
-						if(player.DistanceFrom(area[0]) == 1){
+						if(player.DistanceFrom(area[0]) == 1 && area[0].actor() == null){
 							if(player.Stealth() * 5 < Global.Roll(1,100)){
 								B.Add(item.TheName() + " suddenly grows tentacles! ");
 								attacked = true;
@@ -994,6 +1003,40 @@ namespace Forays{
 					}
 					break;
 				}
+				case EventType.FOG_VENT:
+				{
+					Tile current = target as Tile;
+					if(!current.Is(FeatureType.FOG)){
+						current.AddOpaqueFeature(FeatureType.FOG);
+						Q.Add(new Event(new List<Tile>{current},400,EventType.FOG));
+					}
+					else{
+						for(int tries=0;tries<50;++tries){
+							List<Tile> open = new List<Tile>();
+							foreach(Tile t in current.TilesAtDistance(1)){
+								if(t.passable){
+									open.Add(t);
+								}
+							}
+							if(open.Count > 0){
+								Tile possible = open.Random();
+								if(!possible.Is(FeatureType.FOG)){
+									possible.AddOpaqueFeature(FeatureType.FOG);
+									Q.Add(new Event(new List<Tile>{possible},400,EventType.FOG));
+									break;
+								}
+								else{
+									current = possible;
+								}
+							}
+							else{
+								break;
+							}
+						}
+					}
+					Q.Add(new Event(target,100,EventType.FOG_VENT));
+					break;
+				}
 				case EventType.FOG:
 				{
 					List<Tile> removed = new List<Tile>();
@@ -1009,6 +1052,50 @@ namespace Forays{
 					if(area.Count > 0){
 						Q.Add(new Event(area,100,EventType.FOG));
 					}
+					break;
+				}
+				case EventType.POISON_GAS_VENT:
+				{
+					Tile current = target as Tile;
+					if(Global.OneIn(7)){
+						int num = Global.Roll(5) + 2;
+						List<Tile> new_area = new List<Tile>();
+						for(int i=0;i<num;++i){
+							if(!current.Is(FeatureType.POISON_GAS)){
+								current.features.Add(FeatureType.POISON_GAS);
+								new_area.Add(current);
+							}
+							else{
+								for(int tries=0;tries<50;++tries){
+									List<Tile> open = new List<Tile>();
+									foreach(Tile t in current.TilesAtDistance(1)){
+										if(t.passable){
+											open.Add(t);
+										}
+									}
+									if(open.Count > 0){
+										Tile possible = open.Random();
+										if(!possible.Is(FeatureType.POISON_GAS)){
+											possible.features.Add(FeatureType.POISON_GAS);
+											new_area.Add(possible);
+											break;
+										}
+										else{
+											current = possible;
+										}
+									}
+									else{
+										break;
+									}
+								}
+							}
+						}
+						if(new_area.Count > 0){
+							B.Add("Toxic vapors pour from " + target.the_name + "! ",target);
+							Q.Add(new Event(new_area,200,EventType.POISON_GAS));
+						}
+					}
+					Q.Add(new Event(target,100,EventType.POISON_GAS_VENT));
 					break;
 				}
 				case EventType.POISON_GAS:

@@ -1,34 +1,206 @@
 
-big list of features:
-current standard generator
-cave generator (possibly 'wide' and 'narrow' cave generators)
-standard generator with more restrictions on corridor placement (corridors must be 3+ away)
-maze generator
-corridors-only generator
-rooms-only generator
++-------------------------------+
+| This line of description fits |
+|    and so this text about     |
+| goblins or whatever would be  |
+|   read and enjoyed by all.    |
+|   Chances are good that no    |
+|  monster would require much   |
+|     more space than this.     |
+|                               |
+|     [=] Hide description      |
++-------------------------------+
 
-ruined template
-doors
-statues
-fungus
-fog
-fog generator tile: searches outwards for a spot, so disappearance of fog makes it random
-poison gas
-firepit
-fire geyser
-traps incl. on chests and doors, or alarms on items.
-rubble
+blood moths still attack you if your torch is out, even if it gives off no light!
+
+
+more vents and geysers on natural levels. more traps otherwise.
+-hide vents and geysers at first. easy.
+
+only certain enemies should respond to alarms. humanoid_int, plus a few others.
+  - finish the other traps, too.
+
+
+
+okay, I did the automatic r/c/N/E/v/h/i function. it works great, but the corner definition should be updated to allow 2x2 rooms, basically. this allows corners to touch. also, edge definition should allow 2x3 rooms:
+cEc
+cEc
+	-this won't be used at all until I have nonrectangular rooms
+
+
+room shapes:
+rectangular
+  min: 3x3
+elliptical
+  min: 5x5
+diamond
+  min: 5x5
+triangular
+  min: 5x5
+L-shaped
+  min: 6x6
+cross-shaped
+  min: 7x7
+alcoves(2x2 holes on sides of room)
+  min: 9x9
+
+room features:
+pillars in various configurations. basic guidelines: no 2 pillars should touch, &
+	rooms should be symmetrical in at least one dimension.
+	explicit pillar rules! find the dimensions of the 'pillar matrix' - the
+	largest arrangement of pillars that can fit in a single(say, the top-left)
+	quadrant of a room. Then, fill randomly, respecting the rule "no staggered
+	pillars, such as #.  .# ". If the dimension is divisible by 4, you can add an
+	offset of 0 or 1 in that dimension. Then, simply reflect to fill the room.
+	an 11x11 room has a 3x3 matrix, a 15x22 room has 4x5, and 3x3 has 1x1.
+   -don't use the above method just yet. for now, either make 1 pillar in each
+	quadrant, or tile it fully.
+rooms with walls in the center. should leave at least 2 spaces on each side.
+
+
+	########	########	########	     ###
+	#......#	##....##	###..###	    ##N#
+	#......#	#......#	##....##	   ##NN#
+	#......#	#......#	#......#	  ##NNE#
+	#......+	#......+	#......+	 ##NNrE+
+	#......#	#......#	##....##	##NNrrE#
+	#......#	##....##	###..###	#NNEEEc#
+	##+#####	##+#####	##+#####	##+#####
+							
+
+
+	########	########	########	########
+	#......#	#......#	#......#	###..###
+	#......#	#.#..#.#	#......#	###..###
+	#......#	#......#	#..##..#	#......#
+	####...+	#......+	#..##..+	#......+
+	 3x3...#	#.#..#.#	#......#	###..###
+	   #...#	#......#	#......#	###..###
+	   #####	##+#####	##+#####	##+#####
+	at least 3x3?					
+
+
+bigger!
+
+	#############	#############	#############	#############
+	#####...#####	######.######	#...........#	#######.....#
+	###.......###	#####...#####	##..........#	#######.....#
+	##.........##	####.....####	###.........#	#######.....#
+	##.........##	###.......###	####........#	#######.....#
+	#...........#	##.........##	#####.......#	#...........#
+	#...........#	#...........#	######......#	#...........#
+	#...........#	##.........##	#######.....#	#...........#
+	##.........##	###.......###	########....#	#...........#
+	##.........##	####.....####	#########...#	#...........#
+	###.......###	#####...#####	##########..#	#...........#
+	#####...#####	######.######	###########.#	#...........#
+	#############	#############	#############	#############
+		       4 possible doors 
+
+
+	#############	#############	#############	#############
+	#...........#	#...........#	#...........#	###.##.##.###
+	#...........#	#.#.#...#.#.#	#...........#	###.##.##.###
+	#...........#	#...........#	#...........#	#...........#
+	#...........#	#.#.......#.#	#...#####...#	###.......###
+	#...........#	#...........#	#...#####...#	###.......###
+	#.....#.....#	#...........#	#...#####...#	#...........#
+	#...........#	#...........#	#...#####...#	###.......###
+	#...........#	#.#.......#.#	#...#####...#	###.......###
+	#...........#	#...........#	#...........#	#...........#
+	#...........#	#.#.#...#.#.#	#...........#	###.##.##.###
+	#...........#	#...........#	#...........#	###.##.##.###
+	#############	#############	#############	#############
+							no, see below.
+
+	    #####	     ###	#############	      #######
+	  ###...###  	    ##.##	#...........#	      #.....#
+	 ##.......## 	   ##...##	##..........#	      #.....#
+	 #.........# 	  ##.....##	 ##.........#	      #.....#
+	##.........##	 ##.......##	  ##........#	#######.....#
+	#...........#	##.........##	   ##.......#	#...........#
+	#...........#	#...........#	    ##......#	#...........#
+	#...........#	##.........##	     ##.....#	#...........#
+	##.........##	 ##.......##	      ##....#	#...........#
+	 #.........# 	  ##.....##	       ##...#	#...........#
+	 ##.......## 	   ##...##	        ##..#	#...........#
+	  ###...###  	    ##.##    	         ##.#	#...........#
+	    #####    	     ###     	          ###	#############
+
+
+	#############	  #########  
+	#...........#	  #.##.##.#  
+	#...........#	###.##.##.###
+	#...........#	#...........#
+	#...#####...#	###.......###
+	#...#   #...#	###.......###
+	#...#   #...#	#...........#
+	#...#   #...#	###.......###
+	#...#####...#	###.......###
+	#...........#	#...........#
+	#...........#	###.##.##.###
+	#...........#	  #.##.##.#  
+	#############	  #########  
+			no, use the one below:
+	#############	#############
+	#...........#	###..###..###
+	#...#...#...#	###..###..###
+	#...........#	#...........#
+	#...#.#.#...#	#...........#
+	#...........#	###.......###
+	#.#.#...#.#.#	###.......###
+	#...........#	###.......###
+	#...#.#.#...#	#...........#
+	#...........#	#...........#
+	#...#...#...#	###..###..###
+	#...........#	###..###..###
+	#############	#############
+			much better!
+
+
+	########################
+	#......................#
+	#.#..................#.#
+	#......................#
+	#.#.#...#......#...#.#.#
+	#......................#
+	#......................#
+	#......................#
+	#.#.......#..#.......#.#
+	#......................#
+	#......................#
+	#......................#
+	#.#.#...#......#...#.#.#
+	#......................#
+	#.#..................#.#
+	#......................#
+	########################
+
+!implemented
+
+double doors for fortresses - easy
+!fungus
+!fog
+!fog vent
+!poison gas
+!poison gas vent
+!fire geyser
+rubble, perhaps in 2x2 - 3x3 piles
+	-in general, MOST level types should have a (small) chance to have any of these features.
 slab doors
+candlelit altar. like a solid fire pit. maybe radius 2.
+
+not yet:
+traps incl. on chests and doors, or alarms on items.
 torches
-poison gas vent
-bombable walls
-rocks?
 mirrors
-mud?
+levers
 wind (works like conveyors)
-levers?
-candlelit altar. like a solid fire pit.
+rocks
+mud
+bombable walls
 tunnels that allow travel to possibly-disconnected parts of the level. would remove you from the map for several turns. 
+
 
 single-use (or one-way) corridors
 2- and 3-wide corridors, with possible statues or other features
@@ -37,13 +209,8 @@ round rooms
 diamond rooms
 triangular rooms
 rooms with rectangular sections missing from a corner (the easy way to do 'combined' rooms)
-rooms filled with pillars (or statues, or etc.)
-rooms with 2 rows or columns of pillars in the middle
-rooms with pillars around the edges
-rooms with single pillars
-rooms with a symmetrical arrangement of pillars or other tiles
 rooms that aren't carved out in the middle (i.e. a large central 'pillar')
-'starburst' rooms
+'starburst' rooms, maybe
 unangband's overlapping rooms: 2 random rectangles within a larger one.
 this type of room: (even dimensions in both directions, and at least 6x6)
   ########  
@@ -63,10 +230,21 @@ this type of room: (even dimensions in both directions, and at least 6x6)
   #..##..#  
   ########  
 
-features that MIGHT or MIGHT NOT be unaffected by level type: (stairs, healing pools, fire geysers) (but fire geysers probably will be)
 
+slime levels: lots of elliptical rooms. pools and streamers/trails of slime. fog or poison gas vents. enemy type: slimes or slug-men or something
 
-more: moving parts? corridor features?
+hive levels: 3x3 rooms only, no doors. corridor numbers 4 4 1 4 4. GenerateInitial, then generate (50/50) rooms and corridor chains, 700 times. Do standard cleanup and verification. enemy type: some kind of insect, or hive dogs
+	-no firepits, fire geysers, ....
+
+fog levels: ???. lots of fog vents. enemy type: phantoms. (probably spawns 2-3 phantoms for every replaced monster)
+
+mine levels: normal levels turned into caves. rubble. enemy type: kobolds.
+
+fortress levels. big central hall, more ordered rooms and corridors. possibly symmetric.
+
+opulent levels. lots of statues. pools of water? long (dead-end) halls?
+
+more: moving parts? corridor features? carve rooms for chests in caves?
 
 
 
@@ -76,6 +254,8 @@ more: moving parts? corridor features?
 "You notice (description) on this floor."
 "You feel (description)."
 "(former level's description) is/are gone."
+
+"Rubble is strewn about this ruined area of the dungeon."
 
 model 1:
 
@@ -88,7 +268,7 @@ leveltype-specific monsters that can only appear in the proper "biome"
 don't increase in power, but rather in number.
 
 
-ITEMS you can only find on certain level types? :o
+ITEMS you can only find on certain level types?
 
 
 
@@ -214,12 +394,8 @@ AI: finish seek: vampire. entrancer?
 	finish idle: vampire, entrancer.
 		-instead of vampire avoiding light, anything that is light-sensitive should avoid it (at the top of active/seek)
 
-healing pools. throw an item in to heal to 100%. one use, of course.
 
-tweak message "something babbles incoherently"
-	-maybe "you hear incoherent babbling" or smth
-
-vampires shouldn't just die when they get kited.
+resist_neck_snap attr, to print neck snap message but not kill. for zombies, vampires.
 
 poltergeists *could* drop items. hmm.
 
@@ -229,16 +405,17 @@ to prevent the player from getting stuck, knock down some walls around marble ho
 
 hag's curse: welded/sticky/cursed weapon/armor? yes please.
 
-levelgen messages that reflect the changing nature of the dungeon.
 
 tutorial hints
-	-weapon switching
-	-armor switching
-	-fire
-	-recovery
-	-movement
-	-bump to attack
-	-resistance
+	-weapon switching	"Resisted!" and/or "Ranged attacks"
+	-armor switching	"Armor"
+	-fire			"You're on fire!"
+	-recovery		"Recovering health"
+	-movement		"Moving around"
+	-bump to attack		"Attacking your enemies" or "Attacking enemies"
+	-resistance		"Resisted!"
+
+remember to add Help.cs to project, duh
 
 animations for new content?
 
@@ -252,9 +429,13 @@ why am i suddenly getting many 'notices' messages for groups, when I previously 
 update help: add headers to overview help - 'Regaining Health, Attacking Monsters, Exploring the Dungeon...'
 	-resistance is half damage
 
-include a goal at the start
+i could allow help display within GetSelection if it could redraw the screen
+
+include a goal at the start	-	"None of the other scouts returned." etc
 
 can trolls wander after getting back up? at least 1/3 should
+
+since stun went from 1/5 to 1/3, should mace of force become 1/3 as a nerf?
 
 rename resting to 'catching your second wind' ?
 
@@ -480,8 +661,6 @@ left out: worm(7-8), pixie(8-9), witch(5-7), pyren(7-9)
  ! done for now ! minus placeholders, of course.
 
 new dungeon features:
-doors -_-
-normal statues
 trapped chests or doors?
 fungus (fuse fungus? bomb fungus?) that explodes a few turns after being lit up
 doors that open when lit (stone slab type)
@@ -512,6 +691,7 @@ should rubble become nonopaque? that would allow me to put some along a corridor
 pillars, to match the shrine pillars.
 One-way and/or single-use corridors. (thanks to .orphle. in #br.gue)
 sometimes, monsters should actually guard corridors
+phantom trap. creates a phantom version of an OOD monster nearby. one HP.
 
 other:
 magical sleep status - lasts for a good while. any time you don't spend your turn
@@ -608,10 +788,12 @@ then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
 		new monsters
 		new items
 		new terrain
-		other 'light' features, including tweak to Shine
+		other 'light' features
 		other balance changes
 		sidebar counters and stuff. for increasing bars like Conviction, or brogue-style bars for other durations.
 		and help check
+
+-for the next version: item descriptions, slime and fog levels, leveltype-specific monsters, circular, diamond, and L-shaped rooms
 
 update your screenshots and videos!
 
@@ -629,10 +811,6 @@ generate trolls with rocks they can throw, in a lair, and have them stay in that
 
 consider making ranged attacks...not attacks at all, but generated straight from the AI routine
 
-replace old spell?
-	-should be easier with shrines!
-		-maybe if you use a magic shrine, it gets replaced
-		 with a 'spell replacement shrine' (purple)
 
 shadow should reduce the light radius of zealots, too
 
@@ -644,6 +822,14 @@ mirrors: can be generated when there is solid rock behind a wall.
 	-they just show what is opposite them. doesn't show vampires. doesn't show the player's reflection 
 		if the player is shadow cloaked.
 
+partial classes to separate AI from the rest of Actor
+foreach(int i in FourDirections) or foreach(int i in Dir8). 4, 8, and 9.
+
+option to put stat window on right.
+
+remember that phantom descriptions should mention using spells on them
+
+help should mention what 3d6 means
 
 0.7.0 should have: (focus on gameplay)
 many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
@@ -659,12 +845,12 @@ a stealth enemy that can teleport from shadows on ONE side of you to shadows on 
 	-limited somehow. does he need to escape first?
 a group enemy that slightly punishes fighting in corridors?
 potion of vampirism? life drain, light allergy, flying.
+when adding doors, for each room, decide "doors" or "no doors", then make it so.
 things other than the player should be able to call MakeNoise
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
 	-this would make a good candidate for generalization: printing a message if the player can see an object OR if that object is within a certain distance. perhaps a distance that implies that the message is a sound, not a visual.
 kills list
 'killed by' in highscore?
-
 
 
 bugs: 
@@ -690,6 +876,34 @@ dies."
 
 
 --generate the list of monsters first, THEN generate the level. then verify that i.e. a troll has a proper lair.
+
+[[
+notes for animation of tutorial tip boxes:
+
+box is always wider than tall.
+
+so, the number of frames of animation will always be tip_lines / 2 + 2
+
+box:	 12
+lines+3: 10
+
+frame 0: 1 or 2
+frame 1: 3 or 4
+...
+
+so, make a colorchar list of the appropriate size.
+
+then, define 2 lines such that odd sizes will have the same line overwritten once.
+
+frame 0: defines line 0 and line 0, or 0 and 1.
+
+frame 1: defines line 1 and line 1, or 1 and 2, then 0 and 2, or 0 and 3.
+
+frame 2: defines line 2 and line 2, or 2 and 3, then 1&3 or 1&4, then 0&4 or 0&5.
+
+frame X: defines X&X or X&X+1, then X-1&X+1 or X-1&X+2 ... then X-X&X+X or X-X&X+X+1
+
+]]
 
 
 

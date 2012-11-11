@@ -11,10 +11,10 @@ using System.Collections.Generic;
 using System.IO;
 using Forays;
 namespace Forays{
-	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,QUICKFIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,UNDEAD_TRAP,GRENADE_TRAP,STUN_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,RUBBLE,FIRE_GEYSER};
+	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,QUICKFIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,UNDEAD_TRAP,GRENADE_TRAP,STUN_TRAP,ALARM_TRAP,DARKNESS_TRAP,POISON_GAS_TRAP,DIM_VISION_TRAP,ICE_TRAP,PHANTOM_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,SPELL_EXCHANGE_SHRINE,RUBBLE,FIRE_GEYSER,STATUE,HEALING_POOL,FOG_VENT,POISON_GAS_VENT};
 	public enum FeatureType{GRENADE,TROLL_CORPSE,TROLL_SEER_CORPSE,QUICKFIRE,RUNE_OF_RETREAT,FOG,POISON_GAS,SLIME,FUNGUS,FUNGUS_ACTIVE,FUNGUS_PRIMED};
 	//public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,LARGE_BAT,SHAMBLING_SCARECROW,SKELETON,CULTIST,POLTERGEIST,ZOMBIE,WOLF,FROSTLING,GOBLIN_ARCHER,GOBLIN_SHAMAN,SWORDSMAN,DIRE_RAT,DREAM_WARRIOR,BANSHEE,WARG,ROBED_ZEALOT,SKULKING_KILLER,CARRION_CRAWLER,OGRE,SHADOW,BERSERKER,ORC_GRENADIER,PHASE_SPIDER,STONE_GOLEM,NECROMANCER,TROLL,ORC_WARMAGE,LASHER_FUNGUS,CORPSETOWER_BEHEMOTH,DREAM_CLONE};
-	public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,LARGE_BAT,WOLF,SKELETON,BLOOD_MOTH,SWORDSMAN,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,DREAM_WARRIOR,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,MIMIC,SKULKING_KILLER,ZOMBIE,DIRE_RAT,ROBED_ZEALOT,SHADOW,BANSHEE,WARG,PHASE_SPIDER,DERANGED_ASCETIC,POLTERGEIST,CAVERN_HAG,COMPY,NOXIOUS_WORM,BERSERKER,TROLL,VAMPIRE,CRUSADING_KNIGHT,SKELETAL_SABERTOOTH,MUD_ELEMENTAL,ENTRANCER,MARBLE_HORROR,OGRE,ORC_GRENADIER,SHADOWVEIL_DUELIST,CARRION_CRAWLER,SPELLMUDDLE_PIXIE,STONE_GOLEM,PYREN_ARCHER,ORC_ASSASSIN,TROLL_SEER,MECHANICAL_KNIGHT,ORC_WARMAGE,LASHER_FUNGUS,NECROMANCER,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,DREAM_CLONE,MUD_TENTACLE};
+	public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,LARGE_BAT,WOLF,SKELETON,BLOOD_MOTH,SWORDSMAN,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,DREAM_WARRIOR,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,MIMIC,SKULKING_KILLER,ZOMBIE,DIRE_RAT,ROBED_ZEALOT,SHADOW,BANSHEE,WARG,PHASE_SPIDER,DERANGED_ASCETIC,POLTERGEIST,CAVERN_HAG,COMPY,NOXIOUS_WORM,BERSERKER,TROLL,VAMPIRE,CRUSADING_KNIGHT,SKELETAL_SABERTOOTH,MUD_ELEMENTAL,ENTRANCER,MARBLE_HORROR,OGRE,ORC_GRENADIER,SHADOWVEIL_DUELIST,CARRION_CRAWLER,SPELLMUDDLE_PIXIE,STONE_GOLEM,PYREN_ARCHER,ORC_ASSASSIN,TROLL_SEER,MECHANICAL_KNIGHT,ORC_WARMAGE,LASHER_FUNGUS,NECROMANCER,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,DREAM_CLONE,MUD_TENTACLE,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
 	public enum AttrType{STEALTHY,UNDEAD,CONSTRUCT,PLANTLIKE,DEMON,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,WANDERING,NEVER_MOVES,SHADOW_CLOAK,NOTICED,PLAYER_NOTICED,ENHANCED_TORCH,MAGICAL_BLOOD,KEEN_EYES,TOUGH,LONG_STRIDE,RUNIC_BIRTHMARK,LOW_LIGHT_VISION,DARKVISION,REGENERATING,REGENERATES_FROM_DEATH,NO_ITEM,STUNNED,PARALYZED,POISONED,FROZEN,ON_FIRE,CATCHING_FIRE,STARTED_CATCHING_FIRE_THIS_TURN,AFRAID,SLOWED,MAGICAL_DROWSINESS,ASLEEP,AGGRAVATING,CURSED_WEAPON,DETECTING_MONSTERS,BLOODSCENT,TELEPORTING,LIGHT_ALLERGY,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,FIRE_HIT,COLD_HIT,POISON_HIT,PARALYSIS_HIT,FORCE_HIT,DIM_VISION_HIT,STALAGMITE_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,FIERY_ARROWS,RESIST_SLASH,RESIST_PIERCE,RESIST_BASH,RESIST_FIRE,RESIST_COLD,RESIST_ELECTRICITY,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ARROWS,IMMUNE_TOXINS,COOLDOWN_1,COOLDOWN_2,BLESSED,HOLY_SHIELDED,ARCANE_SHIELDED,SPORE_BURST,SPELL_DISRUPTION,MECHANICAL_SHIELD,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,DEFENSIVE_STANCE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,DISTRACTED,ALERTED,AMNESIA_STUN,UNFROZEN,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
 	public enum SpellType{SHINE,IMMOLATE,FORCE_PALM,FREEZE,BLINK,SCORCH,BLOODSCENT,LIGHTNING_BOLT,SHADOWSIGHT,VOLTAIC_SURGE,MAGIC_HAMMER,RETREAT,GLACIAL_BLAST,PASSAGE,FLASHFIRE,SONIC_BOOM,COLLAPSE,FORCE_BEAM,AMNESIA,BLIZZARD,BLESS,MINOR_HEAL,HOLY_SHIELD,NUM_SPELLS,NO_SPELL};
 	public enum SkillType{COMBAT,DEFENSE,MAGIC,SPIRIT,STEALTH,NUM_SKILLS,NO_SKILL};
@@ -25,8 +25,8 @@ namespace Forays{
 	public enum MagicItemType{PENDANT_OF_LIFE,RING_OF_RESISTANCE,RING_OF_PROTECTION,CLOAK_OF_DISAPPEARANCE,NUM_MAGIC_ITEMS,NO_MAGIC_ITEM};
 	public enum DamageType{NORMAL,FIRE,COLD,ELECTRIC,POISON,HEAL,SLASHING,BASHING,PIERCING,MAGIC,NONE};
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
-	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG,POISON_GAS,QUICKFIRE,BOSS_ARRIVE};
-	public enum OptionType{LAST_TARGET,AUTOPICKUP,NO_ROMAN_NUMERALS,HIDE_OLD_MESSAGES,HIDE_COMMANDS};
+	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,FOG,POISON_GAS_VENT,POISON_GAS,QUICKFIRE,BOSS_ARRIVE};
+	public enum OptionType{LAST_TARGET,AUTOPICKUP,NO_ROMAN_NUMERALS,HIDE_OLD_MESSAGES,HIDE_COMMANDS,NEVER_DISPLAY_TIPS};
 	public class Game{
 		public Map M;
 		public Queue Q;
@@ -56,6 +56,7 @@ namespace Forays{
 				Screen.Blank();
 			}
 			else{
+				Console.Title = "Forays into Norrendrin";
 				Console.BufferHeight = Global.SCREEN_H; //25
 			}
 			Console.TreatControlCAsInput = true;
@@ -87,6 +88,7 @@ namespace Forays{
 			string recentname = "".PadRight(30);
 			int recentdepth = -1;
 			char recentwin = '-';
+			string recentcause = "";
 			while(true){
 				Screen.Blank();
 				Screen.WriteMapString(1,0,new cstr(Color.Yellow,"Forays into Norrendrin " + Global.VERSION));
@@ -135,6 +137,7 @@ namespace Forays{
 					game.B = new Buffer(game);
 					game.Q = new Queue(game);
 					Map.Q = game.Q;
+					Map.B = game.B;
 					PhysicalObject.M = game.M;
 					Actor.M = game.M;
 					Actor.Q = game.Q;
@@ -153,7 +156,6 @@ namespace Forays{
 					Tile.Q = game.Q;
 					Tile.player = game.player;
 					if(!saved_game){
-						game.M.GenerateLevel();
 						Actor.player_name = "";
 						if(File.Exists("name.txt")){
 							StreamReader file = new StreamReader("name.txt");
@@ -180,6 +182,8 @@ namespace Forays{
 							game.B.DisplayNow("Enter name: ",false);
 							Actor.player_name = Global.EnterString(26);
 						}
+						game.M.GenerateLevelTypes();
+						game.M.GenerateLevel();
 						Screen.Blank();
 						Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
 						Screen.WriteMapString(1,0,"[a] Toughness - You have a slight resistance to physical damage.");
@@ -321,6 +325,10 @@ namespace Forays{
 						List<Actor> need_location = new List<Actor>();
 						Actor.player_name = b.ReadString();
 						game.M.current_level = b.ReadInt32();
+						game.M.level_types = new List<LevelType>();
+						for(int i=0;i<20;++i){
+							game.M.level_types.Add((LevelType)b.ReadInt32());
+						}
 						game.M.wiz_lite = b.ReadBoolean();
 						game.M.wiz_dark = b.ReadBoolean();
 						//skipping danger_sensed
@@ -588,6 +596,7 @@ namespace Forays{
 					recentdepth = game.M.current_level;
 					recentname = Actor.player_name;
 					recentwin = Global.BOSS_KILLED? 'W' : '-';
+					recentcause = Global.KILLED_BY;
 					if(!Global.SAVING){
 						List<string> newhighscores = new List<string>();
 						int num_scores = 0;
@@ -604,7 +613,7 @@ namespace Forays{
 							if(s.Substring(0,2) == "--"){
 								if(!added && num_scores < 22){
 									char symbol = Global.BOSS_KILLED? 'W' : '-';
-									newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name);
+									newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name + " -- " + Global.KILLED_BY);
 								}
 								newhighscores.Add(s);
 								break;
@@ -615,7 +624,7 @@ namespace Forays{
 								if(dlev < game.M.current_level){
 									if(!added){
 										char symbol = Global.BOSS_KILLED? 'W' : '-';
-										newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name);
+										newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name + " -- " + Global.KILLED_BY);
 										++num_scores;
 										added = true;
 									}
@@ -780,7 +789,7 @@ namespace Forays{
 				}
 				case 'b':
 				{
-					Global.DisplayHelp();
+					Help.DisplayHelp();
 					break;
 				}
 				case 'c':
@@ -811,8 +820,11 @@ namespace Forays{
 						string[] tokens = s.Split(' ');
 						int dlev = Convert.ToInt32(tokens[0]);
 						char winning = tokens[1][0];
-						string name = s.Substring(tokens[0].Length + 3);
-						if(!written_recent && name == recentname && dlev == recentdepth && winning == recentwin){
+						string name_and_cause_of_death = s.Substring(tokens[0].Length + 3);
+						int idx = name_and_cause_of_death.LastIndexOf(" -- ");
+						string name = name_and_cause_of_death.Substring(0,idx);
+						string cause_of_death = name_and_cause_of_death.Substring(idx+4);
+						if(!written_recent && name == recentname && dlev == recentdepth && winning == recentwin && cause_of_death == recentcause){
 							Screen.WriteString(line,18,new cstr(name,recent));
 							written_recent = true;
 						}

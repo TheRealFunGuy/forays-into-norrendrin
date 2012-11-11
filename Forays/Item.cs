@@ -37,7 +37,7 @@ namespace Forays{
 			proto[ConsumableType.DARKNESS] = new Item(ConsumableType.DARKNESS,"orb~ of darkness",'*',Color.DarkGray);
 			proto[ConsumableType.PRISMATIC] = new Item(ConsumableType.PRISMATIC,"prismatic orb~",'*',Color.RandomPrismatic);
 			proto[ConsumableType.FREEZING] = new Item(ConsumableType.FREEZING,"orb~ of freezing",'*',Color.RandomIce);
-			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'~',Color.White);
+			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'{',Color.White);
 			Define(ConsumableType.QUICKFIRE,"orb~ of quickfire",'*',Color.RandomFire);
 			Define(ConsumableType.CLOAKING,"potion~ of cloaking",'!',Color.DarkBlue);
 			Define(ConsumableType.FOG,"orb~ of fog",'*',Color.Gray);
