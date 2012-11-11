@@ -201,6 +201,15 @@ namespace Forays{
 			}
 			return result;
 		}
+		public static colorchar[,] GetCurrentRect(int row,int col,int height,int width){
+			colorchar[,] result = new colorchar[height,width];
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					result[i,j] = Char(row+i,col+j);
+				}
+			}
+			return result;
+		}
 		public static bool BoundsCheck(int r,int c){
 			if(r>=0 && r<Global.SCREEN_H && c>=0 && c<Global.SCREEN_W){
 				return true;
@@ -246,6 +255,15 @@ namespace Forays{
 				}
 				Console.SetCursorPosition(c,r);
 				Console.Write(ch.c);
+			}
+		}
+		public static void WriteArray(int r,int c,colorchar[,] array){
+			int h = array.GetLength(0);
+			int w = array.GetLength(1);
+			for(int i=0;i<h;++i){
+				for(int j=0;j<w;++j){
+					WriteChar(i+r,j+c,array[i,j]);
+				}
 			}
 		}
 		public static void WriteString(int r,int c,string s){ WriteString(r,c,new cstr(Color.Gray,s)); }
@@ -435,9 +453,9 @@ namespace Forays{
 					}
 					cpos += s.s.Length;
 				}
-				if(cpos-Global.MAP_OFFSET_COLS < Global.COLS){
+				/*if(cpos-Global.MAP_OFFSET_COLS < Global.COLS){
 					WriteString(r,cpos,"".PadRight(Global.COLS-(cpos-Global.MAP_OFFSET_COLS)));
-				}
+				}*/
 			}
 		}
 		public static void WriteStatsChar(int r,int c,colorchar ch){ WriteChar(r,c,ch); } //was r+1,c
@@ -487,6 +505,37 @@ namespace Forays{
 				}
 				Console.SetCursorPosition(c,r);
 				Console.Write(s.s);
+			}
+		}
+		public static void MapDrawWithStrings(colorchar[,] array,int row,int col,int height,int width){
+			cstr s;
+			s.s = "";
+			s.bgcolor = Color.Black;
+			s.color = Color.Black;
+			int current_c = col;
+			for(int i=row;i<row+height;++i){
+				s.s = "";
+				current_c = col;
+				for(int j=col;j<col+width;++j){
+					colorchar ch = array[i,j];
+					if(Screen.ResolveColor(ch.color) != s.color){
+						if(s.s.Length > 0){
+							Screen.WriteMapString(i,current_c,s);
+							s.s = "";
+							s.s += ch.c;
+							s.color = ch.color;
+							current_c = j;
+						}
+						else{
+							s.s += ch.c;
+							s.color = ch.color;
+						}
+					}
+					else{
+						s.s += ch.c;
+					}
+				}
+				Screen.WriteMapString(i,current_c,s);
 			}
 		}
 		public static void AnimateCell(int r,int c,colorchar ch,int duration){

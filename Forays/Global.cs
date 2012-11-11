@@ -25,6 +25,7 @@ namespace Forays{
 		public static bool BOSS_KILLED = false;
 		public static bool QUITTING = false;
 		public static bool SAVING = false;
+		public static string KILLED_BY = "debugged to death";
 		public static List<string> quickstartinfo = null;
 		public static Dictionary<OptionType,bool> Options = new Dictionary<OptionType, bool>();
 		public static bool Option(OptionType option){
@@ -257,219 +258,6 @@ namespace Forays{
 				return "";
 			}
 		}
-		public static void DisplayHelp(){ DisplayHelp(Help.Overview); }
-		public static void DisplayHelp(Help h){
-			Console.CursorVisible = false;
-			Screen.Blank();
-			int num_topics = Enum.GetValues(typeof(Help)).Length;
-			Screen.WriteString(5,4,"Topics:",Color.Yellow);
-			for(int i=0;i<num_topics+1;++i){
-				Screen.WriteString(i+7,0,"[ ]");
-				Screen.WriteChar(i+7,1,(char)(i+'a'),Color.Cyan);
-			}
-			Screen.WriteString(num_topics+7,4,"Quit");
-			Screen.WriteString(0,16,"".PadRight(61,'-'));
-			Screen.WriteString(23,16,"".PadRight(61,'-'));
-			List<string> text = HelpTopic(h);
-			int startline = 0;
-			ConsoleKeyInfo command;
-			char ch;
-			for(bool done=false;!done;){
-				foreach(Help help in Enum.GetValues(typeof(Help))){
-					if(h == help){
-						Screen.WriteString(7+(int)help,4,Enum.GetName(typeof(Help),help),Color.Yellow);
-					}
-					else{
-						Screen.WriteString(7+(int)help,4,Enum.GetName(typeof(Help),help));
-					}
-				}
-				if(startline > 0){
-					Screen.WriteString(0,77,new colorstring("[",Color.Yellow,"-",Color.Cyan,"]",Color.Yellow));
-				}
-				else{
-					Screen.WriteString(0,77,"---");
-				}
-				bool more = false;
-				if(startline + 22 < text.Count){
-					more = true;
-				}
-				if(more){
-					Screen.WriteString(23,77,new colorstring("[",Color.Yellow,"+",Color.Cyan,"]",Color.Yellow));
-				}
-				else{
-					Screen.WriteString(23,77,"---");
-				}
-				for(int i=1;i<=22;++i){
-					if(text.Count - startline < i){
-						Screen.WriteString(i,16,"".PadRight(64));
-					}
-					else{
-						Screen.WriteString(i,16,text[i+startline-1].PadRight(64));
-					}
-				}
-				command = Console.ReadKey(true);
-				ConsoleKey ck = command.Key;
-				if(ck == ConsoleKey.Backspace || ck == ConsoleKey.PageUp){
-					ch = (char)8;
-				}
-				else{
-					if(ck == ConsoleKey.PageDown){
-						ch = ' ';
-					}
-					else{
-						ch = Actor.ConvertInput(command);
-					}
-				}
-				switch(ch){
-				case 'a':
-					if(h != Help.Overview){
-						h = Help.Overview;
-						text = HelpTopic(h);
-						startline = 0;
-					}
-					break;
-				case 'b':
-					if(h != Help.Skills){
-						h = Help.Skills;
-						text = HelpTopic(h);
-						startline = 0;
-						
-					}
-					break;
-				case 'c':
-					if(h != Help.Feats){
-						h = Help.Feats;
-						text = HelpTopic(h);
-						startline = 0;
-					}
-					break;
-				case 'd':
-					if(h != Help.Spells){
-						h = Help.Spells;
-						text = HelpTopic(h);
-						startline = 0;
-					}
-					break;
-				case 'e':
-					if(h != Help.Items){
-						h = Help.Items;
-						text = HelpTopic(h);
-						startline = 0;
-					}
-					break;
-				case 'f':
-					if(h != Help.Commands){
-						h = Help.Commands;
-						text = HelpTopic(h);
-						startline = 0;
-					}
-					break;
-				case 'g':
-					if(h != Help.Advanced){
-						h = Help.Advanced;
-						text = HelpTopic(h);
-						startline = 0;
-					}
-					break;
-				case 'h':
-				case (char)27:
-					done = true;
-					break;
-				case '8':
-				case '-':
-				case '_':
-					if(startline > 0){
-						--startline;
-					}
-					break;
-				case '2':
-				case '+':
-				case '=':
-					if(more){
-						++startline;
-					}
-					break;
-				case (char)8:
-					if(startline > 0){
-						startline -= 22;
-						if(startline < 0){
-							startline = 0;
-						}
-					}
-					break;
-				case ' ':
-				case (char)13:
-					if(text.Count > 22){
-						startline += 22;
-						if(startline + 22 > text.Count){
-							startline = text.Count - 22;
-						}
-					}
-					break;
-				default:
-					break;
-				}
-			}
-			Screen.Blank();
-		}
-		public static List<string> HelpTopic(Help h){
-			string path = "";
-			int startline = 0;
-			int num_lines = -1; //-1 means read until end
-			switch(h){
-			case Help.Overview:
-				path = "help.txt";
-				num_lines = 54;
-				break;
-			case Help.Commands:
-				path = "help.txt";
-				/*if(Option(OptionType.VI_KEYS)){
-					startline = 85;
-				}
-				else{*/
-				startline = 56;
-				//}
-				num_lines = 26;
-				break;
-			case Help.Items:
-				path = "item_help.txt";
-				break;
-			case Help.Skills:
-				path = "feat_help.txt";
-				num_lines = 19;
-				break;
-			case Help.Feats:
-				path = "feat_help.txt";
-				startline = 21;
-				break;
-			case Help.Spells:
-				path = "spell_help.txt";
-				break;
-			case Help.Advanced:
-				path = "advanced_help.txt";
-				break;
-			default:
-				path = "feat_help.txt";
-				break;
-			}
-			List<string> result = new List<string>();
-			if(path != ""){
-				StreamReader file = new StreamReader(path);
-				for(int i=0;i<startline;++i){
-					file.ReadLine();
-				}
-				for(int i=0;i<num_lines || num_lines == -1;++i){
-					if(file.Peek() != -1){
-						result.Add(file.ReadLine());
-					}
-					else{
-						break;
-					}
-				}
-				file.Close();
-			}
-			return result;
-		}
 		public static void LoadOptions(){
 			StreamReader file = new StreamReader("options.txt");
 			string s = "";
@@ -492,12 +280,32 @@ namespace Forays{
 					}
 				}
 			}
+			s = "";
+			while(s.Length < 2 || s.Substring(0,2) != "--"){
+				s = file.ReadLine();
+				if(s.Length >= 2 && s.Substring(0,2) == "--"){
+					break;
+				}
+				string[] tokens = s.Split(' ');
+				if(tokens[0].Length == 1){
+					char c = Char.ToUpper(tokens[0][0]);
+					if(c == 'F' || c == 'T'){
+						TutorialTopic topic = (TutorialTopic)Enum.Parse(typeof(TutorialTopic),tokens[1],true);
+						if(c == 'F'){
+							Help.displayed[topic] = false;
+						}
+						else{
+							Help.displayed[topic] = true;
+						}
+					}
+				}
+			}
 		}
 		public static void SaveOptions(){
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
-			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options:");
-			file.WriteLine("last_target autopickup no_roman_numerals hide_old_messages hide_commands");
+			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):");
+			file.WriteLine("last_target autopickup no_roman_numerals hide_old_messages hide_commands never_display_tips");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");
@@ -506,6 +314,16 @@ namespace Forays{
 					file.Write("f ");
 				}
 				file.WriteLine(Enum.GetName(typeof(OptionType),op).ToLower());
+			}
+			file.WriteLine("-- Tracking which tutorial tips have been displayed:");
+			foreach(TutorialTopic topic in Enum.GetValues(typeof(TutorialTopic))){
+				if(Help.displayed[topic]){
+					file.Write("t ");
+				}
+				else{
+					file.Write("f ");
+				}
+				file.WriteLine(Enum.GetName(typeof(TutorialTopic),topic).ToLower());
 			}
 			file.WriteLine("--");
 			file.Close();
@@ -528,6 +346,9 @@ namespace Forays{
 			};
 			b.Write(Actor.player_name);
 			b.Write(M.current_level);
+			for(int i=0;i<20;++i){
+				b.Write((int)M.level_types[i]);
+			}
 			b.Write(M.wiz_lite);
 			b.Write(M.wiz_dark);
 			//skipping danger_sensed
@@ -721,7 +542,6 @@ namespace Forays{
 			Environment.Exit(0);
 		}
 	}
-	public enum Help{Overview,Skills,Feats,Spells,Items,Commands,Advanced};
 	public class Dict<TKey,TValue>{
 		public Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
 		public TValue this[TKey key]{
@@ -850,6 +670,20 @@ namespace Forays{
 				l.Add(temp.RemoveRandom());
 			}
 		}
+		public static List<string> GetWordWrappedList(this string s,int max_length){
+			List<string> result = new List<string>();
+			while(s.Length > max_length){
+				for(int i=max_length;i>=0;--i){
+					if(s.Substring(i,1) == " "){
+						result.Add(s.Substring(0,i));
+						s = s.Substring(i+1);
+						break;
+					}
+				}
+			}
+			result.Add(s);
+			return result;
+		}
 		public static string PadOuter(this string s,int totalWidth){
 			return s.PadOuter(totalWidth,' ');
 		}
@@ -870,6 +704,46 @@ namespace Forays{
 		}
 		public static string PadToMapSize(this string s){
 			return s.PadRight(Global.COLS);
+		}
+		public static colorstring GetColorString(this string s){ return GetColorString(s,Color.Gray); }
+		public static colorstring GetColorString(this string s,Color color){
+			if(s.Contains("[")){
+				string temp = s;
+				colorstring result = new colorstring();
+				while(temp.Contains("[")){
+					int open = temp.IndexOf('[');
+					int close = temp.IndexOf(']');
+					if(close == -1){
+						result.strings.Add(new cstr(temp,color));
+						temp = "";
+					}
+					else{
+						int hyphen = temp.IndexOf('-');
+						if(hyphen != -1 && hyphen > open && hyphen < close){
+							result.strings.Add(new cstr(temp.Substring(0,open+1),color));
+							//result.strings.Add(new cstr(temp.Substring(open+1,(close-open)-1),Color.Cyan));
+							result.strings.Add(new cstr(temp.Substring(open+1,(hyphen-open)-1),Color.Cyan));
+							result.strings.Add(new cstr("-",color));
+							result.strings.Add(new cstr(temp.Substring(hyphen+1,(close-hyphen)-1),Color.Cyan));
+							result.strings.Add(new cstr("]",color));
+							temp = temp.Substring(close+1);
+						}
+						else{
+							result.strings.Add(new cstr(temp.Substring(0,open+1),color));
+							result.strings.Add(new cstr(temp.Substring(open+1,(close-open)-1),Color.Cyan));
+							result.strings.Add(new cstr("]",color));
+							temp = temp.Substring(close+1);
+						}
+					}
+				}
+				if(temp != ""){
+					result.strings.Add(new cstr(temp,color));
+				}
+				return result;
+			}
+			else{
+				return new colorstring(s,color);
+			}
 		}
 		public delegate void ListDelegate<T>(T t); //this one is kinda experimental and doesn't save tooo much typing, but it's here anyway
 		public static void Each<T>(this List<T> l,ListDelegate<T> del){

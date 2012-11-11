@@ -11,6 +11,7 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 namespace Forays{
+	public enum LevelType{Standard,Cave,Ruined,Hive,Mine,Fortress,Extravagant};
 	public class Map{
 		public class PosArray<T>{
 			private T[,] objs;
@@ -34,11 +35,10 @@ namespace Forays{
 				objs = new T[rows,cols];
 			}
 		}
-		//public Tile[,] tile{get;set;} 
-		//public Actor[,] actor{get;set;} 
 		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
 		public int current_level{get;set;}
+		public List<LevelType> level_types;
 		public bool wiz_lite{get{ return internal_wiz_lite; }
 			set{
 				internal_wiz_lite = value;
@@ -46,7 +46,7 @@ namespace Forays{
 					foreach(Tile t in AllTiles()){
 						if(t.Is(FeatureType.FUNGUS)){
 							Q.Add(new Event(t,200,EventType.BLAST_FUNGUS));
-							Actor.B.Add("The blast fungus starts to smolder in the light. ",t);
+							B.Add("The blast fungus starts to smolder in the light. ",t);
 							t.features.Remove(FeatureType.FUNGUS);
 							t.features.Add(FeatureType.FUNGUS_ACTIVE);
 						}
@@ -64,6 +64,7 @@ namespace Forays{
 		private const int COLS = Global.COLS;
 		public static Actor player{get;set;}
 		public static Queue Q{get;set;}
+		public static Buffer B{get;set;}
 		static Map(){
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -77,6 +78,7 @@ namespace Forays{
 			current_level = 0;
 			Map.player = g.player;
 			Map.Q = g.Q;
+			Map.B = g.B;
 		}
 		public bool BoundsCheck(int r,int c){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
@@ -105,6 +107,28 @@ namespace Forays{
 			return result;
 		}
 		public List<pos> AllPositions(){ return allpositions; }
+		public LevelType ChooseNextLevelType(LevelType current){
+			List<LevelType> types = new List<LevelType>();
+			foreach(LevelType l in Enum.GetValues(typeof(LevelType))){
+				if(l != current){
+					types.Add(l);
+				}
+			}
+			return types.Random();
+		}
+		public void GenerateLevelTypes(){
+			level_types = new List<LevelType>{LevelType.Standard,LevelType.Standard};
+			LevelType current = LevelType.Standard;
+			while(level_types.Count < 20){
+				int num = Global.Roll(2,2) - 1;
+				current = ChooseNextLevelType(current);
+				for(int i=0;i<num;++i){
+					if(level_types.Count < 20){
+						level_types.Add(current);
+					}
+				}
+			}
+		}
 		public void UpdateDangerValues(){
 			danger_sensed = new bool[ROWS,COLS];
 			foreach(Actor a in AllActors()){
@@ -571,7 +595,7 @@ namespace Forays{
 						if(actor[i,j] != player){
 							actor[i,j].inv.Clear();
 							actor[i,j].target = null;
-							Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
+							//Q.KillEvents(actor[i,j],EventType.ANY_EVENT);
 							if(actor[i,j].group != null){
 								actor[i,j].group.Clear();
 								actor[i,j].group = null;
@@ -587,43 +611,102 @@ namespace Forays{
 			}
 			wiz_lite = false;
 			wiz_dark = false;
-			Q.KillEvents(null,EventType.BLAST_FUNGUS);
+			/*Q.KillEvents(null,EventType.BLAST_FUNGUS);
 			Q.KillEvents(null,EventType.RELATIVELY_SAFE);
 			Q.KillEvents(null,EventType.POLTERGEIST);
+			Q.KillEvents(null,EventType.MIMIC);
+			Q.KillEvents(null,EventType.FIRE_GEYSER);
+			Q.KillEvents(null,EventType.FIRE_GEYSER_ERUPTION);
+			Q.KillEvents(null,EventType.FOG);
+			Q.KillEvents(null,EventType.GRENADE);
+			Q.KillEvents(null,EventType.POISON_GAS);
+			Q.KillEvents(null,EventType.QUICKFIRE);
+			Q.KillEvents(null,EventType.REGENERATING_FROM_DEATH);
+			Q.KillEvents(null,EventType.STALAGMITE);*/
+			Q.ResetForNewLevel();
 			Actor.tiebreakers = new List<Actor>{player};
 			//alltiles.Clear();
-			DungeonGen.Dungeon dungeon = new DungeonGen.Dungeon();
-			char[,] charmap = dungeon.Generate();
-			int attempts = 0;
-			for(bool done=false;!done;++attempts){
-				int rr = Global.Roll(ROWS-4) + 1;
-				int rc = Global.Roll(COLS-4) + 1;
-				if(charmap[rr,rc] == '.'){
-					bool floors = true;
-					pos temp = new pos(rr,rc);
-					foreach(pos p in temp.PositionsAtDistance(1)){
-						if(charmap[p.row,p.col] != '.'){
-							floors = false;
-						}
-					}
-					if(floors){
-						charmap[rr,rc] = '>';
-						done = true;
+			DungeonGen.StandardDungeon dungeon = new DungeonGen.StandardDungeon();
+			char[,] charmap = null;
+			switch(level_types[current_level-1]){
+			case LevelType.Standard:
+				charmap = dungeon.GenerateStandard();
+				break;
+			case LevelType.Cave:
+				charmap = dungeon.GenerateCave();
+				break;
+			case LevelType.Ruined:
+				charmap = dungeon.GenerateRuined();
+				break;
+			case LevelType.Hive:
+				charmap = dungeon.GenerateHive();
+				break;
+			case LevelType.Mine:
+				charmap = dungeon.GenerateMine();
+				break;
+			case LevelType.Fortress:
+				charmap = dungeon.GenerateFortress();
+				break;
+			case LevelType.Extravagant:
+				charmap = dungeon.GenerateExtravagant();
+				break;
+			}
+			/*for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					Screen.WriteMapChar(i,j,charmap[i,j]);
+				}
+			}
+			Console.ReadKey(true);*/
+			List<pos> interesting_tiles = new List<pos>();
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					if(charmap[i,j] == '$'){
+						interesting_tiles.Add(new pos(i,j));
 					}
 				}
-				if(attempts > 500){ Actor.B.Add("Trying to place stairs.... "); }
 			}
+			int attempts = 0;
 			if(current_level%2 == 1){
 				List<int> ints = new List<int>{0,1,2,3,4};
 				while(ints.Count > 0){
-					bool done = false;
-					while(!done){
+					attempts = 0;
+					for(bool done=false;!done;++attempts){
 						int rr = Global.Roll(ROWS-4) + 1;
 						int rc = Global.Roll(COLS-4) + 1;
+						if(interesting_tiles.Count > 0 && (ints.Count > 1 || attempts > 1000)){
+							pos p = interesting_tiles.Random();
+							rr = p.row;
+							rc = p.col;
+							charmap[rr,rc] = '.';
+						}
+						pos temp = new pos(rr,rc);
 						if(ints.Count > 1){
 							if(charmap[rr,rc] == '.'){
+								if(attempts > 1000){
+									bool good = true;
+									foreach(pos p in temp.PositionsWithinDistance(4)){
+										char ch = charmap[p.row,p.col];
+										if(ch == 'a' || ch == 'b' || ch == 'c' || ch == 'd' || ch == 'e'){
+											good = false;
+										}
+									}
+									if(good){
+										List<pos> dist2 = new List<pos>();
+										foreach(pos p2 in temp.PositionsAtDistance(2)){
+											if(charmap[p2.row,p2.col] == '.'){
+												dist2.Add(p2);
+											}
+										}
+										if(dist2.Count > 0){
+											charmap[rr,rc] = (char)(((char)ints.RemoveRandom()) + 'a');
+											pos p2 = dist2.Random();
+											charmap[p2.row,p2.col] = (char)(((char)ints.RemoveRandom()) + 'a');
+											done = true;
+											break;
+										}
+									}
+								}
 								bool floors = true;
-								pos temp = new pos(rr,rc);
 								foreach(pos p in temp.PositionsAtDistance(1)){
 									if(charmap[p.row,p.col] != '.'){
 										floors = false;
@@ -644,18 +727,56 @@ namespace Forays{
 										charmap[rr,rc-1] = (char)(((char)ints.RemoveRandom()) + 'a');
 										charmap[rr,rc+1] = (char)(((char)ints.RemoveRandom()) + 'a');
 									}
-									charmap[rr,rc] = '#';
+									char center = ' ';
+									switch(Global.Roll(3)){
+									case 1:
+										center = '#';
+										break;
+									case 2:
+										center = '&';
+										break;
+									case 3:
+										center = '0';
+										break;
+									}
+									charmap[rr,rc] = center;
+									interesting_tiles.Remove(temp);
 									done = true;
+									break;
 								}
 							}
 						}
 						else{
+							if(attempts > 1000 && charmap[rr,rc] == '.'){
+								bool good = true;
+								foreach(pos p in temp.PositionsWithinDistance(2)){
+									char ch = charmap[p.row,p.col];
+									if(ch == 'a' || ch == 'b' || ch == 'c' || ch == 'd' || ch == 'e'){
+										good = false;
+									}
+								}
+								if(good){
+									charmap[rr,rc] = (char)(((char)ints.RemoveRandom()) + 'a');
+									interesting_tiles.Remove(temp);
+									done = true;
+									break;
+								}
+							}
 							if(charmap[rr,rc] == '#'){
 								if(charmap[rr+1,rc] != '.' && charmap[rr-1,rc] != '.' && charmap[rr,rc-1] != '.' && charmap[rr,rc+1] != '.'){
 									continue; //no floors? retry.
 								}
+								bool no_good = false;
+								foreach(pos p in temp.PositionsAtDistance(2)){
+									char ch = charmap[p.row,p.col];
+									if(ch == 'a' || ch == 'b' || ch == 'c' || ch == 'd' || ch == 'e'){
+										no_good = true;
+									}
+								}
+								if(no_good){
+									continue;
+								}
 								int walls = 0;
-								pos temp = new pos(rr,rc);
 								foreach(pos p in temp.PositionsAtDistance(1)){
 									if(charmap[p.row,p.col] == '#'){
 										++walls;
@@ -679,6 +800,7 @@ namespace Forays{
 										if(successive_walls == 5){
 											done = true;
 											charmap[rr,rc] = (char)(((char)ints.RemoveRandom()) + 'a');
+											interesting_tiles.Remove(temp);
 											break;
 										}
 									}
@@ -697,6 +819,12 @@ namespace Forays{
 				for(bool done=false;!done;++tries){
 					int rr = Global.Roll(ROWS-4) + 1;
 					int rc = Global.Roll(COLS-4) + 1;
+					if(interesting_tiles.Count > 0){
+						pos p = interesting_tiles.RemoveRandom();
+						rr = p.row;
+						rc = p.col;
+						charmap[rr,rc] = '.';
+					}
 					if(charmap[rr,rc] == '.'){
 						bool floors = true;
 						pos temp = new pos(rr,rc);
@@ -705,28 +833,48 @@ namespace Forays{
 								floors = false;
 							}
 						}
-						if(floors){
+						if(floors || tries > 1000){ //after 1000 tries, place it anywhere
 							charmap[rr,rc] = '=';
 							done = true;
 						}
 					}
-					if(tries > 500){ Actor.B.Add("Trying to place chests.... "); }
 				}
 			}
-			int num_firepits = 0;
-			switch(Global.Roll(5)){
-			case 1:
-				num_firepits = 1;
-				break;
-			case 2:
-				num_firepits = Global.Roll(4)+1;
-				break;
+			attempts = 0;
+			for(bool done=false;!done;++attempts){
+				int rr = Global.Roll(ROWS-4) + 1;
+				int rc = Global.Roll(COLS-4) + 1;
+				if(interesting_tiles.Count > 0){
+					pos p = interesting_tiles.RemoveRandom();
+					rr = p.row;
+					rc = p.col;
+					charmap[rr,rc] = '.';
+				}
+				if(charmap[rr,rc] == '.'){
+					bool floors = true;
+					pos temp = new pos(rr,rc);
+					foreach(pos p in temp.PositionsAtDistance(1)){
+						if(charmap[p.row,p.col] != '.'){
+							floors = false;
+						}
+					}
+					if(floors || attempts > 1000){
+						charmap[rr,rc] = '>';
+						done = true;
+					}
+				}
 			}
-			for(int i=0;i<num_firepits;++i){
-				int tries = 0;
-				for(bool done=false;!done && tries < 100;++tries){
+			if(Global.OneIn(30)){
+				attempts = 0;
+				for(bool done=false;!done;++attempts){
 					int rr = Global.Roll(ROWS-4) + 1;
 					int rc = Global.Roll(COLS-4) + 1;
+					if(interesting_tiles.Count > 0){
+						pos p = interesting_tiles.RemoveRandom();
+						rr = p.row;
+						rc = p.col;
+						charmap[rr,rc] = '.';
+					}
 					if(charmap[rr,rc] == '.'){
 						bool floors = true;
 						pos temp = new pos(rr,rc);
@@ -735,8 +883,8 @@ namespace Forays{
 								floors = false;
 							}
 						}
-						if(floors){
-							charmap[rr,rc] = '0';
+						if(floors || attempts > 1000){
+							charmap[rr,rc] = 'P';
 							done = true;
 						}
 					}
@@ -757,11 +905,13 @@ namespace Forays{
 			List<Tile> hidden = new List<Tile>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
-					switch(charmap[i,j]){
+					//Screen.WriteMapChar(i,j,charmap[i,j]);
+					switch(charmap[i,j]){case '%': Tile.Create(TileType.FIRE_GEYSER,i,j); break;
 					case '#':
 						Tile.Create(TileType.WALL,i,j);
 						break;
 					case '.':
+					case '$':
 						Tile.Create(TileType.FLOOR,i,j);
 						break;
 					case '+':
@@ -778,8 +928,17 @@ namespace Forays{
 							Tile.Create(TileType.FLOOR,i,j);
 						}
 						break;
+					case '&':
+						Tile.Create(TileType.STATUE,i,j);
+						break;
+					case ':':
+						Tile.Create(TileType.RUBBLE,i,j);
+						break;
 					case '0':
 						Tile.Create(TileType.FIREPIT,i,j);
+						break;
+					case 'P':
+						Tile.Create(TileType.HEALING_POOL,i,j);
 						break;
 					case '=':
 						Tile.Create(TileType.CHEST,i,j);
@@ -823,6 +982,7 @@ namespace Forays{
 					tile[i,j].solid_rock = true;
 				}
 			}
+			//Console.ReadKey(true);
 			player.ResetForNewLevel();
 			foreach(Tile t in AllTiles()){
 				if(t.light_radius > 0){
@@ -1014,7 +1174,7 @@ namespace Forays{
 			}
 			if(Global.CoinFlip()){ //is 50% the best rate for hidden areas? hmm
 				bool done = false;
-				for(int tries=0;!done && tries<9999;++tries){
+				for(int tries=0;!done && tries<500;++tries){
 					int rr = Global.Roll(ROWS-4) + 1;
 					int rc = Global.Roll(COLS-4) + 1;
 					bool good = true;
@@ -1040,6 +1200,9 @@ namespace Forays{
 									good_dir = false;
 								}
 								t = t.TileInDirection(i);
+								if(t != null && t.type == TileType.STATUE){
+									good_dir = false;
+								}
 								++distance;
 							}
 							if(good_dir && t != null){
@@ -1184,10 +1347,179 @@ namespace Forays{
 				Q.Add(e);
 			}
 			{
-			Event e = new Event(10000,EventType.RELATIVELY_SAFE);
-			e.tiebreaker = 0;
-			Q.Add(e);
+				Event e = new Event(10000,EventType.RELATIVELY_SAFE);
+				e.tiebreaker = 0;
+				Q.Add(e);
 			}
+			if(current_level == 1){
+				B.Add("Welcome, " + Actor.player_name + "! ");
+			}
+			else{
+				B.Add(LevelMessage());
+			}
+		}
+		public string LevelMessage(){
+			if(current_level == 1 || level_types[current_level-2] == level_types[current_level-1]){
+				return "";
+			}
+			List<string> messages = new List<string>();
+			switch(level_types[current_level-1]){
+			case LevelType.Standard:
+				messages.Add("You enter a complex of ancient rooms and hallways. ");
+				messages.Add("Well-worn corridors suggest that these rooms are frequently used. ");
+				break;
+			case LevelType.Cave:
+				messages.Add("You enter a large natural cave. ");
+				messages.Add("This cavern's rough walls shine with moisture. ");
+				messages.Add("A cave opens up before you. A dry, dusty scent lingers in the ancient tunnels. ");
+				break;
+			case LevelType.Ruined:
+				messages.Add("You enter a badly damaged rubble-strewn area of the dungeon. ");
+				messages.Add("Broken walls and piles of rubble cover parts of the floor here. ");
+				messages.Add("This section of the dungeon has partially collapsed. ");
+				break;
+			case LevelType.Hive:
+				messages.Add("You enter an area made up of small chambers. Some of the walls are covered in a waxy substance. ");
+				messages.Add("As you enter the small chambers here, you briefly hear a faint buzzing that makes your skin crawl. ");
+				break;
+			case LevelType.Mine:
+				messages.Add("You enter a system of mining tunnels. ");
+				messages.Add("Mining tools are scattered on the ground of this level. ");
+				messages.Add("You notice half-finished tunnels and mining equipment here. ");
+				break;
+			case LevelType.Fortress:
+				messages.Add("You pass through a broken gate and enter the remnants of a fortress. ");
+				messages.Add("This level looks like it was intended to be a stronghold. ");
+				break;
+			case LevelType.Extravagant:
+				messages.Add("This area is decorated with fine tapestries, marble statues, and other luxuries. ");
+				messages.Add("Patterned decorative tiles, fine rugs, and beautifully worked stone greet you upon entering this level. ");
+				break;
+			}
+			if(current_level > 1){
+				string transition = TransitionMessage(level_types[current_level-2],level_types[current_level-1]);
+				if(transition != ""){
+					messages.Add(transition);
+				}
+			}
+			return messages.Random();
+		}
+		public string TransitionMessage(LevelType from,LevelType to){
+			switch(from){
+			case LevelType.Standard:
+				switch(to){
+				case LevelType.Cave:
+					return "Rooms and corridors disappear from your surroundings as you reach a large natural cavern. ";
+				case LevelType.Ruined:
+					return "More corridors and rooms appear before you, but many of the walls here are shattered and broken. Rubble covers the floor. ";
+				case LevelType.Hive:
+					return "The rooms get smaller as you continue. A waxy substance appears on some of the walls. ";
+				case LevelType.Mine:
+					return "As you continue, you notice that the rooms and corridors here seem only partly finished. ";
+				case LevelType.Fortress:
+					return "You pass through an undefended gate. This area was obviously intended to be secure against intruders. ";
+				case LevelType.Extravagant:
+					return "As you continue, you notice that every corridor is extravagantly decorated and every room is magnificently furnished. ";
+				}
+				break;
+			case LevelType.Cave:
+				switch(to){
+				case LevelType.Standard:
+					return "Leaving the cave behind, you again encounter signs of humanoid habitation. ";
+				case LevelType.Ruined:
+					return "The cave leads you to ruined corridors long abandoned by their creators. ";
+				case LevelType.Hive:
+					return "The wide-open spaces of the cave disappear, replaced by small chambers that remind you of an insect hive. ";
+				case LevelType.Mine:
+					return "As you continue, the rough natural edges of the cave are broken up by artificial tunnels. You notice mining tools on the ground. ";
+				case LevelType.Fortress:
+					return "A smashed set of double doors leads you out of the cave. This area seems to have been well-defended, once. ";
+				case LevelType.Extravagant:
+					return "You encounter a beautifully crafted door in the cave wall. It leads to corridors richly decorated with tiles and tapestries. ";
+				}
+				break;
+			case LevelType.Ruined:
+				switch(to){
+				case LevelType.Standard:
+					return "no longer in such bad shape. ";
+				case LevelType.Cave:
+					return "never touched by picks. ";
+				case LevelType.Hive:
+					return "taken over by insects. ";
+				case LevelType.Mine:
+					return "being mined instead of collapsing. ";
+				case LevelType.Fortress:
+					return "better maintained, but now fallen into disuse. ";
+				case LevelType.Extravagant:
+					return "stark contrast from ruin to riches. ";
+				}
+				break;
+			case LevelType.Hive:
+				switch(to){
+				case LevelType.Standard:
+					return "tunnels made by picks instead of thousands of insects. ";
+				case LevelType.Cave:
+					return "leave the cramped chambers behind and enter a wider cave. ";
+				case LevelType.Ruined:
+					return "built by humanoids, but in the process of being reclaimed. ";
+				case LevelType.Mine:
+					return "tools show that this area is being made by humanoids rather than insects. ";
+				case LevelType.Fortress:
+					return "a wide hole leads to an abandoned fortress. ";
+				case LevelType.Extravagant:
+					return "itchiness gives way to comfort. ";
+				}
+				break;
+			case LevelType.Mine:
+				switch(to){
+				case LevelType.Standard:
+					return "fully formed corridors and rooms. ";
+				case LevelType.Cave:
+					return "tunnels disappear and natural cave walls surround you. ";
+				case LevelType.Ruined:
+					return "collapsing instead of being mined. looks older. ";
+				case LevelType.Hive:
+					return "signs of humanoid construction vanish. hive walls appear. ";
+				case LevelType.Fortress:
+					return "not only complete but well-defended at one time. ";
+				case LevelType.Extravagant:
+					return "complete and richly decorated. ";
+				}
+				break;
+			case LevelType.Fortress:
+				switch(to){
+				case LevelType.Standard:
+					return "this area is outside the main area of the fortress. ";
+				case LevelType.Cave:
+					return "leave the fortress behind and the corridors open up into natural caves. ";
+				case LevelType.Ruined:
+					return "unlike the fortress, this area was neglected. ";
+				case LevelType.Hive:
+					return "a wide hole leads to small chambers that etc etc. ";
+				case LevelType.Mine:
+					return "incomplete section that still has mining tools around. ";
+				case LevelType.Extravagant:
+					return "military to luxury. ";
+				}
+				break;
+			case LevelType.Extravagant:
+				switch(to){
+				case LevelType.Standard:
+					return "riches disappear. ";
+				case LevelType.Cave:
+					return "luxury is replaced by nature. ";
+				case LevelType.Ruined:
+					return "The opulence of your surroundings vanishes, replaced by ruined walls and scattered rubble. ";
+				case LevelType.Hive:
+					return "decorations are replaced by the waxy walls of an insect hive. ";
+				case LevelType.Mine:
+					return "no luxury here, just the tools of workers. ";
+				case LevelType.Fortress:
+					return "luxury to military. ";
+				}
+				break;
+			}
+			return "";
 		}
 	}
 }

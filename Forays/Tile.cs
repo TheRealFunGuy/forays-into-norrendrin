@@ -12,7 +12,7 @@ namespace Forays{
 	public class Tile : PhysicalObject{
 		public TileType type{get;set;}
 		public bool passable{get;set;}
-		public bool opaque{get{ return internal_opaque || features.Contains(FeatureType.FOG); } set{ internal_opaque = value; }}
+		public bool opaque{get{ return internal_opaque/* || features.Contains(FeatureType.FOG)*/; } set{ internal_opaque = value; }}
 		private bool internal_opaque; //no need to ever access this directly
 		public bool seen{get;set;}
 		public bool solid_rock{get;set;} //used for walls that will never be seen, to speed up LOS checks
@@ -58,15 +58,26 @@ namespace Forays{
 			proto[TileType.UNDEAD_TRAP] = new Tile(TileType.UNDEAD_TRAP,"sliding wall trap",'^',Color.DarkCyan,true,false,TileType.FLOOR);
 			proto[TileType.GRENADE_TRAP] = new Tile(TileType.GRENADE_TRAP,"grenade trap",'^',Color.DarkGray,true,false,TileType.FLOOR);
 			proto[TileType.STUN_TRAP] = new Tile(TileType.STUN_TRAP,"stun trap",'^',Color.Red,true,false,TileType.FLOOR);
+			Define(TileType.ALARM_TRAP,"alarm trap",'^',Color.White,true,false,TileType.FLOOR);
+			Define(TileType.DARKNESS_TRAP,"darkness trap",'^',Color.Blue,true,false,TileType.FLOOR);
+			Define(TileType.POISON_GAS_TRAP,"poison gas trap",'^',Color.Green,true,false,TileType.FLOOR);
+			Define(TileType.DIM_VISION_TRAP,"dim vision trap",'^',Color.DarkMagenta,true,false,TileType.FLOOR);
+			Define(TileType.ICE_TRAP,"ice trap",'^',Color.RandomIce,true,false,TileType.FLOOR);
+			Define(TileType.PHANTOM_TRAP,"phantom trap",'^',Color.Cyan,true,false,TileType.FLOOR);
 			proto[TileType.HIDDEN_DOOR] = new Tile(TileType.HIDDEN_DOOR,"wall",'#',Color.Gray,false,true,TileType.DOOR_C);
 			Define(TileType.RUBBLE,"pile of rubble",':',Color.Gray,false,true,TileType.FLOOR);
-			Define(TileType.RUINED_SHRINE,"ruined shrine",'_',Color.DarkGray,true,false,null);
 			Define(TileType.COMBAT_SHRINE,"shrine of combat",'_',Color.DarkRed,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.DEFENSE_SHRINE,"shrine of defense",'_',Color.White,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.MAGIC_SHRINE,"shrine of magic",'_',Color.Magenta,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.SPIRIT_SHRINE,"shrine of spirit",'_',Color.Yellow,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.STEALTH_SHRINE,"shrine of stealth",'_',Color.Blue,true,false,TileType.RUINED_SHRINE);
+			Define(TileType.RUINED_SHRINE,"ruined shrine",'_',Color.DarkGray,true,false,null);
+			Define(TileType.SPELL_EXCHANGE_SHRINE,"spell exchange shrine",'_',Color.DarkMagenta,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.FIRE_GEYSER,"fire geyser",'~',Color.Red,true,false,null);
+			Define(TileType.STATUE,"statue",'&',Color.Gray,false,false,null);
+			Define(TileType.HEALING_POOL,"healing pool",'0',Color.Cyan,true,false,TileType.FLOOR);
+			Define(TileType.FOG_VENT,"fog vent",'~',Color.Gray,true,false,null);
+			Define(TileType.POISON_GAS_VENT,"gas vent",'~',Color.DarkGreen,true,false,null);
 
 			proto_feature[FeatureType.GRENADE] = new PhysicalObject("grenade",',',Color.Red);
 			proto_feature[FeatureType.QUICKFIRE] = new PhysicalObject("quickfire",'&',Color.RandomFire);
@@ -156,6 +167,16 @@ namespace Forays{
 				return "~";
 			case TileType.FIREPIT:
 				return "0";
+			case TileType.STATUE:
+				return "&";
+			case TileType.COMBAT_SHRINE:
+			case TileType.DEFENSE_SHRINE:
+			case TileType.MAGIC_SHRINE:
+			case TileType.RUINED_SHRINE:
+			case TileType.SPELL_EXCHANGE_SHRINE:
+			case TileType.SPIRIT_SHRINE:
+			case TileType.STEALTH_SHRINE:
+				return "_"; //this is really only useful while debugging
 			default:
 				return ".";
 			}
@@ -168,8 +189,8 @@ namespace Forays{
 			}
 			return t;
 		}
-		public static TileType RandomTrap(){ //todo add new traps as needed
-			int i = Global.Roll(6) + 7;
+		public static TileType RandomTrap(){
+			int i = Global.Roll(12) + 7;
 			return (TileType)i;
 		}
 		public bool Is(TileType t){
@@ -407,7 +428,7 @@ namespace Forays{
 						B.Add(toggler.TheVisible() + " closes the door. ");
 					}
 					else{
-						if(seen || player.DistanceFrom(this) <= 12){
+						if(seen || player.DistanceFrom(this) <= 6){
 							B.Add("You hear a door closing. ");
 						}
 					}
@@ -417,7 +438,7 @@ namespace Forays{
 						B.Add(toggler.TheVisible() + " opens the door. ");
 					}
 					else{
-						if(seen || player.DistanceFrom(this) <= 12){
+						if(seen || player.DistanceFrom(this) <= 6){
 							B.Add("You hear a door opening. ");
 						}
 					}
@@ -733,14 +754,10 @@ namespace Forays{
 					B.Add("You notice a flash of light. ",this);
 				}
 				actor().attrs[AttrType.STUNNED]++;
-				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(5)+7)*100,AttrType.STUNNED,(actor().YouFeel() + " less disoriented. "),(this.actor())));
+				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(10)+7)*100,AttrType.STUNNED,(actor().YouFeel() + " less disoriented. "),(this.actor())));
 				Toggle(actor());
 				break;
-			case TileType.LIGHT_TRAP: //todo split
-				B.Add("You hear a high-pitched ringing sound. "); //was "high-pitched thrumming sound"
-				if(actor() == player || player.DistanceFrom(this) <= 4){ //kinda hacky until other things can MakeNoise
-					player.MakeNoise();
-				}
+			case TileType.LIGHT_TRAP:
 				if(M.wiz_lite == false){
 					if(player.HasLOS(row,col) && !actor().IsHiddenFrom(player)){
 						B.Add("A wave of light washes out from above " + actor().the_name + "! ");
@@ -751,11 +768,35 @@ namespace Forays{
 					M.wiz_lite = true;
 					M.wiz_dark = false;
 				}
+				else{
+					B.Add("Nothing happens. ",this);
+				}
+				Toggle(actor());
+				break;
+			case TileType.DARKNESS_TRAP:
+				if(M.wiz_dark == false){
+					if(player.CanSee(actor())){
+						B.Add("A surge of darkness radiates out from above " + actor().the_name + "! ");
+						if(player.light_radius > 0){
+							B.Add("Your light is extinguished! ");
+						}
+					}
+					else{
+						B.Add("A surge of darkness extinguishes all light in the area! ");
+					}
+					M.wiz_dark = true;
+					M.wiz_lite = false;
+				}
+				else{
+					B.Add("Nothing happens. ",this);
+				}
 				Toggle(actor());
 				break;
 			case TileType.QUICKFIRE_TRAP:
+			{
 				B.Add("Fire pours over " + actor().TheVisible() + " and starts to spread! ",this);
-				foreach(Actor a in ActorsWithinDistance(1)){
+				Actor a = actor();
+				//foreach(Actor a in ActorsWithinDistance(1)){ //no longer affects everything nearby
 					if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE) && !a.HasAttr(AttrType.ON_FIRE)
 					&& !a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
 						if(a == actor()){							// to work properly, 
@@ -768,7 +809,7 @@ namespace Forays{
 							B.Add(a.You("start") + " to catch fire. ",a);
 						}
 					}
-				}
+				//}
 				features.Add(FeatureType.QUICKFIRE);
 				Toggle(actor());
 				List<Tile> newarea = new List<Tile>();
@@ -780,6 +821,113 @@ namespace Forays{
 					Q.Add(new Event(this,newarea,100,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
 				//}
 				break;
+			}
+			case TileType.ALARM_TRAP:
+				if(actor() == player){
+					B.Add("A high-pitched ringing sound reverberates from above you. ");
+				}
+				else{
+					if(player.CanSee(actor())){
+						B.Add("A high-pitched ringing sound reverberates from above " + actor().the_name + ". ");
+					}
+					else{
+						B.Add("You hear a high-pitched ringing sound. ");
+					}
+				}
+				foreach(Actor a in ActorsWithinDistance(12,true)){
+					if(a.type != ActorType.LARGE_BAT && a.type != ActorType.BLOOD_MOTH && a.type != ActorType.CARNIVOROUS_BRAMBLE
+					&& a.type != ActorType.LASHER_FUNGUS && a.type != ActorType.PHASE_SPIDER){
+						a.FindPath(this);
+					}
+				}
+				Toggle(actor());
+				break;
+			case TileType.DIM_VISION_TRAP:
+				B.Add("A dart strikes " + actor().the_name + ". ",actor());
+				if(actor() == player){
+					B.Add("Your vision becomes weaker! ");
+					actor().GainAttrRefreshDuration(AttrType.DIM_VISION,actor().DurationOfMagicalEffect(Global.Roll(10) + 20) * 100,"Your vision returns to normal. ");
+				}
+				else{
+					if(!actor().HasAttr(AttrType.IMMUNE_TOXINS) && !actor().HasAttr(AttrType.UNDEAD) && !actor().HasAttr(Forays.AttrType.BLINDSIGHT)
+					&& actor().type != ActorType.BLOOD_MOTH && actor().type != ActorType.PHASE_SPIDER){
+						if(player.CanSee(actor())){
+							B.Add(actor().the_name + " seems to have trouble seeing. ");
+						}
+						actor().GainAttrRefreshDuration(AttrType.DIM_VISION,actor().DurationOfMagicalEffect(Global.Roll(10) + 20) * 100);
+					}
+				}
+				Toggle(actor());
+				break;
+			case TileType.ICE_TRAP:
+				if(player.CanSee(actor())){
+					B.Add("The air suddenly freezes, encasing " + actor().the_name + " in ice. ");
+				}
+				actor().attrs[AttrType.FROZEN] = 15;
+				Toggle(actor());
+				break;
+			case TileType.PHANTOM_TRAP:
+			{
+				Tile open = TilesWithinDistance(3).Where(t => t.passable && t.actor() == null && t.HasLOE(this)).Random();
+				if(open != null){
+					Actor a = Actor.CreatePhantom(open.row,open.col);
+					if(a != null){
+						a.attrs[AttrType.PLAYER_NOTICED]++;
+						a.player_visibility_duration = -1;
+						B.Add("A ghostly image rises! ",a);
+					}
+					else{
+						B.Add("Nothing happens. ",this);
+					}
+				}
+				else{
+					B.Add("Nothing happens. ",this);
+				}
+				Toggle(actor());
+				break;
+			}
+			case TileType.POISON_GAS_TRAP:
+			{
+				Tile current = this;
+				int num = Global.Roll(5) + 7;
+				List<Tile> new_area = new List<Tile>();
+				for(int i=0;i<num;++i){
+					if(!current.Is(FeatureType.POISON_GAS)){
+						current.features.Add(FeatureType.POISON_GAS);
+						new_area.Add(current);
+					}
+					else{
+						for(int tries=0;tries<50;++tries){
+							List<Tile> open = new List<Tile>();
+							foreach(Tile t in current.TilesAtDistance(1)){
+								if(t.passable){
+									open.Add(t);
+								}
+							}
+							if(open.Count > 0){
+								Tile possible = open.Random();
+								if(!possible.Is(FeatureType.POISON_GAS)){
+									possible.features.Add(FeatureType.POISON_GAS);
+									new_area.Add(possible);
+									break;
+								}
+								else{
+									current = possible;
+								}
+							}
+							else{
+								break;
+							}
+						}
+					}
+				}
+				if(new_area.Count > 0){
+					B.Add("Poisonous gas fills the area! ",this);
+					Q.Add(new Event(new_area,300,EventType.POISON_GAS));
+				}
+				Toggle(actor());
+				break;
+			}
 			default:
 				break;
 			}
@@ -961,6 +1109,12 @@ namespace Forays{
 			case TileType.UNDEAD_TRAP:
 			case TileType.TELEPORT_TRAP:
 			case TileType.STUN_TRAP:
+			case TileType.ALARM_TRAP:
+			case TileType.DARKNESS_TRAP:
+			case TileType.DIM_VISION_TRAP:
+			case TileType.ICE_TRAP:
+			case TileType.PHANTOM_TRAP:
+			case TileType.POISON_GAS_TRAP:
 				return true;
 			default:
 				return false;
@@ -979,6 +1133,7 @@ namespace Forays{
 			case TileType.MAGIC_SHRINE:
 			case TileType.SPIRIT_SHRINE:
 			case TileType.STEALTH_SHRINE:
+			case TileType.SPELL_EXCHANGE_SHRINE:
 				return true;
 			default:
 				return false;
