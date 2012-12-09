@@ -48,9 +48,20 @@ namespace Forays{
 		public PhysicalObject(string name_,char symbol_,Color color_){
 			row = -1;
 			col = -1;
-			name = name_;
-			the_name = "the " + name_;
-			switch(name_[0]){
+			SetName(name_);
+			symbol = symbol_;
+			color = color_;
+			light_radius = 0;
+		}
+		public void SetName(string new_name){
+			name = new_name;
+			the_name = "the " + name;
+			a_name = "a " + name;
+			if(name=="you"){
+				the_name = "you";
+				a_name = "you";
+			}
+			switch(name[0]){
 			case 'a':
 			case 'e':
 			case 'i':
@@ -61,15 +72,9 @@ namespace Forays{
 			case 'I':
 			case 'O':
 			case 'U':
-				a_name = "an " + name_;
-				break;
-			default:
-				a_name = "a " + name_;
+				a_name = "an " + name;
 				break;
 			}
-			symbol = symbol_;
-			color = color_;
-			light_radius = 0;
 		}
 		public void Cursor(){
 			Console.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);

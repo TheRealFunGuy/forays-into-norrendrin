@@ -130,6 +130,29 @@ namespace Forays{
 			}
 			return i;
 		}
+		public string Name(){
+			string result;
+			int position;
+			string qty = quantity.ToString();
+			switch(quantity){
+			case 0:
+				return "a buggy item";
+			case 1:
+				result = name;
+				position = result.IndexOf('~');
+				if(position != -1){
+					result = result.Substring(0,position) + result.Substring(position+1);
+				}
+				return result;
+			default:
+				result = name;
+				position = result.IndexOf('~');
+				if(position != -1){
+					result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+				}
+				return result;
+			}
+		}
 		public string AName(){
 			string result;
 			int position;
@@ -208,7 +231,8 @@ namespace Forays{
 			}
 			return list.Random();
 		}
-		public bool Use(Actor user){
+		public bool Use(Actor user){ return Use(user,null); }
+		public bool Use(Actor user,List<Tile> line){
 			bool used = true;
 			switch(type){
 			case ConsumableType.HEALING:
@@ -395,10 +419,11 @@ namespace Forays{
 				break;
 			case ConsumableType.DETECT_MONSTERS:
 			{
-				user.attrs[AttrType.DETECTING_MONSTERS]++;
+				//user.attrs[AttrType.DETECTING_MONSTERS]++;
 				B.Add("The scroll reveals " + user.Your() + " foes. ",user);
 				int duration = Global.Roll(20)+30;
-				Q.Add(new Event(user,duration*100,AttrType.DETECTING_MONSTERS,user.Your() + " foes are no longer revealed. ",user));
+				//Q.Add(new Event(user,duration*100,AttrType.DETECTING_MONSTERS,user.Your() + " foes are no longer revealed. ",user));
+				user.GainAttrRefreshDuration(AttrType.DETECTING_MONSTERS,duration*100,user.Your() + " foes are no longer revealed. ",user);
 				break;
 			}
 			case ConsumableType.MAGIC_MAP:
@@ -421,12 +446,12 @@ namespace Forays{
 						}
 						if(good){
 							t.seen = true;
-							if(t.IsTrap() || t.Is(TileType.HIDDEN_DOOR)){
+							if(t.IsTrapOrVent() || t.Is(TileType.HIDDEN_DOOR)){
 								if(hiddencheck != null){
 									hiddencheck.area.Remove(t);
 								}
 							}
-							if(t.IsTrap()){
+							if(t.IsTrapOrVent()){
 								t.name = Tile.Prototype(t.type).name;
 								t.a_name = Tile.Prototype(t.type).a_name;
 								t.the_name = Tile.Prototype(t.type).the_name;
@@ -462,8 +487,10 @@ namespace Forays{
 				}
 				break;
 			case ConsumableType.PRISMATIC:
-				{
-				List<Tile> line = user.GetTarget(12,1);
+			{
+				if(line == null){
+					line = user.GetTarget(12,1);
+				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
@@ -500,7 +527,7 @@ namespace Forays{
 						if(t.passable){
 							foreach(Tile t2 in t.TilesWithinDistance(1)){
 								if(t2.actor() != null){
-									t2.actor().TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+									t2.actor().TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user,"a prismatic orb");
 								}
 								if(damtype == DamageType.FIRE && t2.Is(FeatureType.TROLL_CORPSE)){
 									t2.features.Remove(FeatureType.TROLL_CORPSE);
@@ -516,7 +543,7 @@ namespace Forays{
 							foreach(Tile t2 in t.TilesWithinDistance(1)){
 								if(prev != null && prev.HasBresenhamLine(t2.row,t2.col)){
 									if(t2.actor() != null){
-										t2.actor().TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user);
+										t2.actor().TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),user,"a prismatic orb");
 									}
 									if(damtype == DamageType.FIRE && t2.Is(FeatureType.TROLL_CORPSE)){
 										t2.features.Remove(FeatureType.TROLL_CORPSE);
@@ -536,10 +563,12 @@ namespace Forays{
 					used = false;
 				}
 				break;
-				}
+			}
 			case ConsumableType.FREEZING:
 			{
-				List<Tile> line = user.GetTarget(12,3);
+				if(line == null){
+					line = user.GetTarget(12,3);
+				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
@@ -572,7 +601,7 @@ namespace Forays{
 					while(targets.Count > 0){
 						Actor ac = targets.RemoveRandom();
 						B.Add(ac.YouAre() + " encased in ice. ",ac);
-						ac.attrs[Forays.AttrType.FROZEN] = 15;
+						ac.attrs[Forays.AttrType.FROZEN] = 25;
 					}
 				}
 				else{
@@ -582,7 +611,9 @@ namespace Forays{
 			}
 			case ConsumableType.QUICKFIRE:
 			{
-				List<Tile> line = user.GetTarget(12,-1);
+				if(line == null){
+					line = user.GetTarget(12,-1);
+				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
@@ -612,7 +643,9 @@ namespace Forays{
 			}
 			case ConsumableType.FOG:
 			{
-				List<Tile> line = user.GetTarget(12,-3);
+				if(line == null){
+					line = user.GetTarget(12,-3);
+				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
@@ -656,6 +689,12 @@ namespace Forays{
 			}
 			case ConsumableType.BANDAGE:
 				user.TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,1,null);
+				if(user.HasAttr(AttrType.MAGICAL_BLOOD)){
+					user.recover_time = Q.turn + 200;
+				}
+				else{
+					user.recover_time = Q.turn + 500;
+				}
 				if(user.name == "you"){
 					B.Add("You apply a bandage. ");
 				}
@@ -672,7 +711,9 @@ namespace Forays{
 					--quantity;
 				}
 				else{
-					user.inv.Remove(this);
+					if(user != null){
+						user.inv.Remove(this);
+					}
 				}
 			}
 			return used;

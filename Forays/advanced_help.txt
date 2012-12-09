@@ -3,6 +3,12 @@ Tips and advanced topics:
 Be sure to take advantage of your natural recovery. Press 'w5'
 or 'w.' to wait in place until you've recovered.
 
+Damage:
+
+Damage values are described as die rolls. For instance, a 2d6
+attack will deal damage equal to two dice with six sides each,
+added together.
+
 Stealth:
 
 Several factors determine whether you'll be spotted on a given

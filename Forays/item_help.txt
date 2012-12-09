@@ -6,6 +6,7 @@ Regeneration    - You regenerate 1HP each turn for the next 60
 Toxin immunity  - Grants complete immunity to biological toxins
                   and poisons for 50 turns.
 Clarity         - Fully restores your drained magic reserves.
+Cloaking        - Grants invisibility while in darkness.
 
 
 Runes:
@@ -13,6 +14,7 @@ Runes:
 Blinking        - Magically transports you a few spaces away.
 Teleportation   - Magically transports you far away.
 Passage         - You travel through an adjacent wall.
+Time            - Grants you a single extra turn.
 
 
 Scrolls:
@@ -31,6 +33,10 @@ Prismatic       - An elemental burst weapon. When thrown, deals
                   2d6 fire, cold, & electrical damage(radius 1).
 Freezing        - When thrown, everything within 3 spaces is
                   encased in ice.
+Quickfire	- Creates quickfire that spreads from the point
+                  of impact.
+Fog             - Fills a small area with fog, blocking sight
+                  and making attacks miss more often.
 
 Other:
 
