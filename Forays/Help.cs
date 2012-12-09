@@ -9,9 +9,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 namespace Forays{
-	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced};
-	public enum TutorialTopic{Movement,Attacking,Resistance,Fire,Recovery,RangedAttacks,Armor,HealingPool};
+	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced,Tips};
+	public enum TutorialTopic{Movement,Attacking,Torch,Resistance,Fire,Recovery,RangedAttacks,Feats,Armor,HealingPool,Consumables};
 	public static class Help{
 		public static Dict<TutorialTopic,bool> displayed = new Dict<TutorialTopic,bool>();
 		public static void DisplayHelp(){ DisplayHelp(HelpTopic.Overview); }
@@ -129,6 +130,13 @@ namespace Forays{
 					}
 					break;
 				case 'h':
+					if(h != HelpTopic.Tips){
+						h = HelpTopic.Tips;
+						text = HelpText(h);
+						startline = 0;
+					}
+					break;
+				case 'i':
 				case (char)27:
 					done = true;
 					break;
@@ -210,6 +218,21 @@ namespace Forays{
 				break;
 			}
 			List<string> result = new List<string>();
+			if(h == HelpTopic.Tips){ //these aren't read from a file
+				result.Add("Viewing all tutorial tips:");
+				result.Add("");
+				result.Add("");
+				result.Add("");
+				foreach(TutorialTopic topic in Enum.GetValues(typeof(TutorialTopic))){
+					foreach(string s in TutorialText(topic)){
+						result.Add(s);
+					}
+					result.Add("");
+					result.Add("");
+					result.Add("");
+				}
+				return result;
+			}
 			if(path != ""){
 				StreamReader file = new StreamReader(path);
 				for(int i=0;i<startline;++i){
@@ -241,35 +264,79 @@ namespace Forays{
 				return new string[]{
 					"Moving around",
 					"",
-					"...",
-					"..."};
+					"Use the numpad [1-9] to move. Press",
+					"[5] to wait.",
+					"",
+					"If you have no numpad, you can use",
+					"the arrow keys or [hjkl] to move,",
+					"using [yubn] for diagonal moves.",
+					"",
+					"This tip won't appear again. If you",
+					"wish to view all tips, you can find",
+					"them by pressing [?] for help."};
 			case TutorialTopic.Attacking:
 				return new string[]{
-					"Attacking",
+					"Attacking enemies",
 					"",
-					"...",
+					"To make a melee attack, simply try to",
+					"move toward an adjacent monster."};
+			case TutorialTopic.Torch:
+				return new string[]{
+					"Using your torch",
 					"",
-					"..."};
+					"You carry a torch that illuminates",
+					"your surroundings, but its light makes",
+					"your presence obvious to enemies.",
+					"",
+					"To put your torch away (or bring it",
+					"back out), press [t].",
+					"",
+					"You won't be able to see quite as far without",
+					"your torch (and you'll have a harder time",
+					"spotting hidden things), but you'll be able",
+					"to sneak around without automatically",
+					"alerting monsters."};
 			case TutorialTopic.Resistance:
 				return new string[]{
 					"Resisted!",
 					"",
+					"Some monsters take half damage from certain",
+					"attack types. If a monster resists one of your",
+					"attacks, you can switch to a different",
+					"weapon by pressing [e] to access the",
+					"equipment screen.",
 					"",
-					"",
-					"..."};
+					"For example, skeletons resist several types of",
+					"damage, but are fully vulnerable to maces."};
 			case TutorialTopic.RangedAttacks:
 				return new string[]{
 					"Ranged attacks",
 					"",
+					"There are some monsters that are best dispatched",
+					"at a safe distance. You can switch to your bow",
+					"by pressing [e] to access the equipment screen.",
 					"",
+					"Once you've readied your bow, press [s] to shoot."};
+			case TutorialTopic.Feats:
+				return new string[]{
+					"Feats",
 					"",
-					"..."};
+					"Feats are special abilities",
+					"you can learn at shrines.",
+					"",
+					"You need to put ALL of the required",
+					"points into a feat before you can",
+					"use it."};
 			case TutorialTopic.Armor:
 				return new string[]{
 					"Armor",
 					"",
+					"Armor helps you to avoid taking damage from",
+					"attacks, but heavy armor also interferes with",
+					"both stealth and magic spells.",
 					"",
-					"..."};
+					"If you don't need stealth or magic, wear",
+					"full plate for the best protection."};
 			case TutorialTopic.Fire:
 				return new string[]{
 					"You're on fire!",
@@ -283,19 +350,57 @@ namespace Forays{
 				return new string[]{
 					"Recovering health",
 					"",
+					"Take advantage of your natural recovery. Your",
+					"health will slowly return until your HP reaches",
+					"a multiple of 10 (so if your health is 74/100,",
+					"it'll go back up to 80/100, and then stop).",
 					"",
+					"If that isn't enough, you can restore more HP by",
+					"resting. Press [r], and if you're undisturbed for",
+					"10 turns, you'll regain half of your missing HP",
+					"(and restore your magic reserves, if applicable).",
 					"",
-					"..."};
+					"You can rest only once per dungeon level, but your",
+					"natural recovery always works."};
 			case TutorialTopic.HealingPool:
 				return new string[]{
 					"Healing pools",
 					"",
-					"yeahhh...",
+					"Perhaps a relative of wishing wells, healing",
+					"pools are a rare feature of the dungeon that",
+					"can fully restore your health.",
 					"",
-					"..."};
+					"To activate a healing pool, drop in an item",
+					"by pressing [d]."};
+			case TutorialTopic.Consumables:
+				return new string[]{
+					"Using consumable items",
+					"",
+					"Sometimes death is unavoidable.",
+					"",
+					"However, consumable items can",
+					"get you out of some desperate",
+					"situations.",
+					"",
+					"When all hope seems lost, be sure to",
+					"check your inventory."};
 			default:
 				return new string[0]{};
 			}
+		}
+		private static List<colorstring> BoxAnimationFrame(int height,int width){
+			Color box_edge_color = Color.Blue;
+			Color box_corner_color = Color.Yellow;
+			List<colorstring> box = new List<colorstring>();
+			box.Add(new colorstring("+",box_corner_color,"".PadRight(width-2,'-'),box_edge_color,"+",box_corner_color));
+			for(int i=0;i<height-2;++i){
+				box.Add(new colorstring("|",box_edge_color,"".PadRight(width-2),Color.Gray,"|",box_edge_color));
+			}
+			box.Add(new colorstring("+",box_corner_color,"".PadRight(width-2,'-'),box_edge_color,"+",box_corner_color));
+			return box;
+		}
+		private static int FrameWidth(int previous_height,int previous_width){
+			return previous_width - (previous_width * 2 / previous_height); //2 lines are removed, so the width loses 2/height to keep similar dimensions
 		}
 		public static void TutorialTip(TutorialTopic topic){
 			if(Global.Option(OptionType.NEVER_DISPLAY_TIPS) || displayed[topic]){
@@ -316,7 +421,7 @@ namespace Forays{
 			int boxwidth = stringwidth + 2;
 			int boxheight = text.Length + 5;
 			//for(bool done=false;!done;){
-			colorstring[] box = new colorstring[boxheight];
+			colorstring[] box = new colorstring[boxheight]; //maybe i should make this a list to match the others
 			box[0] = new colorstring("+",box_corner_color,"".PadRight(stringwidth,'-'),box_edge_color,"+",box_corner_color);
 			box[text.Length + 1] = new colorstring("|",box_edge_color,"".PadRight(stringwidth),Color.Gray,"|",box_edge_color);
 			box[text.Length + 2] = new colorstring("|",box_edge_color) + "[Press any key to continue]".PadOuter(stringwidth).GetColorString(text_color) + new colorstring("|",box_edge_color);
@@ -333,19 +438,30 @@ namespace Forays{
 				}
 				++pos;
 			}
-			int x = (Global.SCREEN_W - boxwidth) / 2;
 			int y = (Global.SCREEN_H - boxheight) / 2;
+			int x = (Global.SCREEN_W - boxwidth) / 2;
 			colorchar[,] memory = Screen.GetCurrentRect(y,x,boxheight,boxwidth);
+			List<List<colorstring>> frames = new List<List<colorstring>>();
+			frames.Add(BoxAnimationFrame(boxheight-2,FrameWidth(boxheight,boxwidth)));
+			for(int i=boxheight-4;i>0;i-=2){
+				frames.Add(BoxAnimationFrame(i,FrameWidth(frames.Last().Count,frames.Last()[0].Length())));
+			}
+			for(int i=frames.Count-1;i>=0;--i){ //since the frames are in reverse order
+				int y_offset = i + 1;
+				int x_offset = (boxwidth - frames[i][0].Length()) / 2;
+				Screen.WriteList(y+y_offset,x+x_offset,frames[i]);
+				Thread.Sleep(20);
+			}
 			foreach(colorstring s in box){
 				Screen.WriteString(y,x,s);
 				++y;
 			}
 			Actor.player.DisplayStats(false);
-			Actor.B.DisplayNow();
-			Console.CursorVisible = false;
-			while(Console.KeyAvailable){
-				Console.ReadKey(true);
+			if(topic != TutorialTopic.Feats){ //hacky exception - don't get rid of the line that's already there.
+				Actor.B.DisplayNow();
 			}
+			Console.CursorVisible = false;
+			Global.FlushInput();
 			/*	switch(Console.ReadKey(true).KeyChar){
 				case 'q':
 					box_edge_color = NextColor(box_edge_color);

@@ -11,7 +11,7 @@ using System.IO;
 using System.Collections.Generic;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.6.3 ";
+		public const string VERSION = "version 0.7.0 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -111,6 +111,11 @@ namespace Forays{
 				return true;
 			}
 			return false;
+		}
+		public static void FlushInput(){
+			while(Console.KeyAvailable){
+				Console.ReadKey(true);
+			}
 		}
 		public static int EnterInt(){ return EnterInt(4); }
 		public static int EnterInt(int max_length){
@@ -291,7 +296,7 @@ namespace Forays{
 					char c = Char.ToUpper(tokens[0][0]);
 					if(c == 'F' || c == 'T'){
 						TutorialTopic topic = (TutorialTopic)Enum.Parse(typeof(TutorialTopic),tokens[1],true);
-						if(c == 'F'){
+						if(c == 'F' || Global.Option(OptionType.ALWAYS_RESET_TIPS)){
 							Help.displayed[topic] = false;
 						}
 						else{
@@ -305,7 +310,7 @@ namespace Forays{
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):");
-			file.WriteLine("last_target autopickup no_roman_numerals hide_old_messages hide_commands never_display_tips");
+			file.WriteLine("last_target autopickup no_roman_numerals hide_old_messages hide_commands never_display_tips always_reset_tips");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");
@@ -645,9 +650,15 @@ namespace Forays{
 	}
 	public static class Extensions{
 		public static T Random<T>(this List<T> l){
+			if(l.Count == 0){
+				return default(T);
+			}
 			return l[Global.Roll(l.Count)-1];
 		}
 		public static T RemoveRandom<T>(this List<T> l){
+			if(l.Count == 0){
+				return default(T);
+			}
 			T result = l[Global.Roll(l.Count)-1];
 			l.Remove(result);
 			return result;
@@ -669,6 +680,43 @@ namespace Forays{
 			while(temp.Count > 0){
 				l.Add(temp.RemoveRandom());
 			}
+		}
+		public static int RotateDirection(this int dir,bool clockwise){ return dir.RotateDirection(clockwise,1); }
+		public static int RotateDirection(this int dir,bool clockwise,int num){
+			for(int i=0;i<num;++i){
+				switch(dir){
+				case 7:
+					dir = clockwise?8:4;
+					break;
+				case 8:
+					dir = clockwise?9:7;
+					break;
+				case 9:
+					dir = clockwise?6:8;
+					break;
+				case 4:
+					dir = clockwise?7:1;
+					break;
+				case 5:
+					break;
+				case 6:
+					dir = clockwise?3:9;
+					break;
+				case 1:
+					dir = clockwise?4:2;
+					break;
+				case 2:
+					dir = clockwise?1:3;
+					break;
+				case 3:
+					dir = clockwise?2:6;
+					break;
+				default:
+					dir = 0;
+					break;
+				}
+			}
+			return dir;
 		}
 		public static List<string> GetWordWrappedList(this string s,int max_length){
 			List<string> result = new List<string>();
@@ -757,6 +805,67 @@ namespace Forays{
 			foreach(T t in l){
 				if(condition(t)){
 					result.Add(t);
+				}
+			}
+			return result;
+		}
+		public static bool Any<T>(this List<T> l,BooleanDelegate<T> condition){
+			foreach(T t in l){
+				if(condition(t)){
+					return true;
+				}
+			}
+			return false;
+		}
+		public delegate int IntegerDelegate<T>(T t);
+		public static List<T> WhereGreatest<T>(this List<T> l,IntegerDelegate<T> value){
+			List<T> result = new List<T>();
+			int highest = 0;
+			bool first = true;
+			foreach(T t in l){
+				int i = value(t);
+				if(first){
+					first = false;
+					highest = i;
+					result.Add(t);
+				}
+				else{
+					if(i > highest){
+						highest = i;
+						result.Clear();
+						result.Add(t);
+					}
+					else{
+						if(i == highest){
+							result.Add(t);
+						}
+					}
+				}
+			}
+			return result;
+		}
+		public static List<T> WhereLeast<T>(this List<T> l,IntegerDelegate<T> value){
+			List<T> result = new List<T>();
+			int lowest = 0;
+			bool first = true;
+			foreach(T t in l){
+				int i = value(t);
+				if(first){
+					first = false;
+					lowest = i;
+					result.Add(t);
+				}
+				else{
+					if(i < lowest){
+						lowest = i;
+						result.Clear();
+						result.Add(t);
+					}
+					else{
+						if(i == lowest){
+							result.Add(t);
+						}
+					}
 				}
 			}
 			return result;

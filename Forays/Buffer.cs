@@ -175,7 +175,11 @@ namespace Forays{
 						count = count.Substring(0,count.Length-1);
 						prev = prev.Substring(0,pos+1);
 					}
-					if(prev == s && str.Count == 1){ //trying this - only add the (x2) part if it's a single-line message, for ease of reading
+					bool too_long_if_repeated = false;
+					if(prev.Length + 3 + (Convert.ToInt32(count)+1).ToString().Length > max_length){
+						too_long_if_repeated = true;
+					}
+					if(prev == s && str.Count == 1 && !too_long_if_repeated){ //trying this - only add the (x2) part if it's a single-line message, for ease of reading
 						log[last] = prev + "(x" + (Convert.ToInt32(count)+1).ToString() + ")";
 						repeated_message = true;
 					}
@@ -295,7 +299,9 @@ namespace Forays{
 						}
 					}
 					Print(true);
-					Print(true);
+					if(str.Last() != ""){
+						Print(true);
+					}
 				}
 				else{
 					Print(true);

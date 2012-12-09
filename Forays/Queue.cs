@@ -327,6 +327,19 @@ namespace Forays{
 			dead=false;
 			tiebreaker = Q.Tiebreaker;
 		}
+		public Event(PhysicalObject target_,List<Tile> area_,int delay_,EventType type_){
+			target=target_;
+			area=area_;
+			delay=delay_;
+			type=type_;
+			attr=AttrType.NO_ATTR;
+			value=0;
+			msg="";
+			msg_objs = null;
+			time_created=Q.turn;
+			dead=false;
+			tiebreaker = Q.Tiebreaker;
+		}
 		public Event(PhysicalObject target_,List<Tile> area_,int delay_,EventType type_,AttrType attr_,int value_,string msg_,params PhysicalObject[] objs){
 			target=target_;
 			area=area_;
@@ -445,9 +458,7 @@ namespace Forays{
 						}
 					}
 					if(attr==AttrType.AFRAID && target == player){
-						while(Console.KeyAvailable){
-							Console.ReadKey(true);
-						}
+						Global.FlushInput();
 					}
 					if(attr==AttrType.BLOOD_BOILED){
 						temp.speed += (10 * value);
@@ -507,7 +518,7 @@ namespace Forays{
 								difficulty = difficulty * 2;
 							}
 							if(Global.Roll(difficulty) == difficulty){
-								if(t.IsTrap()){
+								if(t.IsTrap() || t.Is(TileType.FIRE_GEYSER) || t.Is(TileType.FOG_VENT) || t.Is(TileType.POISON_GAS_VENT)){
 									t.name = Tile.Prototype(t.type).name;
 									t.a_name = Tile.Prototype(t.type).a_name;
 									t.the_name = Tile.Prototype(t.type).the_name;
@@ -536,7 +547,7 @@ namespace Forays{
 				case EventType.RELATIVELY_SAFE:
 				{
 					if(M.AllActors().Count == 1 && !Q.Contains(EventType.POLTERGEIST) && !Q.Contains(EventType.BOSS_ARRIVE)
-					&& !Q.Contains(EventType.REGENERATING_FROM_DEATH)){
+					&& !Q.Contains(EventType.REGENERATING_FROM_DEATH) && !Q.Contains(EventType.MIMIC) && !Q.Contains(EventType.MARBLE_HORROR)){
 						B.Add("The dungeon is still and silent. ");
 						B.PrintAll();
 					}
@@ -546,210 +557,64 @@ namespace Forays{
 					break;
 				}
 				case EventType.POLTERGEIST:
-					{
-					if(true){ //relic
-						if(value < 3){
-							switch(Global.Roll(4)){
-							case 1: //doors
-								List<Tile> doors = new List<Tile>();
-								foreach(Tile t in area){
-									if(t.type == TileType.DOOR_C || t.type == TileType.DOOR_O){
-										doors.Add(t);
-									}
-								}
-								if(doors.Count > 0){
-									Tile t = doors[Global.Roll(doors.Count)-1];
-									if(t.type == TileType.DOOR_C){
-										if(player.CanSee(t)){
-											B.Add(t.the_name + " flies open! ",t);
-										}
-										else{
-											if(t.seen || player.DistanceFrom(t) <= 12){
-												B.Add("You hear a door opening. ");
-											}
-										}
-										t.Toggle(null);
-									}
-									else{
-										if(t.actor() == null){
-											if(player.CanSee(t)){
-												B.Add(t.the_name + " slams closed! ",t);
-											}
-											else{
-												if(t.seen || player.DistanceFrom(t) <= 12){
-													B.Add("You hear a door slamming. ");
-												}
-											}
-											t.Toggle(null);
-										}
-										else{
-											if(player.CanSee(t)){
-												B.Add(t.the_name + " slams closed on " + t.actor().the_name + "! ",t);
-											}
-											else{
-												if(player.DistanceFrom(t) <= 12){
-													B.Add("You hear a door slamming and a grunt of pain. ");
-												}
-											}
-											t.actor().TakeDamage(DamageType.BASHING,DamageClass.PHYSICAL,Global.Roll(6),null);
-										}
-									}
-								}
-								break;
-							case 2: //items
-							{
-								bool player_here = false;
-								foreach(Tile t in area){
-									if(t.actor() == player){
-										player_here = true;
-									}
-								}
-								if(player_here){
-									List<Tile> tiles = new List<Tile>();
-									foreach(Tile t in area){
-										if(t.inv != null && t.actor() == null && t.DistanceFrom(player) >= 2 && player.HasLOS(t.row,t.col)){
-											tiles.Add(t);
-										}
-									}
-									if(tiles.Count > 0){
-										Tile t = tiles[Global.Roll(tiles.Count)-1];
-										List<Tile> line = t.GetBestExtendedLine(player.row,player.col);
-										t = line[0];
-										int i = 1;
-										while(t.passable && t.DistanceFrom(line[0]) <= 9 && line[i].passable){
-											if(t.actor() != null && t.actor().IsHit(0)){
-												break;
-											}
-											t = line[i];
-											++i;
-										}
-										if(line[0].inv.type == ConsumableType.PRISMATIC || line[0].inv.type == ConsumableType.SUNLIGHT){
-											if(line[0].inv.type == ConsumableType.SUNLIGHT){ //let's say that they don't like the light
-												B.Add("The orb bobs up and down in the air for a moment. ",line[0]);
-											}
-											else{
-												B.Add("The orb rises into the air and sails toward you! ",line[0],t);
-												Item item = line[0].inv;
-												line[0].inv = null;
-												List<Tile> anim_line = line[0].GetBestLine(t.row,t.col);
-												B.DisplayNow();
-												Screen.AnimateProjectile(anim_line,new colorchar(item.color,item.symbol));
-												string qhit = item.quantity > 1? "shatter " : "shatters ";
-												if(t.actor() != null){
-													B.Add(item.TheName() + " " + qhit + "on " + t.actor().the_name + ". ",line[0],t);
-												}
-												else{
-													B.Add(item.TheName() + " " + qhit + "on " + t.the_name + ". ",line[0],t);
-												}
-												List<DamageType> dmg = new List<DamageType>();
-												dmg.Add(DamageType.FIRE);
-												dmg.Add(DamageType.COLD);
-												dmg.Add(DamageType.ELECTRIC);
-												while(dmg.Count > 0){
-													DamageType damtype = dmg[Global.Roll(dmg.Count)-1];
-													colorchar ch = new colorchar(Color.Black,'*');
-													switch(damtype){
-													case DamageType.FIRE:
-														ch.color = Color.RandomFire;
-														break;
-													case DamageType.COLD:
-														ch.color = Color.RandomIce;
-														break;
-													case DamageType.ELECTRIC:
-														ch.color = Color.RandomLightning;
-														break;
-													}
-													B.DisplayNow();
-													Screen.AnimateExplosion(t,1,ch,100);
-													foreach(Actor a in t.ActorsWithinDistance(1)){ //todo ALL this is getting reworked
-														a.TakeDamage(damtype,DamageClass.MAGICAL,Global.Roll(2,6),null);
-													}
-													dmg.Remove(damtype);
-												}
-											}
-										}
-										else{
-											Item item = line[0].inv;
-											B.Add(item.TheName() + " rises into the air and sails toward you! ",line[0],t);
-											line[0].inv = null;
-											List<Tile> anim_line = line[0].GetBestLine(t.row,t.col);
-											B.DisplayNow();
-											Screen.AnimateProjectile(anim_line,new colorchar(item.color,item.symbol));
-											t.GetItem(item);
-											string qhit = item.quantity > 1? "hit " : "hits ";
-											if(t.actor() != null){
-												B.Add(item.TheName() + " " + qhit + t.actor().the_name + ". ",line[0],t);
-												t.actor().TakeDamage(DamageType.NORMAL,DamageClass.NO_TYPE,Global.Roll(6),null);
-											}
-											else{
-												B.Add(item.TheName() + " " + qhit + t.the_name + ". ",line[0],t);
-											}
-										}
-										break;
-									}
-								}
-/*								else{ //right now, does nothing if the player isn't present.
-									List<Tile> tiles = new List<Tile>();
-									foreach(Tile t in area){
-										if(t.inv != null && t.actor() == null && t.seen){
-											tiles.Add(t);
-										}
-									}
-									//
-								}*/
-								break;
-							}
-							case 3: //shriek
-							{
-								bool good = false;
-								foreach(Tile t in area){
-									if(t.actor() == player){
-										good = true;
-									}
-								}
-								if(good){
-									B.Add("Something shrieks right next to your ear! ");
-									player.MakeNoise();
-								}
-								break;
-							}
-							case 4: //the no-effect messages
-							{
-								if(Global.CoinFlip()){
-									int distance = 100;
-									foreach(Tile t in area){
-										if(t.DistanceFrom(player) < distance){
-											distance = t.DistanceFrom(player);
-										}
-									}
-									if(distance == 0){
-										B.Add("You hear mocking laughter from nearby. ");
-									}
-									else{
-										if(distance <= 3){
-											B.Add("You hear laughter from somewhere. ");
-										}
-									}
-								}
-								else{
-									foreach(Tile t in area){
-										if(t.actor() == player){
-											B.Add("You feel like you're being watched. ");
-											break;
-										}
-									}
-								}
-								break;
-							}
-							default:
-								break;
-							}
+				{
+					if(target != null && target is Actor){ //target can either be a stolen item, or the currently manifested poltergeist.
+						Q.Add(new Event(target,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
+						break; //if it's manifested, the event does nothing for now.
+					}
+					if(area.Any(t => t.actor() == player)){
+						bool manifested = false;
+						if(value == 0){
+							B.Add("You feel like you're being watched. ");
 						}
 						else{
-							for(int tries=0;tries<999;++tries){
-								Tile t = area[Global.Roll(area.Count)-1];
-								if(t.passable && t.actor() == null && player.CanSee(t)){
-									Actor a = Actor.Create(ActorType.POLTERGEIST,t.row,t.col);
+							if(target != null){ //if it has a stolen item
+								Tile tile = null;
+								tile = area.Where(t => t.actor() == null && t.DistanceFrom(player) >= 2
+								                  && t.HasLOE(player) && t.FirstActorInLine(player) == player).Random();
+								if(tile != null){
+									Actor temporary = new Actor(ActorType.POLTERGEIST,"something",'G',Color.DarkGreen,1,1,0,0);
+									temporary.a_name = "something";
+									temporary.the_name = "something";
+									temporary.p = tile.p;
+									temporary.inv = new List<Item>();
+									temporary.inv.Add(target as Item);
+									Item item = temporary.inv[0];
+									if(item.symbol == '*'){ //orbs
+										if(item.type == ConsumableType.SUNLIGHT || item.type == ConsumableType.DARKNESS){
+											B.Add(temporary.You("throw") + " " + item.AName() + ". ",temporary);
+											B.DisplayNow();
+											Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
+											B.Add(item.TheName() + " shatters on you! ");
+										}
+										temporary.inv[0].Use(temporary,temporary.GetBestExtendedLineOfEffect(player));
+									}
+									else{
+										B.Add(temporary.You("throw") + " " + item.AName() + ". ",temporary);
+										B.DisplayNow();
+										Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
+										player.tile().GetItem(item);
+										B.Add(item.TheName() + " hits you. ");
+										player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),temporary,"a flying " + item.Name());
+									}
+									target = null;
+								}
+								else{
+									Q.Add(new Event(target,area,100,EventType.POLTERGEIST,AttrType.NO_ATTR,value,""));
+									return; //try again next turn
+								}
+							}
+							else{
+								if(value >= 3 && area.Any(t => t.DistanceFrom(player) == 1 && t.passable && t.actor() == null)){
+									Tile tile = area.Where(t => t.DistanceFrom(player) == 1 && t.passable && t.actor() == null).Random();
+									B.DisplayNow();
+									for(int i=4;i>0;--i){
+										Screen.AnimateStorm(tile.p,i,2,1,'G',Color.DarkGreen);
+									}
+									Actor a = Actor.Create(ActorType.POLTERGEIST,tile.row,tile.col);
+									Q.KillEvents(a,EventType.MOVE);
+									a.Q0();
+									a.player_visibility_duration = -1;
 									foreach(Event e in Q.list){
 										if(e.target == a && e.type == EventType.MOVE){
 											e.tiebreaker = this.tiebreaker;
@@ -757,30 +622,120 @@ namespace Forays{
 										}
 									}
 									Actor.tiebreakers[tiebreaker] = a;
-									t.actor().player_visibility_duration = -1;
 									B.Add("A poltergeist manifests in front of you! ");
-									return;
+									Q.Add(new Event(a,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
+									manifested = true;
+								}
+								else{
+									if(player.tile().type == TileType.DOOR_O){
+										B.Add("The door slams closed on you! ");
+										player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"a slamming door");
+									}
+									else{
+										Tile tile = null; //check for items to throw...
+										tile = area.Where(t => t.inv != null && t.actor() == null && t.DistanceFrom(player) >= 2
+										                  && t.HasLOE(player) && t.FirstActorInLine(player) == player).Random();
+										if(tile != null){
+											Actor temporary = new Actor(ActorType.POLTERGEIST,"something",'G',Color.DarkGreen,1,1,0,0);
+											temporary.a_name = "something";
+											temporary.the_name = "something";
+											temporary.p = tile.p;
+											temporary.inv = new List<Item>();
+											if(tile.inv.quantity <= 1){
+												temporary.inv.Add(tile.inv);
+												tile.inv = null;
+											}
+											else{
+												temporary.inv.Add(new Item(tile.inv,-1,-1));
+												tile.inv.quantity--;
+											}
+											M.Draw();
+											Item item = temporary.inv[0];
+											if(item.symbol == '*'){ //orbs
+												if(item.type == ConsumableType.SUNLIGHT || item.type == ConsumableType.DARKNESS){
+													B.Add(temporary.You("throw") + " " + item.TheName() + ". ",temporary);
+													B.DisplayNow();
+													Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
+													B.Add(item.TheName() + " shatters on you! ");
+												}
+												temporary.inv[0].Use(temporary,temporary.GetBestExtendedLineOfEffect(player));
+											}
+											else{
+												B.Add(temporary.You("throw") + " " + item.TheName() + ". ",temporary);
+												B.DisplayNow();
+												Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
+												player.tile().GetItem(item);
+												B.Add(item.TheName() + " hits you. ");
+												player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),temporary,"a flying " + item.Name());
+											}
+										}
+										else{
+											if(area.Any(t => t.type == TileType.DOOR_O || t.type == TileType.DOOR_C)){
+												Tile door = area.Where(t=>t.type == TileType.DOOR_O || t.type == TileType.DOOR_C).Random();
+												if(door.type == TileType.DOOR_C){
+													if(player.CanSee(door)){
+														B.Add("The door flies open! ",door);
+													}
+													else{
+														if(door.seen || player.DistanceFrom(door) <= 12){
+															B.Add("You hear a door slamming. ");
+														}
+													}
+													door.Toggle(null);
+												}
+												else{
+													if(door.actor() == null){
+														if(player.CanSee(door)){
+															B.Add("The door slams closed! ",door);
+														}
+														else{
+															if(door.seen || player.DistanceFrom(door) <= 12){
+																B.Add("You hear a door slamming. ");
+															}
+														}
+														door.Toggle(null);
+													}
+													else{
+														if(player.CanSee(door)){
+															B.Add("The door slams closed on " + door.actor().TheVisible() + "! ",door);
+														}
+														else{
+															if(player.DistanceFrom(door) <= 12){
+																B.Add("You hear a door slamming and a grunt of pain. ");
+															}
+														}
+														door.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"a slamming door");
+													}
+												}
+											}
+											else{
+												B.Add("You hear mocking laughter from nearby. ");
+											}
+										}
+									}
 								}
 							}
 						}
-					}
-					bool player_present = false;
-					foreach(Tile t in area){
-						if(t.actor() == player){
-							player_present = true;
+						if(!manifested){
+							Q.Add(new Event(target,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,value+1,""));
 						}
 					}
-					if(player_present){
-						Q.Add(new Event(null,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,value+1,""));
-					}
 					else{
-						Q.Add(new Event(null,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
+						Q.Add(new Event(target,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
 					}
 					break;
-					}
+				}
 				case EventType.MIMIC:
 				{
 					Item item = target as Item;
+					if(area[0].inv != item){ //it could have been picked up by the player or moved in another way
+						foreach(Tile t in M.AllTiles()){ //if it was moved, make the correction to the event's area.
+							if(t.inv == item){
+								area = new List<Tile>{t};
+								break;
+							}
+						}
+					}
 					if(area[0].inv == item){
 						bool attacked = false;
 						if(player.DistanceFrom(area[0]) == 1 && area[0].actor() == null){
@@ -858,7 +813,7 @@ namespace Forays{
 						Screen.AnimateMapCells(cells,new colorchar('*',Color.DarkRed));
 						//Screen.AnimateExplosion(t,1,new colorchar('*',Color.DarkRed));
 						foreach(Actor a in t.ActorsWithinDistance(1)){
-							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),null);
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),null,"an exploding grenade");
 						}
 						if(t.actor() != null){
 							int dir = Global.RandomDirection();
@@ -891,7 +846,7 @@ namespace Forays{
 						}
 						foreach(Actor a in t.ActorsWithinDistance(3)){
 							if(t.HasLOE(a)){
-								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(5,6),null);
+								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(5,6),null,"an exploding blast fungus");
 							}
 						}
 						if(t.actor() != null){
@@ -951,6 +906,27 @@ namespace Forays{
 				}
 				case EventType.FIRE_GEYSER_ERUPTION:
 				{
+					if(target.name == "floor"){
+						Event hiddencheck = null;
+						Tile t = target as Tile;
+						foreach(Event e in Q.list){
+							if(!e.dead && e.type == EventType.CHECK_FOR_HIDDEN){
+								hiddencheck = e;
+								break;
+							}
+						}
+						if(player.HasLOS(t)){
+							//t.seen = true;
+							if(hiddencheck != null){
+								hiddencheck.area.Remove(t);
+							}
+							t.name = Tile.Prototype(t.type).name;
+							t.a_name = Tile.Prototype(t.type).a_name;
+							t.the_name = Tile.Prototype(t.type).the_name;
+							t.symbol = Tile.Prototype(t.type).symbol;
+							t.color = Tile.Prototype(t.type).color;
+						}
+					}
 					if(value >= 0){ //a value of -1 means 'reset light radius to 0'
 						if(target.light_radius == 0){
 							target.UpdateRadius(0,8,true);
@@ -973,7 +949,7 @@ namespace Forays{
 						foreach(Tile t in target.TilesWithinDistance(1)){
 							Actor a = t.actor();
 							if(a != null){
-								if(a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(2,6),null)){
+								if(a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(2,6),null,"a fiery eruption")){
 									if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.IMMUNE_FIRE)
 									&& !a.HasAttr(AttrType.ON_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE)
 									&& !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
@@ -1005,6 +981,27 @@ namespace Forays{
 				}
 				case EventType.FOG_VENT:
 				{
+					if(target.name == "floor"){
+						Event hiddencheck = null;
+						Tile t = target as Tile;
+						foreach(Event e in Q.list){
+							if(!e.dead && e.type == EventType.CHECK_FOR_HIDDEN){
+								hiddencheck = e;
+								break;
+							}
+						}
+						if(player.CanSee(t)){
+							//t.seen = true;
+							if(hiddencheck != null){
+								hiddencheck.area.Remove(t);
+							}
+							t.name = Tile.Prototype(t.type).name;
+							t.a_name = Tile.Prototype(t.type).a_name;
+							t.the_name = Tile.Prototype(t.type).the_name;
+							t.symbol = Tile.Prototype(t.type).symbol;
+							t.color = Tile.Prototype(t.type).color;
+						}
+					}
 					Tile current = target as Tile;
 					if(!current.Is(FeatureType.FOG)){
 						current.AddOpaqueFeature(FeatureType.FOG);
@@ -1056,6 +1053,27 @@ namespace Forays{
 				}
 				case EventType.POISON_GAS_VENT:
 				{
+					if(target.name == "floor"){
+						Event hiddencheck = null;
+						Tile t = target as Tile;
+						foreach(Event e in Q.list){
+							if(!e.dead && e.type == EventType.CHECK_FOR_HIDDEN){
+								hiddencheck = e;
+								break;
+							}
+						}
+						if(player.CanSee(t)){
+							//t.seen = true;
+							if(hiddencheck != null){
+								hiddencheck.area.Remove(t);
+							}
+							t.name = Tile.Prototype(t.type).name;
+							t.a_name = Tile.Prototype(t.type).a_name;
+							t.the_name = Tile.Prototype(t.type).the_name;
+							t.symbol = Tile.Prototype(t.type).symbol;
+							t.color = Tile.Prototype(t.type).color;
+						}
+					}
 					Tile current = target as Tile;
 					if(Global.OneIn(7)){
 						int num = Global.Roll(5) + 2;
@@ -1115,6 +1133,78 @@ namespace Forays{
 					}
 					break;
 				}
+				case EventType.STONE_SLAB:
+				{
+					Tile t = target as Tile;
+					if(t.type == TileType.STONE_SLAB && (t.IsLitFromAnywhere(true) || area.Any(x=>x.actor()!=null))){
+						bool vis = player.CanSee(t);
+						t.Toggle(null,Forays.TileType.FLOOR);
+						if(!vis && player.CanSee(t)){
+							vis = true;
+						}
+						if(vis){
+							B.Add("The stone slab rises with a grinding sound. ");
+						}
+						else{
+							if(player.DistanceFrom(t) <= 6){
+								B.Add("You hear a grinding sound. ");
+							}
+						}
+					}
+					else{
+						if(t.type == TileType.FLOOR && !t.IsLitFromAnywhere(true) && t.actor() == null && !area.Any(x=>x.actor()!=null)){
+							bool vis = player.CanSee(t);
+							t.Toggle(null,Forays.TileType.STONE_SLAB);
+							if(!vis && player.CanSee(t)){
+								vis = true;
+							}
+							if(vis){
+								B.Add("The stone slab descends with a grinding sound. ");
+							}
+							else{
+								if(player.DistanceFrom(t) <= 6){
+									B.Add("You hear a grinding sound. ");
+								}
+							}
+						}
+					}
+					Q.Add(new Event(target,area,100,EventType.STONE_SLAB));
+					break;
+				}
+				case EventType.MARBLE_HORROR:
+				{
+					Tile t = target as Tile;
+					if(t.type == TileType.STATUE){
+						if(value == 1 && player.CanSee(t) && !t.IsLit() && t.actor() == null){ //if target was visible last turn & this turn, and it's currently in darkness...
+							t.TransformTo(TileType.FLOOR);
+							Actor a = Actor.Create(ActorType.MARBLE_HORROR,t.row,t.col,true,true);
+							foreach(Event e in Q.list){
+								if(e.target == a && e.type == EventType.MOVE){
+									e.dead = true;
+									break;
+								}
+							}
+							a.Q0();
+							switch(Global.Roll(2)){
+							case 1:
+								B.Add("You think that statue might have just moved... ");
+								break;
+							case 2:
+								B.Add("The statue turns its head to face you. ");
+								break;
+							}
+						}
+						else{
+							if(player.CanSee(t)){
+								Q.Add(new Event(target,100,EventType.MARBLE_HORROR,1));
+							}
+							else{
+								Q.Add(new Event(target,100,EventType.MARBLE_HORROR,0));
+							}
+						}
+					}
+					break;
+				}
 				case EventType.REGENERATING_FROM_DEATH:
 				{
 					if(target.tile().Is(FeatureType.TROLL_CORPSE)){ //otherwise, assume it was destroyed by fire
@@ -1137,6 +1227,9 @@ namespace Forays{
 								target.tile().Toggle(target.actor());
 							}
 							target.tile().features.Remove(FeatureType.TROLL_CORPSE);
+							if(Global.OneIn(3)){
+								target.actor().attrs[Forays.AttrType.WANDERING]++;
+							}
 						}
 						else{
 							int roll = Global.Roll(20);
@@ -1161,7 +1254,7 @@ namespace Forays{
 							default:
 								break;
 							}
-							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
+							Q.Add(new Event(target,null,100,EventType.REGENERATING_FROM_DEATH,attr,value,""));
 						}
 					}
 					if(target.tile().Is(FeatureType.TROLL_SEER_CORPSE)){ //otherwise, assume it was destroyed by fire
@@ -1180,10 +1273,16 @@ namespace Forays{
 							target.actor().attrs[Forays.AttrType.NO_ITEM]++;
 							B.Add("The troll seer stands up! ",target);
 							target.actor().player_visibility_duration = -1;
+							if(attr == AttrType.COOLDOWN_1){
+								target.actor().attrs[Forays.AttrType.COOLDOWN_1]++;
+							}
 							if(target.tile().type == TileType.DOOR_C){
 								target.tile().Toggle(target.actor());
 							}
 							target.tile().features.Remove(FeatureType.TROLL_SEER_CORPSE);
+							if(Global.OneIn(3)){
+								target.actor().attrs[Forays.AttrType.WANDERING]++;
+							}
 						}
 						else{
 							int roll = Global.Roll(20);
@@ -1208,7 +1307,7 @@ namespace Forays{
 							default:
 								break;
 							}
-							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,value));
+							Q.Add(new Event(target,null,100,EventType.REGENERATING_FROM_DEATH,attr,value,""));
 						}
 					}
 					break;
@@ -1288,7 +1387,7 @@ namespace Forays{
 							if(player.CanSee(a.tile())){
 								B.Add("The quickfire burns " + a.the_name + ". ",a);
 							}
-							a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(6),null);
+							a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(6),null,"quickfire");
 						}
 					}
 					--value;
@@ -1297,8 +1396,48 @@ namespace Forays{
 					}
 					break;
 				}
+				case EventType.BOSS_SIGN:
+				{
+					string s = "";
+					switch(Global.Roll(8)){
+					case 1:
+						s = "You see scratch marks on the walls and floor. ";
+						break;
+					case 2:
+						s = "There are deep gouges in the floor here. ";
+						break;
+					case 3:
+						s = "The floor here is scorched and blackened. ";
+						break;
+					case 4:
+						s = "You notice bones of an unknown sort on the floor. ";
+						break;
+					case 5:
+						s = "You hear a distant roar. ";
+						break;
+					case 6:
+						s = "You smell smoke. ";
+						break;
+					case 7:
+						s = "You spot a large reddish scale on the floor. ";
+						break;
+					case 8:
+						s = "A small tremor shakes the area. ";
+						break;
+					default:
+						s = "Debug message. ";
+						break;
+					}
+					if(!player.HasAttr(AttrType.RESTING)){
+						B.AddIfEmpty(s);
+					}
+					Q.Add(new Event((Global.Roll(20)+35)*100,EventType.BOSS_SIGN));
+					break;
+				}
 				case EventType.BOSS_ARRIVE:
 				{
+					bool spawned = false;
+					Actor a = null;
 					if(M.AllActors().Count == 1 && !Q.Contains(EventType.POLTERGEIST)){
 						List<Tile> trolls = new List<Tile>();
 						for(LinkedListNode<Event> current = Q.list.First;current!=null;current = current.Next){
@@ -1319,12 +1458,10 @@ namespace Forays{
 							}
 						}
 						Q.KillEvents(null,EventType.REGENERATING_FROM_DEATH);
-						B.Add("You hear a loud crash and a nearby roar! ");
-						B.PrintAll();
 						List<Tile> goodtiles = M.AllTiles();
 						List<Tile> removed = new List<Tile>();
 						foreach(Tile t in goodtiles){
-							if(!t.passable || player.CanSee(t)){
+							if(!t.passable || t.Is(TileType.CHASM) || player.CanSee(t)){
 								removed.Add(t);
 							}
 						}
@@ -1332,56 +1469,127 @@ namespace Forays{
 							goodtiles.Remove(t);
 						}
 						if(goodtiles.Count > 0){
+							B.Add("You hear a loud crash and a nearby roar! ");
 							Tile t = goodtiles[Global.Roll(goodtiles.Count)-1];
-							Actor.Create(ActorType.FIRE_DRAKE,t.row,t.col,true,false);
-							//M.actor[t.row,t.col].player_visibility_duration = -1;
+							a = Actor.Create(ActorType.FIRE_DRAKE,t.row,t.col,true,false);
+							spawned = true;
 						}
 						else{
-							for(bool done=false;!done;){
-								int rr = Global.Roll(Global.ROWS-2);
-								int rc = Global.Roll(Global.COLS-2);
-								if(M.tile[rr,rc].passable && M.actor[rr,rc] == null && player.DistanceFrom(rr,rc) >= 6){
-									Actor.Create(ActorType.FIRE_DRAKE,rr,rc,true,false);
-									//M.actor[rr,rc].player_visibility_duration = -1;
-									done = true;
+							if(M.AllTiles().Any(t=>t.passable && !t.Is(TileType.CHASM) && t.actor() == null)){
+								B.Add("You hear a loud crash and a nearby roar! ");
+								Tile tile = M.AllTiles().Where(t=>t.passable && !t.Is(TileType.CHASM) && t.actor() == null).Random();
+								a = Actor.Create(ActorType.FIRE_DRAKE,tile.row,tile.col,true,false);
+								spawned = true;
+							}
+						}
+					}
+					if(!spawned){
+						Q.Add(new Event(null,null,(Global.Roll(20)+10)*100,EventType.BOSS_ARRIVE,attr,value,""));
+					}
+					else{
+						if(value > 0){
+							a.curhp = value;
+						}
+						else{ //if there's no good value, this means that this is the first appearance.
+							B.Add("The ground shakes as dust and rocks fall from the cavern ceiling. ");
+							B.Add("This place is falling apart! ");
+							List<Tile> floors = M.AllTiles().Where(t=>t.passable && t.type != TileType.CHASM && player.tile() != t);
+							Tile tile = null;
+							if(floors.Count > 0){
+								tile = floors.Random();
+								(tile as Tile).Toggle(null,TileType.CHASM);
+							}
+							Q.Add(new Event(tile,100,EventType.FLOOR_COLLAPSE));
+							Q.Add(new Event((Global.Roll(20)+20)*100,EventType.CEILING_COLLAPSE));
+
+						}
+					}
+					break;
+				}
+				case EventType.FLOOR_COLLAPSE:
+				{
+					Tile current = target as Tile;
+					int tries = 0;
+					if(current != null){
+						for(tries=0;tries<50;++tries){
+							List<Tile> open = new List<Tile>();
+							foreach(Tile t in current.TilesAtDistance(1)){
+								if(t.passable || t.Is(TileType.RUBBLE)){
+									open.Add(t);
+								}
+							}
+							if(open.Count > 0){
+								Tile possible = open.Random();
+								if(!possible.Is(TileType.CHASM)){
+									possible.Toggle(null,TileType.CHASM);
+									List<Tile> open_neighbors = possible.TilesAtDistance(1).Where(t=>t.passable && t.type != TileType.CHASM);
+									int num_neighbors = open_neighbors.Count;
+									while(open_neighbors.Count > num_neighbors/2){
+										Tile neighbor = open_neighbors.RemoveRandom();
+										neighbor.Toggle(null,TileType.CHASM);
+									}
+									break;
+								}
+								else{
+									current = possible;
+								}
+							}
+							else{
+								break;
+							}
+						}
+					}
+					if(tries == 50 || current == null){
+						List<Tile> floors = M.AllTiles().Where(t=>t.passable && t.type != TileType.CHASM && player.tile() != t);
+						if(floors.Count > 0){
+							target = floors.Random();
+							(target as Tile).Toggle(null,TileType.CHASM);
+						}
+					}
+					Q.Add(new Event(target,100,EventType.FLOOR_COLLAPSE));
+					break;
+				}
+				case EventType.CEILING_COLLAPSE:
+				{
+					B.Add("The ground shakes and debris falls from the ceiling! ");
+					for(int i=1;i<Global.ROWS-1;++i){
+						for(int j=1;j<Global.COLS-1;++j){
+							Tile t = M.tile[i,j];
+							if(t.Is(TileType.WALL)){
+								int num_walls = t.TilesAtDistance(1).Where(x=>x.Is(TileType.WALL)).Count;
+								if(num_walls < 8 && Global.OneIn(20)){
+									if(Global.CoinFlip()){
+										t.Toggle(null,Forays.TileType.FLOOR);
+										foreach(Tile neighbor in t.TilesAtDistance(1)){
+											neighbor.solid_rock = false;
+										}
+									}
+									else{
+										t.Toggle(null,Forays.TileType.RUBBLE);
+										foreach(Tile neighbor in t.TilesAtDistance(1)){
+											if(neighbor.type == TileType.FLOOR && Global.OneIn(10)){
+												neighbor.Toggle(null,Forays.TileType.RUBBLE);
+											}
+										}
+									}
+								}
+							}
+							else{
+								int num_walls = t.TilesAtDistance(1).Where(x=>x.Is(TileType.WALL)).Count;
+								if(num_walls == 0 && Global.OneIn(100)){
+									if(Global.OneIn(6)){
+										t.Toggle(null,Forays.TileType.RUBBLE);
+									}
+									foreach(Tile neighbor in t.TilesAtDistance(1)){
+										if(neighbor.type == TileType.FLOOR && Global.OneIn(6)){
+											neighbor.Toggle(null,Forays.TileType.RUBBLE);
+										}
+									}
 								}
 							}
 						}
 					}
-					else{
-						string s = "";
-						switch(Global.Roll(8)){
-						case 1:
-							s = "You see scratch marks on the walls and floor. ";
-							break;
-						case 2:
-							s = "There are deep gouges in the floor here. ";
-							break;
-						case 3:
-							s = "The floor here is scorched and blackened. ";
-							break;
-						case 4:
-							s = "You notice bones of an unknown sort on the floor. ";
-							break;
-						case 5:
-							s = "You hear a distant roar. ";
-							break;
-						case 6:
-							s = "You smell smoke. ";
-							break;
-						case 7:
-							s = "You spot a large reddish scale on the floor. ";
-							break;
-						case 8:
-							s = "A small tremor shakes the area. ";
-							break;
-						default:
-							s = "Debug message. ";
-							break;
-						}
-						B.AddIfEmpty(s);
-						Q.Add(new Event((Global.Roll(20)+35)*100,EventType.BOSS_ARRIVE));
-					}
+					Q.Add(new Event((Global.Roll(20)+20)*100,EventType.CEILING_COLLAPSE));
 					break;
 				}
 				}

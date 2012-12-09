@@ -1,25 +1,4 @@
 
-+-------------------------------+
-| This line of description fits |
-|    and so this text about     |
-| goblins or whatever would be  |
-|   read and enjoyed by all.    |
-|   Chances are good that no    |
-|  monster would require much   |
-|     more space than this.     |
-|                               |
-|     [=] Hide description      |
-+-------------------------------+
-
-blood moths still attack you if your torch is out, even if it gives off no light!
-
-
-more vents and geysers on natural levels. more traps otherwise.
--hide vents and geysers at first. easy.
-
-only certain enemies should respond to alarms. humanoid_int, plus a few others.
-  - finish the other traps, too.
-
 
 
 okay, I did the automatic r/c/N/E/v/h/i function. it works great, but the corner definition should be updated to allow 2x2 rooms, basically. this allows corners to touch. also, edge definition should allow 2x3 rooms:
@@ -178,7 +157,6 @@ bigger!
 
 !implemented
 
-double doors for fortresses - easy
 !fungus
 !fog
 !fog vent
@@ -187,11 +165,12 @@ double doors for fortresses - easy
 !fire geyser
 rubble, perhaps in 2x2 - 3x3 piles
 	-in general, MOST level types should have a (small) chance to have any of these features.
-slab doors
-candlelit altar. like a solid fire pit. maybe radius 2.
+!slab doors
 
 not yet:
 traps incl. on chests and doors, or alarms on items.
+double doors for fortresses - easy
+candlelit altar. like a solid fire pit. maybe radius 2.
 torches
 mirrors
 levers
@@ -249,71 +228,15 @@ more: moving parts? corridor features? carve rooms for chests in caves?
 
 
 
-"This level is (description)."
-"The walls here are (description)."
-"You notice (description) on this floor."
-"You feel (description)."
-"(former level's description) is/are gone."
-
-"Rubble is strewn about this ruined area of the dungeon."
-
-model 1:
-
-each level has a type. each type has its own generation rules. example types are 
-
-
 
 leveltype-specific monsters that can only appear in the proper "biome"
 
 don't increase in power, but rather in number.
 
 
-ITEMS you can only find on certain level types?
+items you can only find on certain level types?
 
 
-
-
-new concept for compys:
-
-rather than being passive, they will coordinate to nip at the player. 
-
-one compy at a time will set an 'attacking' flag. only this one will approach the player and attack.
-upon attacking, the flag is removed. compys without the 'attacking' flag will flee instead of attacking.
-this will allow them to hover at 2-3 tiles away. (they'll mostly flee rather than attack if the player steps next to them.)
-
-if there is no room to flee, they'll still attack (so corridors work properly)
-
-if the player is helpless(paralyzed, afraid, or asleep) or severely injured(<20hp), they'll all set their 'attacking' flag. (so, at least 1 attack from each.) 
-
-if none are attacking
-
-no, wait. come back to this.
-
-
-
-
-
-vampire:
-(doesn't step into light while wandering.)
-
-
-
-entrancer:
-
-in battle:
-shields and teleports it closer to the player. hides behind it by checking the extended line from player to entranced. switches places if player is closer to entrancer. 
-teleports 2 spaces at a time. shields for about 25-30 damage.
-separate cooldowns for 2 effects: shield is about 15 turns, teleport is about 4 turns.
-so:
-teleporting vs shielding? teleporting first.
-teleporting vs nothing? teleport if the thrall is far away, or if it can be placed well.
-shielding vs nothing? always shield. (assuming the previous shield is gone)
-walking vs nothing? walk toward the extended line from player to thrall.
-
-
-
-
-autoexplore that tries to avoid leaving far-away dead ends behind.
 
 levelgen:
 what sort of separations? would a level have only 2 'types'?
@@ -321,361 +244,38 @@ what about 'templates' in the form of functions that could be applied, like 'rui
 
 
 
-		     old hp  new hp  old dmg  new dmg	message			notices message
-
-GOBLIN			25	25	2	2	hits			-
-LARGE_BAT		20	20	1	1	bites/scratches		-
-BLOOD_MOTH		 -	25	-	3	bites		    (nothing)/"notices your light"
-WOLF			30	25	2	2	bites			-
-SKELETON		30	30	2	2	hits			-
-SWORDSMAN		40	35	3	2	hits			-
-DARKNESS_DWELLER	 -	45	-	2	hits			notices?
-CARNIVOROUS_BRAMBLE	 -	35	-	3	rakes			(nothing)
-FROSTLING		35	35    3*,2*,4*	<--	hits/blasts/bursts	-
-DREAM_WARRIOR		40	40	3	2	hits			-
-
-CULTIST			35	35	2	2	hits			-
-GOBLIN_ARCHER		25	25	2	2	hits			-
-GOBLIN_SHAMAN		25	25	2	2	hits			-
-MIMIC			 -	30	-	2*	hits			(nothing)
-SKULKING_KILLER		40	35	3	3	hits			-
-ZOMBIE			50	50     2*,3	<--	lunges / bites		-
-DIRE_RAT		25	25	1	1	bites			-
-ROBED_ZEALOT		40	40	3	3	hammers			-
-SHADOW			45	40	2	2	touches			-
-BANSHEE			40	40	2	2	claws			-
-
-WARG			40	40	2	2	bites			-
-PHASE_SPIDER		50	45	1*	1*	bites			-
-ASCETICMONK_		 -	40	-	3	punches/kicks/strikes	"babbles incoherently"
-POLTERGEIST		40	35     2,1	1*?	slimes/grabs item	-
-CAVERN_HAG		 -	40	-	3?	clutches at?		"cackles"
-COMPY			 -	25	-	1* or 2*bites			"squeaks"
-NOXIOUS_WORM		 -	55	-	3	bites/slams		"notices"
-BERSERKER		40	40	3	3	hits			-
-TROLL			55	50	3	3	claws			-
-VAMPIRE			 -	40	-	2	bites?			"notices"
-
-CRUSADING_KNIGHT	 -	45	-	5*	mace			"shouts"
-SKELETAL_SABERTOOTH	 -	40	-	3	bites			notices?
-MUD_ELEMENTAL		 -	35	-	2	hits			notices?
-ENTRANCER		 -	35	-	2	hits		  (in the same style as the necro)
-MARBLE_HORROR		 -	?	-	?	hits		  (nothing? is it ever unaware?)
-OGRE			55	55	4	4	hits			-
-ORC_GRENADIER		50	50	3	3	hits			-
-SHADOWVEIL_DUELIST	 -	40	-	3	hits? or slashes?	notices
-CARRION_CRAWLER		35	35     0*,1	<--	bites/lashes		-
-SP_D_PIXIE		 -	35	-	1 or 2?	?			notices
-
-STONE_GOLEM		65	65	4	4	slams			-
-PYREN_ARCHER		 -	55	-	3*	hits			notices
-ORC_ASSASSIN		 -	50	-	3	hits			snarls
-TROLL_SOOTHSAYER	 -	50	-	3	claws			growls viciously
-MECHANICAL_KNIGHT	 -	?	-	3	hits?		 (starts moving? nothing?)
-ORC_WARMAGE		50	50	3	3	hits			-
-LASHER_FUNGUS		50	50     3,1*	<--	tentacle/tentacle	-
-NECROMANCER		40	40	2	2	hits			-
-LUMINOUS_AVENGER	 -	40	-	3	hits or strikes		notices
-CORPSETOWER_BEHEMOTH	75	75	5	5	clobbers		-
-
-
-move this note:
-in a big(!) superhero RL, you could sometimes be unmasked instead of killed (especially by the cops). this would make the game much harder, but still winnable.
-	-factions. when you enter a 'mission', the game determines which factions have an
-	 interest in this, and they'll make an appearance. lots of rival clashes and stuff.
-
-
-
- MECHANICAL_SHIELD.  then start AI.
-	-make sure the right guys are dropping items
-		-vampires? humanoid int? (med_humanoid? are they neck-snappable?)
-
-AI: finish seek: vampire. entrancer?
-	finish idle: vampire, entrancer.
-		-instead of vampire avoiding light, anything that is light-sensitive should avoid it (at the top of active/seek)
-
-
-resist_neck_snap attr, to print neck snap message but not kill. for zombies, vampires.
-
-poltergeists *could* drop items. hmm.
-
-50% miss chance against cloaked enemies, too? how exactly should fog work here?
-
-to prevent the player from getting stuck, knock down some walls around marble horrors when the level is lit up.
-
-hag's curse: welded/sticky/cursed weapon/armor? yes please.
-
-
-tutorial hints
-	-weapon switching	"Resisted!" and/or "Ranged attacks"
-	-armor switching	"Armor"
-	-fire			"You're on fire!"
-	-recovery		"Recovering health"
-	-movement		"Moving around"
-	-bump to attack		"Attacking your enemies" or "Attacking enemies"
-	-resistance		"Resisted!"
-
-remember to add Help.cs to project, duh
-
-animations for new content?
-
-why am i suddenly getting many 'notices' messages for groups, when I previously got just one?
-	-i think this happens when they notice but the player isn't close enough
-	 to 'makeNoise' and they follow the leader. hm.
-		-no, following is not necessary. they do it when you step into LOS
-		-group members should be alerted directly, then. do this.
-			-done?
-
-update help: add headers to overview help - 'Regaining Health, Attacking Monsters, Exploring the Dungeon...'
-	-resistance is half damage
-
-i could allow help display within GetSelection if it could redraw the screen
-
 include a goal at the start	-	"None of the other scouts returned." etc
 
-can trolls wander after getting back up? at least 1/3 should
 
-since stun went from 1/5 to 1/3, should mace of force become 1/3 as a nerf?
-
-rename resting to 'catching your second wind' ?
-
-TEST LOOKMODE AND NEW TARGETING ON LINUX BEFORE RELEASE
-
-new code:
 brutish strength
 	-smash known traps, stalagmites, doors, statues. anything useful?
-
-done(maybe):
-smoke feature
-armored enemies have different miss message
-shadow cloak
-fungus feature - will they spread at all?
-mimic event - just needs a mimic monster.
-spell disruption - radius-based only.
-magical sleepiness
-poison gas feature
-fire vent tile
-quickfire orb	
-shadow cloak item
-smoke bomb: self-targeting would be nice to have.
-rune of time (gives a free turn)
-
-
-new items:
-potion of brutish strength
   no items, spells, or certain feats, but lots of damage and the ability to smash
   doors, statues, and other features?
 explosive fungus orb-type item? or orcish grenades?
 
 
-(rat) goblin large_bat shambling_scarecrow skeleton cultist poltergeist zombie wolf frostling goblin_archer goblin_shaman swordsman dire_rat dream_warrior banshee warg robed_zealot skulking_killer carrion_crawler ogre shadow berserker orc_grenadier phase_spider stone_golem necromancer troll lasher_fungus orc_warmage corpsetower_behemoth (fire_drake) skeletal_sabertooth luminous_avenger crusading_knight entrancer shadowveil_duelist mimic deranged_ascetic/unhinged_ascetic/chaos_monk chaos_fairy/chaos_pixie/dissonant pixie/chaos_moth/chaos_butterfly troll_soothsayer mechanical_knight marble_horror/granite_horror pyren_archer mud_elemental orc_assassin cavern_witch vampire compy noxious_worm PLACEHOLDER_1 PLACEHOLDER_2
-
- -- Instead of picking a number for HP, I'll instead pick low/med/high and adjust for depth -- 
- -- melee damage will work the same way. -- 
-
-(skeletal horse)
-skeletal sabertooth!
-fast. (medium health, medium damage. These will be assumed from now on, if not stated).
-elemental resistance. slashing and piercing resistance. undead. darkvision. wait, is this guy going to be just a fast skeleton(with better stealth detection)? increase damage a bit.
-
-luminous avenger
-fast. lowish HP. permanent holy shield. gives off light. when severely injured, darkens the level to fully heal.
-
-crusading knight
-med-high health. strong slow attack. torch. heavy armor. if attacked but unable to see attacker, lights the level.
-
-entrancer
-low health, low damage. always wanders. upon encountering a non-group monster, it enslaves it. in combat, the entrancer increases its servant's strength, regeneration, speed...
-ranged attack?
-
-(shadow-cloaked duelist)
-shadow cloak. upon attacking, moves to a space that's adjacent to itself & the player. prefers orthogonal directions.
-
-mimic
-appears to be an item until it attacks. low-med health, low-med attack. slow. successful attacks grab their target.
-(grabs usually work both ways and prevent normal movement. any OTHER movement breaks the grab.)
-
-(spell disrupting fighter)
-'raving/babbling/mad/ranting/frenetic/aberrant/demented/deranged/lunatic/psychotic ascetic'
-or possibly 'chaos monk'
-prevents casting within a short distance.
-
-(spell disrupting pixie)
-i might unify the concept as a 'chaos' effect. otherwise it'll have a different msg than the monk
-prevents casting within a short distance. small, flying. either fast OR it moves like a bat(probably fast, because bats tend to take a long time to reach you). definitely attacks like a bat.
-
-troll magician/seer/soothsayer/etc.
-(same stats as troll.) might be able to cast glacial blast and sonic boom, but doesn't keep distance. when injured enough, teleports the player away (once?).
-
-mechanical knight / clockwork knight / other
-low HP. its shield makes it invulnerable to most attacks. Critical hits and sneak attacks still work, and the knight drops its guard if it misses on an attack. When a certain portion of its health is gone, its arms or legs will be destroyed. It can't use its shield without arms, and moves slowly while it has no legs.
-
-marble horror / granite horror / etc.
-in normal light, it is a statue indistinguishable from the normal dungeon feature. sunlight (from the spell, item, or trap) destroys it instantly. in darkness, it animates. construct, resists slashing & piercing damage & the elements. darkvision. Good candidate for the dim-vision touch effect, shrinking the player's vision radius while in darkness.
-
-pyren archer
-med-high health. weak attack + fire hit. fires flaming arrows. acts like an archer. possibly has a fire-related trick to use when cornered. immune to fire, of course.
-
-mud elemental
-low-med HP. resists all weapon types, i think. elemental attacks should work better.
-if the player is next to any walls during the mud elemental's turn, those walls will grow muddy tentacles/hands/whatever and attack & try to hold the player.
-
 orc assassin? even more basic than the skulking killer? (but more dangerous because it sneak attacks.) Needs an AI enhancement: when moving toward the player, if there is a spot that the player can't see (but it's at the same distance as the spot you would have stepped to), step there to stay out of sight. shadowsight?
-
-(hag)
-weak attack? ONCE, the hag can place a curse on the player. this tends to have a fairly long duration, up to 100 turns(?)
-curses: light allergy, magical sleepiness, aggravate, ...
-	-cursed weapon. no changing for...several turns.
--usually curses as soon as it takes dmg
-
-vampire (descriptive name?)
-flying. somewhat fast? light allergy. destroyed by sunlight. drains life on hit (the damage doesn't matter; the vampire probably regains 10-20% health on a successful attack.)
-
-procompsognathus (name? i wonder if i could just call them compys.)
-small, low hp, weak attack. instead of rushing to attack, they stay back unless they're injured, or the player is below 40%(?) health. poisonous bite. (normal poison, or magical sleepiness?)
-	-stays at distance 2 if there are no enemies next to the player and if it's uninjured.
-		-what about distance 3?
 
 noxious worm
 high hp. slow. breathes small clouds of poison every few turns. (could burrow into a wall and koolaid out when the player walks by. if it's a level 10 monster, it definitely should.)
-
-blood moth
-high damage. moves toward the brightest light source it can see. hovers around fire pits/fire geysers/zealots, but attacks the player.
-if there's no light source, picks a random direction.
-	if that direction is open, the moth moves.
-	if that direction is blocked:
-		if not injured, the moth brushes up against whatever is in the way.
-		if injured, the moth will attack any actor in the way.
-
-darkness dweller
-high HP.
-if it has been in darkness for at least 5 turns, starting its turn in light will cause it to become blind for ~3 turns. while blind, it staggers every turn.
-
-carnivorous bramble
-med-high HP, high damage. does not move. plant.
 
 
 
 new monsters:
 undead fast animal - summoned by necro
-	-skeletal horse? melee beast plus resistances.
-mechanical knight
-  would be invulnerable until it misses. at certain hp values, its arms or legs
-  fall off. "~'s arms fall off! ~ kicks you." with no legs, he does nothing.
-  probably takes normal damage from crits, too.
-statues - they're normal statues when in the light, but animate when in darkness.
-shadow cloaked melee guy - sidesteps when he attacks.
-  invisible in darkness, of course
-luminous avenger
-  fast, permanent holy shield, gives off light. when injured enough, darkens the
-  level to fully heal.
-crusading knight
-  strong attack, heavy armor, & torch. if attacked from hiding, he lights the
-  level.
-mimic (item+event at first)
-  if player is adjacent to item, check player's stealth. if noticed, attack. if
-  player picks up the item, jump out of pack and attack.
-antimagic melee guy
-  not antimagic, but spell disruption. prevents spells from being cast within
-  a certain distance, and also prevents spells that target it directly.
-antimagic pixie
-  fast, flying. not sure about attack.
-(teleports player)
-(stronger bow user)
-  big ranged damage, but not fragile like most ranged guys
 slugman
   appears in groups. leaves slime trails on the ground. usually moves slowly, but
   moves quickly when on a slime trail. ranged attack, maybe?
-(magic reserve drainer?)
 (on-death triggers? light, knockback?)
-entrancer
-  always wanders. when it encounters a non-group monster (maybe melee only), it
-  enslaves it, adding it to its group, and will make it stronger in combat.
-(darkness dweller repelled/dazed/blinded by light for a few turns)
-mud monster
-  makes walls attack or grab at you, encouraging you to fight it in the open
-remake: poltergeist. item-thrower. can yank items from the player's pack.
-	-doesn't throw mimic items (with do_not_stack == true)
-		-it could throw them if the mimic event could then find them.
 (anything that doesn't care about how much damage you deal)
 
- 1 goblin large_bat PLACEHOLDER_3
- 2 skeleton cultist poltergeist
- 3 zombie wolf frostling 
- 4 goblin_archer goblin_shaman swordsman 
- 5 dire_rat dream_warrior banshee 
- 6 warg robed_zealot skulking_killer 
- 7 carrion_crawler ogre shadow 
- 8 berserker orc_grenadier phase_spider 
- 9 stone_golem necromancer troll 
-10 lasher_fungus orc_warmage corpsetower_behemoth
-
-should be moved deeper:    cultist, poltergeist, zombie
-should be moved shallower: wolf, swordsman, dream_warrior, skulking killer, shadow
-
-COULD be moved deeper, maybe:    banshee, ogre, necromancer(depending on summons)
-COULD be moved shallower, maybe: skeleton, frostling, banshee(yep), robed_zealot, berserker,
-				 orc_grenadier, phase_spider, troll
-COULD be changed in rarity, maybe: carrion_crawler, stone_golem, lasher, frostling
- skeletal_sabertooth luminous_avenger crusading_knight entrancer shadowveil_duelist mimic deranged_ascetic/unhinged_ascetic/chaos_monk chaos_fairy/chaos_pixie/dissonant pixie/chaos_moth/chaos_butterfly troll_soothsayer mechanical_knight marble_horror/granite_horror pyren_archer mud_elemental orc_assassin cavern_witch vampire compy noxious_worm PLACEHOLDER_1 PLACEHOLDER_2
-
-'upgrades' should appear at least 3 (or more) levels deeper. skeleton->sabertooth, bat->pixie & asceticmonk->pixie, wolf->warg, killer->assassin, shadow->duelist, troll->soothsayer, 
-g.archer->p.archer, mimic->mud_elemental(similar mechanic), dire_rat->compy.
-
-
- 1 goblin large_bat wolf skeleton ???
- 2 swordsman ??? ??? frostling dream_warrior
- 3 cultist goblin_archer goblin_shaman ??? ???
- 4 zombie skulking_killer robed_zealot mimic banshee
- 5 dire_rat ??? asceticmonk shadow phase_spider
- 6 warg crusading_knight berserker troll vampire
- 7 carrion_crawler sabertooth mud_elemental ??? marble_horror
- 8 ogre orc_grenadier duelist compy witch
- 9 necromancer pyren assassin ??? mechaknight
-10 warmage lasher ??? avenger behemoth
-left out: poltergeist(5-6), golem(6-9), worm(7-8),
-entrancer(6-8), soothsayer(9-10), pixie(8-9), 3 placeholders
-
- 1 goblin bat wolf skeleton PH1
- 2 swordsman PH2 PH3 frostling d.warrior
- 3 cultist g.archer shaman mimic killer
- 4 zombie d.rat zealot shadow banshee
- 5 warg ??? asceticmonk poltergeist spider
- 6 compy c.knight berserker troll vampire
- 7 crawler sabertooth m.elemental entrancer m.horror
- 8 ogre grenadier duelist golem avenger
- 9 necro ??? assassin soothsayer m.knight
-10 warmage lasher ??? ??? behemoth
-left out: worm(7-8), pixie(8-9), witch(5-7), pyren(7-9)
-
- 1 goblin bat wolf skeleton PH1
- 2 swordsman PH2 PH3 frostling d.warrior
- 3 cultist g.archer shaman mimic killer
- 4 zombie d.rat zealot shadow banshee
- 5 warg spider asceticmonk poltergeist witch
- 6 compy worm berserker troll vampire
- 7 c.knight sabertooth m.elemental entrancer m.horror
- 8 ogre grenadier duelist crawler pixie
- 9 golem pyren assassin soothsayer m.knight
-10 warmage lasher necro avenger behemoth
- ! done for now ! minus placeholders, of course.
 
 new dungeon features:
 trapped chests or doors?
-fungus (fuse fungus? bomb fungus?) that explodes a few turns after being lit up
-doors that open when lit (stone slab type)
 torches
 	-implemented as walls that actually shed light from an adjacent tile?
-fire vents/firespouts that occasionally burn things on top of them, and give off
-  more light than firepits.
-separate alarm from light trap
-  alarms tied to items or doors?
-add darkness trap
+alarms tied to items or doors?
 periodic stun trap that affects everything in its LOS
-poison trap. darts or gas?
-	-dart trap for dim vision?
-ice trap?
-sleep trap
 bombable walls to hide some hidden rooms.
 more open areas. maybe even LoL-style brush?
   open areas make carrying a torch more dangerous, and make lightning bolt better
@@ -688,17 +288,10 @@ deity statues. these would be colored instead of gray, and would have an associa
 anyway, these would appear near the center of rooms, and could replace the walls between shrines.
 should rubble become nonopaque? that would allow me to put some along a corridor, making groups harder to fight there. (i could do it anyway, but the player would move it)
 	-OTOH, if the player moves it, monsters don't have to. also, secret rooms can be here
-pillars, to match the shrine pillars.
 One-way and/or single-use corridors. (thanks to .orphle. in #br.gue)
 sometimes, monsters should actually guard corridors
-phantom trap. creates a phantom version of an OOD monster nearby. one HP.
 
 other:
-magical sleep status - lasts for a good while. any time you don't spend your turn
-  moving, you might fall asleep, which lasts for a few turns or until you take
-  damage.
-sunlight (Shine now makes your torch give off sunlight) can destroy light-
-  sensitive enemies outright
 an event (possibly triggered by shrines or chests) where you defend an area for a
   short while, for some purpose.
 light and dark sensitivity - i'm thinking blind-in-darkness and damaged-in-light.
@@ -724,7 +317,6 @@ i think i've figured out slime:
 
 
              
-             Do what now?
                            #####
 HP: 69                   ###...####       ############
 Depth: 1                 #........#       #..........######
@@ -772,30 +364,18 @@ counter for fail rate, sure.
 [bloodboil-]
 
 
-what about a 'blank' Event that takes a lambda? sounds great, but how the heck could I save/restore it?
-
 #
 
-make sure to always consider the old stuff when adding new stuff - it can use updates too, or receive some of these new ideas.
-
-decide which changes should go into 0.7.0!
 probably split all these into 0.7.0 and 0.8.0.
 then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
 	-equipment update: better identities for weapons and armor. chainmail would resist slashing, 
 		weapons would have different crit effects, plate would ... etc
-	-well, so far i have:
-		new map gen
-		new monsters
-		new items
+
 		new terrain
-		other 'light' features
 		other balance changes
-		sidebar counters and stuff. for increasing bars like Conviction, or brogue-style bars for other durations.
 		and help check
 
 -for the next version: item descriptions, slime and fog levels, leveltype-specific monsters, circular, diamond, and L-shaped rooms
-
-update your screenshots and videos!
 
 in ForaysSuperClass: public ActorType ZOMBIE = ActorType.ZOMBIE;
 
@@ -811,9 +391,6 @@ generate trolls with rocks they can throw, in a lair, and have them stay in that
 
 consider making ranged attacks...not attacks at all, but generated straight from the AI routine
 
-
-shadow should reduce the light radius of zealots, too
-
 Select() needs a rewrite, and to be moved out of Actor.
 
 mirrors: can be generated when there is solid rock behind a wall.
@@ -827,33 +404,23 @@ foreach(int i in FourDirections) or foreach(int i in Dir8). 4, 8, and 9.
 
 option to put stat window on right.
 
-remember that phantom descriptions should mention using spells on them
-
-help should mention what 3d6 means
-
 0.7.0 should have: (focus on gameplay)
-many effects should use the new 'RefreshDuration', including shadow's touch attack, etc etc.
+
 "You are burned. You are unburnt." <--being attacked by burning enemy while Tough
 think about scaling Spirit's duration reduction to more than 50%
 what about a 'default ranged attack' in addition to the 'default melee attack' spell?
-fire drake should come with a quickfire event
-	-not just a quickfire event, but the level should practically fall apart!
-is the minimum number of enemies really 4? eww, too low.
-	-it's actually 5.
-	-spread them out more!
-a stealth enemy that can teleport from shadows on ONE side of you to shadows on the OTHER side, and re-stealth while doing so.
-	-limited somehow. does he need to escape first?
-a group enemy that slightly punishes fighting in corridors?
-potion of vampirism? life drain, light allergy, flying.
-when adding doors, for each room, decide "doors" or "no doors", then make it so.
+potion of vampirism? life drain, light allergy, flying. this would be a nice addition to an ID game, at least.
 things other than the player should be able to call MakeNoise
 extend the "monster notices" sounds so that you can hear them even if you can't see them.
 	-this would make a good candidate for generalization: printing a message if the player can see an object OR if that object is within a certain distance. perhaps a distance that implies that the message is a sound, not a visual.
-kills list
-'killed by' in highscore?
 
 
 bugs: 
+here's that really weird one where I got killed the turn I used a rune of time:
+"Time stops for a moment. (grayed out)
+You bring out your torch. The troll seer regenerates. The troll
+seer casts glacial blast. The glacial blast hits you. You [more]
+die. [more]"
 minor: passage shows a WHITE floor under the player, not the correct color.
 using lunge on an aware goblin archer a knight's move away. the archer appears normal, when it should have a green background from the targeting.
 	-i believe this is another form of the other background color bug.
@@ -861,54 +428,20 @@ using lunge on an aware goblin archer a knight's move away. the archer appears n
 	-does not happen every time. this one might be a pain to track down.
 again on linux - bits of the previous map still appear. no idea why. does not happen often. (once so far!)
 	-not reproduced yet
-there still might be a bug related to being on fire and catching fire at the same time.
-	-not reproduced
 "The skeleton looks less disoriented. " - no skeleton in sight.
 	-reviewed code. should never happen, but it did.
 		-theory: it died and the message was still printed. rework removal from msg_obj list.
 			-happened again with "the skeleton looks more stable". debug the trap messages, then do the msg_obj fix.
-		-above theory is probably wrong: happened with a
-		 goblin that was alive
+		-above theory is probably wrong: happened with a goblin that was alive
 "You fire an arrow. The arrow hits the cultist. The cultist [more]
 dies."
 	-note that the [more] takes up exactly as much space as "dies. " - what gives?
+	-should be fixed!
 
 
 
 --generate the list of monsters first, THEN generate the level. then verify that i.e. a troll has a proper lair.
 
-[[
-notes for animation of tutorial tip boxes:
-
-box is always wider than tall.
-
-so, the number of frames of animation will always be tip_lines / 2 + 2
-
-box:	 12
-lines+3: 10
-
-frame 0: 1 or 2
-frame 1: 3 or 4
-...
-
-so, make a colorchar list of the appropriate size.
-
-then, define 2 lines such that odd sizes will have the same line overwritten once.
-
-frame 0: defines line 0 and line 0, or 0 and 1.
-
-frame 1: defines line 1 and line 1, or 1 and 2, then 0 and 2, or 0 and 3.
-
-frame 2: defines line 2 and line 2, or 2 and 3, then 1&3 or 1&4, then 0&4 or 0&5.
-
-frame X: defines X&X or X&X+1, then X-1&X+1 or X-1&X+2 ... then X-X&X+X or X-X&X+X+1
-
-]]
-
-
-
-	-something for cultists to summon - this should be on a special level though, and it would be badass.
-		-summoning circles and all
 
 
 room mimic
@@ -949,11 +482,13 @@ battle of the titans special level: a brawl between titans that don't care about
  <.agikm.> Maybe some wormlike creatures that would merge together and create more powerful variant of the same thing.
  <.agikm.> So you'd better just kill them one by one fast.
 special level brainstorm idea dump:
-skeleton jelly
+skeleton jelly. hilarious.
 
 
 voltaic rapture was too badass
 -this spell wasn't voltaic rapture, but was lightning-based: each time you're hit in melee you release a radius 2 burst of electricity
+
+trap disarming that simply requires different actions. One requires you to '.' wait on 2 opposite sides. One requires you to run around it without stopping. One requires you to step on all the diagonals without stepping on any of the cardinal directions.
 
 secrets
 silence
@@ -979,4 +514,195 @@ wizardry
 sorcery
 conjuring
 evocation
+
+
+BLOOD_MOTH		 -	25	-	3	bites		    (nothing)/"notices your light"
+attracted to light, 
+Found fluttering around any source of light, this huge moth is named for the rivulets of crimson on its wings that mimic dripping blood. Unlike most moths, it has a wide razor-filled mouth.
+SWORDSMAN		40	35	3	2	hits			-
+ready to duel, eyes watch (your) movements, twirls his sword in his hand, 
+Always ready for a fight, the swordsman twirls his sword in his hand as he walks. His eyes never leave his foe, watching for the next advance.
+SKULKING_KILLER		40	35	3	3	hits			-
+leaping/dashing/? from shadow to shadow, blade in hand, grin or grimace, 
+This rogue dashes from shadow to shadow, dagger in hand. A smirk appears as the killer overtakes the victim.
+ROBED_ZEALOT		40	40	3	3	hammers			-
+holy symbol, holy magic, church's spells, heretics, 
+A holy symbol hangs, silver and forked, from the neck of the zealot. The holy magic of the church's spells promises the zealot a swift victory over heretics.
+SHADOW			45	40	2	2	touches			-
+manifest darkness, not quite entirely solid, visible in light, 
+Shadows are manifest darkness, barely maintaining a physical presence. A dark environment hides them utterly, but the light reveals their warped human shape.
+BANSHEE			40	40	2	2	claws			-
+Claws are blood-caked nails, the length of your entire hand, face full of pain and hate, (wisp/shred/?) dress hangs/floats/flies behind her, scream, 
+The banshee's face is full of pain and hate. Blood-caked nails
+The banshee floats shrieking, trailing wisps of a faded dress behind her. Her nails are blood-caked claws. The banshee's hateful scream is painful for the living to hear.
+WARG			40	40	2	2	bites			-
+more intelligent relative of the wolf, white fur with black markings, eyes too human, 
+This wolf has white fur with black markings. Its eyes are too human for your liking.
+PHASE_SPIDER		50	45	1*	1*	bites			-
+noneuclidean, seems to climb into solid surfaces, dripping fangs, even when looking at it, you think you can hear it behind you, 
+Heedless of the laws of nature, this brilliantly iridescent spider steps to the side and appears twenty feet away. Even when you're looking right at it, you think you can hear it behind you.
+ASCETICMONK_		 -	40	-	3	punches/kicks/strikes	"babbles incoherently"
+mad, flurry, skilled, mad rambling, you can only do the same, 
+This solitary monk constantly kicks and punches at empty space, madly repeating nonsense words. Those nearby will find themselves uttering the same gibberish.
+POLTERGEIST		40	35     2,1	1*?	slimes/grabs item	-
+troublesome, penchant/? for tossing things around, haunting a location,
+This troublesome spirit has a penchant for throwing things and upending furniture. It affords no rest to intruders in the area that it haunts.
+CAVERN_HAG		 -	40	-	3?	clutches at?		"cackles"
+cracked warty skin, cackle, catching victims, cursing (someone), 
+The hag's foul brand of magic can impart a nasty curse on those who cross her. Cracked, warty skin hides surprising strength, used to wrestle her victims into the stewpot.
+
+COMPY			 -	25	-	1* or 2*bites			"squeaks"
+little scavengers and waste-eaters, possess a subtle(?) poison, only attack weak or helpless, (tendency to ignore healthy stuff), 
+Compys are little waste-eating scavengers that possess a subtle poison. They tend to ignore healthy creatures, preferring to surround those who are weak, helpless, or otherwise occupied.
+NOXIOUS_WORM		 -	55	-	3	bites/slams		"notices"
+thick stench, round(ed) and as tall as a man, whips its tail around, 
+The noxious worm, almost as tall as a man, slams foes with its bulk. It vomits a thick stench from its maw.
+BERSERKER		40	40	3	3	hits			-
+trophies of war, axe, rage, uncontrolled, unfeeling or impervious, 
+In battle, the berserker enters a state of unfeeling rage, axe swinging at anything within reach. Trophies of war adorn the berserker's minimally armored form.
+ENTRANCER		 -	35	-	2	hits		  (in the same style as the necro)
+mind taker or stealer of minds or brainwasher or something, enthralls, bends to will, enslaves, until a more powerful thrall appears, 
+The entrancer bends a weak-minded being to her will and has it fight on her behalf, at least until a more desirable thrall appears. The entrancer can protect and teleport the enthralled creature.
+SHADOWVEIL_DUELIST	 -	40	-	3	hits? or slashes?	notices
+cloak of (dark), magical technique(?), (the duelist's style, however it might be described...twisting, parrying, lunging???) is well-matched with his magical advantage.
+The shadowveil duelist hides under a cloak of shadows to strike unseen. A spinning, feinting fighting style keeps the duelist in motion.
+SP_D_PIXIE		 -	35	-	1 or 2?	?			notices
+faerie/fairy, magical, fills your head with a buzzing sound (maybe), scratches furiously, (feels like something is missing here), 
+fairies have some control over the flow of magic
+Using fairy enchantments to influence the flow of magic, this pixie causes its every wingbeat to reverberate in the skulls of those nearby, stifling words of magic.
+
+PYREN_ARCHER		 -	55	-	3*	hits			notices
+wide shoulders, tall, strange race of men, descendants of flame, still capable of calling the flame, nocks an arrow and it ignites or smth, 
+Tall and wide-shouldered descendants of flame, the pyren are a strange race of men. Though they are flesh and blood, they still possess the power to ignite nearby objects.ORC_ASSASSIN		 -	50	-	3	hits			snarls
+wicked grin, stalker, pointed teeth and ??? blade, camo, 
+This orcish stalker is well camouflaged. A wicked grin shows off sharp teeth as the assassin brandishes a sharp blade.
+TROLL_SOOTHSAYER	 -	50	-	3	claws			growls viciously
+leader, spells and claws, arcane tricks passed down from seer to seer, 
+The seer is a leader of the loose association that passes for a troll society
+The seer is a leader among the solitary troll population, sought for augury and council. Spells and arcane tricks are passed down from seer to seer. 
+ORC_WARMAGE		50	50	3	3	hits			-
+tracking magic, orc war parties (maybe), powerful wizardry, maybe some backstory about warmage badassery (?), 
+The destruction wreaked by warmages evokes respect and feat even among their own kind. They often lead raids and war parties, using tracking spells to complement their lethal magic.
+LUMINOUS_AVENGER	 -	40	-	3	hits or strikes		notices
+being of light, empyreal appearance/look/visage, (here's a good question - is it man-shaped? featureless? angelic? not winged? sword or other weapon?), 
+ The radiance of this empyreal being prevents you from gazing continuously at it.
+ The radiance of this empyreal being prevents you from looking directly at it for more than a few seconds.
+The radiance of this empyreal being makes your eyes hurt after a few seconds. When you look again it still has the shape of a human, but occasionally its silhouette seems to have wings, horns, or four legs.
+FIRE_DRAKE
+(huge), (deadly and hungry for your flesh and treasure), sizing up your flesh and (making plans) to drag your treasures back to its lair, snarling fiery master of this place, 
+Huge, deadly, and hungry for your charred flesh, the fire drake prepares to drag your valuables back to its lair. You have no doubts that you now face the snarling fiery master of this dungeon.
+
+GOBLIN			25	25	2	2	hits			-
+The goblin is a small ugly humanoid, often found inhabiting the upper reaches of any cave, chamber, or tunnel it can find.
+LARGE_BAT		20	20	1	1	bites/scratches		-
+The bats here are substantially bigger than most, perhaps because their insect prey is also unusually large.
+BLOOD_MOTH		 -	25	-	3	bites		    (nothing)/"notices your light"
+attracted to light, 
+WOLF			30	25	2	2	bites			-
+snarl, lithe, teeth, 
+Lithe and quick, this canine predator has formidable teeth and powerful jaws.
+SKELETON		30	30	2	2	hits			-
+A humanoid skeleton, animated by magic, seeing without eyes, and moving without muscles.
+A humanoid skeleton, animated by magic to see without eyes and move without muscles.
+SWORDSMAN		40	35	3	2	hits			-
+ready to duel, 
+DARKNESS_DWELLER	 -	45	-	2	hits			notices?
+This pale dirty humanoid wears tattered rags. Its huge eyes are sensitive to light.
+CARNIVOROUS_BRAMBLE	 -	35	-	3	rakes			(nothing)
+Sharp tangles of thorny branches spread out from its center. The closest branches seem to follow your movements.
+FROSTLING		35	35    3*,2*,4*	<--	hits/blasts/bursts	-
+An alien-looking creature of cold, the frostling possesses insectlike mandibles, claws, and smooth whitish skin. A fog of chill condensation surrounds it.
+DREAM_WARRIOR		40	40	3	2	hits			-
+The features of this warrior are hard to make out, but the curved blade held at the ready is clear enough.
+CULTIST			35	35	2	2	hits			-
+This cultist wears a crimson robe that reaches the ground. His head has been shaved and tattooed in devotion to his demon lord.
+GOBLIN_ARCHER		25	25	2	2	hits			-
+This goblin carries a crude bow and wears a quiver of arrows. It glances around, looking for inviting targets.
+GOBLIN_SHAMAN		25	25	2	2	hits			-
+This goblin's markings identify it as a tribe leader and shaman. It carries a small staff and wears a necklace of ears and fingers.
+
+
+MIMIC			 -	30	-	2*	hits			(nothing)
+The mimic changes its shape to that of an ordinary object, then waits for an unwary goblin or adventurer. It can secrete a powerful adhesive to hold its prey.
+SKULKING_KILLER		40	35	3	3	hits			-
+
+ZOMBIE			50	50     2*,3	<--	lunges / bites		-
+The zombie is a rotting, shambling corpse animated by the dark art of necromancy. It mindlessly seeks the flesh of the living.
+DIRE_RAT		25	25	1	1	bites			-
+With red eyes and long yellow teeth, most dire rats outweigh forty of their smaller brethren.
+ROBED_ZEALOT		40	40	3	3	hammers			-
+
+SHADOW			45	40	2	2	touches			-
+
+BANSHEE			40	40	2	2	claws			-
+
+WARG			40	40	2	2	bites			-
+
+PHASE_SPIDER		50	45	1*	1*	bites			-
+noneuclidean, 
+ASCETICMONK_		 -	40	-	3	punches/kicks/strikes	"babbles incoherently"
+mad, flurry, skilled, 
+POLTERGEIST		40	35     2,1	1*?	slimes/grabs item	-
+
+CAVERN_HAG		 -	40	-	3?	clutches at?		"cackles"
+warty skin, cackle, 
+
+
+COMPY			 -	25	-	1* or 2*bites			"squeaks"
+
+NOXIOUS_WORM		 -	55	-	3	bites/slams		"notices"
+
+BERSERKER		40	40	3	3	hits			-
+
+TROLL			55	50	3	3	claws			-
+The troll towers above you, all muscles, claws, and warty greenish skin. The regenerative powers of the troll are well-known, as is the suggestion to fight them with fire.
+VAMPIRE			 -	40	-	2	bites?			"notices"
+The vampire floats above the ground with hunger in its eyes. A dark cape flows around its pale form.
+CRUSADING_KNIGHT	 -	45	-	5*	mace			"shouts"
+This knight's armor bears the holy symbols of his church. He holds his torch aloft, awaiting the appearance of evildoers.
+SKELETAL_SABERTOOTH	 -	40	-	3	bites			notices?
+The skeletal remains of an enormous feline predator stand here, seemingly ready to pounce at any moment.
+MUD_ELEMENTAL		 -	35	-	2	hits			notices?
+As the mud elemental oozes across the floor, bits of dirt seem to animate and are absorbed into its body.
+ENTRANCER		 -	35	-	2	hits		  (in the same style as the necro)
+
+OGRE			55	55	4	4	hits			-
+Built like an orc, but as big as a troll, this tusked brute wields a giant club.
+ORC_GRENADIER		50	50	3	3	hits			-
+Orcs are a burly and warlike race, quick to make enemies. This orc carries a satchel filled with deadly orcish explosives.
+-or 'This one'
+SHADOWVEIL_DUELIST	 -	40	-	3	hits? or slashes?	notices
+
+CARRION_CRAWLER		35	35     0*,1	<--	bites/lashes		-
+This many-legged segmented insect crawls over the ground and walls in search of carrion. When threatened or lacking another source of food, tentacles on its head are used to apply a paralyzing substance to living prey.
+SP_D_PIXIE		 -	35	-	1 or 2?	?			notices
+
+
+STONE_GOLEM		65	65	4	4	slams			-
+Constructs of stone are often created to guard or serve. Their rocky nature grants them a degree of resistance to many forms of attack.
+PYREN_ARCHER		 -	55	-	3*	hits			notices
+
+ORC_ASSASSIN		 -	50	-	3	hits			snarls
+
+TROLL_SOOTHSAYER	 -	50	-	3	claws			growls viciously
+
+MECHANICAL_KNIGHT	 -	?	-	3	hits?		 (starts moving? nothing?)
+The mechanical knight's shield moves with unnatural speed, ready to foil any onslaught. Its exposed gears appear vulnerable to any attack that could bypass its shield.
+ORC_WARMAGE		50	50	3	3	hits			-
+
+LASHER_FUNGUS		50	50     3,1*	<--	tentacle/tentacle	-
+The lasher is a tall mass of fungal growth with several ropelike tentacles extending from it.
+
+NECROMANCER		40	40	2	2	hits			-
+Necromancers practice the dark arts, raising the dead to serve them. They gain power through unholy rituals that make them unwelcome in any civilized place.
+LUMINOUS_AVENGER	 -	40	-	3	hits or strikes		notices
+
+CORPSETOWER_BEHEMOTH	75	75	5	5	clobbers		-
+This monstrosity looks like it was stitched together from corpses of several different species. You see pieces of humans, orcs, and trolls, in addition to some you can't begin to identify.
+FIRE_DRAKE
+
+PHANTOM (X)
+Phantoms are beings of illusion, but real enough to do lasting harm. Because they vanish at the slightest touch, they are easily dispatched with magic spells.
+
+
 

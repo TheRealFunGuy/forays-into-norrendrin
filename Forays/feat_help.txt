@@ -50,7 +50,7 @@ Full defense - Stand still('5' or '.') to ready yourself for
                attack. You gain an extra 50% chance to avoid
                attacks, and any enemy that misses you will
                have its attack redirected to another adjacent
-               enemy. (4 points, passive)
+               enemy. (3 points, passive)
 
 Tumble - Move up to 2 spaces while avoiding arrows. You'll dodge
          the first arrow fired at you before your next turn. If

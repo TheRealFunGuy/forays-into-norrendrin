@@ -266,6 +266,13 @@ namespace Forays{
 				}
 			}
 		}
+		public static void WriteList(int r,int c,List<colorstring> ls){
+			int line = r;
+			foreach(colorstring cs in ls){
+				WriteString(line,c,cs);
+				++line;
+			}
+		}
 		public static void WriteString(int r,int c,string s){ WriteString(r,c,new cstr(Color.Gray,s)); }
 		public static void WriteString(int r,int c,string s,Color color){ WriteString(r,c,new cstr(s,color)); }
 		public static void WriteString(int r,int c,cstr s){
