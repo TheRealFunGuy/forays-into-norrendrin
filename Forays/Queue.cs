@@ -1567,6 +1567,7 @@ namespace Forays{
 									else{
 										t.Toggle(null,Forays.TileType.RUBBLE);
 										foreach(Tile neighbor in t.TilesAtDistance(1)){
+											neighbor.solid_rock = false;
 											if(neighbor.type == TileType.FLOOR && Global.OneIn(10)){
 												neighbor.Toggle(null,Forays.TileType.RUBBLE);
 											}
