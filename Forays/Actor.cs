@@ -3235,7 +3235,7 @@ namespace Forays{
 							player.MakeNoise();
 							break;
 						case ActorType.BLOOD_MOTH:
-							if(!M.wiz_lite && player.LightRadius() > 0){
+							if(!M.wiz_lite && !M.wiz_dark && player.LightRadius() > 0){
 								B.Add(the_name + " notices your light. ",this);
 							}
 							break;
@@ -7100,7 +7100,7 @@ namespace Forays{
 			case DamageType.NONE:
 				break;
 			}
-			if(dmg.source != null && dmg.source == player && dmg.damclass == DamageClass.PHYSICAL && resisted){
+			if(dmg.source != null && dmg.source == player && dmg.damclass == DamageClass.PHYSICAL && resisted && !cause_of_death.Contains("arrow")){
 				Help.TutorialTip(TutorialTopic.Resistance);
 			}
 			if(damage_dealt){
@@ -7184,7 +7184,7 @@ namespace Forays{
 					Q.Add(new Event(this,1000,Forays.AttrType.BLOOD_BOILED,attrs[Forays.AttrType.BLOOD_BOILED],"Your blood cools. "));
 				}
 				if(type == ActorType.MECHANICAL_KNIGHT){
-					if(curhp <= 10 && !HasAttr(AttrType.COOLDOWN_1) && !HasAttr(AttrType.COOLDOWN_2)){
+					if(curhp <= 10 && curhp > 0 && !HasAttr(AttrType.COOLDOWN_1) && !HasAttr(AttrType.COOLDOWN_2)){
 						if(Global.CoinFlip()){
 							B.Add(Your() + " arms are destroyed! ",this);
 							attrs[Forays.AttrType.COOLDOWN_1]++;

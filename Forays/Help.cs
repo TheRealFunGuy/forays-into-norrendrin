@@ -461,6 +461,7 @@ namespace Forays{
 				Actor.B.DisplayNow();
 			}
 			Console.CursorVisible = false;
+			Thread.Sleep(500);
 			Global.FlushInput();
 			/*	switch(Console.ReadKey(true).KeyChar){
 				case 'q':
@@ -484,6 +485,9 @@ namespace Forays{
 				Global.Options[OptionType.NEVER_DISPLAY_TIPS] = true;
 			}
 			Screen.WriteArray((Global.SCREEN_H - boxheight) / 2,x,memory);
+			if(topic != TutorialTopic.Feats){ //another exception
+				Actor.player.DisplayStats(true);
+			}
 			displayed[topic] = true;
 			Console.CursorVisible = true;
 		}
