@@ -15,6 +15,7 @@ namespace Forays{
 		public bool opaque{get{ return internal_opaque || features.Contains(FeatureType.FOG); } set{ internal_opaque = value; }}
 		private bool internal_opaque; //no need to ever access this directly
 		public bool seen{get;set;}
+		public bool revealed_by_light{get;set;}
 		public bool solid_rock{get;set;} //used for walls that will never be seen, to speed up LOS checks
 		public int light_value{get{ return internal_light_value; }
 			set{
@@ -95,10 +96,8 @@ namespace Forays{
 			proto_feature[FeatureType.FUNGUS_ACTIVE] = new PhysicalObject("blast fungus(active)",'"',Color.Red);
 			proto_feature[FeatureType.FUNGUS_PRIMED] = new PhysicalObject("blast fungus(exploding)",'"',Color.Yellow);
 
-			//mimic
 			//not an actual trap, but arena rooms, too. perhaps you'll see the opponent, in stasis.
 				//"Touch the [tile]?(Y/N) "   if you touch it, you're stuck in the arena until one of you dies.
-			//poison gas
 		}
 		private static void Define(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
 			proto[type_] = new Tile(type_,name_,symbol_,color_,passable_,opaque_,toggles_into_);
@@ -114,6 +113,7 @@ namespace Forays{
 			passable = t.passable;
 			opaque = t.opaque;
 			seen = false;
+			revealed_by_light = t.revealed_by_light;
 			solid_rock = false;
 			light_value = 0;
 			toggles_into = t.toggles_into;
@@ -149,6 +149,10 @@ namespace Forays{
 			opaque = opaque_;
 			seen = false;
 			solid_rock = false;
+			revealed_by_light = false;
+			if(Is(TileType.STAIRS,TileType.CHEST,TileType.FIREPIT,TileType.HEALING_POOL)){
+				revealed_by_light = true;
+			}
 			light_value = 0;
 			toggles_into = toggles_into_;
 			inv = null;
@@ -207,6 +211,75 @@ namespace Forays{
 				return TileType.POISON_GAS_VENT;
 			}
 		}
+		public string Name(bool consider_low_light){
+			if(revealed_by_light){
+				consider_low_light = false;
+			}
+			if(!consider_low_light || IsLit()){
+				return name;
+			}
+			else{
+				if(IsTrap()){
+					return "trap";
+				}
+				if(IsShrine() || type == TileType.RUINED_SHRINE){
+					return "shrine";
+				}
+				switch(type){
+				case TileType.FIRE_GEYSER:
+				case TileType.FOG_VENT:
+				case TileType.POISON_GAS_VENT:
+					return "crack in the floor";
+				}
+				return name;
+			}
+		}
+		public string AName(bool consider_low_light){
+			if(revealed_by_light){
+				consider_low_light = false;
+			}
+			if(!consider_low_light || IsLit()){
+				return a_name;
+			}
+			else{
+				if(IsTrap()){
+					return "a trap";
+				}
+				if(IsShrine() || type == TileType.RUINED_SHRINE){
+					return "a shrine";
+				}
+				switch(type){
+				case TileType.FIRE_GEYSER:
+				case TileType.FOG_VENT:
+				case TileType.POISON_GAS_VENT:
+					return "a crack in the floor";
+				}
+				return a_name;
+			}
+		}
+		public string TheName(bool consider_low_light){
+			if(revealed_by_light){
+				consider_low_light = false;
+			}
+			if(!consider_low_light || IsLit()){
+				return the_name;
+			}
+			else{
+				if(IsTrap()){
+					return "the trap";
+				}
+				if(IsShrine() || type == TileType.RUINED_SHRINE){
+					return "the shrine";
+				}
+				switch(type){
+				case TileType.FIRE_GEYSER:
+				case TileType.FOG_VENT:
+				case TileType.POISON_GAS_VENT:
+					return "the crack in the floor";
+				}
+				return the_name;
+			}
+		}
 		public bool Is(TileType t){
 			if(type == t){
 				return true;
@@ -216,6 +289,14 @@ namespace Forays{
 		public bool Is(FeatureType t){
 			foreach(FeatureType feature in features){
 				if(feature == t){
+					return true;
+				}
+			}
+			return false;
+		}
+		public bool Is(params TileType[] types){
+			foreach(TileType t in types){
+				if(type == t){
 					return true;
 				}
 			}
@@ -384,12 +465,12 @@ namespace Forays{
 			}
 			return false;
 		}
-		public void Toggle(PhysicalObject toggler){
+		public void Toggle(Actor toggler){
 			if(toggles_into != null){
 				Toggle(toggler,toggles_into.Value);
 			}
 		}
-		public void Toggle(PhysicalObject toggler,TileType toggle_to){
+		public void Toggle(Actor toggler,TileType toggle_to){
 			bool lighting_update = false;
 			List<PhysicalObject> light_sources = new List<PhysicalObject>();
 			TileType original_type = type;
@@ -439,7 +520,7 @@ namespace Forays{
 			if(toggler != null && toggler != player){
 				if(type == TileType.DOOR_C && original_type == TileType.DOOR_O){
 					if(player.CanSee(this)){
-						B.Add(toggler.TheVisible() + " closes the door. ");
+						B.Add(toggler.TheName(true) + " closes the door. ");
 					}
 					else{
 						if(seen || player.DistanceFrom(this) <= 6){
@@ -449,7 +530,7 @@ namespace Forays{
 				}
 				if(type == TileType.DOOR_O && original_type == TileType.DOOR_C){
 					if(player.CanSee(this)){
-						B.Add(toggler.TheVisible() + " opens the door. ");
+						B.Add(toggler.TheName(true) + " opens the door. ");
 					}
 					else{
 						if(seen || player.DistanceFrom(this) <= 6){
@@ -460,7 +541,7 @@ namespace Forays{
 			}
 			if(toggler != null){
 				if(original_type == TileType.RUBBLE){
-					B.Add(toggler.YouVisible("shift") + " the rubble aside. ",this);
+					B.Add(toggler.YouVisible("scatter") + " the rubble. ",this);
 				}
 			}
 		}
@@ -481,6 +562,7 @@ namespace Forays{
 				UpdateRadius(light_radius,Prototype(type_).light_radius);
 			}
 			light_radius = Prototype(type_).light_radius;
+			revealed_by_light = false;
 		}
 		public void TurnToFloor(){
 			bool lighting_update = false;
@@ -622,6 +704,329 @@ namespace Forays{
 			}
 		}
 		public void TriggerTrap(){
+			bool actor_here = (actor() != null);
+			if(actor_here && actor().type == ActorType.FIRE_DRAKE){
+				if(name == "floor"){
+					B.Add(actor().the_name + " smashes " + Tile.Prototype(type).a_name + ". ",this);
+				}
+				else{
+					B.Add(actor().the_name + " smashes " + the_name + ". ",this);
+				}
+				TransformTo(TileType.FLOOR);
+				return;
+			}
+			if(player.CanSee(this)){
+				B.Add("*CLICK* ",this);
+				B.PrintAll();
+			}
+			switch(type){
+			case TileType.GRENADE_TRAP:
+			{
+				if(actor_here && player.CanSee(actor())){
+					B.Add("Grenades fall from the ceiling above " + actor().the_name + "! ",this);
+				}
+				else{
+					B.Add("Grenades fall from the ceiling! ",this);
+				}
+				List<Tile> valid = new List<Tile>();
+				foreach(Tile t in TilesWithinDistance(1)){
+					if(t.passable && !t.Is(FeatureType.GRENADE)){
+						valid.Add(t);
+					}
+				}
+				int count = Global.OneIn(10)? 3 : 2;
+				for(;count>0 & valid.Count > 0;--count){
+					Tile t = valid.Random();
+					if(t.actor() != null){
+						if(t.actor() == player){
+							B.Add("One lands under you! ");
+						}
+						else{
+							if(player.CanSee(this)){
+								B.Add("One lands under " + t.actor().the_name + ". ",t.actor());
+							}
+						}
+					}
+					else{
+						if(t.inv != null){ //todo: this could also check for any features that hide grenades.
+							B.Add("One lands under " + t.inv.TheName() + ". ",t);
+						}
+					}
+					t.features.Add(FeatureType.GRENADE);
+					valid.Remove(t);
+					Q.Add(new Event(t,100,EventType.GRENADE));
+				}
+				Toggle(actor());
+				break;
+			}
+			case TileType.UNDEAD_TRAP:
+			{
+				List<int> dirs = new List<int>();
+				for(int i=2;i<=8;i+=2){
+					Tile t = this;
+					bool good = true;
+					while(t.type != TileType.WALL){
+						t = t.TileInDirection(i);
+						if(t.opaque && t.type != TileType.WALL){
+							good = false;
+							break;
+						}
+						if(DistanceFrom(t) > 6){
+							good = false;
+							break;
+						}
+					}
+					if(good && t.row > 0 && t.row < ROWS-1 && t.col > 0 && t.col < COLS-1){
+						t = t.TileInDirection(i);
+					}
+					else{
+						good = false;
+					}
+					if(good && t.row > 0 && t.row < ROWS-1 && t.col > 0 && t.col < COLS-1){
+						foreach(Tile tt in t.TilesWithinDistance(1)){
+							if(tt.type != TileType.WALL){
+								good = false;
+							}
+						}
+					}
+					else{
+						good = false;
+					}
+					if(good){
+						dirs.Add(i);
+					}
+				}
+				if(dirs.Count == 0){
+					B.Add("Nothing happens. ",this);
+				}
+				else{
+					int dir = dirs[Global.Roll(dirs.Count)-1];
+					Tile first = this;
+					while(first.type != TileType.WALL){
+						first = first.TileInDirection(dir);
+					}
+					first.TileInDirection(dir).TurnToFloor();
+					ActorType ac = Global.CoinFlip()? ActorType.SKELETON : ActorType.ZOMBIE; //todo: change this based on depth?
+					Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col,true,true);
+					first.TurnToFloor();
+					foreach(Tile t in first.TileInDirection(dir).TilesWithinDistance(1)){
+						t.solid_rock = false;
+					}
+					first.ActorInDirection(dir).FindPath(TileInDirection(dir));
+					if(player.CanSee(first)){
+						B.Add("The wall slides away. ");
+					}
+					else{
+						if(DistanceFrom(player) <= 6){
+							B.Add("You hear rock sliding on rock. ");
+						}
+					}
+				}
+				Toggle(actor());
+				break;
+			}
+			case TileType.TELEPORT_TRAP:
+				if(actor_here){
+					B.Add("An unstable energy covers " + actor().TheName(true) + ". ",actor());
+					actor().attrs[AttrType.TELEPORTING] = Global.Roll(4);
+					Q.KillEvents(actor(),AttrType.TELEPORTING); //should be replaced by refreshduration eventually. works the same way, though.
+					Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(10)+25)*100,AttrType.TELEPORTING,actor().YouFeel() + " more stable. ",actor()));
+				}
+				else{
+					B.Add("An unstable energy crackles for a moment, then dissipates. ",this);
+				}
+				Toggle(actor());
+				break;
+			case TileType.STUN_TRAP:
+				if(actor_here && player.CanSee(actor())){
+					B.Add("A disorienting flash assails " + actor().the_name + ". ",this);
+				}
+				else{
+					B.Add("You notice a flash of light. ",this);
+				}
+				if(actor_here){
+					actor().GainAttrRefreshDuration(AttrType.STUNNED,actor().DurationOfMagicalEffect(Global.Roll(10)+7)*100,(actor().YouFeel() + " less disoriented. "),(this.actor()));
+				}
+				Toggle(actor());
+				break;
+			case TileType.LIGHT_TRAP:
+				if(M.wiz_lite == false){
+					if(actor_here && player.HasLOS(row,col) && !actor().IsHiddenFrom(player)){
+						B.Add("A wave of light washes out from above " + actor().the_name + "! ");
+					}
+					else{
+						B.Add("A wave of light washes over the area! ");
+					}
+					M.wiz_lite = true;
+					M.wiz_dark = false;
+				}
+				else{
+					B.Add("Nothing happens. ",this);
+				}
+				Toggle(actor());
+				break;
+			case TileType.DARKNESS_TRAP:
+				if(M.wiz_dark == false){
+					if(actor_here && player.CanSee(actor())){
+						B.Add("A surge of darkness radiates out from above " + actor().the_name + "! ");
+						if(player.light_radius > 0){
+							B.Add("Your light is extinguished! ");
+						}
+					}
+					else{
+						B.Add("A surge of darkness extinguishes all light in the area! ");
+					}
+					M.wiz_dark = true;
+					M.wiz_lite = false;
+				}
+				else{
+					B.Add("Nothing happens. ",this);
+				}
+				Toggle(actor());
+				break;
+			case TileType.QUICKFIRE_TRAP:
+			{
+				if(actor_here){
+					B.Add("Fire pours over " + actor().TheName(true) + " and starts to spread! ",this);
+					Actor a = actor();
+					if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE) && !a.HasAttr(AttrType.ON_FIRE)
+					&& !a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
+						if(a == actor()){							// to work properly, 
+							a.attrs[AttrType.STARTED_CATCHING_FIRE_THIS_TURN] = 1; //this would need to determine what actor's turn it is
+						} //therefore, hack
+						else{
+							a.attrs[AttrType.CATCHING_FIRE] = 1;
+						}
+						if(player.CanSee(a.tile())){
+							B.Add(a.You("start") + " to catch fire. ",a);
+						}
+					}
+				}
+				features.Add(FeatureType.QUICKFIRE);
+				Toggle(actor());
+				List<Tile> newarea = new List<Tile>();
+				newarea.Add(this);
+				Q.Add(new Event(this,newarea,100,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
+				break;
+			}
+			case TileType.ALARM_TRAP:
+				if(actor() == player){
+					B.Add("A high-pitched ringing sound reverberates from above you. ");
+				}
+				else{
+					if(actor_here && player.CanSee(actor())){
+						B.Add("A high-pitched ringing sound reverberates from above " + actor().the_name + ". ");
+					}
+					else{
+						B.Add("You hear a high-pitched ringing sound. ");
+					}
+				}
+				foreach(Actor a in ActorsWithinDistance(12,true)){
+					if(a.type != ActorType.LARGE_BAT && a.type != ActorType.BLOOD_MOTH && a.type != ActorType.CARNIVOROUS_BRAMBLE
+					&& a.type != ActorType.LASHER_FUNGUS && a.type != ActorType.PHASE_SPIDER){
+						a.FindPath(this);
+					}
+				}
+				Toggle(actor());
+				break;
+			case TileType.DIM_VISION_TRAP:
+				if(actor_here){
+					B.Add("A dart flies out and strikes " + actor().the_name + ". ",actor());
+				}
+				else{
+					B.Add("A dart flies out and breaks on the floor. ",this);
+				}
+				if(actor() == player){
+					B.Add("Your vision becomes weaker! ");
+					actor().GainAttrRefreshDuration(AttrType.DIM_VISION,actor().DurationOfMagicalEffect(Global.Roll(10) + 20) * 100,"Your vision returns to normal. ");
+				}
+				else{
+					if(actor_here && !actor().HasAttr(AttrType.IMMUNE_TOXINS) && !actor().HasAttr(AttrType.UNDEAD) && !actor().HasAttr(Forays.AttrType.BLINDSIGHT)
+					&& actor().type != ActorType.BLOOD_MOTH && actor().type != ActorType.PHASE_SPIDER){
+						if(player.CanSee(actor())){
+							B.Add(actor().the_name + " seems to have trouble seeing. ");
+						}
+						actor().GainAttrRefreshDuration(AttrType.DIM_VISION,actor().DurationOfMagicalEffect(Global.Roll(10) + 20) * 100);
+					}
+				}
+				Toggle(actor());
+				break;
+			case TileType.ICE_TRAP:
+				if(actor_here){
+					if(player.CanSee(this)){
+						B.Add("The air suddenly freezes, encasing " + actor().TheName(true) + " in ice. ");
+					}
+					actor().attrs[AttrType.FROZEN] = 25;
+				}
+				Toggle(actor());
+				break;
+			case TileType.PHANTOM_TRAP:
+			{
+				Tile open = TilesWithinDistance(3).Where(t => t.passable && t.actor() == null && t.HasLOE(this)).Random();
+				if(open != null){
+					Actor a = Actor.CreatePhantom(open.row,open.col);
+					if(a != null){
+						a.attrs[AttrType.PLAYER_NOTICED]++;
+						a.player_visibility_duration = -1;
+						B.Add("A ghostly image rises! ",a);
+					}
+					else{
+						B.Add("Nothing happens. ",this);
+					}
+				}
+				else{
+					B.Add("Nothing happens. ",this);
+				}
+				Toggle(actor());
+				break;
+			}
+			case TileType.POISON_GAS_TRAP:
+			{
+				Tile current = this;
+				int num = Global.Roll(5) + 7;
+				List<Tile> new_area = new List<Tile>();
+				for(int i=0;i<num;++i){
+					if(!current.Is(FeatureType.POISON_GAS)){
+						current.features.Add(FeatureType.POISON_GAS);
+						new_area.Add(current);
+					}
+					else{
+						for(int tries=0;tries<50;++tries){
+							List<Tile> open = new List<Tile>();
+							foreach(Tile t in current.TilesAtDistance(1)){
+								if(t.passable){
+									open.Add(t);
+								}
+							}
+							if(open.Count > 0){
+								Tile possible = open.Random();
+								if(!possible.Is(FeatureType.POISON_GAS)){
+									possible.features.Add(FeatureType.POISON_GAS);
+									new_area.Add(possible);
+									break;
+								}
+								else{
+									current = possible;
+								}
+							}
+							else{
+								break;
+							}
+						}
+					}
+				}
+				if(new_area.Count > 0){
+					B.Add("Poisonous gas fills the area! ",this);
+					Q.Add(new Event(new_area,300,EventType.POISON_GAS));
+				}
+				Toggle(actor());
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		/*public void TriggerTrap(){
 			if(actor().type == ActorType.FIRE_DRAKE){
 				if(name == "floor"){
 					B.Add(actor().the_name + " smashes " + Tile.Prototype(type).a_name + ". ",this);
@@ -645,7 +1050,6 @@ namespace Forays{
 				else{
 					B.Add("Grenades fall from the ceiling! ",this);
 				}
-				//bool nade_here = false;
 				List<Tile> valid = new List<Tile>();
 				foreach(Tile t in TilesWithinDistance(1)){
 					if(t.passable && !t.Is(FeatureType.GRENADE)){
@@ -655,9 +1059,6 @@ namespace Forays{
 				int count = Global.OneIn(10)? 3 : 2;
 				for(;count>0 & valid.Count > 0;--count){
 					Tile t = valid.Random();
-					/*if(t == this){
-						nade_here = true;
-					}*/
 					if(t.actor() != null){
 						if(t.actor() == player){
 							B.Add("One lands under you! ");
@@ -733,8 +1134,6 @@ namespace Forays{
 					foreach(Tile t in first.TileInDirection(dir).TilesWithinDistance(1)){
 						t.solid_rock = false;
 					}
-					//first.ActorInDirection(dir).target_location = this;
-					//first.ActorInDirection(dir).player_visibility_duration = -1;
 					first.ActorInDirection(dir).FindPath(TileInDirection(dir));
 					if(player.CanSee(first)){
 						B.Add("The wall slides away. ");
@@ -749,7 +1148,7 @@ namespace Forays{
 				break;
 			}
 			case TileType.TELEPORT_TRAP:
-				B.Add("An unstable energy covers " + actor().TheVisible() + ". ",actor());
+				B.Add("An unstable energy covers " + actor().TheName(true) + ". ",actor());
 				actor().attrs[AttrType.TELEPORTING] = Global.Roll(4);
 				Q.KillEvents(actor(),AttrType.TELEPORTING); //should be replaced by refreshduration eventually. works the same way, though.
 				Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(10)+25)*100,AttrType.TELEPORTING,actor().YouFeel() + " more stable. ",actor()));
@@ -762,8 +1161,6 @@ namespace Forays{
 				else{
 					B.Add("You notice a flash of light. ",this);
 				}
-				//actor().attrs[AttrType.STUNNED]++;
-				//Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(Global.Roll(10)+7)*100,AttrType.STUNNED,(actor().YouFeel() + " less disoriented. "),(this.actor())));
 				actor().GainAttrRefreshDuration(AttrType.STUNNED,actor().DurationOfMagicalEffect(Global.Roll(10)+7)*100,(actor().YouFeel() + " less disoriented. "),(this.actor()));
 				Toggle(actor());
 				break;
@@ -804,7 +1201,7 @@ namespace Forays{
 				break;
 			case TileType.QUICKFIRE_TRAP:
 			{
-				B.Add("Fire pours over " + actor().TheVisible() + " and starts to spread! ",this);
+				B.Add("Fire pours over " + actor().TheName(true) + " and starts to spread! ",this);
 				Actor a = actor();
 				if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE) && !a.HasAttr(AttrType.ON_FIRE)
 				&& !a.HasAttr(AttrType.IMMUNE_FIRE) && !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
@@ -864,7 +1261,7 @@ namespace Forays{
 				break;
 			case TileType.ICE_TRAP:
 				if(player.CanSee(this)){
-					B.Add("The air suddenly freezes, encasing " + actor().TheVisible() + " in ice. ");
+					B.Add("The air suddenly freezes, encasing " + actor().TheName(true) + " in ice. ");
 				}
 				actor().attrs[AttrType.FROZEN] = 25;
 				Toggle(actor());
@@ -934,35 +1331,11 @@ namespace Forays{
 			default:
 				break;
 			}
-		}
+		}*/
 		public void OpenChest(){
 			if(type == TileType.CHEST){
 				if(Global.Roll(1,10) == 10){
 					List<int> upgrades = new List<int>();
-					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.FLAMEBRAND)){
-						upgrades.Add(0);
-					}
-					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.MACE_OF_FORCE)){
-						upgrades.Add(1);
-					}
-					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.VENOMOUS_DAGGER)){
-						upgrades.Add(2);
-					}
-					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.STAFF_OF_MAGIC)){
-						upgrades.Add(3);
-					}
-					if(Global.Roll(1,2) == 2 && !player.weapons.Contains(WeaponType.HOLY_LONGBOW)){
-						upgrades.Add(4);
-					}
-					if(Global.Roll(1,3) == 3 && !player.armors.Contains(ArmorType.ELVEN_LEATHER)){
-						upgrades.Add(5);
-					}
-					if(Global.Roll(1,3) == 3 && !player.armors.Contains(ArmorType.CHAINMAIL_OF_ARCANA)){
-						upgrades.Add(6);
-					}
-					if(Global.Roll(1,3) == 3 && !player.armors.Contains(ArmorType.FULL_PLATE_OF_RESISTANCE)){
-						upgrades.Add(7);
-					}
 					if(Global.Roll(1,2) == 2 && !player.magic_items.Contains(MagicItemType.PENDANT_OF_LIFE)){
 						upgrades.Add(8);
 					}
@@ -981,75 +1354,28 @@ namespace Forays{
 					}
 					int upgrade = upgrades[Global.Roll(1,upgrades.Count)-1];
 					switch(upgrade){
-					case 0: //flamebrand
-						player.weapons.Find(WeaponType.SWORD).Value = WeaponType.FLAMEBRAND;
-						if(Weapon.BaseWeapon(player.weapons.First.Value) == WeaponType.SWORD){
-							player.UpdateOnEquip(WeaponType.SWORD,WeaponType.FLAMEBRAND);
-						}
-						break;
-					case 1: //mace of force
-						player.weapons.Find(WeaponType.MACE).Value = WeaponType.MACE_OF_FORCE;
-						if(Weapon.BaseWeapon(player.weapons.First.Value) == WeaponType.MACE){
-							player.UpdateOnEquip(WeaponType.MACE,WeaponType.MACE_OF_FORCE);
-						}
-						break;
-					case 2: //venomous dagger
-						player.weapons.Find(WeaponType.DAGGER).Value = WeaponType.VENOMOUS_DAGGER;
-						if(Weapon.BaseWeapon(player.weapons.First.Value) == WeaponType.DAGGER){
-							player.UpdateOnEquip(WeaponType.DAGGER,WeaponType.VENOMOUS_DAGGER);
-						}
-						break;
-					case 3: //staff of magic
-						player.weapons.Find(WeaponType.STAFF).Value = WeaponType.STAFF_OF_MAGIC;
-						if(Weapon.BaseWeapon(player.weapons.First.Value) == WeaponType.STAFF){
-							player.UpdateOnEquip(WeaponType.STAFF,WeaponType.STAFF_OF_MAGIC);
-						}
-						break;
-					case 4: //holy longbow
-						player.weapons.Find(WeaponType.BOW).Value = WeaponType.HOLY_LONGBOW;
-						if(Weapon.BaseWeapon(player.weapons.First.Value) == WeaponType.BOW){
-							player.UpdateOnEquip(WeaponType.BOW,WeaponType.HOLY_LONGBOW);
-						}
-						break;
-					case 5: //elven leather
-						player.armors.Find(ArmorType.LEATHER).Value = ArmorType.ELVEN_LEATHER;
-						if(Armor.BaseArmor(player.armors.First.Value) == ArmorType.LEATHER){
-							player.UpdateOnEquip(ArmorType.LEATHER,ArmorType.ELVEN_LEATHER);
-						}
-						break;
-					case 6: //chainmail of arcana
-						player.armors.Find(ArmorType.CHAINMAIL).Value = ArmorType.CHAINMAIL_OF_ARCANA;
-						if(Armor.BaseArmor(player.armors.First.Value) == ArmorType.CHAINMAIL){
-							player.UpdateOnEquip(ArmorType.CHAINMAIL,ArmorType.CHAINMAIL_OF_ARCANA);
-						}
-						break;
-					case 7: //full plate of resistance
-						player.armors.Find(ArmorType.FULL_PLATE).Value = ArmorType.FULL_PLATE_OF_RESISTANCE;
-						if(Armor.BaseArmor(player.armors.First.Value) == ArmorType.FULL_PLATE){
-							player.UpdateOnEquip(ArmorType.FULL_PLATE,ArmorType.FULL_PLATE_OF_RESISTANCE);
-						}
-						break;
 					case 8: //pendant of life
-						player.magic_items.AddLast(MagicItemType.PENDANT_OF_LIFE);
+						player.magic_items.Add(MagicItemType.PENDANT_OF_LIFE);
 						break;
 					case 9: //ring of resistance
-						player.magic_items.AddLast(MagicItemType.RING_OF_RESISTANCE);
+						player.magic_items.Add(MagicItemType.RING_OF_RESISTANCE);
 						break;
 					case 10: //ring of protection
-						player.magic_items.AddLast(MagicItemType.RING_OF_PROTECTION);
+						player.magic_items.Add(MagicItemType.RING_OF_PROTECTION);
 						break;
 					case 11: //cloak of disappearance
-						player.magic_items.AddLast(MagicItemType.CLOAK_OF_DISAPPEARANCE);
+						player.magic_items.Add(MagicItemType.CLOAK_OF_DISAPPEARANCE);
 						break;
 					default:
 						break;
 					}
+					if(player.magic_items.Count == 1){
+						player.equipped_magic_item_idx = 0;
+					}
 					if(upgrade <= 4){
-						B.Add("You find a " + Weapon.Name((WeaponType)(upgrade+5)) + "! ");
 					}
 					else{
 						if(upgrade <= 7){
-							B.Add("You find " + Armor.Name((ArmorType)(upgrade-2)) + "! ");
 						}
 						else{
 							B.Add("You find a " + MagicItem.Name((MagicItemType)(upgrade-8)) + "! ");

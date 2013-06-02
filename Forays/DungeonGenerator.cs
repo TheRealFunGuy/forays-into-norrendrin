@@ -402,7 +402,7 @@ namespace DungeonGen{
 					break;
 				}
 				case ConsoleKey.U:
-					d.ApplyRuin();
+					d.AddLake();
 					break;
 				case ConsoleKey.D1:
 					d.allow_all_corner_connections = !d.allow_all_corner_connections;
@@ -573,6 +573,10 @@ namespace DungeonGen{
 				RemoveUnconnected();
 				AddDoors();
 				AddPillars(30);
+				/*int num_lakes = Roll(3);
+				for(int i=0;i<num_lakes;++i){
+					AddLake();
+				}*/
 				MarkInterestingLocations();
 				if(NumberOfFloors() < 320 || HasLargeUnusedSpaces()){
 					Clear();
@@ -961,6 +965,8 @@ namespace DungeonGen{
 				return '&';
 			case '0':
 				return '0';
+			case '~':
+				return '~';
 			case '#':
 			case 'P':
 			default:
@@ -1280,6 +1286,98 @@ namespace DungeonGen{
 				for(int j=0;j<W;++j){
 					if(num[i,j] != biggest_area){
 						map[i,j] = '#';
+					}
+				}
+			}
+		}
+		public bool IsConnected(){
+			int[,] num = new int[H,W];
+			for(int i=0;i<H;++i){
+				for(int j=0;j<W;++j){
+					if(ConvertedChar(map[i,j]) == '.' || map[i,j] == '&' || map[i,j] == ':' || map[i,j] == 'P' || map[i,j] == '+'){
+						num[i,j] = 0;
+					}
+					else{
+						num[i,j] = -1;
+					}
+				}
+			}
+			int count = 0;
+			for(int i=0;i<H;++i){
+				for(int j=0;j<W;++j){
+					if(num[i,j] == 0){
+						count++;
+						num[i,j] = count;
+						bool changed = true;
+						while(changed){
+							changed = false;
+							for(int s=0;s<H;++s){
+								for(int t=0;t<W;++t){
+									if(num[s,t] == count){
+										for(int ds=-1;ds<=1;++ds){
+											for(int dt=-1;dt<=1;++dt){
+												if(num[s+ds,t+dt] == 0){
+													num[s+ds,t+dt] = count;
+													changed = true;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			if(count > 1){
+				return false;
+			}
+			return true;
+		}
+		public void AddLake(){
+			int radius = Roll(6);
+			int size = radius*2 + 1;
+			for(int tries=0;tries<100;++tries){
+				int rr = Roll(H-((1+radius)*2)) + radius;
+				int rc = Roll(W-((1+radius)*2)) + radius;
+				int top = rr - radius;
+				int left = rc - radius;
+				char[,] submap = new char[size,size];
+				int radiusx10 = radius * 10;
+				bool reject = false;
+				for(int i=0;i<size && !reject;++i){
+					for(int j=0;j<size && !reject;++j){
+						if(map[i+top,j+left] == 'W'){
+							reject = true;
+						}
+					}
+				}
+				if(reject){
+					continue;
+				}
+				for(int i=0;i<size;++i){
+					for(int j=0;j<size;++j){
+						submap[i,j] = map[i+top,j+left];
+						if(EstimatedEuclideanDistanceFromX10(rr,rc,i+top,j+left) <= radiusx10){
+							map[i+top,j+left] = '#';
+						}
+					}
+				}
+				if(IsConnected()){
+					for(int i=0;i<size;++i){
+						for(int j=0;j<size;++j){
+							if(EstimatedEuclideanDistanceFromX10(rr,rc,i+top,j+left) <= radiusx10){
+								map[i+top,j+left] = 'W';
+							}
+						}
+					}
+					return;
+				}
+				else{
+					for(int i=0;i<size;++i){
+						for(int j=0;j<size;++j){
+							map[i+top,j+left] = submap[i,j];
+						}
 					}
 				}
 			}

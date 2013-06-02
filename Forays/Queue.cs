@@ -524,7 +524,7 @@ namespace Forays{
 									t.the_name = Tile.Prototype(t.type).the_name;
 									t.symbol = Tile.Prototype(t.type).symbol;
 									t.color = Tile.Prototype(t.type).color;
-									B.Add("You notice " + t.a_name + ". ");
+									B.Add("You notice " + t.AName(true) + ". ");
 								}
 								else{
 									if(t.type == TileType.HIDDEN_DOOR){
@@ -697,7 +697,7 @@ namespace Forays{
 													}
 													else{
 														if(player.CanSee(door)){
-															B.Add("The door slams closed on " + door.actor().TheVisible() + "! ",door);
+															B.Add("The door slams closed on " + door.actor().TheName(true) + "! ",door);
 														}
 														else{
 															if(player.DistanceFrom(door) <= 12){
@@ -1330,7 +1330,7 @@ namespace Forays{
 							}
 							if(t.Is(FeatureType.FUNGUS)){
 								Q.Add(new Event(t,200,EventType.BLAST_FUNGUS));
-								Actor.B.Add("The blast fungus starts to smolder in the light. ",t);
+								B.Add("The blast fungus starts to smolder in the light. ",t);
 								t.features.Remove(FeatureType.FUNGUS);
 								t.features.Add(FeatureType.FUNGUS_ACTIVE);
 							}
@@ -1371,7 +1371,7 @@ namespace Forays{
 								}
 								if(t.Is(FeatureType.FUNGUS)){
 									Q.Add(new Event(t,200,EventType.BLAST_FUNGUS));
-									Actor.B.Add("The blast fungus starts to smolder in the light. ",t);
+									B.Add("The blast fungus starts to smolder in the light. ",t);
 									t.features.Remove(FeatureType.FUNGUS);
 									t.features.Add(FeatureType.FUNGUS_ACTIVE);
 								}

@@ -81,17 +81,18 @@ namespace Forays{
 		public Dict<SkillType,int> skills = new Dict<SkillType,int>();
 		public Dict<FeatType,int> feats = new Dict<FeatType,int>();
 		public Dict<SpellType,int> spells = new Dict<SpellType,int>(); //change to bool? todo
-		public int magic_penalty;
+		public int exhaustion;
 		public int time_of_last_action;
 		public int recover_time;
 		public List<pos> path = new List<pos>();
 		public Tile target_location;
 		public int player_visibility_duration;
 		public List<Actor> group = null;
-		public LinkedList<WeaponType> weapons = new LinkedList<WeaponType>();
-		public LinkedList<ArmorType> armors = new LinkedList<ArmorType>();
-		public LinkedList<MagicItemType> magic_items = new LinkedList<MagicItemType>();
-		
+		public LinkedList<Weapon> weapons = new LinkedList<Weapon>();
+		public LinkedList<Armor> armors = new LinkedList<Armor>();
+		public List<MagicItemType> magic_items = new List<MagicItemType>();
+		public int equipped_magic_item_idx = -1;
+
 		public static string player_name;
 		public static List<FeatType> feats_in_order = null;
 		public static List<FeatType> partial_feats_in_order = null;
@@ -181,9 +182,6 @@ namespace Forays{
 		public Actor(){
 			F = new SpellType[13];
 			inv = new List<Item>();
-			weapons = new LinkedList<WeaponType>();
-			armors = new LinkedList<ArmorType>();
-			magic_items = new LinkedList<MagicItemType>();
 			attrs = new Dict<AttrType, int>();
 			skills = new Dict<SkillType,int>();
 			feats = new Dict<FeatType,int>();
@@ -213,14 +211,13 @@ namespace Forays{
 			time_of_last_action = 0;
 			recover_time = 0;
 			player_visibility_duration = 0;
-			weapons = new LinkedList<WeaponType>(a.weapons);
-			armors = new LinkedList<ArmorType>(a.armors);
-			magic_items = new LinkedList<MagicItemType>(a.magic_items);
+			weapons.AddFirst(new Weapon(WeaponType.NO_WEAPON));
+			armors.AddFirst(new Armor(ArmorType.NO_ARMOR));
 			attrs = new Dict<AttrType, int>(a.attrs);
 			skills = new Dict<SkillType,int>(a.skills);
 			feats = new Dict<FeatType,int>(a.feats);
 			spells = new Dict<SpellType,int>(a.spells);
-			magic_penalty = 0;
+			exhaustion = 0;
 		}
 		public Actor(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int level_,int light_radius_,params AttrType[] attrlist){
 			type = type_;
@@ -238,13 +235,11 @@ namespace Forays{
 			time_of_last_action = 0;
 			recover_time = 0;
 			player_visibility_duration = 0;
-			weapons.AddFirst(WeaponType.NO_WEAPON);
-			armors.AddFirst(ArmorType.NO_ARMOR);
 			F = new SpellType[13];
 			for(int i=0;i<13;++i){
 				F[i] = SpellType.NO_SPELL;
 			}
-			magic_penalty = 0;
+			exhaustion = 0;
 			foreach(AttrType at in attrlist){
 				attrs[at]++;
 			}//row and col are -1
@@ -333,17 +328,17 @@ namespace Forays{
 			}
 			return a;
 		}
-		override public string TheVisible(){ //returns the_name or "something"
-			if(player.CanSee(this)){
-				return the_name;
+		public string AName(bool consider_visibility){
+			if(!consider_visibility || player.CanSee(this)){
+				return a_name;
 			}
 			else{
 				return "something";
 			}
 		}
-		override public string AVisible(){ //returns a_name or "something"
-			if(player.CanSee(this)){
-				return a_name;
+		public string TheName(bool consider_visibility){
+			if(!consider_visibility || player.CanSee(this)){
+				return the_name;
 			}
 			else{
 				return "something";
@@ -356,10 +351,10 @@ namespace Forays{
 			}
 			else{
 				if(ends_in_es){
-					return TheVisible() + " " + s + "es";
+					return TheName(true) + " " + s + "es";
 				}
 				else{
-					return TheVisible() + " " + s + "s";
+					return TheName(true) + " " + s + "s";
 				}
 			}
 		}
@@ -458,6 +453,9 @@ namespace Forays{
 						a.UpdateRadius(0,a.LightRadius());
 					}
 				}
+				if(type == ActorType.PLAYER){
+					M.UpdateSafetyMap(this);
+				}
 			}
 		}
 		public bool GrabPreventsMovement(PhysicalObject o){
@@ -518,17 +516,131 @@ namespace Forays{
 				spells[spell]++;
 			}
 		}
+		public Weapon EquippedWeapon{
+			get{
+				if(weapons != null && weapons.Count > 0){
+					return weapons.First.Value;
+				}
+				return null;
+			}
+			set{
+				if(weapons == null){
+					weapons = new LinkedList<Weapon>();
+				}
+				if(weapons.Contains(value)){
+					while(weapons.First.Value != value){
+						Weapon temp = weapons.First.Value;
+						weapons.Remove(temp);
+						weapons.AddLast(temp);
+					}
+				}
+				else{
+					weapons.AddFirst(value);
+				}
+			}
+		}
+		public Armor EquippedArmor{
+			get{
+				if(armors != null && armors.Count > 0){
+					return armors.First.Value;
+				}
+				return null;
+			}
+			set{
+				if(armors == null){
+					armors = new LinkedList<Armor>();
+				}
+				if(armors.Contains(value)){
+					while(armors.First.Value != value){
+						Armor temp = armors.First.Value;
+						armors.Remove(temp);
+						armors.AddLast(temp);
+					}
+				}
+				else{
+					armors.AddFirst(value);
+				}
+			}
+		}
+		private Weapon WeaponOfType(WeaponType w){
+			if(weapons == null || weapons.Count == 0){
+				return null;
+			}
+			LinkedListNode<Weapon> n = weapons.First;
+			while(n.Value.type != w){
+				if(n == weapons.Last){
+					return null; //reached the end
+				}
+				else{
+					n = n.Next;
+				}
+			}
+			return n.Value;
+		}
+		private Armor ArmorOfType(ArmorType a){
+			if(armors == null || armors.Count == 0){
+				return null;
+			}
+			LinkedListNode<Armor> n = armors.First;
+			while(n.Value.type != a){
+				if(n == armors.Last){
+					return null; //reached the end
+				}
+				else{
+					n = n.Next;
+				}
+			}
+			return n.Value;
+		}
+		public Weapon Sword{get{return WeaponOfType(WeaponType.SWORD);}}
+		public Weapon Mace{get{return WeaponOfType(WeaponType.MACE);}}
+		public Weapon Dagger{get{return WeaponOfType(WeaponType.DAGGER);}}
+		public Weapon Staff{get{return WeaponOfType(WeaponType.STAFF);}}
+		public Weapon Bow{get{return WeaponOfType(WeaponType.BOW);}}
+		public Armor Leather{get{return ArmorOfType(ArmorType.LEATHER);}}
+		public Armor Chainmail{get{return ArmorOfType(ArmorType.CHAINMAIL);}}
+		public Armor Plate{get{return ArmorOfType(ArmorType.FULL_PLATE);}}
+		public MagicItemType EquippedMagicItemType(){
+			if(magic_items == null || magic_items.Count == 0){
+				return MagicItemType.NO_MAGIC_ITEM;
+			}
+			return magic_items[equipped_magic_item_idx];
+		}
 		public int LightRadius(){ return Math.Max(light_radius,attrs[AttrType.ON_FIRE]); }
 		public int ArmorClass(){
 			int total = TotalSkill(SkillType.DEFENSE);
-			if(weapons.First.Value == WeaponType.STAFF || weapons.First.Value == WeaponType.STAFF_OF_MAGIC){
+			if(EquippedWeapon.type == WeaponType.STAFF){
 				total++;
 			}
 			if(magic_items.Contains(MagicItemType.RING_OF_PROTECTION)){
 				total++;
 			}
-			total += Armor.Protection(armors.First.Value);
+			total += TotalProtectionFromArmor();
 			return total;
+		}
+		public int TotalProtectionFromArmor(){
+			int effective_exhaustion = exhaustion;
+			if(HasFeat(FeatType.ARMOR_MASTERY)){
+				effective_exhaustion -= 5;
+			}
+			switch(EquippedArmor.type){
+			case ArmorType.LEATHER:
+				if(effective_exhaustion >= 15){
+					return 0;
+				}
+				break;
+			case ArmorType.CHAINMAIL:
+				if(effective_exhaustion >= 10){
+					return 0;
+				}
+				break;
+			case ArmorType.FULL_PLATE:
+				if(effective_exhaustion >= 5){
+					return 0;
+				}
+				break;
+			}
+			return EquippedArmor.Protection();
 		}
 		public int Stealth(){ return Stealth(row,col); }
 		public int Stealth(int r,int c){ //this method should probably become part of TotalSkill
@@ -541,8 +653,8 @@ namespace Forays{
 					total += 2;
 				}
 			}
-			if(!HasFeat(FeatType.SILENT_CHAINMAIL) || Armor.BaseArmor(armors.First.Value) != ArmorType.CHAINMAIL){
-				total -= Armor.StealthPenalty(armors.First.Value);
+			if(!HasFeat(FeatType.SILENT_CHAINMAIL) || EquippedArmor.type != ArmorType.CHAINMAIL){
+				total -= EquippedArmor.StealthPenalty();
 			}
 			return total;
 		}
@@ -712,6 +824,7 @@ namespace Forays{
 		public override string ToString(){ return symbol.ToString(); }
 		public void Input(){
 			bool skip_input = false;
+			pos old_position = p;
 			if(HasAttr(AttrType.DESTROYED_BY_SUNLIGHT)){
 				if(M.wiz_lite || (player.HasAttr(AttrType.ENHANCED_TORCH) && DistanceFrom(player) <= player.light_radius
 									&& player.HasBresenhamLine(row,col))){
@@ -748,10 +861,10 @@ namespace Forays{
 				}
 				B.Add("You fall. ");
 				B.PrintAll();
-				int old_magic_penalty = magic_penalty;
+				int old_exhaustion = exhaustion;
 				int old_resting_status = attrs[Forays.AttrType.RESTING];
 				M.GenerateBossLevel(drake_on_next_level);
-				magic_penalty = old_magic_penalty; //falling to a new level doesn't let you rest again during the boss fight
+				exhaustion = old_exhaustion; //falling to a new level doesn't let you rest again during the boss fight
 				attrs[Forays.AttrType.RESTING] = old_resting_status;
 				Q0();
 				return;
@@ -760,10 +873,10 @@ namespace Forays{
 				if(player.tile().type == TileType.CHASM){
 					B.Add("You fall. ");
 					B.PrintAll();
-					int old_magic_penalty = player.magic_penalty;
+					int old_exhaustion = player.exhaustion;
 					int old_resting_status = player.attrs[Forays.AttrType.RESTING];
 					M.GenerateBossLevel(true);
-					player.magic_penalty = old_magic_penalty; //falling to a new level doesn't let you rest again during the boss fight
+					player.exhaustion = old_exhaustion; //falling to a new level doesn't let you rest again during the boss fight
 					player.attrs[Forays.AttrType.RESTING] = old_resting_status;
 					return;
 				}
@@ -1059,6 +1172,12 @@ namespace Forays{
 				}
 				attrs[AttrType.STARTED_CATCHING_FIRE_THIS_TURN] = 0;
 			}
+			if(old_position.row == row && old_position.col == col){
+				attrs[AttrType.TURNS_HERE]++;
+			}
+			else{
+				attrs[AttrType.TURNS_HERE] = 0;
+			}
 			time_of_last_action = Q.turn; //this might eventually need a slight rework for 0-time turns
 		}
 		public static char ConvertInput(ConsoleKeyInfo k){
@@ -1187,7 +1306,7 @@ namespace Forays{
 				return;
 			}
 			if(HasAttr(AttrType.FROZEN)){
-				int damage = Global.Roll(Weapon.Damage(weapons.First.Value).dice,6) + TotalSkill(SkillType.COMBAT);
+				int damage = Global.Roll(EquippedWeapon.DamageInfo().dice,6) + TotalSkill(SkillType.COMBAT);
 				attrs[Forays.AttrType.FROZEN] -= damage;
 				if(attrs[Forays.AttrType.FROZEN] < 0){
 					attrs[Forays.AttrType.FROZEN] = 0;
@@ -1340,8 +1459,8 @@ namespace Forays{
 				if(attrs[AttrType.RESTING] == 10){
 					attrs[AttrType.RESTING] = -1;
 					curhp += ((maxhp - curhp) / 2); //recover half of your missing health
-					ResetSpells();
-					B.Add("You rest...you feel great! ");
+					exhaustion = 0;
+					B.Add("You rest...you feel great! "); //todo: equipment repair. message if you can now wear your armor again.
 					B.Print(false);
 					DisplayStats(true);
 					Cursor();
@@ -1387,6 +1506,22 @@ namespace Forays{
 				Cursor();
 			}
 			ConsoleKeyInfo command = Console.ReadKey(true);
+			/*ConsoleKeyInfo command;
+			bool command_entered = false;
+			while(!command_entered){
+				if(Console.KeyAvailable){
+					command = Console.ReadKey(true);
+					command_entered = true;
+					break;
+				}
+				Screen.AnimateCellNonBlocking(row+Global.MAP_OFFSET_ROWS,col+Global.MAP_OFFSET_COLS,new colorchar('@',Color.DarkGray),200);
+				if(Console.KeyAvailable){
+					command = Console.ReadKey(true);
+					command_entered = true;
+					break;
+				}
+				Screen.AnimateCellNonBlocking(row+Global.MAP_OFFSET_ROWS,col+Global.MAP_OFFSET_COLS,new colorchar('@',Color.DarkRed),200);
+			}*/
 			char ch = ConvertInput(command);
 			ch = ConvertVIKeys(ch);
 			bool alt = false;
@@ -1625,45 +1760,9 @@ namespace Forays{
 				}
 				break;
 				}
-			/*case 'c':
-				{
-				int door = DirectionOfOnlyUnblocked(TileType.DOOR_O);
-				if(door == -1){
-					int dir = GetDirection("Close in which direction? ");
-					if(dir != -1){
-						if(TileInDirection(dir).type == TileType.DOOR_O){
-							if(StunnedThisTurn()){
-								break;
-							}
-							TileInDirection(dir).Toggle(this);
-							Q1();
-						}
-						else{
-							Q0();
-						}
-					}
-					else{
-						Q0();
-					}
-				}
-				else{
-					if(door == 0){
-						B.Add("There's nothing to close here. ");
-						Q0();
-					}
-					else{
-						if(StunnedThisTurn()){
-							break;
-						}
-						TileInDirection(door).Toggle(this);
-						Q1();
-					}
-				}
-				break;
-				}*/
 			case 's':
-				{
-				if(Weapon.BaseWeapon(weapons.First.Value) == WeaponType.BOW || HasFeat(FeatType.QUICK_DRAW)){
+			{
+				if(EquippedWeapon.type == WeaponType.BOW || HasFeat(FeatType.QUICK_DRAW)){
 					if(ActorsAtDistance(1).Count > 0){
 						if(ActorsAtDistance(1).Count == 1){
 							B.Add("You can't fire with an enemy so close. ");
@@ -1673,19 +1772,10 @@ namespace Forays{
 						}
 						Q0();
 					}
-					/*if(Global.Option(OptionType.LAST_TARGET) && target!=null && DistanceFrom(target)==1){ //since you can't fire
-						target = null;										//at adjacent targets anyway.
-					}*/
 					else{
-						List<Tile> line = GetTarget(12);
-						if(line != null){
-							//if(DistanceFrom(t) > 1 || t.actor() == null){
+						List<Tile> line = GetTargetLine(12);
+						if(line != null && line.Last() != tile()){
 							FireArrow(line);
-							/*}
-							else{
-								B.Add("You can't fire at adjacent targets. ");
-								Q0();
-							}*/
 						}
 						else{
 							Q0();
@@ -1697,9 +1787,96 @@ namespace Forays{
 					Q0();
 				}
 				break;
-				}
+			}
 			case 'f':
-				{
+			{
+				if(inv.Count == 0){
+					B.Add("You have nothing in your pack. ");
+					Q0();
+				}
+				else{
+					int num = SelectItem("Throw which item? ");
+					M.RedrawWithStrings();
+					if(num != -1){
+						if(StunnedThisTurn()){
+							break;
+						}
+						bool target_nearest_enemy = false;
+						if(inv[num].NameOfItemType() == "orb"){
+							target_nearest_enemy = true;
+						}
+						List<Tile> line = GetTarget(false,12,0,false,target_nearest_enemy);
+						if(line != null){
+							if(inv[num].NameOfItemType() == "orb"){
+								inv[num].Use(this,line);
+								Q1();
+							}
+							else{
+								Item i = null;
+								if(inv[num].quantity == 1){
+									i = inv[num];
+								}
+								else{
+									i = new Item(inv[num],-1,-1);
+									inv[num].quantity--;
+								}
+								i.revealed_by_light = true;
+								i.ignored = true;
+								Tile t = line.LastBeforeSolidTile();
+								Actor first = FirstActorInLine(line);
+								B.Add(You("fling") + " " + i.TheName() + ". ");
+								if(first != null && first != this){
+									t = first.tile();
+									B.Add("It hits " + first.the_name + ". ",first);
+								}
+								line = line.ToFirstObstruction();
+								if(line.Count > 0){
+									line.RemoveAt(line.Count - 1);
+								}
+								if(line.Count > 0){
+									line.RemoveAt(line.Count - 1); //i forget why I needed to do this twice, but it seems to work
+								}
+								int idx = 0;
+								foreach(Tile tile2 in line){
+									if(tile2.seen){
+										++idx;
+									}
+									else{
+										line = line.To(tile2);
+										if(line.Count > 0){
+											line.RemoveAt(line.Count - 1);
+										}
+										break;
+									}
+								}
+								if(line.Count > 0){
+									AnimateProjectile(line,i.symbol,i.color);
+								}
+								t.GetItem(i);
+								inv.Remove(i);
+								if(first != null && first != this){
+									first.player_visibility_duration = -1;
+									first.attrs[AttrType.PLAYER_NOTICED]++;
+								}
+								else{
+									if(t.IsTrap()){
+										t.TriggerTrap();
+									}
+								}
+								Q1();
+							}
+						}
+						else{
+							Q0();
+						}
+					}
+					else{
+						Q0();
+					}
+				}
+				break;
+			}
+				/*{
 				List<FeatType> active_feats = new List<FeatType>();
 				List<FeatType> passive_feats = new List<FeatType>();
 				foreach(FeatType ft in feats_in_order){
@@ -1820,7 +1997,7 @@ namespace Forays{
 					Q0();
 				}
 				break;
-				}
+				}*/
 			case 'z':
 			{
 				foreach(Actor a in ActorsWithinDistance(2)){
@@ -1861,11 +2038,8 @@ namespace Forays{
 				}
 				if(sp.Count > 0){
 					colorstring topborder = new colorstring("------------------Level---Fail rate--------Description------------",Color.Gray);
-					int basefail = magic_penalty * 5;
-					if(!HasFeat(FeatType.ARMORED_MAGE)){
-						basefail += Armor.AddedFailRate(armors.First.Value);
-					}
-					colorstring bottomborder = new colorstring("------------Base fail rate: ",Color.Gray,(basefail.ToString().PadLeft(3) + "%"),FailColor(basefail),"----------[",Color.Gray,"?",Color.Cyan,"] for help".PadRight(22,'-'),Color.Gray);
+					int basefail = exhaustion * 5;
+					colorstring bottomborder = new colorstring("----------------" + "Exhaustion: ".PadLeft(12+(3-basefail.ToString().Length),'-'),Color.Gray,(basefail.ToString() + "%"),FailColor(basefail),"----------[",Color.Gray,"?",Color.Cyan,"] for help".PadRight(22,'-'),Color.Gray);
 					//int i = Select("Cast which spell? ",topborder,bottomborder,ls);
 					int i = Select("Cast which spell? ",topborder,bottomborder,ls,false,false,true,true,HelpTopic.Spells);
 					if(i != -1){
@@ -1892,11 +2066,7 @@ namespace Forays{
 						}
 					}
 					if(!monsters_visible){
-						bool can_recover_spells = false;
-						if(magic_penalty > 0){
-							can_recover_spells = true;
-						}
-						if(curhp < maxhp || can_recover_spells){
+						if(curhp < maxhp || exhaustion > 0){
 							if(StunnedThisTurn()){
 								break;
 							}
@@ -1924,11 +2094,7 @@ namespace Forays{
 					if(StunnedThisTurn()){
 						break;
 					}
-					bool can_recover_spells = false;
-					if(magic_penalty > 0){
-						can_recover_spells = true;
-					}
-					if(attrs[AttrType.RESTING] != -1 && (curhp < maxhp || can_recover_spells)){
+					if(attrs[AttrType.RESTING] != -1 && (curhp < maxhp || exhaustion > 0)){
 						B.DisplayNow("Really take the stairs without resting first?(y/n): ");
 						Console.CursorVisible = true;
 						bool done = false;
@@ -1984,7 +2150,16 @@ namespace Forays{
 							}
 						}
 						FindPath(stairs,-1,true);
-						Q0();
+						if(path.Count > 0){
+							PlayerWalk(DirectionOf(path[0]));
+							if(DistanceFrom(path[0]) == 0){
+								path.RemoveAt(0);
+							}
+						}
+						else{
+							B.Add("There's no path to the stairs. ");
+							Q0();
+						}
 					}
 					else{
 						B.Add("You don't see any stairs here. ");
@@ -1994,8 +2169,19 @@ namespace Forays{
 				break;
 			case 'x':
 			{
-				attrs[AttrType.AUTOEXPLORE]++;
-				Q0();
+				if(!FindAutoexplorePath()){
+					B.Add("You don't see a path for further exploration. ");
+					Q0();
+				}
+				else{
+					attrs[AttrType.AUTOEXPLORE]++;
+					PlayerWalk(DirectionOf(path[0]));
+					if(path.Count > 0){
+						if(DistanceFrom(path[0]) == 0){
+							path.RemoveAt(0);
+						}
+					}
+				}
 			}
 				break;
 			case 'g':
@@ -2051,11 +2237,8 @@ namespace Forays{
 								}
 								if(sp.Count > 0){
 									colorstring topborder = new colorstring("------------------Level---Fail rate--------Description------------",Color.Gray);
-									int basefail = magic_penalty * 5;
-									if(!HasFeat(FeatType.ARMORED_MAGE)){
-										basefail += Armor.AddedFailRate(armors.First.Value);
-									}
-									colorstring bottomborder = new colorstring("------------Base fail rate: ",Color.Gray,(basefail.ToString().PadLeft(3) + "%"),FailColor(basefail),"----------[",Color.Gray,"?",Color.Cyan,"] for help".PadRight(22,'-'),Color.Gray);
+									int basefail = exhaustion * 5;
+									colorstring bottomborder = new colorstring("----------------" + "Exhaustion: ".PadLeft(12+(3-basefail.ToString().Length),'-'),Color.Gray,(basefail.ToString() + "%"),FailColor(basefail),"----------[",Color.Gray,"?",Color.Cyan,"] for help".PadRight(22,'-'),Color.Gray);
 									int i = Select("Trade one of your spells for another? ",topborder,bottomborder,ls,false,false,true,true,HelpTopic.Spells);
 									if(i != -1){
 										List<SpellType> unknown = new List<SpellType>();
@@ -2166,48 +2349,14 @@ namespace Forays{
 					Q0();
 				}
 				else{
-					int num = -1;
-					Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
-					char letter = 'a';
-					int line=1;
-					foreach(string s in InventoryList()){
-						string s2 = "[" + letter + "] " + s;
-						Screen.WriteMapString(line,0,s2.PadRight(COLS));
-						Screen.WriteMapChar(line,1,new colorchar(Color.Cyan,letter));
-						letter++;
-						line++;
-					}
-					//Screen.WriteMapString(line,0,("".PadRight(25,'-') + "[?] for help").PadRight(COLS,'-'));
-					Screen.WriteMapString(line,0,("------Space left: " + (Global.MAX_INVENTORY_SIZE - InventoryCount()).ToString().PadRight(7,'-') + "[?] for help").PadRight(COLS,'-'));
-					Screen.WriteMapChar(line,26,new colorchar(Color.Cyan,'?'));
-					if(line < ROWS){
-						Screen.WriteMapString(line+1,0,"".PadRight(COLS));
-					}
-					B.DisplayNow("Drop which item? ");
-					Console.CursorVisible = true;
-					while(true){
-						command = Console.ReadKey(true);
-						ch = ConvertInput(command);
-						int ii = ch - 'a';
-						if(ii >= 0 && ii < InventoryList().Count){
-							num = ii;
-							break;
-						}
-						else{
-							if(ch == '?'){
-								Help.DisplayHelp(HelpTopic.Items);
-								num = -1;
-								break;
-							}
-						}
-						break;
-					}
+					int num = SelectItem("Drop which item? ");
 					M.RedrawWithStrings();
 					if(num != -1){
 						if(StunnedThisTurn()){
 							break;
 						}
 						Item i = inv[num];
+						i.revealed_by_light = true;
 						if(i.quantity <= 1){
 							if(tile().type == TileType.HEALING_POOL){
 								B.Add("You drop " + i.TheName() + " into the healing pool. ");
@@ -2277,6 +2426,7 @@ namespace Forays{
 									else{
 										Item newitem = new Item(i,row,col);
 										newitem.quantity = count;
+										newitem.revealed_by_light = true;
 										if(tile().GetItem(newitem)){
 											i.quantity -= count;
 											B.Add("You drop " + newitem.TheName() + ". ");
@@ -2298,44 +2448,12 @@ namespace Forays{
 				}
 				break;
 			case 'i':
-/*				if(inv.Count == 0){
-					B.Add("You have nothing in your pack. ");
-				}
-				else{
-					Select("In your pack: ",InventoryList(),true,false,true);
-					Console.CursorVisible = true;
-					Console.ReadKey(true);
-				}
-				Q0();
-				break;*/
 				if(inv.Count == 0){
 					B.Add("You have nothing in your pack. ");
 					Q0();
 				}
 				else{
-//					int i = Select("Use which item? ",InventoryList());
-					Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
-					char letter = 'a';
-					int line=1;
-					foreach(string s in InventoryList()){
-						string s2 = "[" + letter + "] " + s;
-						Screen.WriteMapString(line,0,s2.PadRight(COLS));
-						Screen.WriteMapChar(line,1,new colorchar(Color.Cyan,letter));
-						letter++;
-						line++;
-					}
-					Screen.WriteMapString(line,0,("------Space left: " + (Global.MAX_INVENTORY_SIZE - InventoryCount()).ToString().PadRight(7,'-') + "[?] for help").PadRight(COLS,'-'));
-					Screen.WriteMapChar(line,26,new colorchar(Color.Cyan,'?'));
-					if(line < ROWS){
-						Screen.WriteMapString(line+1,0,"".PadRight(COLS));
-					}
-					B.DisplayNow("In your pack: ");
-					Console.CursorVisible = true;
-					command = Console.ReadKey(true);
-					ch = ConvertInput(command);
-					if(ch == '?'){
-						Help.DisplayHelp(HelpTopic.Items);
-					}
+					SelectItem("In your pack: ");
 					M.RedrawWithStrings();
 					Q0();
 				}
@@ -2346,50 +2464,12 @@ namespace Forays{
 					Q0();
 				}
 				else{
-//					int i = Select("Use which item? ",InventoryList());
-					int num = -1;
-					Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
-					char letter = 'a';
-					int line=1;
-					foreach(string s in InventoryList()){
-						string s2 = "[" + letter + "] " + s;
-						Screen.WriteMapString(line,0,s2.PadRight(COLS));
-						Screen.WriteMapChar(line,1,new colorchar(Color.Cyan,letter));
-						letter++;
-						line++;
-					}
-					Screen.WriteMapString(line,0,("------Space left: " + (Global.MAX_INVENTORY_SIZE - InventoryCount()).ToString().PadRight(7,'-') + "[?] for help").PadRight(COLS,'-'));
-					//Screen.WriteMapString(line,0,("".PadRight(25,'-') + "[?] for help").PadRight(COLS,'-'));
-					Screen.WriteMapChar(line,26,new colorchar(Color.Cyan,'?'));
-					if(line < ROWS){
-						Screen.WriteMapString(line+1,0,"".PadRight(COLS));
-					}
-					B.DisplayNow("Apply which item? ");
-					Console.CursorVisible = true;
-					while(true){
-						command = Console.ReadKey(true);
-						ch = ConvertInput(command);
-						int ii = ch - 'a';
-						if(ii >= 0 && ii < InventoryList().Count){
-							num = ii;
-							break;
-						}
-						else{
-							if(ch == '?'){
-								Help.DisplayHelp(HelpTopic.Items);
-								num = -1;
-								break;
-							}
-						}
-						break;
-					}
+					int num = SelectItem("Apply which item? ");
 					M.RedrawWithStrings();
-					//if(i != -1){
 					if(num != -1){
 						if(StunnedThisTurn()){
 							break;
 						}
-						//if(inv[i].Use(this)){
 						if(inv[num].Use(this)){
 							Q1();
 						}
@@ -2405,20 +2485,29 @@ namespace Forays{
 			case 'e':
 			{
 				int[] changes = DisplayEquipment();
-				WeaponType new_weapon = Weapon.BaseWeapon((WeaponType)changes[0]);
-				ArmorType new_armor = Armor.BaseArmor((ArmorType)changes[1]);
-				WeaponType old_weapon = weapons.First.Value;
-				ArmorType old_armor = armors.First.Value;
-				bool weapon_changed = (new_weapon != Weapon.BaseWeapon(old_weapon));
-				bool armor_changed = (new_armor != Armor.BaseArmor(old_armor));
+				Weapon new_weapon = WeaponOfType((WeaponType)changes[0]);
+				Armor new_armor = ArmorOfType((ArmorType)changes[1]);
+				Weapon old_weapon = EquippedWeapon;
+				Armor old_armor = EquippedArmor;
+				bool weapon_changed = (new_weapon != old_weapon);
+				bool armor_changed = (new_armor != old_armor);
+				bool magic_item_changed = (changes[2] != equipped_magic_item_idx);
 				bool cursed_weapon = false;
-				if(weapon_changed && HasAttr(AttrType.CURSED_WEAPON)){
+				bool cursed_armor = false;
+				if(weapon_changed && EquippedWeapon.status[EquipmentStatus.CURSED]){
 					cursed_weapon = true;
 					weapon_changed = false;
 				}
-				if(!weapon_changed && !armor_changed){
+				if(armor_changed && EquippedArmor.status[EquipmentStatus.CURSED]){
+					cursed_armor = true;
+					armor_changed = false;
+				}
+				if(!weapon_changed && !armor_changed && !magic_item_changed){
 					if(cursed_weapon){
-						B.Add("Your " + Weapon.Name(weapons.First.Value) + " is stuck to your hand and can't be dropped. ");
+						B.Add("Your " + EquippedWeapon + " is stuck to your hand and can't be put away. ");
+					}
+					if(cursed_armor){
+						B.Add("Your " + EquippedArmor + " is stuck to your body and can't be removed. ");
 					}
 					Q0();
 				}
@@ -2427,40 +2516,31 @@ namespace Forays{
 						break;
 					}
 					if(weapon_changed){
-						bool done=false;
-						while(!done){
-							WeaponType w = weapons.First.Value;
-							weapons.Remove(w);
-							weapons.AddLast(w);
-							if(new_weapon == Weapon.BaseWeapon(weapons.First.Value)){
-								done = true;
-							}
-						}
+						EquippedWeapon = new_weapon;
 						if(HasFeat(FeatType.QUICK_DRAW) && !armor_changed){
-							B.Add("You quickly ready your " + Weapon.Name(weapons.First.Value) + ". ");
+							B.Add("You quickly ready your " + EquippedWeapon + ". ");
 						}
 						else{
-							B.Add("You ready your " + Weapon.Name(weapons.First.Value) + ". ");
+							B.Add("You ready your " + EquippedWeapon + ". ");
 						}
-						UpdateOnEquip(old_weapon,weapons.First.Value);
+						//UpdateOnEquip(old_weapon,EquippedWeapon);
 					}
 					if(armor_changed){
-						bool done=false;
-						while(!done){
-							ArmorType a = armors.First.Value;
-							armors.Remove(a);
-							armors.AddLast(a);
-							if(new_armor == Armor.BaseArmor(armors.First.Value)){
-								done = true;
-							}
-						}
-						B.Add("You wear your " + Armor.Name(armors.First.Value) + ". ");
-						UpdateOnEquip(old_armor,armors.First.Value);
+						EquippedArmor = new_armor;
+						B.Add("You wear your " + EquippedArmor + ". ");
+						//UpdateOnEquip(old_armor,EquippedArmor);
+					}
+					if(magic_item_changed){
+						equipped_magic_item_idx = changes[2];
+						B.Add("You are now using your " + MagicItem.Name(EquippedMagicItemType()) + ". ");
 					}
 					if(cursed_weapon){
-						B.Add("Your " + Weapon.Name(weapons.First.Value) + " is stuck to your hand and can't be dropped. ");
+						B.Add("Your " + EquippedWeapon + " is stuck to your hand and can't be put away. ");
 					}
-					if(HasFeat(FeatType.QUICK_DRAW) && !armor_changed){
+					if(cursed_armor){
+						B.Add("Your " + EquippedArmor + " is stuck to your body and can't be removed. ");
+					}
+					if(HasFeat(FeatType.QUICK_DRAW) && !armor_changed && !magic_item_changed){
 						Q0();
 					}
 					else{
@@ -2475,55 +2555,47 @@ namespace Forays{
 			case '$':
 			case '%':
 			{
-				if(HasAttr(AttrType.CURSED_WEAPON)){
-					B.Add("Your " + Weapon.Name(weapons.First.Value) + " is stuck to your hand and can't be dropped. ");
+				if(EquippedWeapon.status[EquipmentStatus.CURSED]){
+					B.Add("Your " + EquippedWeapon + " is stuck to your hand and can't be put away. ");
 					Q0();
 				}
 				else{
-					WeaponType new_weapon = WeaponType.NO_WEAPON;
+					Weapon new_weapon = null;
 					switch(ch){
 					case '!':
-						new_weapon = WeaponType.SWORD;
+						new_weapon = Sword;
 						break;
 					case '@':
-						new_weapon = WeaponType.MACE;
+						new_weapon = Mace;
 						break;
 					case '#':
-						new_weapon = WeaponType.DAGGER;
+						new_weapon = Dagger;
 						break;
 					case '$':
-						new_weapon = WeaponType.STAFF;
+						new_weapon = Staff;
 						break;
 					case '%':
-						new_weapon = WeaponType.BOW;
+						new_weapon = Bow;
 						break;
 					}
-					WeaponType old_weapon = weapons.First.Value;
-					if(new_weapon == Weapon.BaseWeapon(old_weapon)){
+					Weapon old_weapon = EquippedWeapon;
+					if(new_weapon == old_weapon){
 						Q0();
 					}
 					else{
 						if(StunnedThisTurn()){
 							break;
 						}
-						bool done=false;
-						while(!done){
-							WeaponType w = weapons.First.Value;
-							weapons.Remove(w);
-							weapons.AddLast(w);
-							if(new_weapon == Weapon.BaseWeapon(weapons.First.Value)){
-								done = true;
-							}
-						}
+						EquippedWeapon = new_weapon;
 						if(HasFeat(FeatType.QUICK_DRAW)){
-							B.Add("You quickly ready your " + Weapon.Name(weapons.First.Value) + ". ");
+							B.Add("You quickly ready your " + EquippedWeapon + ". ");
 							Q0();
 						}
 						else{
-							B.Add("You ready your " + Weapon.Name(weapons.First.Value) + ". ");
+							B.Add("You ready your " + EquippedWeapon + ". ");
 							Q1();
 						}
-						UpdateOnEquip(old_weapon,weapons.First.Value);
+						//UpdateOnEquip(old_weapon,EquippedWeapon);
 					}
 				}
 				break;
@@ -2532,38 +2604,36 @@ namespace Forays{
 			case '(':
 			case ')':
 			{
-				ArmorType new_armor = ArmorType.NO_ARMOR;
-				switch(ch){
-				case '*':
-					new_armor = ArmorType.LEATHER;
-					break;
-				case '(':
-					new_armor = ArmorType.CHAINMAIL;
-					break;
-				case ')':
-					new_armor = ArmorType.FULL_PLATE;
-					break;
-				}
-				ArmorType old_armor = armors.First.Value;
-				if(new_armor == Armor.BaseArmor(old_armor)){
+				if(EquippedArmor.status[EquipmentStatus.CURSED]){
+					B.Add("Your " + EquippedArmor + " is stuck to your body and can't be removed. ");
 					Q0();
 				}
 				else{
-					if(StunnedThisTurn()){
+					Armor new_armor = null;
+					switch(ch){
+					case '*':
+						new_armor = Leather;
+						break;
+					case '(':
+						new_armor = Chainmail;
+						break;
+					case ')':
+						new_armor = Plate;
 						break;
 					}
-					bool done=false;
-					while(!done){
-						ArmorType a = armors.First.Value;
-						armors.Remove(a);
-						armors.AddLast(a);
-						if(new_armor == Armor.BaseArmor(armors.First.Value)){
-							done = true;
-						}
+					Armor old_armor = EquippedArmor;
+					if(new_armor == old_armor){
+						Q0();
 					}
-					B.Add("You wear your " + Armor.Name(armors.First.Value) + ". ");
-					Q1();
-					UpdateOnEquip(old_armor,armors.First.Value);
+					else{
+						if(StunnedThisTurn()){
+							break;
+						}
+						EquippedArmor = new_armor;
+						B.Add("You wear your " + EquippedArmor + ". ");
+						Q1();
+						//UpdateOnEquip(old_weapon,EquippedWeapon);
+					}
 				}
 				break;
 			}
@@ -2598,7 +2668,7 @@ namespace Forays{
 				Q1();
 				break;
 			case (char)9:
-				GetTarget(true,-1,true);
+				GetTarget(true,-1,0,false,true);
 				Q0();
 				break;
 			case 'p':
@@ -2617,9 +2687,32 @@ namespace Forays{
 				break;
 				}
 			case 'c':
-				DisplayCharacterInfo();
-				Q0();
+			{
+				int feat = DisplayCharacterInfo();
+				if(feat >= 0){
+					foreach(FeatType f in feats_in_order){
+						if(Feat.IsActivated(f)){
+							if(feat == 0){
+								M.RedrawWithStrings();
+								if(StunnedThisTurn()){
+									break;
+								}
+								if(!UseFeat(f)){
+									Q0();
+									break;
+								}
+							}
+							else{
+								--feat;
+							}
+						}
+					}
+				}
+				else{
+					Q0();
+				}
 				break;
+			}
 			case 'O':
 			case '=':
 			{
@@ -2673,11 +2766,8 @@ namespace Forays{
 							}
 							if(sp.Count > 0){
 								colorstring topborder = new colorstring("------------------Level---Fail rate--------Description------------",Color.Gray);
-								int basefail = magic_penalty * 5;
-								if(!HasFeat(FeatType.ARMORED_MAGE)){
-									basefail += Armor.AddedFailRate(armors.First.Value);
-								}
-								colorstring bottomborder = new colorstring("------------Base fail rate: ",Color.Gray,(basefail.ToString().PadLeft(3) + "%"),FailColor(basefail),"".PadRight(37,'-'),Color.Gray);
+								int basefail = exhaustion * 5;
+								colorstring bottomborder = new colorstring("----------------" + "Exhaustion: ".PadLeft(12+(3-basefail.ToString().Length),'-'),Color.Gray,(basefail.ToString() + "%"),FailColor(basefail),"".PadRight(37,'-'),Color.Gray);
 								int i = Select("Automatically cast which spell? ",topborder,bottomborder,list,false,false,false,false,HelpTopic.Overview);
 								if(i != -1){
 									F[0] = sp[i];
@@ -2775,7 +2865,7 @@ namespace Forays{
 				break;
 			}
 			case '~': //debug mode 
-				if(false){
+				if(true){
 					List<string> l = new List<string>();
 					l.Add("Throw a prismatic orb");
 					l.Add("create chests");
@@ -2794,7 +2884,7 @@ namespace Forays{
 					l.Add("create trap");
 					l.Add("create door");
 					l.Add("spawn lots of goblins and lose neck snap");
-					l.Add("remove all enemies, spawn boss");
+					l.Add("distance test");
 					l.Add("detect monsters forever");
 					l.Add("trigger floor collapse");
 					switch(Select("Activate which cheat? ",l)){
@@ -2816,15 +2906,15 @@ namespace Forays{
 					}
 					case 2:
 					{
-						List<Tile> line = GetTarget(-1,-1);
+						/*List<Tile> line = GetTarget(-1,-1);
 						if(line != null){
-							Tile t = line.Last();
+							Tile t = line.Last();*/
 							/*if(t != null && t.inv == null){
 								Item.Create(Item.RandomItem(),t.row,t.col);
 								t.inv.do_not_stack = true;
 								Q.Add(new Event(t.inv,new List<Tile>{t},100,Forays.EventType.MIMIC,AttrType.NO_ATTR,0,""));
 							}*/
-							if(t != null){
+							//if(t != null){
 								/*t.TransformTo(TileType.FIRE_GEYSER);
 								int frequency = Global.Roll(21) + 4; //5-25
 								int variance = Global.Roll(10) - 1; //0-9
@@ -2839,24 +2929,66 @@ namespace Forays{
 								int delay = ((minimum_value - 1) + Global.Roll(number_of_values)) * 100;
 								Q.Add(new Event(t,delay + 200,EventType.FIRE_GEYSER,(frequency*10)+variance)); //notice the hacky way the value is stored
 								Q.Add(new Event(t,delay,EventType.FIRE_GEYSER_ERUPTION,2));*/
-								t.TransformTo(TileType.POISON_GAS_VENT);
+								/*t.TransformTo(TileType.POISON_GAS_VENT);
 								Q.Add(new Event(t,100,EventType.POISON_GAS_VENT));
 							}
+						}*/
+						/*int[,] row_displacement = GetDiamondSquarePlasmaFractal(ROWS,COLS);
+						int[,] col_displacement = GetDiamondSquarePlasmaFractal(ROWS,COLS);
+						colorchar[,] scr = Screen.GetCurrentMap();
+						M.actor[p] = null;
+						scr[p.row,p.col] = M.VisibleColorChar(p.row,p.col);
+						M.actor[p] = this;
+						int total_rd = 0;
+						int total_cd = 0;
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								total_rd += row_displacement[i,j];
+								total_cd += col_displacement[i,j];
+							}
 						}
+						int avg_rd = total_rd / (ROWS*COLS);
+						int avg_cd = total_cd / (ROWS*COLS);
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								row_displacement[i,j] -= avg_rd;
+								col_displacement[i,j] -= avg_cd;
+							}
+						}
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								if(i == p.row && j == p.col){
+									Screen.WriteMapChar(i,j,'@',Color.White);
+								}
+								else{
+									row_displacement[i,j] /= 8;
+									col_displacement[i,j] /= 8;
+									if(Global.BoundsCheck(i+row_displacement[i,j],j+col_displacement[i,j])){
+										Screen.WriteMapChar(i,j,scr[i+row_displacement[i,j],j+col_displacement[i,j]]);
+									}
+									else{
+										Screen.WriteMapChar(i,j,Screen.BlankChar());
+									}
+								}
+							}
+						}
+						Console.ReadKey(true);*/
 						Q0();
 						break;
 					}
 					case 3:
 					{
-						//ConsoleKeyInfo command2 = Console.ReadKey(true);
-						//Console.Write(command2.Key);
-						List<Tile> line = GetTarget(-1,-1);
+						ConsoleKeyInfo command2 = Console.ReadKey(true);
+						Console.SetCursorPosition(14,14);
+						Console.Write(command2.Key);
+						Console.ReadKey(true);
+						/*List<Tile> line = GetTarget(-1,-1);
 						if(line != null){
 							Tile t = line.Last();
 							if(t != null){
 								t.AddOpaqueFeature(FeatureType.FOG);
 							}
-						}
+						}*/
 						Q0();
 						break;
 					}
@@ -2985,7 +3117,7 @@ namespace Forays{
 					}
 					case 15:
 					{
-							List<Tile> line = GetTarget(-1,-1);
+							List<Tile> line = GetTargetTile(-1,0,false);
 							if(line != null){
 								Tile t = line.Last();
 								if(t != null){
@@ -3008,7 +3140,7 @@ namespace Forays{
 					}
 					case 17:
 					{
-						foreach(Actor a in M.AllActors()){
+						/*foreach(Actor a in M.AllActors()){
 							if(a != this){
 								Q.KillEvents(a,Forays.EventType.ANY_EVENT);
 								M.RemoveTargets(a);
@@ -3020,7 +3152,39 @@ namespace Forays{
 								Create(ActorType.FIRE_DRAKE,t.row,t.col,true,false);
 								break;
 							}
+						}*/
+						List<Tile> list = new List<Tile>();
+						while(list.Count < 15){
+							int rr = Global.Roll(ROWS-2);
+							int rc = Global.Roll(COLS-2);
+							if(M.tile[rr,rc].passable){
+								list.AddUnique(M.tile[rr,rc]);
+							}
 						}
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								if(M.tile[i,j].passable){
+									List<Tile> closest_tiles = list.WhereLeast(x => x.EstimatedEuclideanDistanceFromX10(i,j));
+									//List<Tile> closest_tiles = list.WhereLeast(x => new Actor(this,i,j).GetPath(x.row,x.col).Count);
+									if(closest_tiles.Count == 2){
+										Screen.WriteMapChar(i,j,'=',Color.White);
+									}
+									else{
+										int idx = list.IndexOf(closest_tiles[0]);
+										Screen.WriteMapChar(i,j,M.tile[i,j].symbol,(Color)(idx+3));
+									}
+								}
+								else{
+									if(!M.tile[i,j].solid_rock){
+										Screen.WriteMapChar(i,j,M.tile[i,j].symbol,M.tile[i,j].color);
+									}
+									else{
+										Screen.WriteMapChar(i,j,Screen.BlankChar());
+									}
+								}
+							}
+						}
+						Console.ReadKey(true);
 						Q0();
 						break;
 					}
@@ -3037,7 +3201,7 @@ namespace Forays{
 					}
 					case 19:
 					{
-						List<Tile> line = GetTarget(-1,-1);
+						List<Tile> line = GetTargetTile(-1,0,false);
 						if(line != null){
 							Tile t = line.Last();
 							if(t != null){
@@ -3070,6 +3234,122 @@ namespace Forays{
 				attrs[Forays.AttrType.AUTOEXPLORE] = 0;
 			}
 		}
+		/*public static int[,] GetDiamondSquarePlasmaFractal(int height,int width,int roughness){
+			int[,] a = GetDiamondSquarePlasmaFractal(height*roughness,width*roughness);
+			int[,] result = new int[height,width];
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					result[i,j] = a[i*roughness,j*roughness];
+				}
+			}
+			return result;
+		}
+		public static int[,] GetDiamondSquarePlasmaFractal(int height,int width){
+			int size = 1;
+			int max = Math.Max(height,width);
+			while(size < max){
+				size *= 2; //find the smallest square that the dungeon fits into
+			}
+			size++; //diamond-square needs 2^x + 1
+			int[,] a = GetDiamondSquarePlasmaFractal(size);
+			int[,] result = new int[height,width];
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					result[i,j] = a[i,j];
+				}
+			}
+			return result;
+		}
+		public static int[,] GetDiamondSquarePlasmaFractal(int size){
+			int[,] a = new int[size,size];
+			a[0,0] = 128;
+			a[0,size-1] = 128;
+			a[size-1,0] = 128;
+			a[size-1,size-1] = 128;
+			int step = 1;
+			while(DiamondStep(a,step)){
+				SquareStep(a,step);
+				++step;
+			}
+			int total = 0;
+			for(int i=0;i<size;++i){
+				for(int j=0;j<size;++j){
+					total += a[i,j];
+				}
+			}
+			int mean = total / (size*size);
+			for(int i=0;i<size;++i){
+				for(int j=0;j<size;++j){
+					a[i,j] -= mean;
+				}
+			}
+			return a;
+		}
+		private static bool ArrayBoundsCheck(int[,] a,int r,int c){
+			if(r < 0 || r > a.GetUpperBound(0) || c < 0 || c > a.GetUpperBound(1)){
+				return false;
+			}
+			return true;
+		}
+		private static bool DiamondStep(int[,] a,int step){ //step starts at 1
+			int divisions = 1; //divisions^2 is the number of squares
+			while(step > 1){
+				divisions *= 2;
+				--step;
+			}
+			int increment = a.GetUpperBound(0) / divisions;
+			if(increment == 1){
+				return false; //done!
+			}
+			for(int i=0;i<divisions;++i){
+				for(int j=0;j<divisions;++j){
+					int total = 0;
+					total += a[i*increment,j*increment];
+					total += a[i*increment,(j+1)*increment];
+					total += a[(i+1)*increment,j*increment];
+					total += a[(i+1)*increment,(j+1)*increment];
+					total = total / 4;
+					total += Global.Roll((128 / divisions) + 1) - ((64 / divisions) + 1);
+					a[i*increment + increment/2,j*increment + increment/2] = total;
+				}
+			}
+			return true;
+		}
+		private static void SquareStep(int[,] a,int step){
+			int divisions = 1;
+			while(step > 0){
+				divisions *= 2;
+				--step;
+			}
+			int increment = a.GetUpperBound(0) / divisions;
+			for(int i=0;i<=divisions;++i){
+				for(int j=0;j<=divisions;++j){
+					if((i+j)%2 == 1){
+						int total = 0;
+						int num = 0;
+						if(ArrayBoundsCheck(a,(i-1)*increment,j*increment)){
+							++num;
+							total += a[(i-1)*increment,j*increment];
+						}
+						if(ArrayBoundsCheck(a,i*increment,(j-1)*increment)){
+							++num;
+							total += a[i*increment,(j-1)*increment];
+						}
+						if(ArrayBoundsCheck(a,i*increment,(j+1)*increment)){
+							++num;
+							total += a[i*increment,(j+1)*increment];
+						}
+						if(ArrayBoundsCheck(a,(i+1)*increment,j*increment)){
+							++num;
+							total += a[(i+1)*increment,j*increment];
+						}
+						total = total / num;
+						total += Global.Roll((256 / divisions) + 1) - ((128 / divisions) + 1); //doubled because divisions are doubled
+						a[i*increment,j*increment] = total;
+					}
+				}
+			}
+		}*/
 		public void PlayerWalk(int dir){
 			if(dir > 0){
 				if(ActorInDirection(dir)!=null){
@@ -3087,10 +3367,10 @@ namespace Forays{
 						ActorInDirection(dir).attrs[AttrType.TURNS_VISIBLE] = -1;
 						ActorInDirection(dir).attrs[Forays.AttrType.NOTICED]++;
 						if(!IsHiddenFrom(ActorInDirection(dir))){
-							B.Add("You walk straight into " + ActorInDirection(dir).AVisible() + "! ");
+							B.Add("You walk straight into " + ActorInDirection(dir).AName(true) + "! ");
 						}
 						else{
-							B.Add("You walk straight into " + ActorInDirection(dir).AVisible() + "! ");
+							B.Add("You walk straight into " + ActorInDirection(dir).AName(true) + "! ");
 							if(CanSee(ActorInDirection(dir))){
 								B.Add(ActorInDirection(dir).the_name + " looks just as surprised as you. ");
 							}
@@ -3114,7 +3394,7 @@ namespace Forays{
 							return;
 						}
 						if(TileInDirection(dir).type == TileType.STAIRS){
-						   if(!Global.Option(OptionType.HIDE_COMMANDS)){
+							if(!Global.Option(OptionType.HIDE_COMMANDS)){
 								B.Add("There are stairs here - press > to descend. ");
 							}
 							else{
@@ -3123,6 +3403,7 @@ namespace Forays{
 						}
 						if(TileInDirection(dir).IsShrine()){
 							B.Add(TileInDirection(dir).the_name + " glows faintly - press g to touch it. ");
+							TileInDirection(dir).revealed_by_light = true;
 						}
 						if(TileInDirection(dir).Is(TileType.CHEST)){
 							B.Add("There is a chest here - press g to open it. ");
@@ -3130,6 +3411,12 @@ namespace Forays{
 						if(TileInDirection(dir).Is(TileType.HEALING_POOL)){
 							B.Add("There is a healing pool here. ");
 							Help.TutorialTip(TutorialTopic.HealingPool);
+						}
+						if(TileInDirection(dir).Is(TileType.FIRE_GEYSER,TileType.FOG_VENT,TileType.POISON_GAS_VENT)){
+							if(TileInDirection(dir).name != "floor"){
+								TileInDirection(dir).revealed_by_light = true;
+								B.Add("There is " + TileInDirection(dir).AName(true) + " here. ");
+							}
 						}
 						if(TileInDirection(dir).Is(TileType.CHASM) && !HasAttr(AttrType.FLYING)){
 							Interrupt();
@@ -3150,6 +3437,7 @@ namespace Forays{
 						}
 						if(TileInDirection(dir).inv != null){
 							B.Add("You see " + TileInDirection(dir).inv.AName() + ". ");
+							TileInDirection(dir).inv.revealed_by_light = true;
 						}
 						Move(TileInDirection(dir).row,TileInDirection(dir).col);
 						QS();
@@ -3225,13 +3513,13 @@ namespace Forays{
 						switch(type){
 						case ActorType.RAT:
 						case ActorType.DIRE_RAT:
-							B.Add(TheVisible() + " squeaks at you. ");
+							B.Add(TheName(true) + " squeaks at you. ");
 							player.MakeNoise();
 							break;
 						case ActorType.GOBLIN:
 						case ActorType.GOBLIN_ARCHER:
 						case ActorType.GOBLIN_SHAMAN:
-							B.Add(TheVisible() + " growls. ");
+							B.Add(TheName(true) + " growls. ");
 							player.MakeNoise();
 							break;
 						case ActorType.BLOOD_MOTH:
@@ -3241,56 +3529,56 @@ namespace Forays{
 							break;
 						case ActorType.CULTIST:
 						case ActorType.ROBED_ZEALOT:
-							B.Add(TheVisible() + " yells. ");
+							B.Add(TheName(true) + " yells. ");
 							player.MakeNoise();
 							break;
 						case ActorType.ZOMBIE:
-							B.Add(TheVisible() + " moans. Uhhhhhhghhh. ");
+							B.Add(TheName(true) + " moans. Uhhhhhhghhh. ");
 							player.MakeNoise();
 							break;
 						case ActorType.WOLF:
-							B.Add(TheVisible() + " snarls at you. ");
+							B.Add(TheName(true) + " snarls at you. ");
 							player.MakeNoise();
 							break;
 						case ActorType.FROSTLING:
-							B.Add(TheVisible() + " makes a chittering sound. ");
+							B.Add(TheName(true) + " makes a chittering sound. ");
 							player.MakeNoise();
 							break;
 						case ActorType.SWORDSMAN:
 						case ActorType.BERSERKER:
 						case ActorType.CRUSADING_KNIGHT:
-							B.Add(TheVisible() + " shouts. ");
+							B.Add(TheName(true) + " shouts. ");
 							player.MakeNoise();
 							break;
 						case ActorType.BANSHEE:
-							B.Add(TheVisible() + " shrieks. ");
+							B.Add(TheName(true) + " shrieks. ");
 							player.MakeNoise();
 							break;
 						case ActorType.WARG:
-							B.Add(TheVisible() + " howls. ");
+							B.Add(TheName(true) + " howls. ");
 							player.MakeNoise();
 							break;
 						case ActorType.DERANGED_ASCETIC:
-							B.Add(TheVisible() + " starts babbling incoherently. ");
+							B.Add(TheName(true) + " starts babbling incoherently. ");
 							break;
 						case ActorType.CAVERN_HAG:
-							B.Add(TheVisible() + " cackles. ");
+							B.Add(TheName(true) + " cackles. ");
 							player.MakeNoise();
 							break;
 						case ActorType.COMPY:
-							B.Add(TheVisible() + " squeaks. ");
+							B.Add(TheName(true) + " squeaks. ");
 							player.MakeNoise();
 							break;
 						case ActorType.OGRE:
-							B.Add(TheVisible() + " bellows at you. ");
+							B.Add(TheName(true) + " bellows at you. ");
 							player.MakeNoise();
 							break;
 						case ActorType.SHADOW:
-							B.Add(TheVisible() + " hisses faintly. ");
+							B.Add(TheName(true) + " hisses faintly. ");
 							break;
 						case ActorType.ORC_GRENADIER:
 						case ActorType.ORC_WARMAGE:
-							B.Add(TheVisible() + " snarls loudly. ");
+							B.Add(TheName(true) + " snarls loudly. ");
 							player.MakeNoise();
 							break;
 						case ActorType.ENTRANCER:
@@ -3300,11 +3588,11 @@ namespace Forays{
 							B.Add(the_name + " starts moving. ",this);
 							break;
 						case ActorType.NECROMANCER:
-							B.Add(TheVisible() + " starts chanting in low tones. ");
+							B.Add(TheName(true) + " starts chanting in low tones. ");
 							break;
 						case ActorType.TROLL:
 						case ActorType.TROLL_SEER:
-							B.Add(TheVisible() + " growls viciously. ");
+							B.Add(TheName(true) + " growls viciously. ");
 							player.MakeNoise();
 							break;
 						case ActorType.CARNIVOROUS_BRAMBLE:
@@ -3790,7 +4078,7 @@ namespace Forays{
 								}
 								else{
 									if(ActorInDirection(dir) != null){
-										B.Add(the_name + " brushes up against " + ActorInDirection(dir).TheVisible() + ". ",this);
+										B.Add(the_name + " brushes up against " + ActorInDirection(dir).TheName(true) + ". ",this);
 									}
 								}
 							}
@@ -3822,7 +4110,7 @@ namespace Forays{
 					}
 					else{
 						if(ActorInDirection(dir) != null){
-							B.Add(YouVisible("stagger") + " into " + ActorInDirection(dir).TheVisible() + ". ",this,ActorInDirection(dir));
+							B.Add(YouVisible("stagger") + " into " + ActorInDirection(dir).TheName(true) + ". ",this,ActorInDirection(dir));
 						}
 						else{
 							if(GrabPreventsMovement(TileInDirection(dir))){
@@ -4583,8 +4871,8 @@ namespace Forays{
 						target.GainAttrRefreshDuration(AttrType.AGGRAVATING,10000,"Your sounds are no longer amplified. ");
 						break;
 					case 4: //cursed weapon
-						B.Add("Your " + Weapon.Name(target.weapons.First.Value) + " becomes stuck to your hand! ");
-						target.GainAttrRefreshDuration(AttrType.CURSED_WEAPON,10000,"Your " + Weapon.Name(target.weapons.First.Value) + " is no longer stuck to your hand. ");
+						B.Add("Your " + target.EquippedWeapon + " becomes stuck to your hand! ");
+						target.EquippedWeapon.status[EquipmentStatus.CURSED] = true;
 						break;
 					}
 					attrs[Forays.AttrType.COOLDOWN_1]++;
@@ -4639,7 +4927,7 @@ namespace Forays{
 				break;
 			case ActorType.NOXIOUS_WORM:
 				if(!HasAttr(AttrType.COOLDOWN_1) && DistanceFrom(target) <= 12){
-					B.Add(TheVisible() + " breathes poisonous gas. ");
+					B.Add(TheName(true) + " breathes poisonous gas. ");
 					List<Tile> area = new List<Tile>();
 					foreach(Tile t in target.TilesWithinDistance(1)){
 						if(t.passable && target.HasLOE(t) && !t.Is(FeatureType.POISON_GAS)){
@@ -4922,7 +5210,7 @@ namespace Forays{
 									}
 									if(tile != null && tile.actor() != thrall){
 										GainAttr(AttrType.COOLDOWN_1,400);
-										B.Add(TheVisible() + " teleports " + thrall.TheVisible() + ". ",this,thrall);
+										B.Add(TheName(true) + " teleports " + thrall.TheName(true) + ". ",this,thrall);
 										M.Draw();
 										thrall.Move(tile.row,tile.col);
 										B.DisplayNow();
@@ -4947,7 +5235,7 @@ namespace Forays{
 								else{
 									if(!HasAttr(AttrType.COOLDOWN_2) && !thrall.HasAttr(AttrType.ARCANE_SHIELDED)){
 										GainAttr(AttrType.COOLDOWN_2,1500);
-										B.Add(TheVisible() + " shields " + thrall.TheVisible() + ". ",this,thrall);
+										B.Add(TheName(true) + " shields " + thrall.TheName(true) + ". ",this,thrall);
 										B.DisplayNow();
 										Screen.AnimateStorm(thrall.p,1,2,5,'*',Color.White);
 										thrall.attrs[Forays.AttrType.ARCANE_SHIELDED] = 25;
@@ -5154,7 +5442,7 @@ namespace Forays{
 						int rc = Global.Roll(1,Global.COLS-2);
 						if(Math.Abs(rr-row) >= 10 || Math.Abs(rc-col) >= 10 || (Math.Abs(rr-row) >= 7 && Math.Abs(rc-col) >= 7)){
 							if(M.BoundsCheck(rr,rc) && M.tile[rr,rc].passable && M.actor[rr,rc] == null && !HasLOS(rr,rc)){
-								B.Add(TheVisible() + " slashes at the air, sending a swirling vortex toward " + target.the_name + ". ",target);
+								B.Add(TheName(true) + " slashes at the air, sending a swirling vortex toward " + target.the_name + ". ",target);
 								AnimateBeam(target,'*',Color.Green);
 								target.AnimateStorm(3,3,10,'*',Color.Green);
 								target.Move(rr,rc);
@@ -5512,17 +5800,17 @@ namespace Forays{
 					Q.Add(new Event(this,100,EventType.MOVE));
 				}
 				else{
-					if(player.armors.First.Value == ArmorType.FULL_PLATE_OF_RESISTANCE && DistanceFrom(player) <= 12 && CanSee(player)){
+					/*if(player.EquippedArmor == ArmorType.FULL_PLATE_OF_RESISTANCE && DistanceFrom(player) <= 12 && CanSee(player)){
 						B.Add(the_name + " exhales an orange mist toward you. ");
 						foreach(Tile t in GetBestLine(player)){
 							Screen.AnimateStorm(t.p,1,2,3,'*',Color.Red);
 						}
 						B.Add("The runes drip from your full plate of resistance! ");
-						player.armors.First.Value = ArmorType.FULL_PLATE;
+						player.EquippedArmor = ArmorType.FULL_PLATE;
 						player.UpdateOnEquip(ArmorType.FULL_PLATE_OF_RESISTANCE,ArmorType.FULL_PLATE);
 						Q.Add(new Event(this,100,EventType.MOVE));
 					}
-					else{
+					else{*/
 						if(!HasAttr(AttrType.COOLDOWN_1)){
 							if(DistanceFrom(target) <= 12){
 								attrs[AttrType.COOLDOWN_1]++;
@@ -5549,7 +5837,7 @@ namespace Forays{
 								QS();
 							}
 						}
-					}
+					//}
 				}
 				break;
 			default:
@@ -5673,7 +5961,7 @@ namespace Forays{
 							}
 							else{
 								if(ActorInDirection(dir) != null){
-									B.Add(the_name + " brushes up against " + ActorInDirection(dir).TheVisible() + ". ",this);
+									B.Add(the_name + " brushes up against " + ActorInDirection(dir).TheName(true) + ". ",this);
 								}
 							}
 						}
@@ -5925,7 +6213,7 @@ namespace Forays{
 							}
 							else{
 								if(ActorInDirection(dir) != null){
-									B.Add(the_name + " brushes up against " + ActorInDirection(dir).TheVisible() + ". ",this);
+									B.Add(the_name + " brushes up against " + ActorInDirection(dir).TheName(true) + ". ",this);
 								}
 							}
 						}
@@ -6159,6 +6447,9 @@ namespace Forays{
 				colchange = 1;
 			}
 			if(flee){
+				if(obj == player){
+					return AI_Flee();
+				}
 				rowchange = -rowchange;
 				colchange = -colchange;
 			}
@@ -6213,7 +6504,7 @@ namespace Forays{
 						walks = " flies straight into you! ";
 					}
 					if(!IsHiddenFrom(player)){
-						B.Add(TheVisible() + walks);
+						B.Add(TheName(true) + walks);
 						if(player.CanSee(this)){
 							B.Add(the_name + " looks startled. ");
 						}
@@ -6221,7 +6512,7 @@ namespace Forays{
 					else{
 						attrs[AttrType.TURNS_VISIBLE] = -1;
 						attrs[Forays.AttrType.NOTICED]++;
-						B.Add(AVisible() + walks);
+						B.Add(AName(true) + walks);
 						if(player.CanSee(this)){
 							B.Add(the_name + " looks just as surprised as you. ");
 						}
@@ -6233,6 +6524,29 @@ namespace Forays{
 				}
 			}
 			return false;
+		}
+		public bool AI_Flee(){
+			List<pos> lowest = new List<pos>();
+			int value = 9999;
+			foreach(pos neighbor in PositionsWithinDistance(1)){
+				if(M.safetymap[neighbor] < value && M.safetymap[neighbor] != -9999){
+					value = M.safetymap[neighbor];
+					lowest.Clear();
+					lowest.Add(neighbor);
+				}
+				else{
+					if(M.safetymap[neighbor] == value){
+						lowest.Add(neighbor);
+					}
+				}
+			}
+			if(value != 9999){
+				pos p = lowest.Random();
+				return AI_MoveOrOpen(p.row,p.col);
+			}
+			else{
+				return false;
+			}
 		}
 		public bool AI_MoveOrOpen(int dir){
 			return AI_MoveOrOpen(TileInDirection(dir).row,TileInDirection(dir).col);
@@ -6339,7 +6653,7 @@ namespace Forays{
 					else{
 						if(path.Count > 0 && M.tile[path[0]].type == TileType.CHASM){
 							path.Clear();
-						}
+						}//todo: should there be an 'else' here?
 						if(path.Count > 1 && DistanceFrom(path[1]) == 1){
 							path.RemoveAt(0);
 						}
@@ -6354,10 +6668,15 @@ namespace Forays{
 			if(StunnedThisTurn()){
 				return false;
 			}
+			if(exhaustion == 20 && Global.CoinFlip()){ //100% exhaustion
+				B.Add(You("fumble") + " from exhaustion. ",this);
+				Q1();
+				return false;
+			}
 			//pos pos_of_target = new pos(a.row,a.col);
 			AttackInfo info = AttackList.Attack(type,attack_idx);
-			if(weapons.First.Value != WeaponType.NO_WEAPON){
-				info.damage = Weapon.Damage(weapons.First.Value);
+			if(EquippedWeapon.type != WeaponType.NO_WEAPON){
+				info.damage = EquippedWeapon.DamageInfo();
 			}
 			info.damage.source = this;
 			int plus_to_hit = TotalSkill(SkillType.COMBAT);
@@ -6439,13 +6758,13 @@ namespace Forays{
 				bool crit = false;
 				int pos = s.IndexOf('&');
 				if(pos != -1){
-					s = s.Substring(0,pos) + TheVisible() + s.Substring(pos+1);
+					s = s.Substring(0,pos) + TheName(true) + s.Substring(pos+1);
 				}
 				pos = s.IndexOf('^');
 				if(pos != -1){
 					string sc = "";
 					int critical_target = 20;
-					if(weapons.First.Value == WeaponType.DAGGER){
+					if(EquippedWeapon.type == WeaponType.DAGGER){
 						critical_target -= 2;
 					}
 					if(HasFeat(FeatType.LETHALITY)){ //10% crit plus 5% for each 20% health the target is missing
@@ -6467,32 +6786,27 @@ namespace Forays{
 				}
 				pos = s.IndexOf('*');
 				if(pos != -1){
-					s = s.Substring(0,pos) + a.TheVisible() + s.Substring(pos+1);
+					s = s.Substring(0,pos) + a.TheName(true) + s.Substring(pos+1);
 				}
 				if(sneak_attack && crit){
 					if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) 
 						&& !a.HasAttr(AttrType.PLANTLIKE) && !a.HasAttr(AttrType.BOSS_MONSTER)){
 						if(a.type != ActorType.PLAYER){ //being nice to the player here...
-							switch(weapons.First.Value){
+							switch(EquippedWeapon.type){
 							case WeaponType.SWORD:
-							case WeaponType.FLAMEBRAND:
-								B.Add("You run " + a.TheVisible() + " through! ");
+								B.Add("You run " + a.TheName(true) + " through! ");
 								break;
 							case WeaponType.MACE:
-							case WeaponType.MACE_OF_FORCE:
 								B.Add("You bash " + a.YourVisible() + " head in! ");
 								break;
 							case WeaponType.DAGGER:
-							case WeaponType.VENOMOUS_DAGGER:
 								B.Add("You pierce one of " + a.YourVisible() + " vital organs! ");
 								break;
 							case WeaponType.STAFF:
-							case WeaponType.STAFF_OF_MAGIC:
 								B.Add("You bring your staff down on " + a.YourVisible() + " head with a loud crack! ");
 								break;
 							case WeaponType.BOW:
-							case WeaponType.HOLY_LONGBOW:
-								B.Add("You choke " + a.TheVisible() + " with your bowstring! ");
+								B.Add("You choke " + a.TheName(true) + " with your bowstring! ");
 								break;
 							default:
 								break;
@@ -6503,7 +6817,7 @@ namespace Forays{
 							return true;
 						}
 						else{ //...but not too nice
-							B.Add(AVisible() + " strikes from hiding! ");
+							B.Add(AName(true) + " strikes from hiding! ");
 							B.Add("The deadly attack leaves you stunned! ");
 							int lotsofdamage = Math.Max(dice*6,a.curhp/2);
 							a.attrs[AttrType.STUNNED]++;
@@ -6696,7 +7010,7 @@ namespace Forays{
 							}
 							else{
 								if(HasFeat(FeatType.DRIVE_BACK)){
-									B.Add(You("drive") + " " + a.TheVisible() + " back. ");
+									B.Add(You("drive") + " " + a.TheName(true) + " back. ");
 								}
 								else{
 									if(a.ArmorClass() > 0 && !no_armor_message){
@@ -6705,16 +7019,16 @@ namespace Forays{
 										}
 										else{
 											int miss_chance = 25 - plus_to_hit;
-											if(Global.Roll(miss_chance) <= Armor.Protection(a.armors.First.Value) * 2){
+											if(Global.Roll(miss_chance) <= a.TotalProtectionFromArmor() * 2){
 												B.Add(a.YourVisible() + " armor blocks " + YourVisible() + " attack. ");
 											}
 											else{
-												B.Add(YouVisible("miss",true) + " " + a.TheVisible() + ". ");
+												B.Add(YouVisible("miss",true) + " " + a.TheName(true) + ". ");
 											}
 										}
 									}
 									else{
-										B.Add(YouVisible("miss",true) + " " + a.TheVisible() + ". ");
+										B.Add(YouVisible("miss",true) + " " + a.TheName(true) + ". ");
 									}
 								}
 							}
@@ -6791,13 +7105,28 @@ namespace Forays{
 				B.Add(You("fire") + " an arrow. ",this);
 			}
 			B.DisplayNow();
-			if(a != null){
-				Screen.AnimateBoltProjectile(line.To(a),Color.DarkYellow,20);
-			}
-			else{
-				Screen.AnimateBoltProjectile(line.To(t),Color.DarkYellow,20);
-			}
 			int idx = 0;
+			foreach(Tile tile2 in line){
+				if(tile2.seen){
+					++idx;
+				}
+				else{
+					line = line.To(tile2);
+					if(line.Count > 0){
+						line.RemoveAt(line.Count - 1);
+					}
+					break;
+				}
+			}
+			if(line.Count > 0){
+				if(a != null){
+					Screen.AnimateBoltProjectile(line.To(a),Color.DarkYellow,20);
+				}
+				else{
+					Screen.AnimateBoltProjectile(line.To(t),Color.DarkYellow,20);
+				}
+			}
+			idx = 0;
 			foreach(string s in misses){
 				B.Add(s,missed[idx]);
 				++idx;
@@ -6818,19 +7147,19 @@ namespace Forays{
 					}
 					if(Global.Roll(1,20) >= critical_target){
 						B.Add("The arrow critically hits " + a.the_name + ". ",a);
-						if(!a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,18+TotalSkill(SkillType.COMBAT),this,Your() + " arrow")){
+						if(!a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,18+TotalSkill(SkillType.COMBAT),this,a_name + "'s arrow")){
 							alive = false;
 						}
 					}
 					else{
 						B.Add("The arrow hits " + a.the_name + ". ",a);
-						if(!a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,Global.Roll(3,6)+TotalSkill(SkillType.COMBAT),this,Your() + " arrow")){
+						if(!a.TakeDamage(DamageType.PIERCING,DamageClass.PHYSICAL,Global.Roll(3,6)+TotalSkill(SkillType.COMBAT),this,a_name + "'s arrow")){
 							alive = false;
 						}
 					}
 					if(alive && (a.HasAttr(AttrType.DEMON) || a.HasAttr(AttrType.UNDEAD))){
-						foreach(WeaponType w in weapons){
-							if(w == WeaponType.HOLY_LONGBOW){
+						foreach(Weapon w in weapons){
+							if(w.type == WeaponType.BOW && w.enchantment == EnchantmentType.HOLINESS){
 								B.Add(a.the_name + " is blasted with holy energy! ",a);
 								if(!a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(3,6),this)){
 									alive = false;
@@ -7126,7 +7455,7 @@ namespace Forays{
 							List<string> verb = new List<string>{"Show yourself","Reveal yourself","Unfold thyself","Present yourself","Unveil yourself","Make yourself known"};
 							List<string> adjective = new List<string>{"despicable","filthy","foul","nefarious","vulgar","sorry","unworthy"};
 							List<string> noun = new List<string>{"villain","blackguard","devil","scoundrel","wretch","cur","rogue"};
-							B.Add(TheVisible() + " shouts \"" + verb.Random() + ", " + adjective.Random() + " " + noun.Random() + "!\" ");
+							B.Add(TheName(true) + " shouts \"" + verb.Random() + ", " + adjective.Random() + " " + noun.Random() + "!\" ");
 							B.Add(the_name + " raises a gauntlet. ",this);
 							B.Add("Sunlight fills the dungeon. ");
 							M.wiz_lite = true;
@@ -7166,7 +7495,7 @@ namespace Forays{
 					}
 				}
 				if(HasAttr(AttrType.HOLY_SHIELDED) && dmg.source != null){
-					B.Add(YourVisible() + " holy shield burns " + dmg.source.TheVisible() + ". ",this,dmg.source);
+					B.Add(YourVisible() + " holy shield burns " + dmg.source.TheName(true) + ". ",this,dmg.source);
 					int amount = Global.Roll(2,6);
 					if(amount >= dmg.source.curhp){
 						amount = dmg.source.curhp - 1;
@@ -7460,14 +7789,14 @@ namespace Forays{
 				bool immobilized = HasAttr(AttrType.FROZEN);
 				if(!next.passable){
 					if(player.CanSee(tile())){
-						B.Add(YouVisibleAre() + " knocked into " + next.TheVisible() + ". ",this,next);
+						B.Add(YouVisibleAre() + " knocked into " + next.TheName(true) + ". ",this,next);
 					}
 					TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),source,"*smashed against " + next.a_name);
 				}
 				else{
 					if(M.actor[next.p] != null){
 						if(player.CanSee(tile())){
-							B.Add(YouVisibleAre() + " knocked into " + M.actor[next.row,next.col].TheVisible() + ". ",this,M.actor[next.row,next.col]); //vis
+							B.Add(YouVisibleAre() + " knocked into " + M.actor[next.row,next.col].TheName(true) + ". ",this,M.actor[next.row,next.col]); //vis
 						}
 						string this_name = a_name;
 						TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),source,"*smashed against " + M.actor[next.p].a_name);
@@ -7498,11 +7827,51 @@ namespace Forays{
 			}
 			return true;
 		}
+		public void IncreaseExhaustion(int amount){
+			int previous = exhaustion;
+			int effective_previous = exhaustion;
+			exhaustion += amount;
+			if(exhaustion > 20){
+				exhaustion = 20;
+			}
+			if(exhaustion < 0){
+				exhaustion = 0;
+			}
+			int effective_exhaustion = exhaustion;
+			if(HasFeat(FeatType.ARMOR_MASTERY)){
+				effective_exhaustion -= 5;
+				effective_previous -= 5;
+			}
+			bool msg = false;
+			switch(EquippedArmor.type){
+			case ArmorType.LEATHER:
+				if(effective_exhaustion >= 15 && effective_previous < 15){
+					msg = true;
+				}
+				break;
+			case ArmorType.CHAINMAIL:
+				if(effective_exhaustion >= 10 && effective_previous < 10){
+					msg = true;
+				}
+				break;
+			case ArmorType.FULL_PLATE:
+				if(effective_exhaustion >= 5 && effective_previous < 5){
+					msg = true;
+				}
+				break;
+			}
+			if(msg){
+				B.Add("You can no longer wear your " + EquippedArmor + " effectively in your exhausted state. ");
+			}
+			if(exhaustion == 20 && previous < 20){
+				B.Add("Your exhaustion makes it hard to even lift your " + EquippedWeapon + ". ");
+			}
+		}
 		public bool CastSpell(SpellType spell){ return CastSpell(spell,null,false); }
 		public bool CastSpell(SpellType spell,bool force_of_will){ return CastSpell(spell,null,force_of_will); }
 		public bool CastSpell(SpellType spell,PhysicalObject obj){ return CastSpell(spell,obj,false); }
 		public bool CastSpell(SpellType spell,PhysicalObject obj,bool force_of_will){ //returns false if targeting is canceled.
-			if(StunnedThisTurn() && !force_of_will){ //eventually this will be moved to the last possible second
+			if(!force_of_will && StunnedThisTurn()){ //eventually this will be moved to the last possible second
 				return true; //returns true because turn was used up. 
 			}
 			if(!HasSpell(spell)){
@@ -7536,7 +7905,7 @@ namespace Forays{
 			if(FailRate(spell) > 0){
 				int fail = FailRate(spell);
 				if(force_of_will){
-					fail = magic_penalty * 5;
+					fail = exhaustion * 5;
 					fail -= skills[SkillType.SPIRIT]*2;
 					if(fail < 0){
 						fail = 0;
@@ -7549,6 +7918,23 @@ namespace Forays{
 					else{
 						if(player.DistanceFrom(this) <= 4 || (player.DistanceFrom(this) <= 12 && player.HasLOS(row,col))){
 							B.Add("You hear words of magic, but nothing happens. ");
+						}
+					}
+					if(Spell.Level(spell) - TotalSkill(SkillType.MAGIC) > 0){
+						if(HasFeat(FeatType.STUDENTS_LUCK)){
+							if(Global.CoinFlip()){
+								B.Add(YouFeel() + " drained. ",this);
+								IncreaseExhaustion(1);
+							}
+							else{
+								if(type == ActorType.PLAYER){
+									B.Add("You feel lucky. ");
+								}
+							}
+						}
+						else{
+							B.Add(YouFeel() + " drained. ",this);
+							IncreaseExhaustion(1);
 						}
 					}
 					Q1();
@@ -7629,8 +8015,8 @@ namespace Forays{
 				break;*/
 			case SpellType.IMMOLATE:
 				if(t == null){
-					line = GetTarget(12);
-					if(line != null){
+					line = GetTargetLine(12);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -7685,7 +8071,7 @@ namespace Forays{
 					B.DisplayNow();
 					Screen.AnimateMapCell(t.row,t.col,new colorchar('*',Color.Blue),100);
 					if(a != null){
-						B.Add(You("strike") + " " + a.TheVisible() + ". ",this,a);
+						B.Add(You("strike") + " " + a.TheName(true) + ". ",this,a);
 						string s = a.the_name;
 						string s2 = a.a_name;
 						List<Tile> line2 = GetBestExtendedLine(a.row,a.col);
@@ -7733,8 +8119,8 @@ namespace Forays{
 				break;
 			case SpellType.FREEZE:
 				if(t == null){
-					line = GetTarget(12);
-					if(line != null){
+					line = GetTargetLine(12);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -7781,8 +8167,8 @@ namespace Forays{
 				break;
 			case SpellType.SCORCH:
 				if(t == null){
-					line = GetTarget(12);
-					if(line != null){
+					line = GetTargetLine(12);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -7835,8 +8221,8 @@ namespace Forays{
 				break;
 			case SpellType.LIGHTNING_BOLT:
 				if(t == null){
-					line = GetTarget(12);
-					if(line != null){
+					line = GetTargetLine(12);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -8062,7 +8448,7 @@ namespace Forays{
 					B.DisplayNow();
 					Screen.AnimateMapCell(t.row,t.col,new colorchar('*',Color.Magenta),100);
 					if(a != null){
-						B.Add(You("smash",true) + " " + a.TheVisible() + ". ",this,a);
+						B.Add(You("smash",true) + " " + a.TheName(true) + ". ",this,a);
 						if(a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(4+bonus,6),this,a_name)){
 							a.GainAttrRefreshDuration(AttrType.STUNNED,201,a.YouAre() + " no longer stunned. ",a);
 							B.Add(a.YouAre() + " stunned. ",a);
@@ -8097,8 +8483,8 @@ namespace Forays{
 				break;
 			case SpellType.GLACIAL_BLAST:
 				if(t == null){
-					line = GetTarget(12);
-					if(line != null){
+					line = GetTargetLine(12);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -8210,8 +8596,8 @@ namespace Forays{
 				}
 			case SpellType.FLASHFIRE:
 				if(t == null){
-					line = GetTarget(12,2);
-					if(line != null){
+					line = GetTargetTile(12,2,true);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -8282,8 +8668,8 @@ namespace Forays{
 				break;
 			case SpellType.SONIC_BOOM:
 				if(t == null){
-					line = GetTarget(12);
-					if(line != null){
+					line = GetTargetLine(12);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -8314,8 +8700,8 @@ namespace Forays{
 				break;
 			case SpellType.COLLAPSE:
 				if(t == null){
-					line = GetTarget(12,-1);
-					if(line != null){
+					line = GetTargetTile(12,0,false);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -8401,8 +8787,8 @@ namespace Forays{
 				break;
 			case SpellType.FORCE_BEAM:
 				if(t == null){
-					line = GetTarget();
-					if(line != null){
+					line = GetTargetLine(-1);
+					if(line != null && line.Last() != tile()){
 						t = line.Last();
 					}
 				}
@@ -8433,7 +8819,7 @@ namespace Forays{
 						}
 						AnimateBoltBeam(line.ToFirstObstruction(),Color.Cyan);
 						if(firstactor != null){
-							string s = firstactor.TheVisible();
+							string s = firstactor.TheName(true);
 							string s2 = firstactor.a_name;
 							firstactor.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this,a_name);
 							if(M.actor[firsttile.row,firsttile.col] != null){
@@ -8445,7 +8831,7 @@ namespace Forays{
 								}
 								else{
 									if(nextactor != null){
-										B.Add(s + "'s corpse is knocked into " + nextactor.TheVisible() + ". ",firsttile,nextactor);
+										B.Add(s + "'s corpse is knocked into " + nextactor.TheName(true) + ". ",firsttile,nextactor);
 										nextactor.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(1,6),this,s2 + "'s falling corpse");
 									}
 								}
@@ -8501,7 +8887,7 @@ namespace Forays{
 							Screen.AnimateMapCells(cells,chars);
 						}*/
 						a.AnimateStorm(2,4,4,'*',Color.RandomPrismatic);
-						B.Add("You fade from " + a.TheVisible() + "'s awareness. ");
+						B.Add("You fade from " + a.TheName(true) + "'s awareness. ");
 						a.player_visibility_duration = 0;
 						a.target = null;
 						a.target_location = null;
@@ -8575,8 +8961,8 @@ namespace Forays{
 				if(Spell.Level(spell) - TotalSkill(SkillType.MAGIC) > 0){
 					if(HasFeat(FeatType.STUDENTS_LUCK)){
 						if(Global.CoinFlip()){
-							magic_penalty++;
 							B.Add(YouFeel() + " drained. ",this);
+							IncreaseExhaustion(1);
 						}
 						else{
 							if(type == ActorType.PLAYER){
@@ -8585,17 +8971,14 @@ namespace Forays{
 						}
 					}
 					else{
-						magic_penalty++;
 						B.Add(YouFeel() + " drained. ",this);
+						IncreaseExhaustion(1);
 					}
 				}
 			}
 			else{
-				magic_penalty += 5;
-				if(magic_penalty > 20){
-					magic_penalty = 20;
-				}
 				B.Add("You drain your magic reserves. ");
+				IncreaseExhaustion(5);
 			}
 			Q1();
 			return true;
@@ -8611,10 +8994,7 @@ namespace Forays{
 			if(failrate < 0){
 				failrate = 0;
 			}
-			failrate += (magic_penalty * 5);
-			if(!HasFeat(FeatType.ARMORED_MAGE)){
-				failrate += Armor.AddedFailRate(armors.First.Value);
-			}
+			failrate += (exhaustion * 5);
 			if(failrate > 100){
 				failrate = 100;
 			}
@@ -8654,9 +9034,6 @@ namespace Forays{
 			}
 			return failcolor;
 		}
-		public void ResetSpells(){
-			magic_penalty = 0;
-		}
 		public void ResetForNewLevel(){
 			target = null;
 			target_location = null;
@@ -8677,16 +9054,15 @@ namespace Forays{
 			if(HasAttr(AttrType.GRABBED)){
 				attrs[AttrType.GRABBED] = 0;
 			}
-			ResetSpells();
 			Q.KillEvents(null,EventType.CHECK_FOR_HIDDEN);
 		}
 		public bool UseFeat(FeatType feat){
 			switch(feat){
 			case FeatType.LUNGE:
 			{
-				List<Tile> line = GetTarget(2);
+				List<Tile> line = GetTargetTile(2,0,true);
 				Tile t = null;
-				if(line != null){
+				if(line != null && line.Last() != tile()){
 					t = line.Last();
 				}
 				if(t != null && t.actor() != null){
@@ -8731,18 +9107,12 @@ namespace Forays{
 				//break;
 			}
 			case FeatType.TUMBLE:
-/*Tumble - (A, 200 energy) - You pick a tile within distance 2. If there is at least one passable tile between 
-you and it(you CAN tumble past actors), you move to that tile. Additional effects: If you move past an actor, 
-they lose sight of you and their turns_target_location is set to X - rand_function_of(stealth skill). (there's a good chance
-they'll find you, then attack, but you will have still moved past them) ; You will automatically dodge the first arrow
-that would hit you before your next turn.(it's still possible they'll roll 2 successes and hit you) ; Has the same
-effect as standing still, if you're on fire or catching fire. */
-				{
+			{
 				target = null; //don't try to automatically pick previous targets while tumbling. this solution isn't ideal.
-				List<Tile> line = GetTarget(false,2,false);
+				List<Tile> line = GetTargetTile(2,0,false);
 				target = null; //then, don't remember an actor picked as the target of tumble
 				Tile t = null;
-				if(line != null){
+				if(line != null && line.Last() != tile()){
 					t = line.Last();
 				}
 				if(t != null && t.passable && t.actor() == null && !GrabPreventsMovement(t)){
@@ -8822,9 +9192,9 @@ effect as standing still, if you're on fire or catching fire. */
 					return false;
 				}
 				//break;
-				}
+			}
 			case FeatType.ARCANE_SHIELD: //25% fail rate for the 'failrate' feats
-				if(magic_penalty < 20){
+				if(exhaustion < 20){
 					/*if(curhp < maxhp){ here's the old arcane healing feat
 						magic_penalty += 5;
 						if(magic_penalty > 20){
@@ -8844,11 +9214,8 @@ effect as standing still, if you're on fire or catching fire. */
 						B.Add("You're not injured. ");
 						return false;
 					}*/
-					magic_penalty += 5;
-					if(magic_penalty > 20){
-						magic_penalty = 20;
-					}
 					B.Add("You drain your magic reserves. ");
+					IncreaseExhaustion(5);
 					int amount = Global.Roll(TotalSkill(SkillType.MAGIC)/2,6) + 25;
 					if(HasAttr(AttrType.ARCANE_SHIELDED)){
 						B.Add("You strengthen your arcane barrier. ");
@@ -8879,8 +9246,8 @@ effect as standing still, if you're on fire or catching fire. */
 						return false;
 					}
 				}
-				if(magic_penalty < 20){
-					int basefail = magic_penalty * 5;
+				if(exhaustion < 20){
+					int basefail = exhaustion * 5;
 					basefail -= skills[SkillType.SPIRIT]*2;
 					if(basefail > 100){
 						basefail = 100;
@@ -8939,7 +9306,7 @@ effect as standing still, if you're on fire or catching fire. */
 				int dir = GetDirection("Disarm which trap? ");
 				if(dir != -1 && TileInDirection(dir).IsKnownTrap()){
 					if(ActorInDirection(dir) != null){
-						B.Add("There is " + ActorInDirection(dir).AVisible() + " in the way. ");
+						B.Add("There is " + ActorInDirection(dir).AName(true) + " in the way. ");
 					}
 					else{
 						if(GrabPreventsMovement(TileInDirection(dir))){
@@ -8972,9 +9339,9 @@ effect as standing still, if you're on fire or catching fire. */
 			}
 			case FeatType.DISTRACT:
 			{
-				List<Tile> line = GetTarget(12,3);
+				List<Tile> line = GetTargetTile(12,3,true);
 				Tile t = null;
-				if(line != null){
+				if(line != null && line.Last() != tile()){
 					t = line.Last();
 				}
 				if(t != null){
@@ -9034,7 +9401,7 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 				else{
 					if(ActorInDirection(dir) != null){
-						B.Add(YouVisible("stagger") + " into " + ActorInDirection(dir).TheVisible() + ". ",this,ActorInDirection(dir));
+						B.Add(YouVisible("stagger") + " into " + ActorInDirection(dir).TheName(true) + ". ",this,ActorInDirection(dir));
 					}
 					else{
 						if(GrabPreventsMovement(TileInDirection(dir))){
@@ -9082,7 +9449,7 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 			}
 		}
-		public void UpdateOnEquip(WeaponType from,WeaponType to){
+		/*public void UpdateOnEquip(WeaponType from,WeaponType to){
 			switch(from){
 			case WeaponType.FLAMEBRAND:
 				attrs[AttrType.FIRE_HIT]--;
@@ -9149,7 +9516,7 @@ effect as standing still, if you're on fire or catching fire. */
 				}
 				break;
 			}
-		}
+		}*/
 		public void UpdateOnEquip(MagicItemType from,MagicItemType to){
 			switch(from){
 			case MagicItemType.RING_OF_RESISTANCE:
@@ -9201,10 +9568,10 @@ effect as standing still, if you're on fire or catching fire. */
 			Screen.WriteStatsString(3,0,"Depth: " + M.current_level + "  ");
 			Screen.WriteStatsString(4,0,"AC: " + ArmorClass() + "  ");
 			int magic_item_lines = magic_items.Count;
-			cstr cs = Weapon.StatsName(weapons.First.Value);
+			cstr cs = EquippedWeapon.StatsName();
 			cs.s = cs.s.PadRight(12);
 			Screen.WriteStatsString(5,0,cs);
-			cs = Armor.StatsName(armors.First.Value);
+			cs = EquippedArmor.StatsName();
 			cs.s = cs.s.PadRight(12);
 			Screen.WriteStatsString(6,0,cs);
 			int line = 7;
@@ -9219,7 +9586,6 @@ effect as standing still, if you're on fire or catching fire. */
 [e]quipment
 [c]haracter
 [t]orch off
-Use [f]eat
 Cast [z]
 [s]hoot			here is the full list, to be completed when there's enough room.
 [a]pply item
@@ -9230,13 +9596,17 @@ Cast [z]
 E[x]plore
 [o]perate
 [tab] Look
+[f]ling
 */
 				for(int i=7+magic_item_lines;i<11;++i){
 					Screen.WriteStatsString(i,0,"".PadRight(12));
 				}
+				/*string[] commandhints = new string[]{"[i]nventory ","[e]quipment ","[c]haracter ","SPECIAL",
+					"Use [f]eat  ","Cast [z]    ","[s]hoot(bow)","[Tab] Look  ","[a]pply item","[f]ling item",
+					"[g]et item  ","[r]est      ","[w]alk      ","E[x]plore   ","[o]perate   "};*/
 				string[] commandhints = new string[]{"[i]nventory ","[e]quipment ","[c]haracter ","SPECIAL",
-					"Use [f]eat  ","Cast [z]    ","[s]hoot     ","[Tab] Look  ","[a]pply item","[g]et item  ",
-					"[r]est      ","[w]alk      ","E[x]plore   ","[o]perate   "};
+					"[Tab] Look  ","[r]est      ","[s]hoot(bow)","Cast [z]    ","[a]pply item","[g]et item  ",
+					"[f]ling item","[o]perate   ","[w]alk      ","E[x]plore   "};
 				if(light_radius > 0){
 					commandhints[3] = "[t]orch off ";
 				}
@@ -9247,7 +9617,7 @@ E[x]plore
 				Color wordcolor = cyan_letters? Color.Gray : Color.DarkGray;
 				for(int i=0;i<commandhints.Length;++i){
 					int open = commandhints[i].LastIndexOf('[');
-					cstr front = new cstr(commandhints[i].Substring(0,open+1),wordcolor);
+					cstr front = new cstr(commandhints[i].Substring(0,open+1),wordcolor); //todo: replace this part with "".GetColorString()
 					int close = commandhints[i].LastIndexOf(']');
 					cstr middle = new cstr(commandhints[i].Substring(open+1,(close - open)-1),lettercolor);
 					cstr end = new cstr(commandhints[i].Substring(close),wordcolor);
@@ -9261,76 +9631,8 @@ E[x]plore
 			}
 			Screen.ResetColors();
 		}
-		/*public void DisplayStats(bool expand_weapons,bool expand_armors){
-			Console.CursorVisible = false;
-			Screen.WriteStatsString(2,0,"HP: ");
-			if(curhp < 50){
-				if(curhp < 20){
-					Screen.WriteStatsString(2,4,new cstr(Color.DarkRed,curhp.ToString() + "  "));
-				}
-				else{
-					Screen.WriteStatsString(2,4,new cstr(Color.Red,curhp.ToString() + "  "));
-				}
-			}
-			else{
-				Screen.WriteStatsString(2,4,curhp.ToString() + "  ");
-			}
-			Screen.WriteStatsString(3,0,"Level: " + level + "  ");
-			//Screen.WriteStatsString(4,0,"XP: " + xp + "  ");
-			Screen.WriteStatsString(4,0,"Depth: " + M.current_level + "  ");
-			Screen.WriteStatsString(5,0,"AC: " + ArmorClass() + "  ");
-			int weapon_lines = 1;
-			int armor_lines = 1;
-			int magic_item_lines = magic_items.Count;
-			string divider = "---".PadRight(12);
-			//Screen.WriteStatsString(6,0,divider);
-			cstr cs = Weapon.StatsName(weapons.First.Value);
-			cs.s = cs.s.PadRight(12);
-			Screen.WriteStatsString(6,0,cs);
-			if(expand_weapons){ //this can easily be extended to handle a variable number of weapons
-				weapon_lines = 5;
-				int i = 7;
-				foreach(WeaponType w in weapons){
-					if(w != weapons.First.Value){
-						cs = Weapon.StatsName(w);
-						cs.s = cs.s.PadRight(12);
-						Screen.WriteStatsString(i,0,cs);
-						++i;
-					}
-				}
-				
-			}
-			//Screen.WriteStatsString(7+weapon_lines,0,divider);
-			cs = Armor.StatsName(armors.First.Value);
-			cs.s = cs.s.PadRight(12);
-			Screen.WriteStatsString(6+weapon_lines,0,cs);
-			if(expand_armors){
-				armor_lines = 3;
-				int i = 7 + weapon_lines;
-				foreach(ArmorType a in armors){
-					if(a != armors.First.Value){
-						cs = Armor.StatsName(a);
-						cs.s = cs.s.PadRight(12);
-						Screen.WriteStatsString(i,0,cs);
-						++i;
-					}
-				}
-			}
-			//Screen.WriteStatsString(8+weapon_lines+armor_lines,0,divider);
-			int line = 6 + weapon_lines + armor_lines;
-			foreach(MagicItemType m in magic_items){
-				cs = MagicItem.StatsName(m);
-				cs.s = cs.s.PadRight(12);
-				Screen.WriteStatsString(line,0,cs);
-				++line;
-			}
-			for(int i=6+weapon_lines+armor_lines+magic_item_lines;i<ROWS-1;++i){
-				Screen.WriteStatsString(i,0,"".PadRight(12));
-			}
-			Screen.ResetColors();
-		}*/
-		public void DisplayCharacterInfo(){ DisplayCharacterInfo(true); }
-		public void DisplayCharacterInfo(bool readkey){
+		public int DisplayCharacterInfo(){ return DisplayCharacterInfo(true); }
+		public int DisplayCharacterInfo(bool readkey){
 			DisplayStats();
 			for(int i=1;i<ROWS-1;++i){
 				Screen.WriteMapString(i,0,"".PadRight(COLS));
@@ -9414,14 +9716,17 @@ E[x]plore
 			Screen.WriteMapString(11,0,"Feats: ");
 			Screen.WriteMapString(11,0,new cstr(catcolor,"Feats"));
 			string featlist = "";
-			for(FeatType f = FeatType.QUICK_DRAW;f < FeatType.NUM_FEATS;++f){
-				if(HasFeat(f)){
-					if(featlist.Length == 0){ //if this is the first one...
-						featlist = featlist + Feat.Name(f);
-					}
-					else{
-						featlist = featlist + ", " + Feat.Name(f);
-					}
+			int active_feat_count = 0;
+			foreach(FeatType f in feats_in_order){
+				if(featlist.Length > 0){
+					featlist = featlist + ", ";
+				}
+				if(Feat.IsActivated(f)){
+					featlist = featlist + "[" + (char)(active_feat_count + 'a') + "] " + Feat.Name(f);
+					++active_feat_count;
+				}
+				else{
+					featlist = featlist + Feat.Name(f);
 				}
 			}
 			int currentrow = 11;
@@ -9430,11 +9735,11 @@ E[x]plore
 				while(featlist[currentcol] != ','){
 					--currentcol;
 				}
-				Screen.WriteMapString(currentrow,7,featlist.Substring(0,currentcol+1));
+				Screen.WriteMapString(currentrow,7,featlist.Substring(0,currentcol+1).GetColorString());
 				featlist = featlist.Substring(currentcol+2);
 				++currentrow;
 			}
-			Screen.WriteMapString(currentrow,7,featlist);
+			Screen.WriteMapString(currentrow,7,featlist.GetColorString());
 			Screen.WriteMapString(14,0,"Spells: ");
 			Screen.WriteMapString(14,0,new cstr(catcolor,"Spells"));
 			string spelllist = "";
@@ -9459,101 +9764,138 @@ E[x]plore
 				++currentrow;
 			}
 			Screen.WriteMapString(currentrow,8,spelllist);
+			/*Screen.WriteMapString(11,7,"Armor mastery, [a] Tumble, Student's luck, Neck snap,".GetColorString()); example of active feats in the character screen
+			Screen.WriteMapString(12,8,"[b] Disarm trap".GetColorString());*/
 			Screen.ResetColors();
 			B.DisplayNow("Character information: ");
 			Console.CursorVisible = true;
+			int num_active_feats = 0;
+			foreach(FeatType feat in Enum.GetValues(typeof(FeatType))){
+				if(HasFeat(feat) && Feat.IsActivated(feat)){
+					++num_active_feats;
+				}
+			}
 			if(readkey){
-				Console.ReadKey(true);
+				return GetSelection("Character information: ",num_active_feats,false,true,false);
+				//Console.ReadKey(true);
+			}
+			else{
+				return -1;
 			}
 		}
 		public int[] DisplayEquipment(){
-			WeaponType new_weapon = weapons.First.Value;
-			ArmorType new_armor = armors.First.Value;
-			Dict<WeaponType,WeaponType> heldweapon = new Dict<WeaponType, WeaponType>();
-			Dict<ArmorType,ArmorType> heldarmor = new Dict<ArmorType, ArmorType>();
-			for(WeaponType w = WeaponType.SWORD;w <= WeaponType.BOW;++w){
-				foreach(WeaponType wt in weapons){
-					if(Weapon.BaseWeapon(wt) == w){
-						heldweapon[w] = wt;
-					}
-				}
-			}
-			for(ArmorType a = ArmorType.LEATHER;a <= ArmorType.FULL_PLATE;++a){
-				foreach(ArmorType at in armors){
-					if(Armor.BaseArmor(at) == a){
-						heldarmor[a] = at;
-					}
-				}
-			}
+			WeaponType new_weapon_type = EquippedWeapon.type;
+			ArmorType new_armor_type = EquippedArmor.type;
+			int new_magic_item_idx = equipped_magic_item_idx;
 			Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
 			for(int i=1;i<ROWS-1;++i){
 				Screen.WriteMapString(i,0,"".PadRight(COLS));
 			}
-			int line = 2;
+			int line = 1;
 			for(WeaponType w = WeaponType.SWORD;w <= WeaponType.BOW;++w){
-				Screen.WriteMapString(line,11,Weapon.EquipmentScreenName(heldweapon[w]));
+				Screen.WriteMapString(line,6,WeaponOfType(w).EquipmentScreenName());
 				++line;
 			}
-			line = 2;
+			line = 8;
 			for(ArmorType a = ArmorType.LEATHER;a <= ArmorType.FULL_PLATE;++a){
-				Screen.WriteMapString(line,COLS-24,Armor.EquipmentScreenName(heldarmor[a]));
+				Screen.WriteMapString(line,6,ArmorOfType(a).EquipmentScreenName());
 				++line;
 			}
-			Screen.WriteMapString(9,1,new cstr(Color.DarkRed,"Weapon: "));
-			Screen.WriteMapChar(9,7,':');
-			Screen.WriteMapString(11,1,new cstr(Color.DarkCyan,"Armor: "));
-			Screen.WriteMapChar(11,6,':');
-			Screen.WriteMapString(13,1,new cstr(Color.DarkGreen,"Magic items: "));
-			Screen.WriteMapChar(13,12,':');
-			line = 13;
+			line = 1;
 			foreach(MagicItemType m in magic_items){
-				string[] s = MagicItem.Description(m);
-				Screen.WriteMapString(line,14,s[0]);
-				Screen.WriteMapString(line+1,14,s[1]);
-				line += 2;
+				string s = MagicItem.Name(m);
+				Screen.WriteMapString(line,38,s[0].ToString().ToUpper() + s.Substring(1));
+				++line;
 			}
+			Screen.WriteMapString(12,1,new cstr(Color.DarkRed,"Weapon: "));
+			Screen.WriteMapChar(12,7,':');
+			Screen.WriteMapString(15,1,new cstr(Color.DarkCyan,"Armor: "));
+			Screen.WriteMapChar(15,6,':');
+			Screen.WriteMapString(18,1,new cstr(Color.DarkGreen,"Magic item: "));
+			Screen.WriteMapChar(18,11,':');
 			ConsoleKeyInfo command;
 			bool done = false;
 			while(!done){
-				line = 2;
+				Weapon new_weapon = WeaponOfType(new_weapon_type);
+				Armor new_armor = ArmorOfType(new_armor_type);
+				line = 1;
 				for(WeaponType w = WeaponType.SWORD;w <= WeaponType.BOW;++w){
-					if(new_weapon == heldweapon[w]){
-						Screen.WriteMapChar(line,5,'>');
-						Screen.WriteMapString(line,7,new cstr(Color.Red,"[" + (char)(w+(int)'a') + "]"));
+					if(new_weapon_type == w){
+						Screen.WriteMapChar(line,0,'>');
+						Screen.WriteMapString(line,2,new cstr(Color.Red,"[" + (char)(w+(int)'a') + "]"));
 					}
 					else{
-						Screen.WriteMapChar(line,5,' ');
-						Screen.WriteMapString(line,7,new cstr(Color.Cyan,"[" + (char)(w+(int)'a') + "]"));
+						Screen.WriteMapChar(line,0,' ');
+						Screen.WriteMapString(line,2,new cstr(Color.Cyan,"[" + (char)(w+(int)'a') + "]"));
 					}
 					++line;
 				}
-				line = 2;
+				line = 8;
 				for(ArmorType a = ArmorType.LEATHER;a <= ArmorType.FULL_PLATE;++a){
-					if(new_armor == heldarmor[a]){
-						Screen.WriteMapChar(line,36,'>');
-						Screen.WriteMapString(line,38,new cstr(Color.Red,"[" + (char)(a+(int)'f') + "]"));
+					if(new_armor_type == a){
+						Screen.WriteMapChar(line,0,'>');
+						Screen.WriteMapString(line,2,new cstr(Color.Red,"[" + (char)(a+(int)'f') + "]"));
 					}
 					else{
-						Screen.WriteMapChar(line,36,' ');
-						Screen.WriteMapString(line,38,new cstr(Color.Cyan,"[" + (char)(a+(int)'f') + "]"));
+						Screen.WriteMapChar(line,0,' ');
+						Screen.WriteMapString(line,2,new cstr(Color.Cyan,"[" + (char)(a+(int)'f') + "]"));
 					}
 					++line;
 				}
-				Screen.WriteMapString(9,9,Weapon.Description(Weapon.BaseWeapon(new_weapon)).PadRight(COLS));
-				if(new_weapon != Weapon.BaseWeapon(new_weapon)){
-					Screen.WriteMapString(10,9,Weapon.Description(new_weapon).PadRight(COLS));
+				line = 1;
+				int letter = 0;
+				foreach(MagicItemType m in magic_items){
+					if(new_magic_item_idx == magic_items.IndexOf(m)){
+						Screen.WriteMapChar(line,32,'>');
+						Screen.WriteMapString(line,34,new cstr(Color.Red,"[" + (char)(letter+(int)'i') + "]"));
+					}
+					else{
+						Screen.WriteMapChar(line,32,' ');
+						Screen.WriteMapString(line,34,new cstr(Color.Cyan,"[" + (char)(letter+(int)'i') + "]"));
+					}
+					++line;
+					++letter;
+				}
+				Screen.WriteMapString(12,9,new_weapon.Description().PadRight(COLS));
+				colorstring weaponstatus = new colorstring();
+				colorstring armorstatus = new colorstring();
+				for(int i=0;i<(int)EquipmentStatus.NUM_STATUS;++i){
+					EquipmentStatus st = (EquipmentStatus)i;
+					if(new_weapon.status[st]){
+						weaponstatus.strings.Add(new cstr(Weapon.StatusName(st) + "  ",Weapon.StatusColor(st)));
+					}
+					if(new_armor.status[st]){
+						armorstatus.strings.Add(new cstr(Weapon.StatusName(st) + "  ",Weapon.StatusColor(st)));
+					}
+				}
+				if(weaponstatus.Length() < COLS){
+					weaponstatus.strings.Add(new cstr("".PadRight(COLS-weaponstatus.Length()),Color.Gray));
+				}
+				if(armorstatus.Length() < COLS){
+					armorstatus.strings.Add(new cstr("".PadRight(COLS-armorstatus.Length()),Color.Gray));
+				}
+				if(new_weapon.enchantment != EnchantmentType.NO_ENCHANTMENT){
+					Screen.WriteMapString(13,9,new_weapon.DescriptionOfEnchantment().PadRight(COLS));
+					Screen.WriteMapString(14,4,weaponstatus);
 				}
 				else{
-					Screen.WriteMapString(10,9,"".PadRight(COLS));
+					Screen.WriteMapString(13,4,weaponstatus);
 				}
-				Screen.WriteMapString(11,8,Armor.Description(Armor.BaseArmor(new_armor)).PadRight(COLS));
-				if(new_armor != Armor.BaseArmor(new_armor)){
-					Screen.WriteMapString(12,8,Armor.Description(new_armor).PadRight(COLS));
+				Screen.WriteMapString(15,8,new_armor.Description().PadRight(COLS));
+				if(new_armor.enchantment != EnchantmentType.NO_ENCHANTMENT){
+					Screen.WriteMapString(16,8,new_armor.DescriptionOfEnchantment().PadRight(COLS));
+					Screen.WriteMapString(17,4,armorstatus);
 				}
 				else{
-					Screen.WriteMapString(12,8,"".PadRight(COLS));
+					Screen.WriteMapString(16,4,armorstatus);
 				}
-				if(new_weapon == weapons.First.Value && new_armor == armors.First.Value){
+				if(new_magic_item_idx >= 0){
+					string[] magic_item_desc = MagicItem.Description(magic_items[new_magic_item_idx]);
+					Screen.WriteMapString(18,13,magic_item_desc[0].PadRight(50));
+					Screen.WriteMapString(19,13,magic_item_desc[1].PadRight(50)); //todo: re-align this part?
+					Screen.WriteMapString(20,13,magic_item_desc[2].PadRight(50));
+				}
+				if(new_weapon == EquippedWeapon && new_armor == EquippedArmor && new_magic_item_idx == equipped_magic_item_idx){
 					Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
 				}
 				else{
@@ -9594,8 +9936,8 @@ E[x]plore
 						ch = 'e';
 						break;
 					}
-					if((int)ch - (int)'a' != (int)(Weapon.BaseWeapon(new_weapon))){
-						new_weapon = heldweapon[(WeaponType)((int)ch - (int)'a')];
+					if((int)ch - (int)'a' != (int)(new_weapon_type)){
+						new_weapon_type = (WeaponType)((int)ch - (int)'a');
 					}
 					break;
 				}
@@ -9616,14 +9958,32 @@ E[x]plore
 						ch = 'h';
 						break;
 					}
-					if((int)ch - (int)'f' != (int)(Armor.BaseArmor(new_armor))){
-						new_armor = heldarmor[(ArmorType)((int)ch - (int)'f')];
+					if((int)ch - (int)'f' != (int)(new_armor_type)){
+						new_armor_type = (ArmorType)((int)ch - (int)'f');
 					}
 					break;
+				case 'i':
+				case 'j':
+				case 'k':
+				case 'l':
+				case 'm':
+				case 'n':
+				case 'o':
+				case 'p':
+				case 'q':
+				case 'r':
+				{
+					int num = (int)ch - (int)'i';
+					if(num < magic_items.Count && num != new_magic_item_idx){
+						new_magic_item_idx = num;
+					}
+					break;
+				}
 				case (char)27:
 				case ' ':
-					new_weapon = weapons.First.Value; //reset
-					new_armor = armors.First.Value;
+					new_weapon_type = EquippedWeapon.type; //reset
+					new_armor_type = EquippedArmor.type;
+					new_magic_item_idx = equipped_magic_item_idx;
 					done = true;
 					break;
 				case (char)13:
@@ -9633,7 +9993,7 @@ E[x]plore
 					break;
 				}
 			}
-			return new int[]{(int)Weapon.BaseWeapon(new_weapon),(int)Armor.BaseArmor(new_armor)};
+			return new int[]{(int)new_weapon_type,(int)new_armor_type,new_magic_item_idx};
 		}
 		public void IncreaseSkill(SkillType skill){
 			List<string> learned = new List<string>();
@@ -10336,7 +10696,7 @@ E[x]plore
 			case ActorType.MECHANICAL_KNIGHT:
 				return "The mechanical knight's shield moves with unnatural speed, ready to foil any onslaught. Its exposed gears appear vulnerable to any attack that could bypass its shield.";
 			case ActorType.ORC_WARMAGE:
-				return "The destruction wreaked by warmages evokes respect and feat even among their own kind. They often lead raids and war parties, using tracking spells to complement their lethal magic.";
+				return "The destruction wreaked by warmages evokes respect and fear even among their own kind. They often lead raids and war parties, using tracking spells to complement their lethal magic.";
 			case ActorType.LASHER_FUNGUS:
 				return "The lasher is a tall mass of fungal growth with several ropelike tentacles extending from it.";
 			case ActorType.NECROMANCER:
@@ -10625,7 +10985,530 @@ E[x]plore
 				}
 			}
 		}
-		public List<Tile> GetTarget(){ return GetTarget(false,-1,true); }
+		public List<Tile> GetTargetTile(int max_distance,int radius,bool start_at_interesting_target){ return GetTarget(false,max_distance,radius,false,start_at_interesting_target); }
+		public List<Tile> GetTargetLine(int max_distance){ return GetTarget(false,max_distance,0,true,true); }
+		public List<Tile> GetTarget(bool lookmode,int max_distance,int radius,bool extend_line,bool start_at_interesting_target){
+			List<Tile> result = null;
+			ConsoleKeyInfo command;
+			int r,c;
+			int minrow = 0;
+			int maxrow = ROWS-1;
+			int mincol = 0;
+			int maxcol = COLS-1;
+			if(max_distance > 0){
+				minrow = Math.Max(minrow,row - max_distance);
+				maxrow = Math.Min(maxrow,row + max_distance);
+				mincol = Math.Max(mincol,col - max_distance);
+				maxcol = Math.Min(maxcol,col + max_distance);
+			}
+			bool hide_descriptions = false;
+			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
+			for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
+				foreach(Actor a in ActorsAtDistance(i)){
+					if(CanSee(a)){
+						if(lookmode || ((IsWithinSightRangeOf(a) || a.tile().IsLit()) && HasLOS(a))){
+							interesting_targets.Add(a);
+						}
+					}
+				}
+			}
+			if(lookmode){
+				for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
+					foreach(Tile t in TilesAtDistance(i)){
+						if(t.type == TileType.STAIRS || t.type == TileType.CHEST
+						|| t.Is(FeatureType.GRENADE) || t.type == TileType.FIREPIT
+						|| t.Is(FeatureType.QUICKFIRE) || t.type == TileType.STALAGMITE
+						|| t.Is(FeatureType.TROLL_CORPSE) || t.Is(FeatureType.TROLL_SEER_CORPSE)
+						|| t.Is(FeatureType.RUNE_OF_RETREAT)
+						|| t.Is(TileType.FIRE_GEYSER) || t.Is(FeatureType.POISON_GAS)
+						|| t.Is(FeatureType.FOG) || t.Is(FeatureType.FUNGUS)
+						|| t.Is(FeatureType.FUNGUS_ACTIVE) || t.Is(FeatureType.FUNGUS_PRIMED)
+						|| t.Is(TileType.FOG_VENT) || t.Is(TileType.HEALING_POOL)
+						|| t.Is(TileType.POISON_GAS_VENT)
+						|| t.IsShrine() || t.inv != null){
+							if(CanSee(t)){
+								interesting_targets.Add(t);
+							}
+						}
+						if(t.IsKnownTrap() && CanSee(t)){
+							interesting_targets.AddUnique(t);
+						}
+					}
+				}
+			}
+			colorchar[,] mem = new colorchar[ROWS,COLS];
+			List<Tile> line = new List<Tile>();
+			List<Tile> oldline = new List<Tile>();
+			bool description_shown_last_time = false;
+			int desc_row = -1;
+			int desc_col = -1;
+			int desc_height = -1;
+			int desc_width = -1;
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					mem[i,j] = Screen.MapChar(i,j);
+				}
+			}
+			if(!start_at_interesting_target || interesting_targets.Count == 0){
+				if(lookmode){
+					B.DisplayNow("Move the cursor to look around. ");
+				}
+				else{
+					B.DisplayNow("Move cursor to choose target, then press Enter. ");
+				}
+			}
+			if(lookmode){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					r = row;
+					c = col;
+				}
+				else{
+					r = interesting_targets[0].row;
+					c = interesting_targets[0].col;
+				}
+			}
+			else{
+				if(target == null || !CanSee(target)
+				|| (max_distance > 0 && DistanceFrom(target) > max_distance)){
+					if(!start_at_interesting_target || interesting_targets.Count == 0){
+						r = row;
+						c = col;
+					}
+					else{
+						r = interesting_targets[0].row;
+						c = interesting_targets[0].col;
+					}
+				}
+				else{
+					r = target.row;
+					c = target.col;
+					if(Global.Option(OptionType.LAST_TARGET)){
+						List<Tile> bestline = null;
+						if(extend_line){
+							bestline = GetBestExtendedLineOfEffect(target).ToFirstSolidTile();
+							if(bestline.Count > max_distance+1){
+								bestline.RemoveRange(max_distance+1,bestline.Count - max_distance - 1);
+							}
+						}
+						else{
+							bestline = GetBestLineOfEffect(target).ToFirstSolidTile();
+						}
+						return bestline;
+					}
+				}
+			}
+			bool first_iteration = true;
+			bool done=false; //when done==true, we're ready to return 'result'
+			while(!done){
+				Screen.ResetColors();
+				string contents = "You see ";
+				List<string> items = new List<string>();
+				if(M.actor[r,c] != null && M.actor[r,c] != this && CanSee(M.actor[r,c])){
+					items.Add(M.actor[r,c].a_name + " " + M.actor[r,c].WoundStatus());
+				}
+				if(M.tile[r,c].inv != null){
+					items.Add(M.tile[r,c].inv.AName(true));
+				}
+				foreach(FeatureType f in M.tile[r,c].features){
+					items.Add(Tile.Feature(f).a_name);
+				}
+				if(items.Count == 0){
+					contents += M.tile[r,c].AName(true);
+				}
+				else{
+					if(items.Count == 1){
+						contents += items[0] + M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+					}
+					else{
+						if(items.Count == 2){
+							if(M.tile[r,c].type != TileType.FLOOR){
+								if(M.tile[r,c].Preposition() == " and "){
+									contents += items[0] + ", " + items[1] + ",";
+									contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+								}
+								else{
+									contents += items[0] + " and " + items[1];
+									contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+								}
+							}
+							else{
+								contents += items[0] + " and " + items[1];
+							}
+						}
+						else{
+							foreach(string s in items){
+								if(s != items.Last()){
+									contents += s + ", ";
+								}
+								else{
+									if(M.tile[r,c].type != TileType.FLOOR){
+										contents += s + ","; //because preposition contains a space already
+									}
+									else{
+										contents += "and " + s;
+									}
+								}
+							}
+							if(M.tile[r,c].type != TileType.FLOOR){
+								contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+							}
+						}
+					}
+				}
+				if(r == row && c == col){
+					if(!first_iteration){
+						string s = "You're standing here. ";
+						if(items.Count == 0 && M.tile[r,c].type == TileType.FLOOR){
+							B.DisplayNow(s);
+						}
+						else{
+							B.DisplayNow(s + contents + " here. ");
+						}
+					}
+				}
+				else{
+					if(CanSee(M.tile[r,c])){
+						B.DisplayNow(contents + ". ");
+					}
+					else{
+						if(M.actor[r,c] != null && CanSee(M.actor[r,c])){
+							B.DisplayNow("You sense " + M.actor[r,c].a_name + " " + M.actor[r,c].WoundStatus() + ". ");
+						}
+						else{
+							if(M.tile[r,c].seen){
+								colorchar tilech = new colorchar(M.tile[r,c].symbol,M.tile[r,c].color);
+								colorchar screench = Screen.MapChar(r,c);
+								if(M.tile[r,c].inv != null && (tilech.c != screench.c || tilech.color != screench.color)){ //hacky, but it seems to work (when a monster drops an item you haven't seen yet)
+									B.DisplayNow("You can no longer see this " + M.tile[r,c].inv.Name(true) + ". "); //todo: double check this hack. it might not work.
+								}
+								else{
+									B.DisplayNow("You can no longer see this " + M.tile[r,c].Name(true) + ". ");
+								}
+							}
+							else{
+								if(lookmode){
+									B.DisplayNow("");
+								}
+								else{
+									B.DisplayNow("Move cursor to choose target, then press Enter. ");
+								}
+							}
+						}
+					}
+				}
+				if(!lookmode){
+					bool blocked=false;
+					Console.CursorVisible = false;
+					if(extend_line){
+						line = GetBestExtendedLineOfEffect(r,c);
+						if(line.Count > max_distance+1){
+							line.RemoveRange(max_distance+1,line.Count - max_distance - 1);
+						}
+					}
+					else{
+						line = GetBestLineOfEffect(r,c);
+					}
+					foreach(Tile t in line){
+						if(t.row != row || t.col != col){
+							colorchar cch = mem[t.row,t.col];
+							if(t.row == r && t.col == c){
+								if(!blocked){
+									cch.bgcolor = Color.Green;
+									if(Global.LINUX){ //no bright bg in terminals
+										cch.bgcolor = Color.DarkGreen;
+									}
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+								else{
+									cch.bgcolor = Color.Red;
+									if(Global.LINUX){
+										cch.bgcolor = Color.DarkRed;
+									}
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+							}
+							else{
+								if(!blocked){
+									cch.bgcolor = Color.DarkGreen;
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+								else{
+									cch.bgcolor = Color.DarkRed;
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+							}
+							if(t.seen && !t.passable && t != line.Last()){
+								blocked=true;
+							}
+						}
+						oldline.Remove(t);
+					}
+					if(radius > 0){
+						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+							if(!line.Contains(t)){
+								colorchar cch = mem[t.row,t.col];
+								if(blocked){
+									cch.bgcolor = Color.DarkRed;
+								}
+								else{
+									cch.bgcolor = Color.DarkGreen;
+								}
+								if(cch.color == cch.bgcolor){
+									cch.color = Color.Black;
+								}
+								Screen.WriteMapChar(t.row,t.col,cch);
+								oldline.Remove(t);
+							}
+						}
+					}
+					foreach(Tile t in oldline){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+				}
+				else{
+					colorchar cch = mem[r,c];
+					cch.bgcolor = Color.Green;
+					if(Global.LINUX){ //no bright bg in terminals
+						cch.bgcolor = Color.DarkGreen;
+					}
+					if(cch.color == cch.bgcolor){
+						cch.color = Color.Black;
+					}
+					Screen.WriteMapChar(r,c,cch);
+					line = new List<Tile>{M.tile[r,c]};
+					oldline.Remove(M.tile[r,c]);
+					foreach(Tile t in oldline){ //to prevent the previous target appearing on top of the description box
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					if(!hide_descriptions && M.actor[r,c] != null && M.actor[r,c] != this && CanSee(M.actor[r,c])){
+						bool description_on_right = false;
+						int max_length = 29;
+						if(c - 6 < max_length){
+							max_length = c - 6;
+						}
+						if(max_length < 20){
+							description_on_right = true;
+							max_length = 29;
+						}
+						List<colorstring> desc = MonsterDescriptionBox(M.actor[r,c].type,max_length);
+						if(description_on_right){
+							int start_c = COLS - desc[0].Length();
+							description_shown_last_time = true;
+							desc_row = 0;
+							desc_col = start_c;
+							desc_height = desc.Count;
+							desc_width = desc[0].Length();
+							for(int i=0;i<desc.Count;++i){
+								Screen.WriteMapString(i,start_c,desc[i]);
+							}
+						}
+						else{
+							description_shown_last_time = true;
+							desc_row = 0;
+							desc_col = 0;
+							desc_height = desc.Count;
+							desc_width = desc[0].Length();
+							for(int i=0;i<desc.Count;++i){
+								Screen.WriteMapString(i,0,desc[i]);
+							}
+						}
+					}
+					else{
+						//description_shown_last_time = false;
+					}
+				}
+				/*foreach(Tile t in oldline){ //moved. see above.
+					Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+				}*/
+				oldline = new List<Tile>(line);
+				if(radius > 0){
+					foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+						oldline.AddUnique(t);
+					}
+				}
+				first_iteration = false;
+				M.tile[r,c].Cursor();
+				Console.CursorVisible = true;
+				command = Console.ReadKey(true);
+				char ch = ConvertInput(command);
+				ch = ConvertVIKeys(ch);
+				int move_value = 1;
+				if((command.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt
+				|| (command.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control
+				|| (command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+					move_value = 6;
+				}
+				switch(ch){
+				case '7':
+					r -= move_value;
+					c -= move_value;
+					break;
+				case '8':
+					r -= move_value;
+					break;
+				case '9':
+					r -= move_value;
+					c += move_value;
+					break;
+				case '4':
+					c -= move_value;
+					break;
+				case '6':
+					c += move_value;
+					break;
+				case '1':
+					r += move_value;
+					c -= move_value;
+					break;
+				case '2':
+					r += move_value;
+					break;
+				case '3':
+					r += move_value;
+					c += move_value;
+					break;
+				case (char)9:
+					if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+						if(interesting_targets.Count > 0){
+							List<PhysicalObject> reversed_targets = new List<PhysicalObject>(interesting_targets);
+							reversed_targets.Reverse();
+							int idx = 0;
+							int dist = DistanceFrom(r,c);
+							int idx_of_next_closest = -1;
+							bool found = false;
+							foreach(PhysicalObject o in reversed_targets){
+								if(o.row == r && o.col == c){
+									int prev_idx = idx + 1; //this goes backwards because the list goes backwards
+									if(prev_idx == reversed_targets.Count){
+										prev_idx = 0;
+									}
+									r = reversed_targets[prev_idx].row;
+									c = reversed_targets[prev_idx].col;
+									found = true;
+									break;
+								}
+								else{
+									if(idx_of_next_closest == -1 && DistanceFrom(o) < dist){
+										idx_of_next_closest = idx;
+									}
+								}
+								++idx;
+							}
+							if(!found){
+								if(idx_of_next_closest == -1){
+									r = reversed_targets[0].row;
+									c = reversed_targets[0].col;
+								}
+								else{
+									r = reversed_targets[idx_of_next_closest].row;
+									c = reversed_targets[idx_of_next_closest].col;
+								}
+							}
+						}
+					}
+					else{
+						if(interesting_targets.Count > 0){
+							int idx = 0;
+							int dist = DistanceFrom(r,c);
+							int idx_of_next_farthest = -1;
+							bool found = false;
+							foreach(PhysicalObject o in interesting_targets){
+								if(o.row == r && o.col == c){
+									int next_idx = idx + 1;
+									if(next_idx == interesting_targets.Count){
+										next_idx = 0;
+									}
+									r = interesting_targets[next_idx].row;
+									c = interesting_targets[next_idx].col;
+									found = true;
+									break;
+								}
+								else{
+									if(idx_of_next_farthest == -1 && DistanceFrom(o) > dist){
+										idx_of_next_farthest = idx;
+									}
+								}
+								++idx;
+							}
+							if(!found){
+								if(idx_of_next_farthest == -1){
+									r = interesting_targets[0].row;
+									c = interesting_targets[0].col;
+								}
+								else{
+									r = interesting_targets[idx_of_next_farthest].row;
+									c = interesting_targets[idx_of_next_farthest].col;
+								}
+							}
+						}
+					}
+					break;
+				case '=':
+					if(lookmode){
+						hide_descriptions = !hide_descriptions;
+					}
+					break;
+				case (char)27:
+				case ' ':
+					done = true;
+					break;
+				case (char)13:
+				case 's':
+					if(M.actor[r,c] != null && M.actor[r,c] != this && CanSee(M.actor[r,c]) && HasLOE(M.actor[r,c])){
+						target = M.actor[r,c];
+					}
+					result = line.ToFirstSolidTile();
+					done = true;
+					break;
+				default:
+					break;
+				}
+				if(r < minrow){
+					r = minrow;
+				}
+				if(r > maxrow){
+					r = maxrow;
+				}
+				if(c < mincol){
+					c = mincol;
+				}
+				if(c > maxcol){
+					c = maxcol;
+				}
+				if(description_shown_last_time){
+					Screen.MapDrawWithStrings(mem,desc_row,desc_col,desc_height,desc_width);
+					description_shown_last_time = false;
+				}
+				if(done){
+					Console.CursorVisible = false;
+					foreach(Tile t in line){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					if(radius > 0){
+						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+							if(!line.Contains(t)){
+								Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+							}
+						}
+					}
+					Console.CursorVisible = true;
+				}
+			}
+			return result;
+		}
+		/*public List<Tile> GetTarget(){ return GetTarget(false,-1,true); }
 		public List<Tile> GetTarget(bool lookmode){ return GetTarget(lookmode,-1,!lookmode); } //note default
 		public List<Tile> GetTarget(int max_distance){ return GetTarget(false,max_distance,true); }
 		public List<Tile> GetTarget(int max_distance,int radius){ return GetTarget(false,max_distance,true,radius); }
@@ -10759,28 +11642,28 @@ E[x]plore
 						items.Add(M.actor[r,c].a_name + " " + M.actor[r,c].WoundStatus());
 					}
 					if(M.tile[r,c].inv != null){
-						items.Add(M.tile[r,c].inv.AName());
+						items.Add(M.tile[r,c].inv.AName(true));
 					}
 					foreach(FeatureType f in M.tile[r,c].features){
 						items.Add(Tile.Feature(f).a_name);
 					}
 					if(items.Count == 0){
-						contents += M.tile[r,c].a_name;
+						contents += M.tile[r,c].AName(true);
 					}
 					else{
 						if(items.Count == 1){
-							contents += items[0] + M.tile[r,c].Preposition() + M.tile[r,c].a_name;
+							contents += items[0] + M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
 						}
 						else{
 							if(items.Count == 2){
 								if(M.tile[r,c].type != TileType.FLOOR){
 									if(M.tile[r,c].Preposition() == " and "){
 										contents += items[0] + ", " + items[1] + ",";
-										contents += M.tile[r,c].Preposition() + M.tile[r,c].a_name;
+										contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
 									}
 									else{
 										contents += items[0] + " and " + items[1];
-										contents += M.tile[r,c].Preposition() + M.tile[r,c].a_name;
+										contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
 									}
 								}
 								else{
@@ -10802,7 +11685,7 @@ E[x]plore
 									}
 								}
 								if(M.tile[r,c].type != TileType.FLOOR){
-									contents += M.tile[r,c].Preposition() + M.tile[r,c].a_name;
+									contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
 								}
 							}
 						}
@@ -10828,7 +11711,14 @@ E[x]plore
 							}
 							else{
 								if(M.tile[r,c].seen){
-									B.DisplayNow("You can no longer see this " + M.tile[r,c].name + ". ");
+									colorchar tilech = new colorchar(M.tile[r,c].symbol,M.tile[r,c].color);
+									colorchar screench = Screen.MapChar(r,c);
+									if(M.tile[r,c].inv != null && (tilech.c != screench.c || tilech.color != screench.color)){ //hacky, but it seems to work (when a monster drops an item you haven't seen yet)
+										B.DisplayNow("You can no longer see this " + M.tile[r,c].inv.Name(true) + ". ");
+									}
+									else{
+										B.DisplayNow("You can no longer see this " + M.tile[r,c].Name(true) + ". ");
+									}
 								}
 								else{
 									if(lookmode){
@@ -10887,16 +11777,13 @@ E[x]plore
 										Screen.WriteMapChar(t.row,t.col,cch);
 									}
 								}
-								/*if(!blocked){
-									last_good = t;
-								}*/
 								if(t.seen && !t.passable && (t.row != r || t.col != c)){
 									blocked=true;
 								}
 							}
 							oldline.Remove(t);
 						}
-						if(radius > 0/* && last_good != null*/){
+						if(radius > 0){
 							foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
 								if(!line.Contains(t)){
 									colorchar cch = mem[t.row,t.col];
@@ -10947,10 +11834,6 @@ E[x]plore
 								desc_width = desc[0].Length();
 								for(int i=0;i<desc.Count;++i){
 									Screen.WriteMapString(i,start_c,desc[i]);
-									/*for(int j=start_c;j<COLS;++j){
-										line.Add(M.tile[i,j]);
-										oldline.Remove(M.tile[i,j]);
-									}*/
 								}
 							}
 							else{
@@ -10961,11 +11844,6 @@ E[x]plore
 								desc_width = desc[0].Length();
 								for(int i=0;i<desc.Count;++i){
 									Screen.WriteMapString(i,0,desc[i]);
-									/*int length = desc[0].Length();
-									for(int j=0;j<length;++j){
-										line.Add(M.tile[i,j]);
-										oldline.Remove(M.tile[i,j]);
-									}*/
 								}
 							}
 						}
@@ -10977,7 +11855,7 @@ E[x]plore
 						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 					}
 					oldline = new List<Tile>(line);
-					if(radius > 0/* && last_good != null*/){
+					if(radius > 0){
 						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
 							oldline.AddUnique(t);
 						}
@@ -10985,12 +11863,6 @@ E[x]plore
 					first_iteration = false;
 					M.tile[r,c].Cursor();
 				}
-				/*if(lookmode && Screen.MapChar(r,c).c == ' ' && Screen.BackgroundColor == ConsoleColor.Black){
-					//testing for foregroundcolor == black does NOT work
-					//testing for backgroundcolor == black DOES work.
-					Screen.WriteMapChar(r,c,' ');
-					Console.SetCursorPosition(c+Global.MAP_OFFSET_COLS,r+Global.MAP_OFFSET_ROWS);
-				}*/
 				Console.CursorVisible = true;
 				command = Console.ReadKey(true);
 				char ch = ConvertInput(command);
@@ -11145,6 +12017,11 @@ E[x]plore
 				}
 			}
 			return result;
+		}*/
+		public int SelectItem(string message){
+			return Select(message,"".PadRight(COLS,'-').GetColorString(),
+					("------Space left: " + (Global.MAX_INVENTORY_SIZE - InventoryCount()).ToString().PadRight(7,'-') + "[?] for help").PadRight(COLS,'-').GetColorString(),
+					InventoryList().GetColorStrings(),false,false,true,true,HelpTopic.Items);
 		}
 		public int Select(string message,List<string> strings){ return Select(message,"".PadLeft(COLS,'-'),"".PadLeft(COLS,'-'),strings,false,false,true); }
 		public int Select(string message,List<string> strings,bool no_ask,bool no_cancel,bool easy_cancel){ return Select(message,"".PadLeft(COLS,'-'),"".PadLeft(COLS,'-'),strings,no_ask,no_cancel,easy_cancel); }
@@ -11185,6 +12062,9 @@ E[x]plore
 				foreach(colorstring s in strings){
 					Screen.WriteMapString(i,0,new colorstring("[",Color.Gray,letter.ToString(),Color.Cyan,"] ",Color.Gray));
 					Screen.WriteMapString(i,4,s);
+					if(s.Length() < COLS-4){
+						Screen.WriteMapString(i,s.Length()+4,"".PadRight(COLS - (s.Length()+4)));
+					}
 					letter++;
 					i++;
 				}
@@ -11210,7 +12090,7 @@ E[x]plore
 			return -1;
 		}
 		public int GetSelection(string s,int count,bool no_cancel,bool easy_cancel,bool help_key){
-			if(count == 0){ return -1; }
+			//if(count == 0){ return -1; }
 			B.DisplayNow(s);
 			Console.CursorVisible = true;
 			ConsoleKeyInfo command;
@@ -11232,6 +12112,9 @@ E[x]plore
 					if(ch == (char)27 || ch == ' '){
 						return -1;
 					}
+				}
+				if(count == 0){
+					return -1;
 				}
 			}
 		}
@@ -11577,7 +12460,7 @@ E[x]plore
 			case FeatType.LETHALITY:
 			case FeatType.LUNGE:
 			case FeatType.DRIVE_BACK:
-			case FeatType.ARMORED_MAGE:
+			case FeatType.ARMOR_MASTERY:
 			case FeatType.FULL_DEFENSE:
 			case FeatType.TUMBLE:
 			case FeatType.STUDENTS_LUCK:
@@ -11603,7 +12486,7 @@ E[x]plore
 			case FeatType.LETHALITY:
 			case FeatType.DRIVE_BACK:
 			case FeatType.SILENT_CHAINMAIL:
-			case FeatType.ARMORED_MAGE:
+			case FeatType.ARMOR_MASTERY:
 			case FeatType.FULL_DEFENSE:
 			case FeatType.MASTERS_EDGE:
 			case FeatType.STUDENTS_LUCK:
@@ -11657,8 +12540,8 @@ E[x]plore
 				return "Lunge";
 			case FeatType.DRIVE_BACK:
 				return "Drive back";
-			case FeatType.ARMORED_MAGE:
-				return "Armored mage";
+			case FeatType.ARMOR_MASTERY:
+				return "Armor mastery";
 			case FeatType.TUMBLE:
 				return "Tumble";
 			case FeatType.MASTERS_EDGE:
@@ -11703,9 +12586,9 @@ E[x]plore
 			case FeatType.SILENT_CHAINMAIL:
 				return new List<string>{
 					"You can wear chainmail with no penalty to stealth."};
-			case FeatType.ARMORED_MAGE:
+			case FeatType.ARMOR_MASTERY:
 				return new List<string>{
-					"You can cast spells with no penalty from your armor."};
+					"DESCRIPTION GOES HERE."};
 			case FeatType.FULL_DEFENSE:
 				return new List<string>{
 					"Stand still to ready yourself for attack. You gain an extra",

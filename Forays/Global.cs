@@ -69,43 +69,6 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static int RotateDirection(int dir,bool clockwise){ return RotateDirection(dir,clockwise,1); }
-		public static int RotateDirection(int dir,bool clockwise,int num){
-			for(int i=0;i<num;++i){
-				switch(dir){
-				case 7:
-					dir = clockwise?8:4;
-					break;
-				case 8:
-					dir = clockwise?9:7;
-					break;
-				case 9:
-					dir = clockwise?6:8;
-					break;
-				case 4:
-					dir = clockwise?7:1;
-					break;
-				case 5:
-					break;
-				case 6:
-					dir = clockwise?3:9;
-					break;
-				case 1:
-					dir = clockwise?4:2;
-					break;
-				case 2:
-					dir = clockwise?1:3;
-					break;
-				case 3:
-					dir = clockwise?2:6;
-					break;
-				default:
-					dir = 0;
-					break;
-				}
-			}
-			return dir;
-		}
 		public static bool BoundsCheck(int r,int c){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
 				return true;
@@ -421,7 +384,7 @@ namespace Forays{
 					b.Write((int)sp);
 					b.Write(a.spells[sp]);
 				}
-				b.Write(a.magic_penalty);
+				b.Write(a.exhaustion);
 				b.Write(a.time_of_last_action);
 				b.Write(a.recover_time);
 				b.Write(a.path.Count);
@@ -435,13 +398,13 @@ namespace Forays{
 					groups.AddUnique(a.group);
 				}
 				b.Write(a.weapons.Count);
-				foreach(WeaponType w in a.weapons){
+				/*foreach(WeaponType w in a.weapons){
 					b.Write((int)w);
 				}
 				b.Write(a.armors.Count);
 				foreach(ArmorType ar in a.armors){
 					b.Write((int)ar);
-				}
+				}*/
 				b.Write(a.magic_items.Count);
 				foreach(MagicItemType m in a.magic_items){
 					b.Write((int)m);
@@ -793,6 +756,13 @@ namespace Forays{
 				return new colorstring(s,color);
 			}
 		}
+		public static List<colorstring> GetColorStrings(this List<string> l){
+			List<colorstring> result = new List<colorstring>();
+			foreach(string s in l){
+				result.Add(s.GetColorString());
+			}
+			return result;
+		}
 		public delegate void ListDelegate<T>(T t); //this one is kinda experimental and doesn't save tooo much typing, but it's here anyway
 		public static void Each<T>(this List<T> l,ListDelegate<T> del){
 			foreach(T t in l){
@@ -880,7 +850,7 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static List<Tile> ToFirstObstruction(this List<Tile> line){ //impassible tile OR actor
+		public static List<Tile> ToFirstObstruction(this List<Tile> line){ //impassable tile OR actor
 			List<Tile> result = new List<Tile>();
 			int idx = 0;
 			foreach(Tile t in line){
