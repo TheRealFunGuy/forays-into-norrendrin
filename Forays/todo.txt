@@ -1,3 +1,558 @@
+-remove frostling ranged attack and drake breath from attack list.
+-add message when you miss because of fog
+-i broke chests. they don't give enchantments yet.
+-broke save/load, of course
+-make holiness percentage instead of straight damage
+-broke updateOnEquip and removed it from equipment switching.
+-realign descriptions for enchantments and magic items?
+-don't generate more than 10 magic items per game.
+
+
+next: (todo: have a thrown item make noise where it lands.)
+
+...and make orbs trigger traps, too.	- done, i think?
+
+now, make light/darkness orbs have animations when thrown
+
+
+-last part of targeting change? have immolate, scorch, etc. check for corpses they fly over.
+
+
+
+
+-increase base crit chance to 10%
+-dagger still gives at least +10%
+-sword cuts off 40% of health on a crit
+-mace ignores armor (i.e. doesn't get blocked by armor). does something on crit. (double damage? stun? reduce accuracy or damage of target?)
+-dagger probably still stuns on crit
+
+
+
+possessed status for weapons
+ can force attacks. when and how? could be "when you hit an enemy with
+ this weapon, you'll spend your next turn attacking again if possible"
+OR
+ "each turn you could attack an enemy while wielding this weapon, you
+ have a chance to automatically do so"
+	-needs work
+
+echo enchantment (weapons)
+ when you hit with this weapon, the attack echoes and happens again,
+ one tile in the same direction. (i.e. it goes in a line until a miss)
+	-great!
+
+
+quick observations about things that work really well in brogue that I don't have:
+-terrain you can see (and ranged atk) through, but not walk on (chasm)
+-terrain that changes as you walk through it (dense foliage)
+
+
+CHANGES:
+
+MECHANICS:
+global magic penalty (25% for those 2 Magic feats, 5% for advanced spells, added to all fail rates) is changed to exhaustion(probably still 25% for those 2 feats and 5% for advanced spells. Added to all fail rates, and also gives ...
+so, exhaustion is always added to your fail rates directly (until there's a feat/magic item that changes that).
+if exhaustion is at 100%, you miss half of your attacks outright.
+at 75%, you can't effectively wear leather (you get no AC from it).
+at 50%, you can't effectively wear chainmail.
+at 25%, you can't effectively wear plate.
+	-might still need a message for when you CAN wear your armor effectively again. but maybe not.
+
+natural recovery nerfed (10->5) or removed entirely. 
+
+UI:
+remove AC from main screen. main display now has HP, Depth, Weapon, Armor, Magic item. There are 3 empty spaces between this and the command list.
+on equipment screen, armor should say "+2 to Defense skill" or "2 bonus Defense" instead of mentioning AC or vaguely mentioning "really good protection". weapons should no longer mention "2d6" as this is the default now.
+
+FEATS:
+feat levels are removed. all feats will now be comparable in power. feats are gained at skill level 1 and 6. you no longer need to master feats - as soon as you select one, you can use it.
+specific feat changes:
+ silent chainmail: replace.
+ distract: replace. (thrown items will replace it)
+ master's edge: nerf.
+ boiling blood: add another bonus when you're at 5 stacks.
+ disarm trap: can now pick up traps, drop them, and reset them.
+ enduring soul: changes from 20 to 10. see recovery change above.
+ danger sense: only works on visible enemies.
+
+TERRAIN:
+firepit: being knocked into one will set you on fire.
+traps: can now be triggered by arrows or thrown items (including orbs).
+healing pool: can throw an item in, too, so don't throw things at them.
+quickfire: could remain the same. still doesn't ignite things, right?
+            what if it spread until it consumed an item, then died out?
+		i think it needs a reimagining.
+blast fungus: explodes a few turns after being exposed to light. deals
+               major damage. these should knock down adjacent walls,
+               too, and probably instantly kill most enemies behind
+               those walls. (~40 damage?)
+stone slab: should now appear occasionally(!) instead of a normal door.
+             opens when light hits it. (target tile is set to self)
+some types of terrain are 1) cool and 2) can be used to trigger monster abilities, even if they don't do anything on their own. so add some!
+
+ARMOR: probably change the way that armor affects stealth & magic. add several things that can affect your armor (some could even be good), like Infested, Rusted, Red-hot, Slimed, Blurred, Glowing, 
+       then, think about things like electric vulnerability, not fitting through some spaces, catching on things, magnets - or, even better, jday's ideas of 'bonus if you didn't move', 'bonus increases as you move away from the one you attacked', 'bonus against range' (this one is probably an effect instead), 'damage is capped', etc.
+       plus a few more: plate is shiny, so just standing in the light is just as bad as holding a light source yourself.
+(now, instead of AC and stealth+casting penalty, armor will have only AC and stealth penalty. perhaps chain and plate will get the same penalty, even(cut stealth by half?), and then plate will get Shiny on top of that. remember to add a tip for Shiny.)
+Weak spot (enemies get +10% crit chance while you're wearing this armor). might be inflicted by swordsmen etc.
+
+WEAPONS: why use a mace against golems? your sword can be blunted!
+slime on a weapon supresses its fire enchantment.
+sticky: can get stuck to monsters when you hit them. you can't make attacks until you step away from that monster to unstick the weapon.
+heavy: chance of exhaustion after swings.
+negated: enchantments don't work.
+
+MONSTERS:
+some monsters should become territorial and not rush over to you when they see a torch flicker.
+many toxin-immune monsters should be immune only to their own toxins.
+skeleton: oh gosh what do I do. maybe they should blunt edged weapons, but maybe not. maybe they should be immune to all 3 elements (?!?). maybe they should introduce the concept of hardness/damage reduction instead of resistance. or i could just remove them (and sabertooths)!
+wargs will get a howl. what will it do? perhaps they'll split up.
+hags will be tweaked a bit, probably getting some new curses.
+compys might need an AI tweak. (weak, occupied, helpless? remove one?)
+vampires still need help.
+shadow(veil) could gain a message when it steps from visible light to visible darkness: "fades from view as it steps into the shadows"
+darkness dwellers: should they check at the start AND end of their turn?
+  otherwise they can still hit you before being blinded.
+
+ITEMS:
+healing will fully heal you and remove all exhaustion (but not poison, burning, etc). as a result, clarity is removed.
+regeneration will last for 100 turns
+toxin immunity -> stone form(needs better name): you become immune to toxins, can't drink potions, can't catch fire, stop regenerating, etc. 
+ -actually, "stop regenerating" might be extended to "stop all ongoing potion effects", including brutish strength and vampirism.probably gain some armor but lose stealth. not sure on that last part.
+A possible change to blinking (or more likely teleport). not sure what.
+there's the potential to switch ?oDM with a third eye potion that also blinds you.
+sunlight and darkness don't last forever, as above.
+rename/repurpose the prismatic orb? it's cool as a weapon, but "prismatic == fire/cold/lightning" doesn't really work for me.
+freezing orb's radius should probably be 2, not 3.
+You'll probably start with 5 bandages, and the game won't generate any more.
+what if quickfire was reimagined so that it always came from an item? you could get it under control and pick it up again. meh.
+orb of fog...could become a trap instead.
+
+
+
+ADDITIONS:
+
+slime: moving/attacking while on slime has a 1/3 chance to fail. on a
+        failed attack, you fall and get slimed: 50% chance to fail
+        to use an item, and drop it instead. other stuff too.
+cracked walls: destroyed by brutish strength, grenades, or blast fungus
+                (and not just adjacent). can appear between rooms.
+		i'm pretty sure knockback should break these too. throw
+		your enemies through them to open them up.
+brush: flammable. blocks LOS to anything not in the same patch of brush
+bell-like object: bashing-type attacks will stun and/or damage guys on
+                   the other side, while making noise. conducts elec.
+ropes connected to ???
+slime pods that spread slime around
+spinning pillar axe traps. thanks, redmike.
+those back&forth guys from zelda, but elec dmg changes their direction.
+deity statues: one for each skill. They affect everything in their FOV, or everything in a certain radius, or just the closest one in their FOV/radius, by setting one of its skills to 10 temporarily.
+'beach ball bloats': take bloats from brogue and make them a bit tougher by having bashing attacks send them flying instead of popping.
+add broguelike "you are in tall grass" descriptions. it'll help.
+there are some plant terrain ideas below.
+monster that pushes everything away when it takes damage. (deals damage too?) probably an artificial being or an assassin.
+items: the most obvious are the tradeoffs: losing your stealth, or combat, or magic, or items, or movement, but gaining something else.
+Ingrain effect that trades movement for regen? prevents teleporting and knockback too? sounds good as a counter for teleportitis.
+ -so, maybe it doesn't do regen, since that's already an item.
+An enemy that makes you exhausted if you hit while its shield is up
+probably not: fountain of life. heals hp each turn, but might animate an item which then runs from you.
+A lot of different crit effects, not just double damage: armor penalties, stuns, poison, slows, blindness, knockback, prevent attacking (or just attacking that target!), ...
+enemy that ONLY wakes when you get near, or when you fight near it, ...
+possibly a bonus effect for armor mastery.
+-a monster that charges up and fires. maybe just once.
+brutish strength might knock enemies back in addition to dealing heavy damage.
+
+
+[14:26] <jday> dsc: Instead of thinking about the pieces, have a list of combos on a piece of paper.
+[14:26] <jday> Your game doesn't have goblins, jackals, archers -- it has   goblin+jackal+archer   which seems to come about by chance when it happens.  Then you make some notes on how to make sure it happens often, and how not to break what it does.
+[14:29] <ds-creamer> I started today by looking in the wrong place, apparently. I was thinking of monsters and the methods of interacting with them, and somehow I got it into my head that brogue's monsters were a lot more interactive than mine.
+[14:30] <ds-creamer> A comparison showed that I was wrong about that, and it must be the traps, thrown items, gases, etc. that are creating a lot of this gameplay.
+[14:30] <jday> Also AI quirks.
+[14:30] <jday> Monsters should be stupidly smart, with a dash of believable stupidity.
+
+[14:36] <jday> dsc: I bet you could find a few small changes that would do a lot of what you need.  A few bits of Delusions, for instance.
+[14:36] <jday> Like the old "stones" idea -- have an item which, when thrown, does what Chicken does.
+[14:37] <ds-creamer> jday: Do you mean AI quirks like 'flees at low health' and 'stays in terrain of choice' and 'keeps distance', or like 'grenadiers will toss grenades even when adjacent to an invulnerable player'?
+[14:37] <jday> Both.  The latter is totally ok when flavor justifies it, and can even be quite good.
+[14:38] <jday> Players pick up on this stuff intuitively most of the time and it can be a big deal.  Like, even something like whether a monster prefers to stay next to the wall or will cut through the middle of the room when chasing you could matter and be noticeable.
+[14:38] <ds-creamer> This method of comparison doesn't seem to be very productive - I'm not spotting the differences and I feel like I'm missing the big picture.
+
+ <jday> It's entirely about space.
+[14:38] <ds-creamer> ('but my monsters do most of that stuff already!')
+[14:39] <jday> Draw a couple of rooms on a grid.
+[14:39] <jday> And start blacking out squares where it would be a terrible idea for the player to go.
+[14:39] <jday> And then start marking squares where the player can sensibly go with a certain resource use.
+[14:39] <graspee> start blacking up monsters. then put on a minstrel show!
+[14:40] <ds-creamer> Most of the ones I have come down to 'fight in a corridor' or 'don't fight in a corridor or tight space'
+[14:41] <jday> And that is the whole game, that space allocation.
+[14:41] <ds-creamer> (terrain types need some serious expansion, for sure)
+
+ <magikmw> Don't fight further away than two tiles.
+[14:41] <jday> Traps, for instance, can make it so you don't want to fight near one because a monster might trip it.
+[14:42] <magikmw> Or you actually might want the reverse.
+[14:42] <jday> Yes!
+[14:42] <jday> Either way, it changes the situations in which you want to be in the space.
+[14:42] <ds-creamer> I had the wrong idea at first. thought you were still talking about monsters.
+[14:42] <jday> If you have a goblin, you can lead him through a room to another room where you'd rather fight him.  But if you have a jackal behind a goblin in a hallway, you can't lead them across a room -- the jackal will get loads of free hits.
+[14:42] <ds-creamer> But brogue's monsters don't really do that either
+[14:43] <jday> They do a little bit.  But not much, you're right.  I bet we can find better options.
+[14:43] <ds-creamer> I suppose that should be "more than the ones in Forays"
+[14:44] <ds-creamer> (some of which are deeper, and I should be mindful of that fact)
+[14:44] <jday> So you take that grid you've blacked up, stop it singing "Jimmy Cracked Corn," hand it a pamphlet on workplace discrimination, and ask yourself how you can make the black cells a good place to enter, or the white ones be bad, based on other considerations.
+
+ <jday> You want different rooms to be places you want to be or don't want to be, depending on what you're fighting.  That's the easiest thing.
+[14:45] <jday> Think of all the times you lead a will-o'-the-wisp down a certain corridor to keep it away from a scroll or something.
+[14:46] <jday> Even something as simple as mixing well-lit and poorly-lit rooms.  Flammability and shallow water.  Floors that will burn out from under you and make you fall before you're ready.
+[14:46] <ds-creamer> So the proper approach really does seem to be "everything at once"
+[14:46] <jday> It is, but you can simplify it.  The simplification is, "How do I make it so there are different situations when I loathe meeting different enemies?"
+
+ <jday> One answer is, "When I'm already fighting some _other_ enemy."  Hell, even having two enemies that sort of cancel each other out would be great.
+[14:47] <jday> (Brogue has a few kind of like that: wisp + zombie, foo bloat + anything.)
+[14:47] <jday> So you'll have a case where you know there's something sleeping somewhere, and you want to lead another monster to it.  That makes for shenanigans.
+[14:49] <ds-creamer> I also realized I had a few abilities that sounded good, but were actually just equivalent to more damage in most cases. I can improve that, too.
+[14:52] <jday> Define them in spatial terms.  FOV, proximity, adjacency, and diffusion are a few great ones.
+[14:52] <jday> Something like "this monster does x when its victim is in FOV but distant and is not in FOV of a crystal."
+[14:53] <jday> Draw out the places on the map where you don't want to be for a rule like that.  It gets pretty crazy.
+[14:53] <jday> (or s/crystal/light source/ for more generic applicability.)
+[14:53] <ds-creamer> Shiny...thing
+
+[14:53] <jday> Are there floors in Forays where you can't put out fire?
+[14:54] <ds-creamer> not yet!
+[14:54] <jday> And are there floors where you can't be lit at all?
+[14:54] <jday> Add those two and they'll add creases to every rule involving burning.
+[14:55] <jday> For free, suddenly, all the immolation in the game is a way to make the player decide where to fight -- and risk an ambush on the way.
+[14:55] <ds-creamer> Also not yet, but that one was actually (somewhat) in the works, in the slime > fire > ice > slime trio
+[14:59] <jday> dsc: Also, timed effects and random effects in terrain.  Here's one Brogue doesn't have: A door that opens and closes every three turns.
+[14:59] <jday> It's easy to make pathfinding take it into account (it has a movement cost of 1 + the number of turns until it opens).
+
+ <jday> (ok, ideally you want that cost to reflect when the monster expects to get there, too, which isn't too hard, but the player won't care if they do it wrong.)
+[15:02] <graspee> monsters should not necessarily be able to perfectly judge door timing
+[15:02] <ds-creamer> *squish*
+[15:03] <graspee> really stupid monsters could be changing path every so often like someone changing lanes at a supermarket checkout
+
+---------
+---------
+
+[10:25] * ds-creamer leans toward removing armor altogether from forays
+[11:23] <Pupnik-> what problems is armor causing in the gameplay?
+[11:29] <ds-creamer> Pupnik-: it's not tactically interesting right now. it's more like a slight permanent boost to the player.
+[11:30] <ds-creamer> (You pick the one that suits your build and playstyle, and you keep it on.)
+[11:31] <ds-creamer> stealth or magic? you might want leather. fighting? use plate. But it's not interesting, and it seems like a good candidate for streamlining.
+[14:25] <jday> dsc: Here's an idea for armor/weapon in forays -- what if they could be damaged in various ways, but that damage is temporary (one level only, or fixed when you rest (which is one level only))?
+[14:25] <jday> Then there might be decisions about using your sword up now, when you might want it later this level.
+[14:27] <jday> The same could apply to armor, and might even be able to tie into terrain.  e.g., leather might give you a boost on rough terrain; plate might only protect you if you stood still last turn.
+[14:28] <ds-creamer> jday: interesting...'blunted', 'out of ammo'...i'm not sure where else to go but magical effects.
+[14:29] <ds-creamer> 'red hot', 'backbiter', 'covered in spiders'...
+[14:29] <jday> Your armor could get insects in it, yeah.
+[14:29] <jday> "Plate Armor: Infested (-1 hp per turn)."
+[14:30] <jday> And when you rest, you add a message about "cleaning your equipment" or something.
+[14:30] <jday> Clearing a level takes on a puzzle element of ordering your resource use according to the fights you expect.
+[14:32] <ds-creamer> i'm not sure about that part, since without Stealth you don't have as much ability to dodge fights as you do in Brogue.
+[14:34] <jday> Leather could be immune to damage like in Rogue, or nudism could be an option.
+[14:35] <jday> But the point is, if stealth is critical to you, don't waste it on the parts of the level you don't need to sneak through.
+[14:36] <jday> The one last thing you would want is a way to make changing armor costly.  Brogue is switching to have a "warm up" period when you switch armor -- like you start with a huge strength deficit.
+[14:36] <ds-creamer> Are you talking limited resources or stealth skill, there?
+[14:37] <jday> You mean, making armor changes costly?  The goal is to make it a serious decision when you switch armor face to face with an enemy.
+[14:38] <jday> So you don't just say, "oh he's played rock I'll play paper," all the time.
+[14:38] <ds-creamer> I meant "don't waste it", sorry
+[14:39] <jday> You get a few types of costs that interact.  The resource cost ("I might use up my paper") is a gamble, and it plays into space via exploration (gambling against unknown).  If you have a cost to switching armor, it ups the ante.
+[14:39] <jday> Because you say, "Well, I think I can take him in this suit of armor," when really it might be optimal to switch.  "Scissors vs scissors?  I'll take my chances."
+[14:39] <jday> A time cost, after all, is really a distance cost -- everything gets closer to you before you're really safe.
+[14:40] <ds-creamer> That stuff is great, yeah. The part I didn't like the sound of was "the fights you expect", implying spoiler knowledge
+
+[14:41] <jday> Ah, yeah.  I mean more like, "I'm going to have to sneak past a scarecrow, but I don't want to do it in this armor."
+[14:41] <ds-creamer> (and I misread "ordering resource use" as "ordering fights" and thought you wanted a lot more scouting action)
+[14:41] <jday> And, of course, if suits of armor interact with space differently, you get a third way to make armor interesting.  stealth vs melee isn't (very) interesting -- it doesn't exist on the game board.
+[14:43] <jday> A few armor types might include: [ ] one that only works if you didn't move last turn   [ ] one that defends you least against the enemy you attacked, but more as you get further from that enemy (most at your back)  [ ] one that imposes a maximum on the damage you take per turn
+[14:43] <ds-creamer> "Plate Armor: Infested (-1 hp per turn)."    That one line is probably reason enough to keep armor.
+[14:43] <ds-creamer> (I still want to rework how armor affects stealth and casting, though. Numerical penalties, ew.)
+[14:44] <jday> It could be that it picks up stealth penalties over the course of a level; that's one thing.  It could also have a fixed % chance of announcing you each turn, so you get a separate message from it.
+[14:45] <jday> "Your plate clatters."
+[14:45] <jday> And if it rusts, then it starts squeaking.
+[14:45] <jday> Could also be light effects -- if plate is shiny, then maybe you stand out whenever a light source is in fov.
+[14:46] <ds-creamer> Getting caught on things, too. I'm not sure which armors would be most vulnerable to that. Rust is a good one, although I'd have to not let it apply to leather.
+[14:47] <jday> That's fine!  You can reflavor some effects, and you can just let different effects target different suits.  Come up with flavors that make sense, and then worry about making terrain/monster interactions with them multifaceted.
+[14:48] <jday> Let's see.  Magic and casting -- why don't casters wear armor, except for the fact that you don't want a caster to engage in melee?  It's basically flavor from the church, isn't it -- no shedding blood?
+[data expunged]
+[14:49] <ds-creamer> Casting sometimes requires complex movements that mages can't do in armor, or something.
+[14:49] <graspee> but the no metal armour is variously rationalized by: hinders complex movements for spells, metal interferes with the magic field...
+[14:49] <jday> [ ] Think of spells that don't synergize (hooray managerspeak) with melee and use lots of them.  "Stay away!" kinds of spells.
+[14:50] <ds-creamer> Druids do the no-metal thing. Which reminds me: I'm going to vastly expand the magical items you can find, and a druidic one that only works in leather is a good idea.
+[14:50] <jday> Yeah, the no metal is easy to make sense; the question is (for me) why we want it in games -- and it's basically to make different kids at your table have different parts to play in the story.  Less important for a lone rogue.
+[14:52] <jday> dsc: So ultimately we want to know why the swordman in plate has an incentive not to cast fireball at every monster that approaches, totally mechanically.  This is the whole matter, boiled down.
+[14:53] <jday> [ ] spell casting can drain you, causing physical weakness   [ ] attack spells can be more situational   [ ] as before, spells that keep monsters from approaching are useless to melee (except for tactics)
+
+[14:54] <jday> Armor doesn't have to be the way that the two interact, in other words.
+[14:57] <ds-creamer> oh, hey
+[14:57] <ds-creamer> Right now I have a "global magic penalty" that increases the fail rate of all spells. 2 of the Magic feats use it as a resource, and casting spells above your level drains it too.
+[14:58] <ds-creamer> I should turn it into a generic 'Exhaustion' stat, and then no swordsman would want to cast especially advanced magics.
+[data expunged]
+[15:00] <ds-creamer> (Bonus: Things can inflict exhaustion on you and it sounds better & matters more than "This guy increases your magical fail rates")
+[data expunged]
+[15:02] <ds-creamer> jday: And then, to actually answer the question, I suppose heavy armor would get a bigger penalty for exhaustion.
+[15:04] <jday> dsc: So basically melee ends up needing, but not actually costing, magic.
+[15:05] <ds-creamer> Needing in a strategically optimal way for some builds?
+[15:06] <ds-creamer> or do you mean the new use of the Exhaustion resource?
+[15:24] <jday> dsc: Exhaustion, yeah.  It's like credit that pays itself off with time.  You think of exhaustion building up, but it's kind of "freshness" that runs down from 0.
+[15:25] <ds-creamer> jday: Oh, then yeah, that was it.
+[15:27] <jday> dsc: The notion is, magic is like something you charge, but melee is something you need to pass a credit check for.
+[15:29] <ds-creamer> I think so. Maybe I'll end up with a Combat feat that exhausts you, too, though.
+[15:32] <ds-creamer> jday: It could really become a general resource - an alternative to HP damage that happens sometimes. (not all the time like a stamina system, though)
+[15:33] <jday> I love what happens when you figure out what problem a broken mechanic was meant to solve.
+[15:33] <ds-creamer> An enemy that makes you exhausted if you hit while its shield is up. I can roll !oClarity into !oHealing, too.
+[15:34] <ds-creamer> I'm seriously thinking about an ID game, too.
+[15:35] <ds-creamer> (perhaps one with no scrolls of ID and no pure negatives)
+[15:40] <jday> That could work well since using the wrong good scroll is a steep cost.
+[15:40] <jday> Consider the possibility of having _one_ pure negative, but it always looks different, so you never ID it.  You might decide never to identify the last class or two because they're not worth it.
+[15:41] <ds-creamer> That's an option, depending on how many I end up with.
+[15:41] <jday> There's also one that was in Toejam and Earl -- one that re-randomizes the names of the other items.  Works less well when you have items in your inventory though.
+[15:44] <jday> (Although you can solve the issues with that by just not renaming the ones you have right now -- all future scrolls are generated with the new names.)
+[15:44] <ds-creamer> I might arbitrarily have orbs be autoIDed for flavor reasons.
+[15:44] <jday> I bring these options up because a simple id game can bear one complicated feature easily.
+[15:45] <ds-creamer> That one might make you think twice before using the last of a stack
+[15:47] <jday> You could very well decide to leave three kinds un-id'd if you've got your favorites.
+
+
+-------------------------------------------------
+-------------------------------------------------
+-------------------------------------------------
+
+[17:37] <jday> dsc: What if you pick one color for out-of-fov, one for dark, and then use the rest for walls and floors in lit fov?
+[17:38] <jday> Since, say, blue for shadows would look like you just can't see the color.
+[17:39] <ds-creamer> It works at first, at least. But you can't mix colors when you have even amounts.
+[17:39] <jday> Even amounts?
+[17:40] <ds-creamer> (are we talking about using other colors of light, or about hallucination visuals?)
+[17:41] <jday> Neither, and maybe you've already made a change like this that I don't know about.  In ordinary play, yellow has always been bright.
+[17:41] <jday> But what if instead, all colors but blue are bright, and you can't distinguish when they're unlit.
+[17:44] <jday> dsc: I mean, I can't blame you if you don't want to go all Cogs-of-Cronus in your color scheme, but you'd get more mileage if you had another twelve colors free.
+[17:46] <ds-creamer> jday: to clarify, do you mean using more colors for light sources (that then color walls and floors), or making everything go blue/dark cyan when unlit?
+[17:47] <jday> dsc: More colors for walls and floors, all light sources white.  Although you _could_ make r/g/b lights that just mask off those components, I wouldn't in a game as symbolic as this.
+[17:50] <ds-creamer> note to self: use RGB lights in a 7drl sometime
+[17:53] <jday> It could be cool, since it would keep you from knowing what you're looking at.
+[17:54] <jday> I'm doing the thing that's really productive, but kind of weird right now, where I'm so zoned in that I'm not quite sure why I'm doing what I'm doing.  Apparently I've decided to add mouse support.
+[17:55] <jday> dsc: feats should start being usable immediately, if that hasn't changed.
+[18:01] <ds-creamer> jday: what, give one feat every 6 dungeon levels (every 3 shrines), and balance them to be somewhat even in strength?
+[18:03] <jday> You want the player to get to start feeling what it's like to have feats sooner.
+[18:03] <jday> So if you can have them do something at 1/4 or whatever, it would be really nice.
+[18:04] <jday> (Does create problems, I guess, with more stuff to balance out.(
+[18:05] <ds-creamer> jday: What about keeping the cost, but moving it to the end? Just having a cooldown period, where it takes you X skill levels to be ready for another feat?
+[18:05] <ds-creamer> You get neck snap at level 1, but nothing else until 6.
+[18:07] <jday> dsc: Yeah, that would be great.  Then players get to try one feat each game.
+[18:07] <ds-creamer> That'd still need a little balancing, but nothing compared to different levels of each feat.
+[18:07] <ds-creamer> jday: Three feats each game, even.
+[18:07] <ds-creamer> It'd still be per-skill
+[18:08] <ds-creamer> Assuming they can explore the entire first level, anyway.
+[18:09] <jday> dsc: That also lets you ramp up the difficulty a little earlier and avoid Brogue's problem with having to equip the player in friendly territory.
+[18:13] <ds-creamer> jday: About the lights, I'm still uneasy. At one point I had it kinda opposite - outside of your light radius things had their normal color, in the light they were all yellow.
+[18:13] <ds-creamer> I didn't like how it obscured what shrine was what and forced you to 'l'ook.
+[18:14] <jday> Right, but without the light you can justify not knowing.
+[18:14] <ds-creamer> You mean "you see a shrine"?
+[18:14] <jday> Would be fine.
+[18:15] <jday> But you can also have it leave color on special things where the color is purely symbolic -- traps and shrines, you know?  That's ok.
+[18:15] <ds-creamer> Wow, you're right.
+[18:15] <ds-creamer> It adds another reason to bring out your torch, and I think that's worth a change.
+[18:16] <ds-creamer> It was the inconsistency that bothered me, not the lack of knowing.
+[18:17] <ds-creamer> I probably need to remove a few symbol clashes, but I want to do that anyway.
+[18:19] <ds-creamer> (let's see...quickfire, statues, and runes. chasms and rubble. bandages and geysers/vents. healing pools and fire pits.)
+[18:19] <jday> 5 is a good statue.  That's what I used in Brogue.
+[18:20] <jday> 7 looks really cool too.
+[18:20] <jday> (Not for a statue, but for lots of other stuff.)
+[18:20] <jday> I mean, 7 fills space nicely; good for chasms for instance.
+
+read above. make feats front-loaded. make blue/dcyan the only dark color, and remove [DATA EXPUNGED].
+
+
+torch: as before, for now
+feats: as before, for now
+spells: as before, for now
+
+weapons: most weapons deal the same base damage now.
+ sword - slices off a percentage of health. On hit, or on crit? Also
+         might need to fail against armor.
+ mace - ignores armor/hardness? what else? or is that enough?
+ dagger - probably the same increased crit chance. (?)
+ staff - +X to defense/AC. attacking an enemy that missed with its last
+         attack will switch places and then push that enemy 1 space, in
+         addition to dealing damage.
+ bow - as before. melee attacks with bow are still weak.
+       but does the bow deal 2 or 3 damage now? any extra effect?
+armor: not sure.
+magic items: more! tons more! a million more!
+
+upgrades: weapon upgrades (and others?) will be non-weapon-specific.
+          that is, you can put 'of force' on whatever you want. maybe
+          even on ANY piece of equipment.
+          as a bonus, i can have more than 5 types!
+
+items: probably going to add identification!
+  potion of vampirism gives flight, life drain, and light allergy.
+  potion of brutish strength could be added if I just change the boss
+   fight like I want to anyway!
+  healing could take you to 100% and regen could heal 100% and they'd
+   still be different.
+
+traits: 
+
+enemies: 
+
+goblin bat wolf skel moth swordsman dweller bramble frostling dwarrior
+cultist archer shaman mimic killer zombie direrat zealot shadow banshee
+warg spider ascetic poltergeist hag compy worm berserker troll vampire
+cknight sabertooth mudelemental entrancer marblehorror ogre grenadier
+duelist crawler pixie golem pyren assassin seer mknight warmage lasher
+necro avenger behemoth drake phantom
+
+desired changes:
+swordsman: might remain the same as an intro to this mechanic, of
+  course. it's decently interesting as-is: "if the swordsman is next to
+  you, you might want to attack him". however, there might be more
+  effective ways to create a similar result.
+bramble: damage boost?
+frostling: not sure. I want to change it somehow.
+dream warrior: minor change: clones disappear when original is killed.
+cultist: minor: message when they die to fire? animation when invoking?
+shaman: the force palm+immolate combo is great. scorch can probably go
+  or stay. perhaps try it without scorch?
+zombie: possibly make lunges take 1 or 2 turns, to remove weird timing.
+direrat: no change? not sure.
+zealot: currently light+heal+halo+bless. let's simplify this. bless
+  should be removed as it makes attacking too similar to the cknight.
+  light+heal+halo is fine. light radius could be reduced. heal could
+  have fewer uses but become stronger. not totally sure about the halo.
+banshee: definitely needs some kind of tweak.
+warg: perhaps they could split up a bit more, and howl to summon the
+  others. it might even have other effects - a warg that can see the
+  player but can't reach might howl to increase the deadliness of any
+  wargs that DO attack the player on the next turn.
+spider: make sure poison refreshes properly. should be good otherwise.
+hag: possible reduction of HP? however, it should still be hard to kill
+  her in one hit without use of resources/terrain.
+worm: might go to previous plan: move it deeper and have it tunnel.
+vampire: not sure how to handle all the kiting.
+sabertooth: possible AI change from skeleton?
+marblehorror: no longer needs hacks if sunlight isn't permanent.
+ogre: something besides hitting hard and taking a lot of damage?
+golem: what if it created stalagmites when struck, too, and could also
+  move through(and destroy) them? it'd make kiting harder.
+pyren: think about that movement ability? fire trail? would be nasty
+  in corridors.
+assassin: better AI. another ability? or is it not needed? poison?
+mknight: i think it needs to be cleaner than "on crits and when it
+  misses" - or does it need to be improved in another way entirely?
+warmage: consider reducing number of spells. not sure which. improve AI
+  when using passage. (is passage animation fixed yet?)
+lasher: fix animation, if not already. perhaps a few tweaks to behavior
+  as well. what if the radius started small and grew as you attacked?
+  what if it grew only for consecutive attacks? what if it could
+  eventually paralyzed instead of stunning?
+behemoth: the burning fix is a little awkward. what if it turned normal
+  floors into grave dirt as it walked?
+
+new enemies:
+enemy that stays in a gap in the wall and is hard to kill without removing
+more effect-on-death enemies? especially ones that leave enemies or terrain behind.
+  a predator(heh) that can't see you if you're slimed
+  a mostly-invulnerable monster that can be trapped or destroyed by terrain
+  a monster that puts you to sleep and spawns dream eaters. you'd want to fight them with other monsters nearby!
+  egg layer. eggs burst with acid or slime or whatever.
+  almost-beamos enemy. rotates each turn(visible upon examination). when you(or an enemy?) step within 2-3 tiles, it activates. it hits an entire quadrant or octant at a time, and goes through all the directions. if you're still within the distance, it resets the timer each turn.
+
+  AND! lots of behavior-based monsters. maybe they hang out near doors,
+       or guard corridors or shrines, or hide in brush, or trigger
+       traps when the player gets near(hey, not bad), or like to drink
+       potions or kick orbs.
+
+
+
+terrain types: lots more!
+  steal brush from LoL, then add the ability to burn it.
+  ropes that can be cut (by slashing) to do ???
+  plant pods or something else that can be smashed to do ???
+  balloonlike objects that can be slashed or pierced to do ???
+    slime pods/balloons/sacs/bubbles!
+  reverberating objects. bash to stun and/or dmg guys on the other side
+    and make noise, of course...and conduct electricity.
+  moving traps: spinning, back&forth, etc.
+  those eye symbols from zelda. shoot them with arrows.
+  the torches from zelda. light them all.
+  knockback into firepits? damage, or burning?
+  one-way wind corridors. push items and monsters, affect fire, i dunno
+  grave dirt. appears near tombstones. occasionally grabs passersby.
+  tombstones: maybe you can just walk over these.
+
+traps: trigger them remotely with thrown items or arrows? probably! (would need a bit of new trap code, of course)
+
+
+misc other: freezing should last longer and should protect you from 100% of damage (maybe). orbs of ice should be pretty good at giving you a few turns, and the difference between strong monsters and weak ones should be more noticable.
+ light shouldn't always be radius 6. some enemies should give off less.
+ sunlight and darkness shouldn't last forever.
+
+ropes that can be cut or burned, but not shocked or bashed (unless maybe frozen first).
+
+a cold effect stolen from alphaman: doubles in damage each time it's applied.
+
+
+
+
+     ...................... really these would all be '&' of various
+     ...................... colors, but here '!' is the trigger and
+     ...................... '^' is the part that attacks.
+     ........&&&...........
+     ........^.&&&^........ but anyway, the plant gets generated like
+     ..........*........... this. it's quite similar to corridor gen, 
+     ........&&&.&!........ really. it starts from a center ('*') and
+     .......!&.&&&......... spreads out a bit in any direction. 
+     ............&^........ 
+     ...................... each endpoint becomes a trigger or an 
+     ...................... attacking part, randomly. (but there must
+     ...................... be at least one of each)
+     ......................
+     ...................... it's functional, too, in that it can be
+     ...................... burned but it doesn't hide you from view.
+     ...... ............... -----------------
+     ....#----#............ what can i do with ropes? this is tricky.
+     ...................... here I have a tripwire. i don't think I can
+     ...................... use this one yet.
+     ...................... -----------------
+     .........*............ here's a plant.
+     ......................
+     ......................
+     .........*............
+     .........#............
+     .........##*.......... here's the same plant one turn after
+     .........#............ sunlight hits it.
+     .........*............
+     ......................
+     ...*...*.*.*##........
+     ...#...#.#...#........ and the same plant after several turns.
+     ...#...#.######*...... 
+     ...#...#.#.#.......... (algo: each turn, pick one end section. 
+     ...#######.####*...... it has a separate 50% chance to grow in
+     .......#.....#........ each valid direction. always 2 tiles at a
+     .......##*...*........ time.)
+     ......................
+     ...................... (when sunlight goes away, reverse it like
+     ...................... this: each turn, pick one end section.
+     ...................... find the stalk it's connected to and remove
+     ...................... the plant 2 spaces in that direction. if
+     ...................... the 2nd one has only one stalk adjacent, it
+     ...................... becomes an end section.)
+     ...................... ------------------
+     ........****.......... poppies! spend 3 turns in them and you get hit with magical drowsiness.
+     ......*******......... it only lasts for a few turns, but refreshes itself as long as you're in the poppies.
+     .....******........... ------------------
+     .....*****............ from brogue: dense foliage that you can
+     ......................  trample.
+     ...................... ------------------
+     ....,,,,,..,,,,....... glowing fungus patches
+     ....,,,,,,,,,,........ 
+     ..........,,,.,....... 
+
+
+
+
+
+fix Parabola: Redraw(), and everything else, shouldn't draw in the last screen position.
 
 
 
@@ -155,17 +710,6 @@ bigger!
 	#......................#
 	########################
 
-!implemented
-
-!fungus
-!fog
-!fog vent
-!poison gas
-!poison gas vent
-!fire geyser
-rubble, perhaps in 2x2 - 3x3 piles
-	-in general, MOST level types should have a (small) chance to have any of these features.
-!slab doors
 
 not yet:
 traps incl. on chests and doors, or alarms on items.
@@ -254,15 +798,13 @@ brutish strength
 explosive fungus orb-type item? or orcish grenades?
 
 
-orc assassin? even more basic than the skulking killer? (but more dangerous because it sneak attacks.) Needs an AI enhancement: when moving toward the player, if there is a spot that the player can't see (but it's at the same distance as the spot you would have stepped to), step there to stay out of sight. shadowsight?
+orc assassin needs an AI enhancement: when moving toward the player, if there is a spot that the player can't see (but it's at the same distance as the spot you would have stepped to), step there to stay out of sight.
 
-noxious worm
-high hp. slow. breathes small clouds of poison every few turns. (could burrow into a wall and koolaid out when the player walks by. if it's a level 10 monster, it definitely should.)
+a stronger noxious worm would burrow into a wall and koolaid out when the player walks by
 
 
 
 new monsters:
-undead fast animal - summoned by necro
 slugman
   appears in groups. leaves slime trails on the ground. usually moves slowly, but
   moves quickly when on a slime trail. ranged attack, maybe?
@@ -286,15 +828,13 @@ any other active dungeon elements or 'moving parts'
 some other features that can be found in corridors.
 deity statues. these would be colored instead of gray, and would have an associated event and terrain effect. the event simply checks the area and prints the appropriate descriptive message, then stops. the terrain effect depends on which type of statue it is. flat bonus to that skill? no, probably just set it to 10. that would lead to rooms where it's easy to hit & damage, rooms where it's hard to hit, rooms where magic is easy, rooms where magical/supernatural effects are diminished, and rooms where everything is stealthy. are there other good effects besides these?
 anyway, these would appear near the center of rooms, and could replace the walls between shrines.
-should rubble become nonopaque? that would allow me to put some along a corridor, making groups harder to fight there. (i could do it anyway, but the player would move it)
-	-OTOH, if the player moves it, monsters don't have to. also, secret rooms can be here
 One-way and/or single-use corridors. (thanks to .orphle. in #br.gue)
 sometimes, monsters should actually guard corridors
 
 other:
 an event (possibly triggered by shrines or chests) where you defend an area for a
   short while, for some purpose.
-light and dark sensitivity - i'm thinking blind-in-darkness and damaged-in-light.
+blind-in-darkness status to go with damaged-in-light.
 
 
 #
@@ -315,58 +855,10 @@ i think i've figured out slime:
 		affect your attack, nor does it take time to stand up, but it SLIMES you.
 	-while SLIMED, any item you try to use has a 50% chance to be dropped instead. evil!
 
-
              
-                           #####
-HP: 69                   ###...####       ############
-Depth: 1                 #........#       #..........######
----                   ####........#       #...............#
-Mace                  #...........#     ###..........####.#
----                   #.##........#      .................#
-Leather               #.##........#       #..........##.#.#
----                   #.##........#       #..........##.#.#
-             ##########.####.#.####   #########.##.####.#.#       #############
-[paralyzed-] #........#.####.#.#      #....#  #...........#########...........#
-[-stunned--] #....0............#      #....####.##.####.####......#.###.#.### #
-[-burning--] #........#.####.######## #...................##..................#
-[--afraid--] #........#.............# #.0..####.##.####.#.##......#.###.#.#####
-[--slowed--] #^.........####.######.# #.........#  #  #.#......>........#.#
-[--shine---] #........###  #.#    #.# #....######     #.####......#####.#.#
-             ##########    #.#    #.# ###.##          #.#  ##.##.##  ##.#.####
-                           #.#    #.#   #.#        ####.#  ##.##.#####.......#
-                           #.######.#####.######   .....####.........#.......#
-11                         #...................       #.@.......0..0.........#
-12                         ####.###.##.##.#.####      ######.........#.......#
-13                            #.............#              ###################
-14                            ###############
-             Depth: 1
----
-(removed XP, level, and AC)
-
-it's a stretch, but there might be room for EIGHT statuses at once. that ain't bad; let me see if I can reasonably get more than 8 at once...
-
-conviction
-boiling blood
-regen
-resistance (+immunity?)
-detecting
-counter for fail rate, sure.
-
-[regenerate]
-[-poisoned-]
-[--frozen--]
- or
-[-immobile-]
-[--dimmed--]
-[dim-light-]
-[conviction]
-[invincible]
-[bloodboil-]
-
-
 #
 
-probably split all these into 0.7.0 and 0.8.0.
+probably split all these into 0.7.1+ and 0.8.0.
 then 0.9.0 can have special levels, and 1.0.0 will be the final iteration.
 	-equipment update: better identities for weapons and armor. chainmail would resist slashing, 
 		weapons would have different crit effects, plate would ... etc
@@ -404,7 +896,12 @@ foreach(int i in FourDirections) or foreach(int i in Dir8). 4, 8, and 9.
 
 option to put stat window on right.
 
-0.7.0 should have: (focus on gameplay)
+f-spells should be expanded to spells AND feats.
+
+lots more magic items, to improve character differentiation?
+joff's idea: more than 20 spells, of which a subset of 20 is chosen for each game.
+radiance/incandescence: target light source deals Xd6 damage to enemies within its light radius.
+0.7.1+ should have:
 
 "You are burned. You are unburnt." <--being attacked by burning enemy while Tough
 think about scaling Spirit's duration reduction to more than 50%
@@ -416,11 +913,14 @@ extend the "monster notices" sounds so that you can hear them even if you can't 
 
 
 bugs: 
+"Killed by the goblin archer's arrow" should use a_name
+this bug PROBABLY exists, even if I haven't noticed it yet: If you move to a new level and end up in the same spot, the map will lose track of you until you move because the position is cleared last.
 here's that really weird one where I got killed the turn I used a rune of time:
 "Time stops for a moment. (grayed out)
 You bring out your torch. The troll seer regenerates. The troll
 seer casts glacial blast. The glacial blast hits you. You [more]
 die. [more]"
+visual bug for lightning bolt: when targeting past the target to hit it at an angle (when it's in a doorway, say), the bolt seems to go through walls.
 minor: passage shows a WHITE floor under the player, not the correct color.
 using lunge on an aware goblin archer a knight's move away. the archer appears normal, when it should have a green background from the targeting.
 	-i believe this is another form of the other background color bug.
@@ -477,7 +977,7 @@ room mimic
 		-'membrane has been destroyed' - could also just mean it's dead, and remove the event.
 
 idea for the cultist's special level: a receptacle fills as cultists die to fire damage. you don't want it to fill up.
-idea for pangolin special level: giant pangolins tear open giant termite mounds. the pangolins use their armor to avoid harm as the termites swarm you.
+special level: giant pangolins tear open giant termite mounds. the pangolins use their armor to avoid harm as the termites swarm you.
 battle of the titans special level: a brawl between titans that don't care about you. avoid being stepped on or destroyed by AOEs.
  <.agikm.> Maybe some wormlike creatures that would merge together and create more powerful variant of the same thing.
  <.agikm.> So you'd better just kill them one by one fast.
@@ -489,6 +989,28 @@ voltaic rapture was too badass
 -this spell wasn't voltaic rapture, but was lightning-based: each time you're hit in melee you release a radius 2 burst of electricity
 
 trap disarming that simply requires different actions. One requires you to '.' wait on 2 opposite sides. One requires you to run around it without stopping. One requires you to step on all the diagonals without stepping on any of the cardinal directions.
+
+quickfire idea: keeps going until it eats an item.
+.............................@^............!.......
+                                                   
+..............................@............!....... *click*
+                                                   
+.....................@&&&&&&&&&&&&&&&&&&...!....... still running
+                                                   
+..................@&&&&&&&&&&&&&&&&&&&&&&&&!....... almost there
+                                                   
+.................@&&&&&&&&&&&&&&&&&&&&&&&&&&....... consumes the item
+                                                   
+................@&&&&&&&&&&&&&&&&&&&&&&&........... now it goes back
+                                                   
+...............@&&&&&&&&&&&&&&&&&&&&............... at 4x the speed
+                                                   
+............@&&&&&&&&&&&........................... still running!
+                                                   
+.........@&&....................................... ahhhhhhhhh
+                                                   
+........@.......................................... and it's out
+                                                   
 
 secrets
 silence
@@ -514,195 +1036,5 @@ wizardry
 sorcery
 conjuring
 evocation
-
-
-BLOOD_MOTH		 -	25	-	3	bites		    (nothing)/"notices your light"
-attracted to light, 
-Found fluttering around any source of light, this huge moth is named for the rivulets of crimson on its wings that mimic dripping blood. Unlike most moths, it has a wide razor-filled mouth.
-SWORDSMAN		40	35	3	2	hits			-
-ready to duel, eyes watch (your) movements, twirls his sword in his hand, 
-Always ready for a fight, the swordsman twirls his sword in his hand as he walks. His eyes never leave his foe, watching for the next advance.
-SKULKING_KILLER		40	35	3	3	hits			-
-leaping/dashing/? from shadow to shadow, blade in hand, grin or grimace, 
-This rogue dashes from shadow to shadow, dagger in hand. A smirk appears as the killer overtakes the victim.
-ROBED_ZEALOT		40	40	3	3	hammers			-
-holy symbol, holy magic, church's spells, heretics, 
-A holy symbol hangs, silver and forked, from the neck of the zealot. The holy magic of the church's spells promises the zealot a swift victory over heretics.
-SHADOW			45	40	2	2	touches			-
-manifest darkness, not quite entirely solid, visible in light, 
-Shadows are manifest darkness, barely maintaining a physical presence. A dark environment hides them utterly, but the light reveals their warped human shape.
-BANSHEE			40	40	2	2	claws			-
-Claws are blood-caked nails, the length of your entire hand, face full of pain and hate, (wisp/shred/?) dress hangs/floats/flies behind her, scream, 
-The banshee's face is full of pain and hate. Blood-caked nails
-The banshee floats shrieking, trailing wisps of a faded dress behind her. Her nails are blood-caked claws. The banshee's hateful scream is painful for the living to hear.
-WARG			40	40	2	2	bites			-
-more intelligent relative of the wolf, white fur with black markings, eyes too human, 
-This wolf has white fur with black markings. Its eyes are too human for your liking.
-PHASE_SPIDER		50	45	1*	1*	bites			-
-noneuclidean, seems to climb into solid surfaces, dripping fangs, even when looking at it, you think you can hear it behind you, 
-Heedless of the laws of nature, this brilliantly iridescent spider steps to the side and appears twenty feet away. Even when you're looking right at it, you think you can hear it behind you.
-ASCETICMONK_		 -	40	-	3	punches/kicks/strikes	"babbles incoherently"
-mad, flurry, skilled, mad rambling, you can only do the same, 
-This solitary monk constantly kicks and punches at empty space, madly repeating nonsense words. Those nearby will find themselves uttering the same gibberish.
-POLTERGEIST		40	35     2,1	1*?	slimes/grabs item	-
-troublesome, penchant/? for tossing things around, haunting a location,
-This troublesome spirit has a penchant for throwing things and upending furniture. It affords no rest to intruders in the area that it haunts.
-CAVERN_HAG		 -	40	-	3?	clutches at?		"cackles"
-cracked warty skin, cackle, catching victims, cursing (someone), 
-The hag's foul brand of magic can impart a nasty curse on those who cross her. Cracked, warty skin hides surprising strength, used to wrestle her victims into the stewpot.
-
-COMPY			 -	25	-	1* or 2*bites			"squeaks"
-little scavengers and waste-eaters, possess a subtle(?) poison, only attack weak or helpless, (tendency to ignore healthy stuff), 
-Compys are little waste-eating scavengers that possess a subtle poison. They tend to ignore healthy creatures, preferring to surround those who are weak, helpless, or otherwise occupied.
-NOXIOUS_WORM		 -	55	-	3	bites/slams		"notices"
-thick stench, round(ed) and as tall as a man, whips its tail around, 
-The noxious worm, almost as tall as a man, slams foes with its bulk. It vomits a thick stench from its maw.
-BERSERKER		40	40	3	3	hits			-
-trophies of war, axe, rage, uncontrolled, unfeeling or impervious, 
-In battle, the berserker enters a state of unfeeling rage, axe swinging at anything within reach. Trophies of war adorn the berserker's minimally armored form.
-ENTRANCER		 -	35	-	2	hits		  (in the same style as the necro)
-mind taker or stealer of minds or brainwasher or something, enthralls, bends to will, enslaves, until a more powerful thrall appears, 
-The entrancer bends a weak-minded being to her will and has it fight on her behalf, at least until a more desirable thrall appears. The entrancer can protect and teleport the enthralled creature.
-SHADOWVEIL_DUELIST	 -	40	-	3	hits? or slashes?	notices
-cloak of (dark), magical technique(?), (the duelist's style, however it might be described...twisting, parrying, lunging???) is well-matched with his magical advantage.
-The shadowveil duelist hides under a cloak of shadows to strike unseen. A spinning, feinting fighting style keeps the duelist in motion.
-SP_D_PIXIE		 -	35	-	1 or 2?	?			notices
-faerie/fairy, magical, fills your head with a buzzing sound (maybe), scratches furiously, (feels like something is missing here), 
-fairies have some control over the flow of magic
-Using fairy enchantments to influence the flow of magic, this pixie causes its every wingbeat to reverberate in the skulls of those nearby, stifling words of magic.
-
-PYREN_ARCHER		 -	55	-	3*	hits			notices
-wide shoulders, tall, strange race of men, descendants of flame, still capable of calling the flame, nocks an arrow and it ignites or smth, 
-Tall and wide-shouldered descendants of flame, the pyren are a strange race of men. Though they are flesh and blood, they still possess the power to ignite nearby objects.ORC_ASSASSIN		 -	50	-	3	hits			snarls
-wicked grin, stalker, pointed teeth and ??? blade, camo, 
-This orcish stalker is well camouflaged. A wicked grin shows off sharp teeth as the assassin brandishes a sharp blade.
-TROLL_SOOTHSAYER	 -	50	-	3	claws			growls viciously
-leader, spells and claws, arcane tricks passed down from seer to seer, 
-The seer is a leader of the loose association that passes for a troll society
-The seer is a leader among the solitary troll population, sought for augury and council. Spells and arcane tricks are passed down from seer to seer. 
-ORC_WARMAGE		50	50	3	3	hits			-
-tracking magic, orc war parties (maybe), powerful wizardry, maybe some backstory about warmage badassery (?), 
-The destruction wreaked by warmages evokes respect and feat even among their own kind. They often lead raids and war parties, using tracking spells to complement their lethal magic.
-LUMINOUS_AVENGER	 -	40	-	3	hits or strikes		notices
-being of light, empyreal appearance/look/visage, (here's a good question - is it man-shaped? featureless? angelic? not winged? sword or other weapon?), 
- The radiance of this empyreal being prevents you from gazing continuously at it.
- The radiance of this empyreal being prevents you from looking directly at it for more than a few seconds.
-The radiance of this empyreal being makes your eyes hurt after a few seconds. When you look again it still has the shape of a human, but occasionally its silhouette seems to have wings, horns, or four legs.
-FIRE_DRAKE
-(huge), (deadly and hungry for your flesh and treasure), sizing up your flesh and (making plans) to drag your treasures back to its lair, snarling fiery master of this place, 
-Huge, deadly, and hungry for your charred flesh, the fire drake prepares to drag your valuables back to its lair. You have no doubts that you now face the snarling fiery master of this dungeon.
-
-GOBLIN			25	25	2	2	hits			-
-The goblin is a small ugly humanoid, often found inhabiting the upper reaches of any cave, chamber, or tunnel it can find.
-LARGE_BAT		20	20	1	1	bites/scratches		-
-The bats here are substantially bigger than most, perhaps because their insect prey is also unusually large.
-BLOOD_MOTH		 -	25	-	3	bites		    (nothing)/"notices your light"
-attracted to light, 
-WOLF			30	25	2	2	bites			-
-snarl, lithe, teeth, 
-Lithe and quick, this canine predator has formidable teeth and powerful jaws.
-SKELETON		30	30	2	2	hits			-
-A humanoid skeleton, animated by magic, seeing without eyes, and moving without muscles.
-A humanoid skeleton, animated by magic to see without eyes and move without muscles.
-SWORDSMAN		40	35	3	2	hits			-
-ready to duel, 
-DARKNESS_DWELLER	 -	45	-	2	hits			notices?
-This pale dirty humanoid wears tattered rags. Its huge eyes are sensitive to light.
-CARNIVOROUS_BRAMBLE	 -	35	-	3	rakes			(nothing)
-Sharp tangles of thorny branches spread out from its center. The closest branches seem to follow your movements.
-FROSTLING		35	35    3*,2*,4*	<--	hits/blasts/bursts	-
-An alien-looking creature of cold, the frostling possesses insectlike mandibles, claws, and smooth whitish skin. A fog of chill condensation surrounds it.
-DREAM_WARRIOR		40	40	3	2	hits			-
-The features of this warrior are hard to make out, but the curved blade held at the ready is clear enough.
-CULTIST			35	35	2	2	hits			-
-This cultist wears a crimson robe that reaches the ground. His head has been shaved and tattooed in devotion to his demon lord.
-GOBLIN_ARCHER		25	25	2	2	hits			-
-This goblin carries a crude bow and wears a quiver of arrows. It glances around, looking for inviting targets.
-GOBLIN_SHAMAN		25	25	2	2	hits			-
-This goblin's markings identify it as a tribe leader and shaman. It carries a small staff and wears a necklace of ears and fingers.
-
-
-MIMIC			 -	30	-	2*	hits			(nothing)
-The mimic changes its shape to that of an ordinary object, then waits for an unwary goblin or adventurer. It can secrete a powerful adhesive to hold its prey.
-SKULKING_KILLER		40	35	3	3	hits			-
-
-ZOMBIE			50	50     2*,3	<--	lunges / bites		-
-The zombie is a rotting, shambling corpse animated by the dark art of necromancy. It mindlessly seeks the flesh of the living.
-DIRE_RAT		25	25	1	1	bites			-
-With red eyes and long yellow teeth, most dire rats outweigh forty of their smaller brethren.
-ROBED_ZEALOT		40	40	3	3	hammers			-
-
-SHADOW			45	40	2	2	touches			-
-
-BANSHEE			40	40	2	2	claws			-
-
-WARG			40	40	2	2	bites			-
-
-PHASE_SPIDER		50	45	1*	1*	bites			-
-noneuclidean, 
-ASCETICMONK_		 -	40	-	3	punches/kicks/strikes	"babbles incoherently"
-mad, flurry, skilled, 
-POLTERGEIST		40	35     2,1	1*?	slimes/grabs item	-
-
-CAVERN_HAG		 -	40	-	3?	clutches at?		"cackles"
-warty skin, cackle, 
-
-
-COMPY			 -	25	-	1* or 2*bites			"squeaks"
-
-NOXIOUS_WORM		 -	55	-	3	bites/slams		"notices"
-
-BERSERKER		40	40	3	3	hits			-
-
-TROLL			55	50	3	3	claws			-
-The troll towers above you, all muscles, claws, and warty greenish skin. The regenerative powers of the troll are well-known, as is the suggestion to fight them with fire.
-VAMPIRE			 -	40	-	2	bites?			"notices"
-The vampire floats above the ground with hunger in its eyes. A dark cape flows around its pale form.
-CRUSADING_KNIGHT	 -	45	-	5*	mace			"shouts"
-This knight's armor bears the holy symbols of his church. He holds his torch aloft, awaiting the appearance of evildoers.
-SKELETAL_SABERTOOTH	 -	40	-	3	bites			notices?
-The skeletal remains of an enormous feline predator stand here, seemingly ready to pounce at any moment.
-MUD_ELEMENTAL		 -	35	-	2	hits			notices?
-As the mud elemental oozes across the floor, bits of dirt seem to animate and are absorbed into its body.
-ENTRANCER		 -	35	-	2	hits		  (in the same style as the necro)
-
-OGRE			55	55	4	4	hits			-
-Built like an orc, but as big as a troll, this tusked brute wields a giant club.
-ORC_GRENADIER		50	50	3	3	hits			-
-Orcs are a burly and warlike race, quick to make enemies. This orc carries a satchel filled with deadly orcish explosives.
--or 'This one'
-SHADOWVEIL_DUELIST	 -	40	-	3	hits? or slashes?	notices
-
-CARRION_CRAWLER		35	35     0*,1	<--	bites/lashes		-
-This many-legged segmented insect crawls over the ground and walls in search of carrion. When threatened or lacking another source of food, tentacles on its head are used to apply a paralyzing substance to living prey.
-SP_D_PIXIE		 -	35	-	1 or 2?	?			notices
-
-
-STONE_GOLEM		65	65	4	4	slams			-
-Constructs of stone are often created to guard or serve. Their rocky nature grants them a degree of resistance to many forms of attack.
-PYREN_ARCHER		 -	55	-	3*	hits			notices
-
-ORC_ASSASSIN		 -	50	-	3	hits			snarls
-
-TROLL_SOOTHSAYER	 -	50	-	3	claws			growls viciously
-
-MECHANICAL_KNIGHT	 -	?	-	3	hits?		 (starts moving? nothing?)
-The mechanical knight's shield moves with unnatural speed, ready to foil any onslaught. Its exposed gears appear vulnerable to any attack that could bypass its shield.
-ORC_WARMAGE		50	50	3	3	hits			-
-
-LASHER_FUNGUS		50	50     3,1*	<--	tentacle/tentacle	-
-The lasher is a tall mass of fungal growth with several ropelike tentacles extending from it.
-
-NECROMANCER		40	40	2	2	hits			-
-Necromancers practice the dark arts, raising the dead to serve them. They gain power through unholy rituals that make them unwelcome in any civilized place.
-LUMINOUS_AVENGER	 -	40	-	3	hits or strikes		notices
-
-CORPSETOWER_BEHEMOTH	75	75	5	5	clobbers		-
-This monstrosity looks like it was stitched together from corpses of several different species. You see pieces of humans, orcs, and trolls, in addition to some you can't begin to identify.
-FIRE_DRAKE
-
-PHANTOM (X)
-Phantoms are beings of illusion, but real enough to do lasting harm. Because they vanish at the slightest touch, they are easily dispatched with magic spells.
-
 
 

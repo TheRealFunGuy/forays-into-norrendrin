@@ -551,6 +551,18 @@ namespace Forays{
 			Thread.Sleep(duration);
 			WriteChar(r,c,prev);
 		}
+		public static void AnimateCellNonBlocking(int r,int c,colorchar ch,int duration){
+			colorchar prev = memory[r,c]; //experimental animation for realtime input. seems to work decently so far.
+			WriteChar(r,c,ch);
+			for(int i=0;i<duration;i+=5){
+				Thread.Sleep(5);
+				if(Console.KeyAvailable){
+					WriteChar(r,c,prev);
+					return;
+				}
+			}
+			WriteChar(r,c,prev);
+		}
 		public static void AnimateMapCell(int r,int c,colorchar ch){ AnimateMapCell(r,c,ch,50); }
 		public static void AnimateMapCell(int r,int c,colorchar ch,int duration){
 			AnimateCell(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch,duration);

@@ -159,12 +159,6 @@ namespace Forays{
 				return the_name + " looks";
 			}
 		}
-		virtual public string TheVisible(){ //always returns the_name. overridden by Actor.
-			return the_name;
-		}
-		virtual public string AVisible(){ //always returns a_name. overridden by Actor.
-			return a_name;
-		}
 		public int DistanceFrom(PhysicalObject o){ return DistanceFrom(o.row,o.col); }
 		public int DistanceFrom(pos p){ return DistanceFrom(p.row,p.col); }
 		public int DistanceFrom(int r,int c){
@@ -653,6 +647,20 @@ compare this number to 1/2:  if less than 1/2, major.
 				for(int j=col-dist;j<=col+dist;++j){
 					if(DistanceFrom(i,j) == dist && M.BoundsCheck(i,j)){
 						result.Add(M.tile[i,j]);
+					}
+				}
+			}
+			return result;
+		}
+		public List<pos> PositionsWithinDistance(int dist){ return PositionsWithinDistance(dist,false); }
+		public List<pos> PositionsWithinDistance(int dist,bool exclude_origin){
+			List<pos> result = new List<pos>();
+			for(int i=row-dist;i<=row+dist;++i){
+				for(int j=col-dist;j<=col+dist;++j){
+					if(i!=row || j!=col || exclude_origin==false){
+						if(M.BoundsCheck(i,j)){
+							result.Add(new pos(i,j));
+						}
 					}
 				}
 			}

@@ -15,6 +15,7 @@ namespace Forays{
 		public int quantity{get;set;}
 		public bool ignored{get;set;} //whether autoexplore and autopickup should ignore this item
 		public bool do_not_stack{get;set;} //whether the item should be combined with other stacks. used for mimic items too.
+		public bool revealed_by_light{get;set;}
 		
 		private static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
 		public static Item Prototype(ConsumableType type){ return proto[type]; }
@@ -52,6 +53,7 @@ namespace Forays{
 			quantity = 1;
 			ignored = false;
 			do_not_stack = false;
+			revealed_by_light = false;
 			name = name_;
 			the_name = "the " + name;
 			switch(name[0]){
@@ -82,6 +84,7 @@ namespace Forays{
 			quantity = 1;
 			ignored = false;
 			do_not_stack = false;
+			revealed_by_light = false;
 			name = i.name;
 			a_name = i.a_name;
 			the_name = i.the_name;
@@ -130,7 +133,49 @@ namespace Forays{
 			}
 			return i;
 		}
-		public string Name(){
+		public string Name(){ return Name(false); }
+		public string AName(){ return AName(false); }
+		public string TheName(){ return TheName(false); }
+		public string Name(bool consider_low_light){
+			if(revealed_by_light){
+				consider_low_light = false;
+			}
+			string result;
+			int position;
+			string qty = quantity.ToString();
+			switch(quantity){
+			case 0:
+				return "buggy item";
+			case 1:
+				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
+					result = name;
+					position = result.IndexOf('~');
+					if(position != -1){
+						result = result.Substring(0,position) + result.Substring(position+1);
+					}
+					return result;
+				}
+				else{
+					return NameOfItemType();
+				}
+			default:
+				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
+					result = name;
+					position = result.IndexOf('~');
+					if(position != -1){
+						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+					}
+					return result;
+				}
+				else{
+					return qty + " " + NameOfItemType() + "s";
+				}
+			}
+		}
+		public string AName(bool consider_low_light){
+			if(revealed_by_light){
+				consider_low_light = false;
+			}
 			string result;
 			int position;
 			string qty = quantity.ToString();
@@ -138,45 +183,40 @@ namespace Forays{
 			case 0:
 				return "a buggy item";
 			case 1:
-				result = name;
-				position = result.IndexOf('~');
-				if(position != -1){
-					result = result.Substring(0,position) + result.Substring(position+1);
+				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
+					result = a_name;
+					position = result.IndexOf('~');
+					if(position != -1){
+						result = result.Substring(0,position) + result.Substring(position+1);
+					}
+					return result;
 				}
-				return result;
+				else{
+					if(NameOfItemType() == "orb"){
+						return "an orb";
+					}
+					else{
+						return "a " + NameOfItemType();
+					}
+				}
 			default:
-				result = name;
-				position = result.IndexOf('~');
-				if(position != -1){
-					result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
+					result = name;
+					position = result.IndexOf('~');
+					if(position != -1){
+						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+					}
+					return result;
 				}
-				return result;
+				else{
+					return qty + " " + NameOfItemType() + "s";
+				}
 			}
 		}
-		public string AName(){
-			string result;
-			int position;
-			string qty = quantity.ToString();
-			switch(quantity){
-			case 0:
-				return "a buggy item";
-			case 1:
-				result = a_name;
-				position = result.IndexOf('~');
-				if(position != -1){
-					result = result.Substring(0,position) + result.Substring(position+1);
-				}
-				return result;
-			default:
-				result = name;
-				position = result.IndexOf('~');
-				if(position != -1){
-					result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
-				}
-				return result;
+		public string TheName(bool consider_low_light){
+			if(revealed_by_light){
+				consider_low_light = false;
 			}
-		}
-		public string TheName(){
 			string result;
 			int position;
 			string qty = quantity.ToString();
@@ -184,19 +224,58 @@ namespace Forays{
 			case 0:
 				return "the buggy item";
 			case 1:
-				result = the_name;
-				position = result.IndexOf('~');
-				if(position != -1){
-					result = result.Substring(0,position) + result.Substring(position+1);
+				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
+					result = the_name;
+					position = result.IndexOf('~');
+					if(position != -1){
+						result = result.Substring(0,position) + result.Substring(position+1);
+					}
+					return result;
 				}
-				return result;
+				else{
+					return "the " + NameOfItemType();
+				}
 			default:
-				result = name;
-				position = result.IndexOf('~');
-				if(position != -1){
-					result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
+					result = name;
+					position = result.IndexOf('~');
+					if(position != -1){
+						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+					}
+					return result;
 				}
-				return result;
+				else{
+					return qty + " " + NameOfItemType() + "s";
+				}
+			}
+		}
+		public string NameOfItemType(){
+			switch(type){
+			case ConsumableType.CLARITY:
+			case ConsumableType.CLOAKING:
+			case ConsumableType.HEALING:
+			case ConsumableType.REGENERATION:
+			case ConsumableType.TOXIN_IMMUNITY:
+				return "potion";
+			case ConsumableType.BLINKING:
+			case ConsumableType.PASSAGE:
+			case ConsumableType.TELEPORTATION:
+			case ConsumableType.TIME:
+				return "rune";
+			case ConsumableType.DETECT_MONSTERS:
+			case ConsumableType.MAGIC_MAP:
+				return "scroll";
+			case ConsumableType.DARKNESS:
+			case ConsumableType.FOG:
+			case ConsumableType.FREEZING:
+			case ConsumableType.PRISMATIC:
+			case ConsumableType.QUICKFIRE:
+			case ConsumableType.SUNLIGHT:
+				return "orb";
+			case ConsumableType.BANDAGE:
+				return "bandage";
+			default:
+				return "unknown item";
 			}
 		}
 		public static int Rarity(ConsumableType type){
@@ -288,7 +367,7 @@ namespace Forays{
 				break;
 				}*/
 			case ConsumableType.CLARITY:
-				user.ResetSpells();
+				user.exhaustion = 0;
 				if(user.name == "you"){
 					B.Add("Your mind clears. ");
 				}
@@ -489,16 +568,20 @@ namespace Forays{
 			case ConsumableType.PRISMATIC:
 			{
 				if(line == null){
-					line = user.GetTarget(12,1);
+					line = user.GetTargetTile(12,1,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line); //todo - consider allowing thrown items to pass over actors, because they fly in an arc
-					B.Add(user.You("throw") + " the prismatic orb. ",user);
-					if(first != null){
+					Actor first = user.FirstActorInLine(line);
+					B.Add(user.You("fling") + " the prismatic orb. ",user);
+					bool trigger_trap = true;
+					if(first != null && first != user){
+						trigger_trap = false;
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
+						first.player_visibility_duration = -1;
+						first.attrs[AttrType.PLAYER_NOTICED]++;
 					}
 					else{
 						B.Add("It shatters on " + t.the_name + "! ",t);
@@ -558,6 +641,9 @@ namespace Forays{
 						}
 						dmg.Remove(damtype);
 					}
+					if(trigger_trap && t.IsTrap()){
+						t.TriggerTrap();
+					}
 				}
 				else{
 					used = false;
@@ -567,13 +653,13 @@ namespace Forays{
 			case ConsumableType.FREEZING:
 			{
 				if(line == null){
-					line = user.GetTarget(12,3);
+					line = user.GetTargetTile(12,3,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("throw") + " the freezing orb. ",user);
+					B.Add(user.You("fling") + " the freezing orb. ",user);
 					if(first != null){
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
@@ -612,13 +698,13 @@ namespace Forays{
 			case ConsumableType.QUICKFIRE:
 			{
 				if(line == null){
-					line = user.GetTarget(12,-1);
+					line = user.GetTargetTile(12,0,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("throw") + " the orb of quickfire. ",user);
+					B.Add(user.You("fling") + " the orb of quickfire. ",user);
 					if(first != null){
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
@@ -644,13 +730,13 @@ namespace Forays{
 			case ConsumableType.FOG:
 			{
 				if(line == null){
-					line = user.GetTarget(12,-3);
+					line = user.GetTargetTile(12,3,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("throw") + " the orb of fog. ",user);
+					B.Add(user.You("fling") + " the orb of fog. ",user);
 					if(first != null){
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
@@ -719,7 +805,7 @@ namespace Forays{
 			return used;
 		}
 	}
-	public static class Weapon{
+	/*public static class Weapon{
 		public static Damage Damage(WeaponType type){
 			switch(type){
 			case WeaponType.SWORD:
@@ -922,6 +1008,30 @@ namespace Forays{
 				return 0;
 			}
 		}
+		public static int ProtectionConsideringExhaustion(ArmorType type,int exhaustion){
+			switch(type){
+			case ArmorType.LEATHER:
+			case ArmorType.ELVEN_LEATHER:
+				if(exhaustion >= 15){
+					return 0;
+				}
+				return 2;
+			case ArmorType.CHAINMAIL:
+			case ArmorType.CHAINMAIL_OF_ARCANA:
+				if(exhaustion >= 10){
+					return 0;
+				}
+				return 4;
+			case ArmorType.FULL_PLATE:
+			case ArmorType.FULL_PLATE_OF_RESISTANCE:
+				if(exhaustion >= 5){
+					return 0;
+				}
+				return 6;
+			default:
+				return 0;
+			}
+		}
 		public static ArmorType BaseArmor(ArmorType type){
 			switch(type){
 			case ArmorType.LEATHER:
@@ -935,17 +1045,6 @@ namespace Forays{
 				return ArmorType.FULL_PLATE;
 			default:
 				return ArmorType.NO_ARMOR;
-			}
-		}
-		public static int AddedFailRate(ArmorType type){
-			switch(type){
-			case ArmorType.CHAINMAIL: //chainmail of arcana has no penalty
-				return 5;
-			case ArmorType.FULL_PLATE:
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				return 15;
-			default:
-				return 0;
 			}
 		}
 		public static int StealthPenalty(ArmorType type){
@@ -1060,6 +1159,375 @@ namespace Forays{
 				return "no armor";
 			}
 		}
+	}*/
+	public class Weapon{
+		public WeaponType type;
+		public EnchantmentType enchantment;
+		public Dict<EquipmentStatus,bool> status = new Dict<EquipmentStatus,bool>();
+		public Weapon(WeaponType type_){
+			type = type_;
+			enchantment = EnchantmentType.NO_ENCHANTMENT;
+		}
+		public Weapon(WeaponType type_,EnchantmentType enchantment_){
+			type = type_;
+			enchantment = enchantment_;
+		}
+		public Damage DamageInfo(){
+			switch(type){
+			case WeaponType.SWORD:
+				return new Damage(2,DamageType.SLASHING,DamageClass.PHYSICAL,null);
+			case WeaponType.MACE:
+				return new Damage(2,DamageType.BASHING,DamageClass.PHYSICAL,null);
+			case WeaponType.DAGGER:
+				return new Damage(2,DamageType.PIERCING,DamageClass.PHYSICAL,null);
+			case WeaponType.STAFF:
+				return new Damage(2,DamageType.BASHING,DamageClass.PHYSICAL,null);
+			case WeaponType.BOW: //bow's melee damage
+				return new Damage(1,DamageType.BASHING,DamageClass.PHYSICAL,null);
+			default:
+				return new Damage(0,DamageType.NONE,DamageClass.NO_TYPE,null);
+			}
+		}
+		public override string ToString(){
+			return NameWithEnchantment();
+		}
+		public string NameWithoutEnchantment(){
+			switch(type){
+			case WeaponType.SWORD:
+				return "sword";
+			case WeaponType.MACE:
+				return "mace";
+			case WeaponType.DAGGER:
+				return "dagger";
+			case WeaponType.STAFF:
+				return "staff";
+			case WeaponType.BOW:
+				return "bow";
+			default:
+				return "no weapon";
+			}
+		}
+		public string NameWithEnchantment(){
+			string ench = "";
+			switch(enchantment){
+			case EnchantmentType.ECHOES:
+				ench = " of echoes";
+				break;
+			case EnchantmentType.FIRE:
+				ench = " of fire";
+				break;
+			case EnchantmentType.FORCE:
+				ench = " of force";
+				break;
+			case EnchantmentType.HOLINESS:
+				ench = " of holiness";
+				break;
+			case EnchantmentType.ICE:
+				ench = " of ice";
+				break;
+			default:
+				break;
+			}
+			return NameWithoutEnchantment() + ench;
+		}
+		public cstr StatsName(){
+			cstr cs;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.Gray;
+			switch(type){
+			case WeaponType.SWORD:
+				cs.s = "Sword";
+				break;
+			case WeaponType.MACE:
+				cs.s = "Mace";
+				break;
+			case WeaponType.DAGGER:
+				cs.s = "Dagger";
+				break;
+			case WeaponType.STAFF:
+				cs.s = "Staff";
+				break;
+			case WeaponType.BOW:
+				cs.s = "Bow";
+				break;
+			default:
+				cs.s = "no weapon";
+				break;
+			}
+			if(enchantment != EnchantmentType.NO_ENCHANTMENT){
+				cs.s = "+" + cs.s + "+";
+			}
+			cs.color = EnchantmentColor();
+			return cs;
+		}
+		public Color EnchantmentColor(){
+			switch(enchantment){
+			case EnchantmentType.ECHOES:
+				return Color.Green;
+			case EnchantmentType.FIRE:
+				return Color.Red;
+			case EnchantmentType.FORCE:
+				return Color.Magenta;
+			case EnchantmentType.HOLINESS:
+				return Color.Yellow;
+			case EnchantmentType.ICE:
+				return Color.Blue;
+			default:
+				return Color.Gray;
+			}
+		}
+		public static Color StatusColor(EquipmentStatus status){
+			switch(status){
+			case EquipmentStatus.BURDENSOME:
+				return Color.DarkBlue;
+			case EquipmentStatus.CURSED:
+				return Color.DarkGray;
+			case EquipmentStatus.DAMAGED:
+				return Color.DarkMagenta;
+			case EquipmentStatus.DULLED:
+				return Color.DarkCyan;
+			case EquipmentStatus.INFESTED:
+				return Color.DarkGreen;
+			case EquipmentStatus.NEGATED:
+				return Color.White;
+			case EquipmentStatus.POSSESSED:
+				return Color.Red;
+			case EquipmentStatus.RUSTED:
+				return Color.DarkRed;
+			case EquipmentStatus.WEAK_POINT:
+				return Color.Blue;
+			case EquipmentStatus.WORN_OUT:
+				return Color.DarkYellow;
+			default:
+				return Color.RandomDark;
+			}
+		}
+		public static string StatusName(EquipmentStatus status){
+			switch(status){
+			case EquipmentStatus.BURDENSOME:
+				return "Burdensome";
+			case EquipmentStatus.CURSED:
+				return "Cursed";
+			case EquipmentStatus.DAMAGED:
+				return "Damaged";
+			case EquipmentStatus.DULLED:
+				return "Dulled";
+			case EquipmentStatus.INFESTED:
+				return "Infested";
+			case EquipmentStatus.NEGATED:
+				return "Negated";
+			case EquipmentStatus.POSSESSED:
+				return "Possessed";
+			case EquipmentStatus.RUSTED:
+				return "Rusted";
+			case EquipmentStatus.WEAK_POINT:
+				return "Weak point";
+			case EquipmentStatus.WORN_OUT:
+				return "Worn out";
+			default:
+				return "No status";
+			}
+		}
+		public colorstring EquipmentScreenName(){
+			colorstring result = new colorstring(StatsName());
+			result.strings[0] = new cstr(result.strings[0].s + " ",result.strings[0].color);
+			for(int i=0;i<(int)EquipmentStatus.NUM_STATUS;++i){
+				if(status[(EquipmentStatus)i]){
+					result.strings.Add(new cstr("*",StatusColor((EquipmentStatus)i)));
+				}
+			}
+			return result;
+		}
+		public string Description(){
+			switch(type){
+			case WeaponType.SWORD:
+				return "Sword -- A powerful 3d6 damage slashing weapon.";
+			case WeaponType.MACE:
+				return "Mace -- A powerful 3d6 damage bashing weapon.";
+			case WeaponType.DAGGER:
+				return "Dagger -- 2d6 damage. Extra chance for critical hits.";
+			case WeaponType.STAFF:
+				return "Staff -- 1d6 damage. Grants a small bonus to defense.";
+			case WeaponType.BOW:
+				return "Bow -- 3d6 damage at range. Less accurate than melee.";
+			default:
+				return "no weapon";
+			}
+		}
+		public string DescriptionOfEnchantment(){
+			switch(enchantment){ //todo
+			case EnchantmentType.ECHOES:
+				return "echoes";
+			case EnchantmentType.FIRE:
+				return "fire";
+			case EnchantmentType.FORCE:
+				return "force";
+			case EnchantmentType.HOLINESS:
+				return "holiness";
+			case EnchantmentType.ICE:
+				return "ice";
+			}
+			return "";
+		}
+	}
+	public class Armor{
+		public ArmorType type;
+		public EnchantmentType enchantment;
+		public Dict<EquipmentStatus,bool> status = new Dict<EquipmentStatus,bool>();
+		public Armor(ArmorType type_){
+			type = type_;
+			enchantment = EnchantmentType.NO_ENCHANTMENT;
+		}
+		public Armor(ArmorType type_,EnchantmentType enchantment_){
+			type = type_;
+			enchantment = enchantment_;
+		}
+		public int Protection(){
+			switch(type){
+			case ArmorType.LEATHER:
+				return 2;
+			case ArmorType.CHAINMAIL:
+				return 4;
+			case ArmorType.FULL_PLATE:
+				return 6;
+			default:
+				return 0;
+			}
+		}
+		public int StealthPenalty(){ //todo
+			switch(type){
+			case ArmorType.CHAINMAIL:
+				return 1;
+			case ArmorType.FULL_PLATE:
+				return 3;
+			default:
+				return 0;
+			}
+		}
+		public override string ToString(){
+			return NameWithEnchantment();
+		}
+		public string NameWithoutEnchantment(){
+			switch(type){
+			case ArmorType.LEATHER:
+				return "leather";
+			case ArmorType.CHAINMAIL:
+				return "chainmail";
+			case ArmorType.FULL_PLATE:
+				return "full plate";
+			default:
+				return "no armor";
+			}
+		}
+		public string NameWithEnchantment(){
+			string ench = "";
+			switch(enchantment){
+			case EnchantmentType.ECHOES:
+				ench = " of echoes";
+				break;
+			case EnchantmentType.FIRE:
+				ench = " of fire";
+				break;
+			case EnchantmentType.FORCE:
+				ench = " of force";
+				break;
+			case EnchantmentType.HOLINESS:
+				ench = " of holiness";
+				break;
+			case EnchantmentType.ICE:
+				ench = " of ice";
+				break;
+			default:
+				break;
+			}
+			return NameWithoutEnchantment() + ench;
+		}
+		public cstr StatsName(){
+			cstr cs;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.Gray;
+			switch(type){
+			case ArmorType.LEATHER:
+				cs.s = "Leather";
+				break;
+			case ArmorType.CHAINMAIL:
+				cs.s = "Chainmail";
+				break;
+			case ArmorType.FULL_PLATE:
+				cs.s = "Full plate";
+				break;
+			default:
+				cs.s = "no armor";
+				break;
+			}
+			if(enchantment != EnchantmentType.NO_ENCHANTMENT){
+				cs.s = "+" + cs.s + "+";
+			}
+			cs.color = EnchantmentColor();
+			return cs;
+		}
+		public Color EnchantmentColor(){
+			switch(enchantment){
+			case EnchantmentType.ECHOES:
+				return Color.Green;
+			case EnchantmentType.FIRE:
+				return Color.Red;
+			case EnchantmentType.FORCE:
+				return Color.Magenta;
+			case EnchantmentType.HOLINESS:
+				return Color.Yellow;
+			case EnchantmentType.ICE:
+				return Color.Blue;
+			default:
+				return Color.Gray;
+			}
+		}
+		public colorstring EquipmentScreenName(){
+			colorstring result = new colorstring(StatsName());
+			result.strings[0] = new cstr(result.strings[0].s + " ",result.strings[0].color);
+			for(int i=0;i<(int)EquipmentStatus.NUM_STATUS;++i){
+				if(status[(EquipmentStatus)i]){
+					result.strings.Add(new cstr("*",Weapon.StatusColor((EquipmentStatus)i)));
+				}
+			}
+			return result;
+		}
+		/*public cstr EquipmentScreenName(){
+			cstr cs;
+			cs.bgcolor = Color.Black;
+			cs.color = Color.Gray;
+			cs.s = NameWithEnchantment();
+			cs.s = cs.s[0].ToString().ToUpper() + cs.s.Substring(1); //capitalize
+			cs.color = EnchantmentColor();
+			return cs;
+		}*/
+		public string Description(){
+			switch(type){
+			case ArmorType.LEATHER:
+				return "Leather -- Light armor. Provides some basic protection.";
+			case ArmorType.CHAINMAIL:
+				return "Chainmail -- Good protection. Noisy and hard to cast in.";
+			case ArmorType.FULL_PLATE:
+				return "Full plate -- The thickest, noisiest, and bulkiest armor.";
+			default:
+				return "no armor";
+			}
+		}
+		public string DescriptionOfEnchantment(){
+			switch(enchantment){ //todo
+			case EnchantmentType.ECHOES:
+				return "echoes";
+			case EnchantmentType.FIRE:
+				return "fire";
+			case EnchantmentType.FORCE:
+				return "force";
+			case EnchantmentType.HOLINESS:
+				return "holiness";
+			case EnchantmentType.ICE:
+				return "ice";
+			}
+			return "";
+		}
 	}
 	public static class MagicItem{
 		public static cstr StatsName(MagicItemType type){
@@ -1102,15 +1570,15 @@ namespace Forays{
 		public static string[] Description(MagicItemType type){
 			switch(type){
 			case MagicItemType.PENDANT_OF_LIFE:
-				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but only works once."};
+				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but only works once.",""};
 			case MagicItemType.RING_OF_PROTECTION:
-				return new string[]{"Ring of protection -- Grants a small bonus to","defense."};
+				return new string[]{"Ring of protection -- Grants a small bonus to","defense.",""};
 			case MagicItemType.RING_OF_RESISTANCE:
-				return new string[]{"Ring of resistance -- Grants resistance to cold,","fire, and electricity."};
+				return new string[]{"Ring of resistance -- Grants resistance to cold,","fire, and electricity.",""};
 			case MagicItemType.CLOAK_OF_DISAPPEARANCE:
-				return new string[]{"Cloak of disappearance -- When your health falls,","gives you a chance to escape to safety."};
+				return new string[]{"Cloak of disappearance -- When your health falls,","gives you a chance to escape to safety.",""};
 			default:
-				return new string[]{"no","item"};
+				return new string[]{"no","item","here"};
 			}
 		}
 	}

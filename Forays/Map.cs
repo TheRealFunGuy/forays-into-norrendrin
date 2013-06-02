@@ -58,9 +58,13 @@ namespace Forays{
 		public bool wiz_dark{get;set;}
 		private Dict<ActorType,int> generated_this_level = null; //used for rejecting monsters if too many already exist on the current level
 		private bool[,] danger_sensed{get;set;}
-		//private List<Tile> alltiles = new List<Tile>();
 		private static List<pos> allpositions = new List<pos>();
-		
+		public PosArray<int> safetymap;
+		public int[,] row_displacement = null;
+		public int[,] col_displacement = null;
+
+		public static Color darkcolor = Color.DarkCyan;
+		public static Color unseencolor = Color.DarkGray;
 		private const int ROWS = Global.ROWS;
 		private const int COLS = Global.COLS;
 		public static Actor player{get;set;}
@@ -80,6 +84,12 @@ namespace Forays{
 			Map.player = g.player;
 			Map.Q = g.Q;
 			Map.B = g.B;
+			safetymap = new PosArray<int>(Global.ROWS,Global.COLS);
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					safetymap[i,j] = -9999;
+				}
+			}
 		}
 		public bool BoundsCheck(int r,int c){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
@@ -142,6 +152,99 @@ namespace Forays{
 								if(value < 100 || a.player_visibility_duration < 0){
 									danger_sensed[t.row,t.col] = true;
 								}
+							}
+						}
+					}
+				}
+			}
+		}
+		public void UpdateSafetyMap(params PhysicalObject[] sources){
+			PriorityQueue<cell> frontier = new PriorityQueue<cell>(c => -c.value);
+			for(int i=0;i<Global.ROWS;++i){
+				for(int j=0;j<Global.COLS;++j){
+					if(tile[i,j].Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.STATUE)){
+						safetymap[i,j] = -9999; //wall or other blocking object, including stationary monsters
+					}
+					else{
+						safetymap[i,j] = 9999; //otherwise, cells start at a very high number
+					}
+				}
+			}
+			foreach(PhysicalObject o in sources){
+				safetymap[o.row,o.col] = 0;
+				frontier.Add(new cell(o.row,o.col,0));
+			}
+			while(frontier.list.Count > 0){
+				cell c = frontier.Pop();
+				for(int s=-1;s<=1;++s){
+					for(int t=-1;t<=1;++t){
+						if(BoundsCheck(c.row+s,c.col+t)){
+							int cost = 10;
+							if(actor[c.row+s,c.col+t] != null){
+								cost = 20 + (10 * actor[c.row+s,c.col+t].attrs[AttrType.TURNS_HERE]);
+							}
+							else{
+								if(tile[c.row+s,c.col+t].Is(TileType.DOOR_C,TileType.RUBBLE)){
+									cost = 20;
+								}
+							}
+							if(safetymap[c.row+s,c.col+t] > c.value+cost){
+								safetymap[c.row+s,c.col+t] = c.value+cost;
+								frontier.Add(new cell(c.row+s,c.col+t,c.value+cost));
+							}
+						}
+					}
+				}
+			}
+			for(int i=0;i<Global.ROWS;++i){
+				for(int j=0;j<Global.COLS;++j){
+					if(safetymap[i,j] == 9999){
+						safetymap[i,j] = -9999; //treat any unreachable areas as walls
+					}
+					if(safetymap[i,j] != -9999){
+						safetymap[i,j] = -(safetymap[i,j]) * 5;
+					}
+				}
+			}
+			foreach(PhysicalObject o in sources){
+				safetymap[o.row,o.col] = -9999; //now the player (or other sources) become blocking
+				//frontier.Add(new cell(o.row,o.col,0));
+			}
+			for(int i=1;i<Global.ROWS-1;++i){
+				for(int j=1;j<Global.COLS-1;++j){
+					if(safetymap[i,j] != -9999){
+						int v = safetymap[i,j];
+						bool good = true;
+						for(int s=-1;s<=1 && good;++s){
+							for(int t=-1;t<=1 && good;++t){
+								if(safetymap[i+s,j+t] < v && safetymap[i+s,j+t] != -9999){
+									good = false;
+								}
+							}
+						}
+						if(good){
+							frontier.Add(new cell(i,j,v));
+						}
+					}
+				}
+			}
+			while(frontier.list.Count > 0){
+				cell c = frontier.Pop();
+				for(int s=-1;s<=1;++s){
+					for(int t=-1;t<=1;++t){
+						if(BoundsCheck(c.row+s,c.col+t)){
+							int cost = 10;
+							if(actor[c.row+s,c.col+t] != null){
+								cost = 20 + (10 * actor[c.row+s,c.col+t].attrs[AttrType.TURNS_HERE]);
+							}
+							else{
+								if(tile[c.row+s,c.col+t].Is(TileType.DOOR_C,TileType.RUBBLE)){
+									cost = 20;
+								}
+							}
+							if(safetymap[c.row+s,c.col+t] > c.value+cost){
+								safetymap[c.row+s,c.col+t] = c.value+cost;
+								frontier.Add(new cell(c.row+s,c.col+t,c.value+cost));
 							}
 						}
 					}
@@ -223,6 +326,136 @@ namespace Forays{
 							Screen.WriteMapChar(i,j,VisibleColorChar(i,j)); //redrawing leaves gaps for some reason.
 						}
 					}
+					/*colorchar[,] scr = new colorchar[ROWS,COLS];
+					for(int i=0;i<ROWS;++i){
+						for(int j=0;j<COLS;++j){
+							scr[i,j] = VisibleColorChar(i,j);
+							if(scr[i,j].c == '#'){
+								//scr[i,j].color = Color.RandomBright;
+							}
+						}
+					}
+					if(row_displacement == null){
+						//row_displacement = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
+						//col_displacement = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
+						row_displacement = new int[ROWS,COLS];
+						col_displacement = new int[ROWS,COLS];
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								//row_displacement[i,j] /= 16;
+								//col_displacement[i,j] /= 16;
+								row_displacement[i,j] = 0;
+								col_displacement[i,j] = 0;
+							}
+						}
+					}
+					else{*/
+						/*int[,] rd2 = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
+						int[,] cd2 = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								rd2[i,j] /= 32;
+								cd2[i,j] /= 32;
+								row_displacement[i,j] += (rd2[i,j] < 0? -1 : rd2[i,j] > 0? 1 : 0);
+								col_displacement[i,j] += (cd2[i,j] < 0? -1 : cd2[i,j] > 0? 1 : 0);
+							}
+						}*/
+						/*for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								if(Global.OneIn(40)){
+									if(row_displacement[i,j] < 0){
+										if(Global.OneIn(10)){
+											row_displacement[i,j]--;
+										}
+										else{
+											row_displacement[i,j]++;
+										}
+									}
+									else{
+										if(row_displacement[i,j] > 0){
+											if(Global.OneIn(10)){
+												row_displacement[i,j]++;
+											}
+											else{
+												row_displacement[i,j]--;
+											}
+										}
+										else{
+											if(Global.CoinFlip()){
+												row_displacement[i,j]++;
+											}
+											else{
+												row_displacement[i,j]--;
+											}
+										}
+									}
+									if(col_displacement[i,j] < 0){
+										if(Global.OneIn(10)){
+											col_displacement[i,j]--;
+										}
+										else{
+											col_displacement[i,j]++;
+										}
+									}
+									else{
+										if(col_displacement[i,j] > 0){
+											if(Global.OneIn(10)){
+												col_displacement[i,j]++;
+											}
+											else{
+												col_displacement[i,j]--;
+											}
+										}
+										else{
+											if(Global.CoinFlip()){
+												col_displacement[i,j]++;
+											}
+											else{
+												col_displacement[i,j]--;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					pos p = player.p;
+					actor[p] = null;
+					scr[p.row,p.col] = VisibleColorChar(p.row,p.col);
+					actor[p] = player;
+					int total_rd = 0;
+					int total_cd = 0;
+					for(int i=0;i<ROWS;++i){
+						for(int j=0;j<COLS;++j){
+							total_rd += row_displacement[i,j];
+							total_cd += col_displacement[i,j];
+						}
+					}
+					int avg_rd = total_rd / (ROWS*COLS);
+					int avg_cd = total_cd / (ROWS*COLS);
+					for(int i=0;i<ROWS;++i){
+						for(int j=0;j<COLS;++j){
+							row_displacement[i,j] -= avg_rd;
+							col_displacement[i,j] -= avg_cd;
+						}
+					}
+					for(int i=0;i<ROWS;++i){
+						for(int j=0;j<COLS;++j){
+							if(i == p.row && j == p.col){
+								Screen.WriteMapChar(i,j,'@',Color.White);
+							}
+							else{
+								if(Global.BoundsCheck(i+row_displacement[i,j],j+col_displacement[i,j])){
+									Screen.WriteMapChar(i,j,scr[i+row_displacement[i,j],j+col_displacement[i,j]]);
+								}
+								else{
+									Screen.WriteMapChar(i,j,Screen.BlankChar());
+								}
+							}
+						}
+					}*/
+					//
+					//
 				}
 				Screen.ResetColors();
 			}
@@ -299,22 +532,42 @@ namespace Forays{
 			ch.bgcolor = Color.Black;
 			if(player.CanSee(r,c)){
 				tile[r,c].seen = true;
+				if(tile[r,c].IsLit()){
+					if(tile[r,c].IsTrapOrVent() || tile[r,c].IsShrine() || tile[r,c].Is(TileType.RUINED_SHRINE,TileType.STAIRS)){
+						if(tile[r,c].name != "floor"){ //don't mark traps that aren't visible yet
+							tile[r,c].revealed_by_light = true;
+						}
+					}
+					if(tile[r,c].inv != null){
+						tile[r,c].inv.revealed_by_light = true;
+					}
+				}
 				if(actor[r,c] != null && player.CanSee(actor[r,c])){
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
-					if(actor[r,c] == player && player.HasAttr(AttrType.SHADOW_CLOAK) && !player.tile().IsLit()){
-						ch.color = Color.DarkBlue;
-					}
-					if(actor[r,c] == player && player.HasFeat(FeatType.DANGER_SENSE) //was danger_sense_on
+					if(actor[r,c] == player && player.HasFeat(FeatType.DANGER_SENSE)
 					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
 					&& !wiz_lite){
 						ch.color = Color.Red;
+					}
+					else{
+						if(actor[r,c] == player && !tile[r,c].IsLit()){
+							if(player.HasAttr(AttrType.SHADOW_CLOAK)){
+								ch.color = Color.DarkBlue;
+							}
+							else{
+								ch.color = darkcolor;
+							}
+						}
 					}
 				}
 				else{
 					if(tile[r,c].inv != null){
 						ch.c = tile[r,c].inv.symbol;
 						ch.color = tile[r,c].inv.color;
+						if(!tile[r,c].inv.revealed_by_light && !tile[r,c].IsLit()){
+							ch.color = darkcolor;
+						}
 					}
 					else{
 						if(tile[r,c].features.Count > 0){
@@ -324,13 +577,16 @@ namespace Forays{
 						else{
 							ch.c = tile[r,c].symbol;
 							ch.color = tile[r,c].color;
-							if((ch.c=='.' && ch.color == Color.White) || (ch.c=='#' && ch.color == Color.Gray)){
+							/*if((ch.c=='.' && ch.color == Color.White) || (ch.c=='#' && ch.color == Color.Gray)){
 								if(tile[r,c].IsLit()){
 									ch.color = Color.Yellow;
 								}
 								else{
 									ch.color = Color.DarkCyan;
 								}
+							}*/
+							if(!tile[r,c].revealed_by_light && !tile[r,c].IsLit()){
+								ch.color = darkcolor;
 							}
 							if(player.HasFeat(FeatType.DANGER_SENSE) && danger_sensed != null
 							   && danger_sensed[r,c] && player.LightRadius() == 0
@@ -350,7 +606,12 @@ namespace Forays{
 					if(tile[r,c].seen){
 						if(tile[r,c].inv != null){
 							ch.c = tile[r,c].inv.symbol;
-							ch.color = tile[r,c].inv.color;
+							if(tile[r,c].inv.revealed_by_light){
+								ch.color = tile[r,c].inv.color;
+							}
+							else{
+								ch.color = unseencolor;
+							}
 						}
 						else{
 							if(tile[r,c].Is(FeatureType.RUNE_OF_RETREAT)){ //some features stay visible when out of sight
@@ -374,10 +635,15 @@ namespace Forays{
 										}
 										else{
 											ch.c = tile[r,c].symbol;
-											ch.color = tile[r,c].color;
-											if((ch.c=='.' && ch.color == Color.White) || (ch.c=='#' && ch.color == Color.Gray)){
-												ch.color = Color.DarkGray;
+											if(tile[r,c].revealed_by_light){
+												ch.color = tile[r,c].color;
 											}
+											else{
+												ch.color = unseencolor;
+											}
+											/*if((ch.c=='.' && ch.color == Color.White) || (ch.c=='#' && ch.color == Color.Gray)){
+												ch.color = Color.DarkGray;
+											}*/
 										}
 									}
 								}
@@ -844,7 +1110,7 @@ namespace Forays{
 									char[] rotated = new char[8];
 									for(int i=0;i<8;++i){
 										pos temp2;
-										temp2 = temp.PositionInDirection(Global.RotateDirection(8,true,i));
+										temp2 = temp.PositionInDirection(8.RotateDirection(true,i));
 										rotated[i] = charmap[temp2.row,temp2.col];
 									}
 									for(int i=0;i<15;++i){
@@ -1906,6 +2172,47 @@ namespace Forays{
 			}
 			return "";
 		}
+	}
+	public delegate int SortValue<T>(T t);
+	public class PriorityQueue<T>{
+		public LinkedList<T> list;
+		public SortValue<T> priority;
+		public PriorityQueue(SortValue<T> sort_value){
+			list = new LinkedList<T>();
+			priority = sort_value;
+		}
+		public void Add(T t){
+			if(list.First == null){
+				list.AddFirst(t);
+			}
+			else{
+				LinkedListNode<T> current = list.First;
+				while(true){
+					if(priority(t) < priority(current.Value)){
+						current = current.Next;
+						if(current == null){
+							list.AddLast(t);
+							break;
+						}
+					}
+					else{
+						list.AddBefore(current,t);
+						break;
+					}
+				}
+			}
+		}
+		public T Pop(){
+			T result = list.First.Value;
+			list.Remove(result);
+			return result;
+		}
+	}
+	struct cell{
+		public int row;
+		public int col;
+		public int value;
+		public cell(int row_,int col_,int value_){ row = row_; col = col_; value = value_; }
 	}
 }
 
