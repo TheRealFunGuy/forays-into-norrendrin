@@ -36,13 +36,19 @@ namespace Forays{
 		public static Random r = new Random();
 		public static void SetSeed(int seed){ r = new Random(seed); }
 		public static int Roll(int dice,int sides){
+			if(sides == 0){
+				return 0;
+			}
 			int total = 0;
 			for(int i=0;i<dice;++i){
 				total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
 			}
 			return total;
 		}
-		public static int Roll(int sides){ //note that Roll(0) returns 1. I think I should eventually change that.
+		public static int Roll(int sides){
+			if(sides == 0){
+				return 0;
+			}
 			int total = 0;
 			total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
 			return total;
@@ -322,10 +328,6 @@ namespace Forays{
 			//skipping danger_sensed
 			b.Write(Actor.feats_in_order.Count);
 			foreach(FeatType ft in Actor.feats_in_order){
-				b.Write((int)ft);
-			}
-			b.Write(Actor.partial_feats_in_order.Count);
-			foreach(FeatType ft in Actor.partial_feats_in_order){
 				b.Write((int)ft);
 			}
 			b.Write(Actor.spells_in_order.Count);

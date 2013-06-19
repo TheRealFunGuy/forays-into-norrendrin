@@ -16,7 +16,10 @@ namespace Forays{
 		public bool ignored{get;set;} //whether autoexplore and autopickup should ignore this item
 		public bool do_not_stack{get;set;} //whether the item should be combined with other stacks. used for mimic items too.
 		public bool revealed_by_light{get;set;}
-		
+
+		public static Dictionary<ConsumableType,string> unIDed_name = new Dictionary<ConsumableType,string>();
+		public static Dict<ConsumableType,bool> identified = new Dict<ConsumableType, bool>();
+
 		private static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
 		public static Item Prototype(ConsumableType type){ return proto[type]; }
 		//public static Map M{get;set;} //inherited
@@ -24,25 +27,24 @@ namespace Forays{
 		public static Buffer B{get;set;}
 		public static Actor player{get;set;}
 		static Item(){
-			proto[ConsumableType.HEALING] = new Item(ConsumableType.HEALING,"potion~ of healing",'!',Color.DarkMagenta);
-			proto[ConsumableType.REGENERATION] = new Item(ConsumableType.REGENERATION,"potion~ of regeneration",'!',Color.Green);
-			proto[ConsumableType.TOXIN_IMMUNITY] = new Item(ConsumableType.TOXIN_IMMUNITY,"potion~ of toxin immunity",'!',Color.Red);
-//			proto[ConsumableType.RESISTANCE] = new Item(ConsumableType.RESISTANCE,"potion~ of resistance",'!',Color.Yellow);
-			proto[ConsumableType.CLARITY] = new Item(ConsumableType.CLARITY,"potion~ of clarity",'!',Color.Gray);
-			proto[ConsumableType.BLINKING] = new Item(ConsumableType.BLINKING,"rune~ of blinking",'&',Color.Cyan);
-			proto[ConsumableType.TELEPORTATION] = new Item(ConsumableType.TELEPORTATION,"rune~ of teleportation",'&',Color.DarkRed);
-			proto[ConsumableType.PASSAGE] = new Item(ConsumableType.PASSAGE,"rune~ of passage",'&',Color.Blue);
+			proto[ConsumableType.HEALING] = new Item(ConsumableType.HEALING,"potion~ of healing",'!',Color.White);
+			proto[ConsumableType.REGENERATION] = new Item(ConsumableType.REGENERATION,"potion~ of regeneration",'!',Color.White);
+			proto[ConsumableType.TOXIN_IMMUNITY] = new Item(ConsumableType.TOXIN_IMMUNITY,"potion~ of toxin immunity",'!',Color.White);
+			proto[ConsumableType.CLARITY] = new Item(ConsumableType.CLARITY,"potion~ of clarity",'!',Color.White);
+			proto[ConsumableType.BLINKING] = new Item(ConsumableType.BLINKING,"scroll~ of blinking",'?',Color.White);
+			proto[ConsumableType.TELEPORTATION] = new Item(ConsumableType.TELEPORTATION,"scroll~ of teleportation",'?',Color.White);
+			proto[ConsumableType.PASSAGE] = new Item(ConsumableType.PASSAGE,"scroll~ of passage",'?',Color.White);
 			proto[ConsumableType.DETECT_MONSTERS] = new Item(ConsumableType.DETECT_MONSTERS,"scroll~ of detect monsters",'?',Color.White);
-			proto[ConsumableType.MAGIC_MAP] = new Item(ConsumableType.MAGIC_MAP,"scroll~ of magic map",'?',Color.Gray);
-			proto[ConsumableType.SUNLIGHT] = new Item(ConsumableType.SUNLIGHT,"orb~ of sunlight",'*',Color.White);
-			proto[ConsumableType.DARKNESS] = new Item(ConsumableType.DARKNESS,"orb~ of darkness",'*',Color.DarkGray);
-			proto[ConsumableType.PRISMATIC] = new Item(ConsumableType.PRISMATIC,"prismatic orb~",'*',Color.RandomPrismatic);
-			proto[ConsumableType.FREEZING] = new Item(ConsumableType.FREEZING,"orb~ of freezing",'*',Color.RandomIce);
+			proto[ConsumableType.MAGIC_MAP] = new Item(ConsumableType.MAGIC_MAP,"scroll~ of magic map",'?',Color.White);
+			proto[ConsumableType.SUNLIGHT] = new Item(ConsumableType.SUNLIGHT,"scroll~ of sunlight",'*',Color.White);
+			proto[ConsumableType.DARKNESS] = new Item(ConsumableType.DARKNESS,"scroll~ of darkness",'*',Color.White);
+			proto[ConsumableType.PRISMATIC] = new Item(ConsumableType.PRISMATIC,"prismatic orb~",'*',Color.White);
+			proto[ConsumableType.FREEZING] = new Item(ConsumableType.FREEZING,"orb~ of freezing",'*',Color.White);
 			proto[ConsumableType.BANDAGE] = new Item(ConsumableType.BANDAGE,"bandage~",'{',Color.White);
-			Define(ConsumableType.QUICKFIRE,"orb~ of quickfire",'*',Color.RandomFire);
-			Define(ConsumableType.CLOAKING,"potion~ of cloaking",'!',Color.DarkBlue);
-			Define(ConsumableType.FOG,"orb~ of fog",'*',Color.Gray);
-			Define(ConsumableType.TIME,"rune~ of time",'&',Color.Green);
+			Define(ConsumableType.QUICKFIRE,"orb~ of quickfire",'*',Color.White);
+			Define(ConsumableType.CLOAKING,"potion~ of cloaking",'!',Color.White);
+			Define(ConsumableType.FOG,"orb~ of fog",'*',Color.White);
+			Define(ConsumableType.TIME,"scroll~ of time",'?',Color.White);
 		}
 		private static void Define(ConsumableType type_,string name_,char symbol_,Color color_){
 			proto[type_] = new Item(type_,name_,symbol_,color_);
@@ -133,6 +135,21 @@ namespace Forays{
 			}
 			return i;
 		}
+		public string SingularName(){
+			string result;
+			int position;
+			if(identified[type]){
+				result = name;
+			}
+			else{
+				result = unIDed_name[type];
+			}
+			position = result.IndexOf('~');
+			if(position != -1){
+				result = result.Substring(0,position) + result.Substring(position+1);
+			}
+			return result;
+		}
 		public string Name(){ return Name(false); }
 		public string AName(){ return AName(false); }
 		public string TheName(){ return TheName(false); }
@@ -148,7 +165,12 @@ namespace Forays{
 				return "buggy item";
 			case 1:
 				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
-					result = name;
+					if(identified[type]){
+						result = name;
+					}
+					else{
+						result = unIDed_name[type];
+					}
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
@@ -160,7 +182,12 @@ namespace Forays{
 				}
 			default:
 				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
-					result = name;
+					if(identified[type]){
+						result = name;
+					}
+					else{
+						result = unIDed_name[type];
+					}
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
@@ -184,7 +211,29 @@ namespace Forays{
 				return "a buggy item";
 			case 1:
 				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
-					result = a_name;
+					if(identified[type]){
+						result = name;
+					}
+					else{
+						result = unIDed_name[type];
+					}
+					switch(result[0]){
+					case 'a':
+					case 'e':
+					case 'i':
+					case 'o':
+					case 'u':
+					case 'A':
+					case 'E':
+					case 'I':
+					case 'O':
+					case 'U':
+						result = "an " + result;
+						break;
+					default:
+						result = "a " + result;
+						break;
+					}
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
@@ -201,7 +250,12 @@ namespace Forays{
 				}
 			default:
 				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
-					result = name;
+					if(identified[type]){
+						result = name;
+					}
+					else{
+						result = unIDed_name[type];
+					}
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
@@ -225,7 +279,12 @@ namespace Forays{
 				return "the buggy item";
 			case 1:
 				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
-					result = the_name;
+					if(identified[type]){
+						result = the_name;
+					}
+					else{
+						result = "the " + unIDed_name[type];
+					}
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
@@ -237,7 +296,12 @@ namespace Forays{
 				}
 			default:
 				if(!consider_low_light || !Global.BoundsCheck(row,col) || tile().IsLit()){
-					result = name;
+					if(identified[type]){
+						result = name;
+					}
+					else{
+						result = unIDed_name[type];
+					}
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
@@ -261,16 +325,43 @@ namespace Forays{
 			case ConsumableType.PASSAGE:
 			case ConsumableType.TELEPORTATION:
 			case ConsumableType.TIME:
-				return "rune";
 			case ConsumableType.DETECT_MONSTERS:
 			case ConsumableType.MAGIC_MAP:
-				return "scroll";
 			case ConsumableType.DARKNESS:
+			case ConsumableType.SUNLIGHT:
+				return "scroll";
 			case ConsumableType.FOG:
 			case ConsumableType.FREEZING:
 			case ConsumableType.PRISMATIC:
 			case ConsumableType.QUICKFIRE:
+				return "orb";
+			case ConsumableType.BANDAGE:
+				return "bandage";
+			default:
+				return "unknown item";
+			}
+		}
+		public static string NameOfItemType(ConsumableType type){
+			switch(type){
+			case ConsumableType.CLARITY:
+			case ConsumableType.CLOAKING:
+			case ConsumableType.HEALING:
+			case ConsumableType.REGENERATION:
+			case ConsumableType.TOXIN_IMMUNITY:
+				return "potion";
+			case ConsumableType.BLINKING:
+			case ConsumableType.PASSAGE:
+			case ConsumableType.TELEPORTATION:
+			case ConsumableType.TIME:
+			case ConsumableType.DETECT_MONSTERS:
+			case ConsumableType.MAGIC_MAP:
 			case ConsumableType.SUNLIGHT:
+			case ConsumableType.DARKNESS:
+				return "scroll";
+			case ConsumableType.FOG:
+			case ConsumableType.FREEZING:
+			case ConsumableType.PRISMATIC:
+			case ConsumableType.QUICKFIRE:
 				return "orb";
 			case ConsumableType.BANDAGE:
 				return "bandage";
@@ -309,6 +400,90 @@ namespace Forays{
 				}
 			}
 			return list.Random();
+		}
+		public static void GenerateUnIDedNames(){
+			identified = new Dict<ConsumableType,bool>();
+			List<string> potion_flavors = new List<string>{"vermilion","cerulean","emerald","fuchsia","aquamarine","goldenrod","violet","silver","indigo","crimson"};
+			List<Color> potion_colors = new List<Color>{Color.Red,Color.Blue,Color.Green,Color.Magenta,Color.Cyan,Color.Yellow,Color.DarkMagenta,Color.Gray,Color.DarkBlue,Color.DarkRed};
+			List<string> orb_flavors = new List<string>{"flickering","iridescent","sparkling","chromatic","psychedelic","scintillating","glimmering"};
+			List<Color> orb_colors = new List<Color>{Color.RandomRGB,Color.RandomCMY,Color.RandomDRGB,Color.RandomDCMY,Color.RandomRainbow,Color.RandomBright,Color.RandomDark};
+			foreach(ConsumableType type in Enum.GetValues(typeof(ConsumableType))){
+				string type_name = NameOfItemType(type);
+				if(type_name == "potion"){
+					int num = Global.Roll(potion_flavors.Count) - 1;
+					unIDed_name[type] = potion_flavors[num] + " potion~";
+					proto[type].color = potion_colors[num];
+					potion_flavors.RemoveAt(num);
+					potion_colors.RemoveAt(num);
+				}
+				else{
+					if(type_name == "scroll"){
+						unIDed_name[type] = "scroll~ labeled '" + GenerateScrollName() + "'";
+					}
+					else{
+						if(type_name == "orb"){
+							unIDed_name[type] = orb_flavors.RemoveRandom() + " orb~";
+							proto[type].color = orb_colors.RemoveRandom(); //note that color isn't tied to name for orbs. they're all random.
+						}
+						else{
+							identified[type] = true; //bandages
+						}
+					}
+				}
+			}
+		}
+		public static string GenerateScrollName(){
+			//List<string> vowel = new List<string>{"a","e","i","o","u"};
+			//List<string> consonant = new List<string>{"k","s","t","n","h","m","y","r","w","g","d","p","b"}; //Japanese-inspired - used AEIOU, 4 syllables max, and 3-9 total
+			//List<string> consonant = new List<string>{"h","k","l","n","m","p","w"}; //Hawaiian-inspired
+			//List<string> vowel = new List<string>{"y","i","e","u","ae"}; //some kinda Gaelic-inspired
+			//List<string> consonant = new List<string>{"r","t","s","rr","m","n","w","b","c","d","f","g","l","ss","v"}; //some kinda Gaelic-inspired
+			List<string> vowel = new List<string>{"a","e","i","o","u","ea","ei","io","a","e","i","o","u","a","e","i","o","u","a","e","i","o","oo","ee","a","e","o"}; //the result of a bunch of tweaking
+			List<string> consonant = new List<string>{"k","s","t","n","h","m","y","r","w","g","d","p","b","f","l","v","z","ch","br","cr","dr","fr","gr","kr","pr","tr","th","sc","sh","sk","sl","sm","sn","sp","st","k","s","t","n","m","r","g","d","p","b","l","k","s","t","n","m","r","d","p","b","l",};
+			int syllables = Global.Roll(5) + 2;
+			List<int> syllable_count = new List<int>();
+			while(syllables > 0){
+				if(syllable_count.Count == 2){
+					syllable_count.Add(syllables);
+					syllables = 0;
+					break;
+				}
+				int R = Math.Min(syllables,3);
+				int M = 0;
+				if(syllable_count.Count == 0){ //sorry, magic numbers here
+					M = 6;
+				}
+				if(syllable_count.Count == 1){
+					M = 5;
+				}
+				int D = 0;
+				if(syllable_count.Count == 0){
+					D = Math.Max(0,syllables - M);
+				}
+				int s = Global.Roll(R - D) + D;
+				syllable_count.Add(s);
+				syllables -= s;
+			}
+			string result = "";
+			while(syllable_count.Count > 0){
+				string word = "";
+				if(Global.OneIn(5)){
+					word = word + vowel.Random();
+				}
+				for(int count = syllable_count.RemoveRandom();count > 0;--count){
+					word = word + consonant.Random() + vowel.Random();
+					/*if(Global.OneIn(20)){ //used for the Japanese-inspired one
+						word = word + "n";
+					}*/
+				}
+				if(result == ""){
+					result = result + word;
+				}
+				else{
+					result = result + " " + word;
+				}
+			}
+			return result;
 		}
 		public bool Use(Actor user){ return Use(user,null); }
 		public bool Use(Actor user,List<Tile> line){
@@ -568,13 +743,17 @@ namespace Forays{
 			case ConsumableType.PRISMATIC:
 			{
 				if(line == null){
-					line = user.GetTargetTile(12,1,true);
+					int radius = 1;
+					if(!identified[type]){
+						radius = 0;
+					}
+					line = user.GetTargetTile(12,radius,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the prismatic orb. ",user);
+					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
 					bool trigger_trap = true;
 					if(first != null && first != user){
 						trigger_trap = false;
@@ -641,6 +820,7 @@ namespace Forays{
 						}
 						dmg.Remove(damtype);
 					}
+					t.MakeNoise(2);
 					if(trigger_trap && t.IsTrap()){
 						t.TriggerTrap();
 					}
@@ -653,16 +833,24 @@ namespace Forays{
 			case ConsumableType.FREEZING:
 			{
 				if(line == null){
-					line = user.GetTargetTile(12,3,true);
+					int radius = 3;
+					if(!identified[type]){
+						radius = 0;
+					}
+					line = user.GetTargetTile(12,radius,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the freezing orb. ",user);
-					if(first != null){
+					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					bool trigger_trap = true;
+					if(first != null && first != user){
+						trigger_trap = false;
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
+						first.player_visibility_duration = -1;
+						first.attrs[AttrType.PLAYER_NOTICED]++;
 					}
 					else{
 						B.Add("It shatters on " + t.the_name + "! ",t);
@@ -689,6 +877,10 @@ namespace Forays{
 						B.Add(ac.YouAre() + " encased in ice. ",ac);
 						ac.attrs[Forays.AttrType.FROZEN] = 25;
 					}
+					t.MakeNoise(2);
+					if(trigger_trap && t.IsTrap()){
+						t.TriggerTrap();
+					}
 				}
 				else{
 					used = false;
@@ -704,10 +896,14 @@ namespace Forays{
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the orb of quickfire. ",user);
-					if(first != null){
+					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					bool trigger_trap = true;
+					if(first != null && first != user){
+						trigger_trap = false;
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
+						first.player_visibility_duration = -1;
+						first.attrs[AttrType.PLAYER_NOTICED]++;
 					}
 					else{
 						B.Add("It shatters on " + t.the_name + "! ",t);
@@ -721,6 +917,10 @@ namespace Forays{
 						prev.features.Add(FeatureType.QUICKFIRE);
 						Q.Add(new Event(prev,new List<Tile>{prev},100,EventType.QUICKFIRE,AttrType.NO_ATTR,3,""));
 					}
+					t.MakeNoise(2);
+					if(trigger_trap && t.IsTrap()){
+						t.TriggerTrap();
+					}
 				}
 				else{
 					used = false;
@@ -730,16 +930,24 @@ namespace Forays{
 			case ConsumableType.FOG:
 			{
 				if(line == null){
-					line = user.GetTargetTile(12,3,true);
+					int radius = 3;
+					if(!identified[type]){
+						radius = 0;
+					}
+					line = user.GetTargetTile(12,radius,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
 					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the orb of fog. ",user);
-					if(first != null){
+					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					bool trigger_trap = true;
+					if(first != null && first != user){
+						trigger_trap = false;
 						t = first.tile();
 						B.Add("It shatters on " + first.the_name + "! ",first);
+						first.player_visibility_duration = -1;
+						first.attrs[AttrType.PLAYER_NOTICED]++;
 					}
 					else{
 						B.Add("It shatters on " + t.the_name + "! ",t);
@@ -767,6 +975,10 @@ namespace Forays{
 					}
 					Screen.AnimateMapCells(cells,new colorchar('*',Color.Gray));
 					Q.Add(new Event(area,400,EventType.FOG));
+					t.MakeNoise(2);
+					if(trigger_trap && t.IsTrap()){
+						t.TriggerTrap();
+					}
 				}
 				else{
 					used = false;
@@ -793,6 +1005,7 @@ namespace Forays{
 				break;
 			}
 			if(used){
+				identified[type] = true;
 				if(quantity > 1){
 					--quantity;
 				}
@@ -805,361 +1018,6 @@ namespace Forays{
 			return used;
 		}
 	}
-	/*public static class Weapon{
-		public static Damage Damage(WeaponType type){
-			switch(type){
-			case WeaponType.SWORD:
-			case WeaponType.FLAMEBRAND:
-				return new Damage(3,DamageType.SLASHING,DamageClass.PHYSICAL,null);
-			case WeaponType.MACE:
-			case WeaponType.MACE_OF_FORCE:
-				return new Damage(3,DamageType.BASHING,DamageClass.PHYSICAL,null);
-			case WeaponType.DAGGER:
-			case WeaponType.VENOMOUS_DAGGER:
-				return new Damage(2,DamageType.PIERCING,DamageClass.PHYSICAL,null);
-			case WeaponType.STAFF:
-			case WeaponType.STAFF_OF_MAGIC:
-			case WeaponType.BOW: //bow's melee damage
-			case WeaponType.HOLY_LONGBOW:
-				return new Damage(1,DamageType.BASHING,DamageClass.PHYSICAL,null);
-			default:
-				return new Damage(0,DamageType.NONE,DamageClass.NO_TYPE,null);
-			}
-		}
-		public static WeaponType BaseWeapon(WeaponType type){
-			switch(type){
-			case WeaponType.SWORD:
-			case WeaponType.FLAMEBRAND:
-				return WeaponType.SWORD;
-			case WeaponType.MACE:
-			case WeaponType.MACE_OF_FORCE:
-				return WeaponType.MACE;
-			case WeaponType.DAGGER:
-			case WeaponType.VENOMOUS_DAGGER:
-				return WeaponType.DAGGER;
-			case WeaponType.STAFF:
-			case WeaponType.STAFF_OF_MAGIC:
-				return WeaponType.STAFF;
-			case WeaponType.BOW:
-			case WeaponType.HOLY_LONGBOW:
-				return WeaponType.BOW;
-			default:
-				return WeaponType.NO_WEAPON;
-			}
-		}
-		public static string Name(WeaponType type){
-			switch(type){
-			case WeaponType.SWORD:
-				return "sword";
-			case WeaponType.FLAMEBRAND:
-				return "flamebrand";
-			case WeaponType.MACE:
-				return "mace";
-			case WeaponType.MACE_OF_FORCE:
-				return "mace of force";
-			case WeaponType.DAGGER:
-				return "dagger";
-			case WeaponType.VENOMOUS_DAGGER:
-				return "venomous dagger";
-			case WeaponType.STAFF:
-				return "staff";
-			case WeaponType.STAFF_OF_MAGIC:
-				return "staff of magic";
-			case WeaponType.BOW:
-				return "bow";
-			case WeaponType.HOLY_LONGBOW:
-				return "holy longbow";
-			default:
-				return "no weapon";
-			}
-		}
-		public static cstr StatsName(WeaponType type){
-			cstr cs;
-			cs.bgcolor = Color.Black;
-			cs.color = Color.Gray;
-			switch(type){
-			case WeaponType.SWORD:
-				cs.s = "Sword";
-				break;
-			case WeaponType.FLAMEBRAND:
-				cs.s = "+Sword+";
-				cs.color = Color.Red;
-				break;
-			case WeaponType.MACE:
-				cs.s = "Mace";
-				break;
-			case WeaponType.MACE_OF_FORCE:
-				cs.s = "+Mace+";
-				cs.color = Color.Cyan;
-				break;
-			case WeaponType.DAGGER:
-				cs.s = "Dagger";
-				break;
-			case WeaponType.VENOMOUS_DAGGER:
-				cs.s = "+Dagger+";
-				cs.color = Color.Green;
-				break;
-			case WeaponType.STAFF:
-				cs.s = "Staff";
-				break;
-			case WeaponType.STAFF_OF_MAGIC:
-				cs.s = "+Staff+";
-				cs.color = Color.Magenta;
-				break;
-			case WeaponType.BOW:
-				cs.s = "Bow";
-				break;
-			case WeaponType.HOLY_LONGBOW:
-				cs.s = "+Bow+";
-				cs.color = Color.Yellow;
-				break;
-			default:
-				cs.s = "no weapon";
-				break;
-			}
-			return cs;
-		}
-		public static cstr EquipmentScreenName(WeaponType type){
-			cstr cs;
-			cs.bgcolor = Color.Black;
-			cs.color = Color.Gray;
-			switch(type){
-			case WeaponType.SWORD:
-				cs.s = "Sword";
-				break;
-			case WeaponType.FLAMEBRAND:
-				cs.s = "Flamebrand";
-				cs.color = Color.Red;
-				break;
-			case WeaponType.MACE:
-				cs.s = "Mace";
-				break;
-			case WeaponType.MACE_OF_FORCE:
-				cs.s = "Mace of force";
-				cs.color = Color.Cyan;
-				break;
-			case WeaponType.DAGGER:
-				cs.s = "Dagger";
-				break;
-			case WeaponType.VENOMOUS_DAGGER:
-				cs.s = "Venomous dagger";
-				cs.color = Color.Green;
-				break;
-			case WeaponType.STAFF:
-				cs.s = "Staff";
-				break;
-			case WeaponType.STAFF_OF_MAGIC:
-				cs.s = "Staff of magic";
-				cs.color = Color.Magenta;
-				break;
-			case WeaponType.BOW:
-				cs.s = "Bow";
-				break;
-			case WeaponType.HOLY_LONGBOW:
-				cs.s = "Holy longbow";
-				cs.color = Color.Yellow;
-				break;
-			default:
-				cs.s = "no weapon";
-				break;
-			}
-			return cs;
-		}
-		public static string Description(WeaponType type){
-			switch(type){
-			case WeaponType.SWORD:
-				return "Sword -- A powerful 3d6 damage slashing weapon.";
-			case WeaponType.FLAMEBRAND:
-				return "Flamebrand -- Deals extra fire damage.";
-			case WeaponType.MACE:
-				return "Mace -- A powerful 3d6 damage bashing weapon.";
-			case WeaponType.MACE_OF_FORCE:
-				return "Mace of force -- Chance to knock back or stun.";
-			case WeaponType.DAGGER:
-				return "Dagger -- 2d6 damage. Extra chance for critical hits.";
-			case WeaponType.VENOMOUS_DAGGER:
-				return "Venomous dagger -- Chance to poison any foe it hits.";
-			case WeaponType.STAFF:
-				return "Staff -- 1d6 damage. Grants a small bonus to defense.";
-			case WeaponType.STAFF_OF_MAGIC:
-				return "Staff of magic -- Grants a bonus to magic skill.";
-			case WeaponType.BOW:
-				return "Bow -- 3d6 damage at range. Less accurate than melee.";
-			case WeaponType.HOLY_LONGBOW:
-				return "Holy longbow - Deals extra damage to undead and demons.";
-			default:
-				return "no weapon";
-			}
-		}
-	}
-	public static class Armor{
-		public static int Protection(ArmorType type){
-			switch(type){
-			case ArmorType.LEATHER:
-			case ArmorType.ELVEN_LEATHER:
-				return 2;
-			case ArmorType.CHAINMAIL:
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				return 4;
-			case ArmorType.FULL_PLATE:
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				return 6;
-			default:
-				return 0;
-			}
-		}
-		public static int ProtectionConsideringExhaustion(ArmorType type,int exhaustion){
-			switch(type){
-			case ArmorType.LEATHER:
-			case ArmorType.ELVEN_LEATHER:
-				if(exhaustion >= 15){
-					return 0;
-				}
-				return 2;
-			case ArmorType.CHAINMAIL:
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				if(exhaustion >= 10){
-					return 0;
-				}
-				return 4;
-			case ArmorType.FULL_PLATE:
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				if(exhaustion >= 5){
-					return 0;
-				}
-				return 6;
-			default:
-				return 0;
-			}
-		}
-		public static ArmorType BaseArmor(ArmorType type){
-			switch(type){
-			case ArmorType.LEATHER:
-			case ArmorType.ELVEN_LEATHER:
-				return ArmorType.LEATHER;
-			case ArmorType.CHAINMAIL:
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				return ArmorType.CHAINMAIL;
-			case ArmorType.FULL_PLATE:
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				return ArmorType.FULL_PLATE;
-			default:
-				return ArmorType.NO_ARMOR;
-			}
-		}
-		public static int StealthPenalty(ArmorType type){
-			switch(type){
-			case ArmorType.CHAINMAIL:
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				return 1;
-			case ArmorType.FULL_PLATE:
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				return 3;
-			default:
-				return 0;
-			}
-		}
-		public static string Name(ArmorType type){
-			switch(type){
-			case ArmorType.LEATHER:
-				return "leather";
-			case ArmorType.ELVEN_LEATHER:
-				return "elven leather";
-			case ArmorType.CHAINMAIL:
-				return "chainmail";
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				return "chainmail of arcana";
-			case ArmorType.FULL_PLATE:
-				return "full plate";
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				return "full plate of resistance";
-			default:
-				return "no armor";
-			}
-		}
-		public static cstr StatsName(ArmorType type){
-			cstr cs;
-			cs.bgcolor = Color.Black;
-			cs.color = Color.Gray;
-			switch(type){
-			case ArmorType.LEATHER:
-				cs.s = "Leather";
-				break;
-			case ArmorType.ELVEN_LEATHER:
-				cs.s = "+Leather+";
-				cs.color = Color.DarkCyan;
-				break;
-			case ArmorType.CHAINMAIL:
-				cs.s = "Chainmail";
-				break;
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				cs.s = "+Chainmail+";
-				cs.color = Color.Magenta;
-				break;
-			case ArmorType.FULL_PLATE:
-				cs.s = "Full plate";
-				break;
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				cs.s = "+Full plate+";
-				cs.color = Color.Blue;
-				break;
-			default:
-				cs.s = "no armor";
-				break;
-			}
-			return cs;
-		}
-		public static cstr EquipmentScreenName(ArmorType type){
-			cstr cs;
-			cs.bgcolor = Color.Black;
-			cs.color = Color.Gray;
-			switch(type){
-			case ArmorType.LEATHER:
-				cs.s = "Leather";
-				break;
-			case ArmorType.ELVEN_LEATHER:
-				cs.s = "Elven leather";
-				cs.color = Color.DarkCyan;
-				break;
-			case ArmorType.CHAINMAIL:
-				cs.s = "Chainmail";
-				break;
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				cs.s = "Chainmail of arcana";
-				cs.color = Color.Magenta;
-				break;
-			case ArmorType.FULL_PLATE:
-				cs.s = "Full plate";
-				break;
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				cs.s = "Full plate of resistance";
-				cs.color = Color.Blue;
-				break;
-			default:
-				cs.s = "no armor";
-				break;
-			}
-			return cs;
-		}
-		public static string Description(ArmorType type){
-			switch(type){
-			case ArmorType.LEATHER:
-				return "Leather -- Light armor. Provides some basic protection.";
-			case ArmorType.ELVEN_LEATHER:
-				return "Elven leather -- Grants a bonus to stealth skill.";
-			case ArmorType.CHAINMAIL:
-				return "Chainmail -- Good protection. Noisy and hard to cast in.";
-			case ArmorType.CHAINMAIL_OF_ARCANA:
-				return "Chainmail of arcana -- Bonus to magic. No cast penalty.";
-			case ArmorType.FULL_PLATE:
-				return "Full plate -- The thickest, noisiest, and bulkiest armor.";
-			case ArmorType.FULL_PLATE_OF_RESISTANCE:
-				return "Full plate of resistance -- Grants resistance to elements.";
-			default:
-				return "no armor";
-			}
-		}
-	}*/
 	public class Weapon{
 		public WeaponType type;
 		public EnchantmentType enchantment;
@@ -1172,20 +1030,20 @@ namespace Forays{
 			type = type_;
 			enchantment = enchantment_;
 		}
-		public Damage DamageInfo(){
+		public AttackInfo Attack(){
 			switch(type){
 			case WeaponType.SWORD:
-				return new Damage(2,DamageType.SLASHING,DamageClass.PHYSICAL,null);
+				return new AttackInfo(100,2,CriticalEffect.PERCENT_DAMAGE,"& hit *");
 			case WeaponType.MACE:
-				return new Damage(2,DamageType.BASHING,DamageClass.PHYSICAL,null);
+				return new AttackInfo(100,2,CriticalEffect.REDUCE_ACCURACY,"& hit *");
 			case WeaponType.DAGGER:
-				return new Damage(2,DamageType.PIERCING,DamageClass.PHYSICAL,null);
+				return new AttackInfo(100,2,CriticalEffect.STUN,"& hit *");
 			case WeaponType.STAFF:
-				return new Damage(2,DamageType.BASHING,DamageClass.PHYSICAL,null);
+				return new AttackInfo(100,2,CriticalEffect.FREEZE,"& hit *");
 			case WeaponType.BOW: //bow's melee damage
-				return new Damage(1,DamageType.BASHING,DamageClass.PHYSICAL,null);
+				return new AttackInfo(100,1,CriticalEffect.MAKE_NOISE,"& hit *"); //todo crit effects
 			default:
-				return new Damage(0,DamageType.NONE,DamageClass.NO_TYPE,null);
+				return new AttackInfo(100,0,CriticalEffect.NO_CRIT,"error");
 			}
 		}
 		public override string ToString(){

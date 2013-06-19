@@ -107,6 +107,65 @@ namespace Forays{
 				light_radius = to;
 			}
 		}
+		public void MakeNoise(int volume){
+			List<Actor> actors = new List<Actor>();
+			int minrow = Math.Max(1,row-volume);
+			int maxrow = Math.Min(Global.ROWS-2,row+volume);
+			int mincol = Math.Max(1,col-volume);
+			int maxcol = Math.Min(Global.COLS-2,col+volume);
+			int[,] values = new int[Global.ROWS,Global.COLS];
+			for(int i=minrow;i<=maxrow;++i){
+				for(int j=mincol;j<=maxcol;++j){
+					if(M.tile[i,j].passable){
+						values[i,j] = 0;
+					}
+					else{
+						values[i,j] = -1;
+					}
+				}
+			}
+			values[row,col] = 1;
+			if(actor() != null){
+				actors.Add(actor());
+			}
+			int val = 1;
+			while(true){
+				for(int i=minrow;i<=maxrow;++i){
+					for(int j=mincol;j<=maxcol;++j){
+						if(values[i,j] == val){
+							for(int s=i-1;s<=i+1;++s){
+								for(int t=j-1;t<=j+1;++t){
+									if(s != i || t != j){
+										if(values[s,t] == 0){
+											values[s,t] = val + 1;
+											if(M.actor[s,t] != null){
+												actors.Add(M.actor[s,t]);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				++val;
+				if(val > volume){
+					break;
+				}
+			}
+			foreach(Actor a in actors){
+				if(a != Actor.player){
+					if(!a.CanSee(Actor.player) && a.target_location == null){ //if they already have an idea of where the player is/was, they won't bother
+						if(volume > 2 || !a.HasAttr(AttrType.IGNORES_QUIET_SOUNDS)){
+							a.FindPath(this);
+							if(Global.CoinFlip()){
+								a.attrs[AttrType.IGNORES_QUIET_SOUNDS]++; //repeated quiet sounds are ignored, eventually...
+							}
+						}
+					}
+				}
+			}
+		}
 		public string YouAre(){
 			if(name == "you"){
 				return "you are";

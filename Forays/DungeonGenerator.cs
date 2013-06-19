@@ -2733,7 +2733,7 @@ Console.ReadKey(true);*/
 				return true;
 			});
 		}
-		public bool ApplyCaveModification(){
+		public bool ApplyCaveModification(){ //todo: this needs a counterpart that makes rooms *bigger* and cavelike.
 			return ForEachRoom((start_r,start_c,end_r,end_c) => {
 				char[,] room = new char[(end_r-start_r)+3,(end_c-start_c)+3]; //includes borders
 				List<pos> exits = new List<pos>();
