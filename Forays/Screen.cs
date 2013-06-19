@@ -14,7 +14,7 @@ namespace Forays{
 		int row{get;set;}
 		int col{get;set;} //scratch that, c# doesn't make this easy enough yet.
 	}*/
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomPrismatic,RandomDark,RandomBright};
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomPrismatic,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow};
 	public struct colorchar{ //todo: engine code version should be char,color
 		public Color color;
 		public Color bgcolor;
@@ -801,6 +801,11 @@ namespace Forays{
 			case Color.RandomPrismatic:
 			case Color.RandomDark:
 			case Color.RandomBright:
+			case Color.RandomRGB:
+			case Color.RandomDRGB:
+			case Color.RandomCMY:
+			case Color.RandomDCMY:
+			case Color.RandomRainbow:
 				return GetColor(ResolveColor(c));
 			default:
 				return ConsoleColor.Black;
@@ -893,6 +898,79 @@ namespace Forays{
 					return Color.Yellow;
 				case 8:
 					return Color.White;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomRGB:
+				switch(Global.Roll(1,3)){
+				case 1:
+					return Color.Red;
+				case 2:
+					return Color.Green;
+				case 3:
+					return Color.Blue;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomDRGB:
+				switch(Global.Roll(1,3)){
+				case 1:
+					return Color.DarkRed;
+				case 2:
+					return Color.DarkGreen;
+				case 3:
+					return Color.DarkBlue;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomCMY:
+				switch(Global.Roll(1,3)){
+				case 1:
+					return Color.Cyan;
+				case 2:
+					return Color.Magenta;
+				case 3:
+					return Color.Yellow;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomDCMY:
+				switch(Global.Roll(1,3)){
+				case 1:
+					return Color.DarkCyan;
+				case 2:
+					return Color.DarkMagenta;
+				case 3:
+					return Color.DarkYellow;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomRainbow:
+				switch(Global.Roll(1,12)){
+				case 1:
+					return Color.Red;
+				case 2:
+					return Color.Green;
+				case 3:
+					return Color.Blue;
+				case 4:
+					return Color.DarkRed;
+				case 5:
+					return Color.DarkGreen;
+				case 6:
+					return Color.DarkBlue;
+				case 7:
+					return Color.Cyan;
+				case 8:
+					return Color.Magenta;
+				case 9:
+					return Color.Yellow;
+				case 10:
+					return Color.DarkCyan;
+				case 11:
+					return Color.DarkMagenta;
+				case 12:
+					return Color.DarkYellow;
 				default:
 					return Color.Black;
 				}

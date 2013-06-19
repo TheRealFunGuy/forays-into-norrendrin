@@ -580,13 +580,7 @@ namespace Forays{
 									temporary.inv = new List<Item>();
 									temporary.inv.Add(target as Item);
 									Item item = temporary.inv[0];
-									if(item.symbol == '*'){ //orbs
-										if(item.type == ConsumableType.SUNLIGHT || item.type == ConsumableType.DARKNESS){
-											B.Add(temporary.You("throw") + " " + item.AName() + ". ",temporary);
-											B.DisplayNow();
-											Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
-											B.Add(item.TheName() + " shatters on you! ");
-										}
+									if(item.NameOfItemType() == "orb"){
 										temporary.inv[0].Use(temporary,temporary.GetBestExtendedLineOfEffect(player));
 									}
 									else{
@@ -651,13 +645,7 @@ namespace Forays{
 											}
 											M.Draw();
 											Item item = temporary.inv[0];
-											if(item.symbol == '*'){ //orbs
-												if(item.type == ConsumableType.SUNLIGHT || item.type == ConsumableType.DARKNESS){
-													B.Add(temporary.You("throw") + " " + item.TheName() + ". ",temporary);
-													B.DisplayNow();
-													Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
-													B.Add(item.TheName() + " shatters on you! ");
-												}
+											if(item.NameOfItemType() == "orb"){
 												temporary.inv[0].Use(temporary,temporary.GetBestExtendedLineOfEffect(player));
 											}
 											else{
@@ -795,7 +783,7 @@ namespace Forays{
 					break;
 				}
 				case EventType.GRENADE:
-					{
+				{
 					Tile t = target as Tile;
 					if(t.Is(FeatureType.GRENADE)){
 						t.features.Remove(FeatureType.GRENADE);
@@ -819,12 +807,10 @@ namespace Forays{
 							int dir = Global.RandomDirection();
 							t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
 						}
-						if(player.DistanceFrom(t) <= 3){
-							player.MakeNoise(); //hacky - todo change
-						}
+						t.MakeNoise(8);
 					}
 					break;
-					}
+				}
 				case EventType.BLAST_FUNGUS:
 				{
 					Tile t = target as Tile;
@@ -853,9 +839,7 @@ namespace Forays{
 							int dir = Global.RandomDirection();
 							t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
 						}
-						if(player.DistanceFrom(t) <= 3){
-							player.MakeNoise(); //hacky - todo change
-						}
+						t.MakeNoise(8);
 					}
 					if(t.Is(FeatureType.FUNGUS_ACTIVE)){
 						t.features.Remove(FeatureType.FUNGUS_ACTIVE);
