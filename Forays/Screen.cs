@@ -14,7 +14,7 @@ namespace Forays{
 		int row{get;set;}
 		int col{get;set;} //scratch that, c# doesn't make this easy enough yet.
 	}*/
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomPrismatic,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow};
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
 	public struct colorchar{ //todo: engine code version should be char,color
 		public Color color;
 		public Color bgcolor;
@@ -798,7 +798,9 @@ namespace Forays{
 			case Color.RandomFire:
 			case Color.RandomIce:
 			case Color.RandomLightning:
-			case Color.RandomPrismatic:
+			case Color.RandomBreached:
+			case Color.RandomExplosion:
+			case Color.RandomGlowingFungus:
 			case Color.RandomDark:
 			case Color.RandomBright:
 			case Color.RandomRGB:
@@ -806,6 +808,7 @@ namespace Forays{
 			case Color.RandomCMY:
 			case Color.RandomDCMY:
 			case Color.RandomRainbow:
+			case Color.RandomAny:
 				return GetColor(ResolveColor(c));
 			default:
 				return ConsoleColor.Black;
@@ -850,17 +853,47 @@ namespace Forays{
 				default:
 					return Color.Black;
 				}
-			case Color.RandomPrismatic:
-				switch(Global.Roll(3)){
+			case Color.RandomBreached:
+			{
+				if(Global.OneIn(4)){
+					return Color.DarkGreen;
+				}
+				return Color.Green;
+				/*switch(Global.Roll(1,4)){
 				case 1:
-					return Color.Red;
+					return Color.Green;;
 				case 2:
-					return Color.Blue;
+					return Color.Green;;
 				case 3:
-					return Color.Yellow;
+					return Color.Green;;
+				case 4:
+					return Color.DarkGreen;
 				default:
 					return Color.Black;
+				}*/
+			}
+			case Color.RandomExplosion:
+				/*switch(Global.Roll(4)){
+				case 1:
+					return Color.DarkRed;
+				case 2:
+					return Color.DarkRed;
+				case 3:
+					return Color.DarkRed;
+				case 4:
+					return Color.Red;
+				default:
+					return Color.Black;
+				}*/
+				if(Global.OneIn(4)){
+					return Color.Red;
 				}
+				return Color.DarkRed;
+			case Color.RandomGlowingFungus:
+				if(Global.OneIn(25)){
+					return Color.DarkCyan;
+				}
+				return Color.Cyan;
 			case Color.RandomDark:
 				switch(Global.Roll(7)){
 				case 1:
@@ -971,6 +1004,41 @@ namespace Forays{
 					return Color.DarkMagenta;
 				case 12:
 					return Color.DarkYellow;
+				default:
+					return Color.Black;
+				}
+			case Color.RandomAny:
+				switch(Global.Roll(15)){
+				case 1:
+					return Color.DarkBlue;
+				case 2:
+					return Color.DarkCyan;
+				case 3:
+					return Color.DarkGray;
+				case 4:
+					return Color.DarkGreen;
+				case 5:
+					return Color.DarkMagenta;
+				case 6:
+					return Color.DarkRed;
+				case 7:
+					return Color.DarkYellow;
+				case 8:
+					return Color.Blue;
+				case 9:
+					return Color.Cyan;
+				case 10:
+					return Color.Gray;
+				case 11:
+					return Color.Green;
+				case 12:
+					return Color.Magenta;
+				case 13:
+					return Color.Red;
+				case 14:
+					return Color.Yellow;
+				case 15:
+					return Color.White;
 				default:
 					return Color.Black;
 				}

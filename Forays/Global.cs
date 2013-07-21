@@ -53,20 +53,19 @@ namespace Forays{
 			total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
 			return total;
 		}
-		public static bool OneIn(int num){
-			int i = Roll(num);
-			if(i == num){
-				return true;
-			}
-			return false;
+		public static int Between(int a,int b){ //inclusive
+			int min = Math.Min(a,b);
+			int max = Math.Max(a,b);
+			return Roll((max-min)+1) + (min-1);
 		}
 		public static bool CoinFlip(){
-			if(r.Next(1,3) == 2){ //returns 1 or 2...
-				return true;
-			}
-			else{
-				return false;
-			}
+			return r.Next(1,3) == 2;
+		}
+		public static bool OneIn(int x){
+			return r.Next(1,x+1) == x;
+		}
+		public static bool PercentChance(int x){
+			return r.Next(1,101) <= x;
 		}
 		public static int RandomDirection(){
 			int result = r.Next(1,8);
@@ -74,6 +73,12 @@ namespace Forays{
 				result = 9;
 			}
 			return result;
+		}
+		public static int[] EightDirections(){
+			return new int[]{7,8,9,4,6,1,2,3};
+		}
+		public static int[] FourDirections(){
+			return new int[]{8,4,6,2};
 		}
 		public static bool BoundsCheck(int r,int c){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
