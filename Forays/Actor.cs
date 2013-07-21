@@ -111,77 +111,96 @@ namespace Forays{
 		private const int ROWS = Global.ROWS;
 		private const int COLS = Global.COLS;
 		//public static Map M{get;set;} //inherited
-		public static Queue Q{get;set;}
-		public static Buffer B{get;set;}
-		public static Actor player{get;set;}
+		//public static Buffer B{get;set;}
+		//public static Queue Q{get;set;}
+		//public static Actor player{get;set;}
 		static Actor(){
 			Define(ActorType.RAT,"rat",'r',Color.DarkGray,15,90,1,0,AttrType.LOW_LIGHT_VISION,AttrType.SMALL,AttrType.KEEN_SENSES);
 			Define(ActorType.GOBLIN,"goblin",'g',Color.Green,25,100,1,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.LARGE_BAT,"large bat",'b',Color.DarkGray,20,60,1,0,AttrType.DARKVISION,AttrType.FLYING,AttrType.SMALL,AttrType.KEEN_SENSES,AttrType.BLINDSIGHT);
-			Define(ActorType.WOLF,"wolf",'c',Color.DarkYellow,25,50,1,0,AttrType.LOW_LIGHT_VISION,AttrType.KEEN_SENSES);
-			Define(ActorType.SKELETON,"skeleton",'s',Color.White,30,100,1,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
+			Define(ActorType.LARGE_BAT,"giant bat",'b',Color.DarkGray,20,60,1,0,AttrType.FLYING,AttrType.SMALL,AttrType.KEEN_SENSES,AttrType.BLINDSIGHT);
+			Define(ActorType.LONE_WOLF,"lone wolf",'c',Color.DarkYellow,25,50,1,0,AttrType.LOW_LIGHT_VISION,AttrType.KEEN_SENSES);
 			Define(ActorType.BLOOD_MOTH,"blood moth",'i',Color.Red,25,100,1,0,AttrType.FLYING);
-			//Define(ActorType.SHAMBLING_SCARECROW,"shambling scarecrow",'x',Color.DarkYellow,30,90,0,1,0,AttrType.CONSTRUCT,AttrType.RESIST_BASH,AttrType.RESIST_PIERCE,AttrType.IMMUNE_ARROWS,AttrType.DARKVISION);
-			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,35,100,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.DARKNESS_DWELLER,"darkness dweller",'h',Color.DarkGreen,45,100,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.DARKVISION);
-			Define(ActorType.CARNIVOROUS_BRAMBLE,"carnivorous bramble",'B',Color.DarkYellow,35,100,2,0,AttrType.PLANTLIKE,AttrType.NEVER_MOVES,AttrType.BLINDSIGHT);
+			Define(ActorType.DARKNESS_DWELLER,"darkness dweller",'h',Color.DarkGreen,45,100,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.CARNIVOROUS_BRAMBLE,"carnivorous bramble",'B',Color.DarkYellow,35,100,2,0,AttrType.PLANTLIKE,AttrType.IMMOBILE,AttrType.BLINDSIGHT);
 			Define(ActorType.FROSTLING,"frostling",'E',Color.Gray,35,100,2,0,AttrType.IMMUNE_COLD);
-			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,40,100,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.DREAM_CLONE,"dream warrior",'p',Color.Cyan,1,100,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.CONSTRUCT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.SWORDSMAN,"swordsman",'p',Color.White,35,100,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,40,100,2,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.DREAM_CLONE,"dream warrior",'p',Color.Cyan,1,100,0,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.NONLIVING);
+			Define(ActorType.SPITTING_COBRA,"spitting cobra",'S',Color.Red,1,100,-1,0);
+			Define(ActorType.KOBOLD,"kobold",'k',Color.Blue,1,100,-1,0);
+			Define(ActorType.NAME_SPOREPOD,"spore pod",'e',Color.Magenta,1,100,-1,0);
+			Define(ActorType.FORASECT,"forasect",'i',Color.Gray,1,100,-1,0);
+			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,35,100,5,0,AttrType.NONLIVING,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION,AttrType.SMALL,AttrType.FLYING);
 			Define(ActorType.CULTIST,"cultist",'p',Color.DarkRed,35,100,3,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.SMALL_GROUP);
 			Define(ActorType.GOBLIN_ARCHER,"goblin archer",'g',Color.DarkCyan,25,100,3,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.GOBLIN_SHAMAN,"goblin shaman",'g',Color.Magenta,25,100,3,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.GOBLIN_SHAMAN).GainSpell(SpellType.FORCE_PALM,SpellType.IMMOLATE,SpellType.SCORCH);
 			Prototype(ActorType.GOBLIN_SHAMAN).skills[SkillType.MAGIC] = 4;
+			Define(ActorType.NAME_DARTFROG,"golden dart frog",'t',Color.Yellow,1,100,-1,0);
+			Define(ActorType.SKELETON,"skeleton",'s',Color.White,30,100,1,0,AttrType.NONLIVING,AttrType.DULLS_BLADES,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,40,100,4,0,AttrType.NONLIVING,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION,AttrType.SHADOW_CLOAK);
 			Define(ActorType.MIMIC,"mimic",'m',Color.White,30,200,3,0,AttrType.GRAB_HIT);
-			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,35,100,3,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
-			Prototype(ActorType.SKULKING_KILLER).skills[SkillType.STEALTH] = 4;
-			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,50,150,4,0,AttrType.UNDEAD,AttrType.MEDIUM_HUMANOID,AttrType.RESIST_NECK_SNAP,AttrType.RESIST_PIERCE,AttrType.RESIST_COLD);
-			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,4,0,AttrType.LOW_LIGHT_VISION,AttrType.LARGE_GROUP,AttrType.SMALL,AttrType.KEEN_SENSES);
+			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,45,100,5,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,50,150,4,0,AttrType.NONLIVING,AttrType.MEDIUM_HUMANOID,AttrType.RESIST_NECK_SNAP,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.ROBED_ZEALOT,"robed zealot",'p',Color.Yellow,40,100,4,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
 			Prototype(ActorType.ROBED_ZEALOT).GainSpell(SpellType.MINOR_HEAL,SpellType.BLESS,SpellType.HOLY_SHIELD);
 			Prototype(ActorType.ROBED_ZEALOT).skills[SkillType.MAGIC] = 6;
-			Define(ActorType.SHADOW,"shadow",'G',Color.DarkGray,40,100,4,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.DARKVISION,AttrType.SHADOW_CLOAK);
-			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,40,80,4,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION,AttrType.FLYING);
-			Define(ActorType.WARG,"warg",'c',Color.White,30,50,5,0,AttrType.LOW_LIGHT_VISION,AttrType.MEDIUM_GROUP,AttrType.KEEN_SENSES);
-			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,45,100,5,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION);
-			Define(ActorType.DERANGED_ASCETIC,"deranged ascetic",'p',Color.RandomDark,40,100,5,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.SPELL_DISRUPTION);
-			Define(ActorType.POLTERGEIST,"poltergeist",'G',Color.DarkGreen,35,100,5,0,AttrType.UNDEAD,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION,AttrType.SMALL,AttrType.FLYING);
+			Define(ActorType.NAME_SLUG,"giant slug",'w',Color.DarkGreen,1,100,-1,0);
+			Define(ActorType.NAME_DEMON,"vulgar demon",'d',Color.Red,1,100,-1,0);
+			Define(ActorType.BANSHEE,"banshee",'G',Color.Magenta,40,80,4,0,AttrType.NONLIVING,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION,AttrType.FLYING);
 			Define(ActorType.CAVERN_HAG,"cavern hag",'h',Color.Blue,40,100,5,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.COMPY,"compy",'l',Color.Green,25,100,6,0,AttrType.SMALL,AttrType.LARGE_GROUP,AttrType.KEEN_SENSES);
-			Define(ActorType.NOXIOUS_WORM,"noxious worm",'w',Color.DarkMagenta,55,140,6,0,AttrType.RESIST_BASH,AttrType.IMMUNE_TOXINS);
 			Define(ActorType.BERSERKER,"berserker",'p',Color.Red,40,100,6,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,50,100,6,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
-			Define(ActorType.VAMPIRE,"vampire",'V',Color.Blue,40,100,6,0,AttrType.UNDEAD,AttrType.MEDIUM_HUMANOID,AttrType.RESIST_NECK_SNAP,AttrType.FLYING,AttrType.LIGHT_ALLERGY,AttrType.DESTROYED_BY_SUNLIGHT,AttrType.LIFE_DRAIN_HIT,AttrType.RESIST_COLD);
-			Define(ActorType.CRUSADING_KNIGHT,"crusading knight",'p',Color.DarkGray,45,100,7,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Prototype(ActorType.CRUSADING_KNIGHT).skills[Forays.SkillType.DEFENSE] = 7;
-			Define(ActorType.SKELETAL_SABERTOOTH,"skeletal sabertooth",'f',Color.White,40,50,7,0,AttrType.UNDEAD,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION,AttrType.KEEN_SENSES);
-			Define(ActorType.MUD_ELEMENTAL,"mud elemental",'E',Color.DarkYellow,35,100,7,0,AttrType.RESIST_BASH,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.IMMUNE_TOXINS,AttrType.IMMUNE_ARROWS);
-			Define(ActorType.MUD_TENTACLE,"mud tentacle",'~',Color.DarkYellow,1,100,0,0,AttrType.CONSTRUCT,AttrType.BLINDSIGHT,AttrType.GRAB_HIT,AttrType.NEVER_MOVES,AttrType.IMMUNE_TOXINS);
-			Define(ActorType.ENTRANCER,"entrancer",'p',Color.DarkMagenta,35,100,7,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
-			Define(ActorType.MARBLE_HORROR,"marble horror",'&',Color.Gray,45,100,7,0,AttrType.CONSTRUCT,AttrType.DARKVISION,AttrType.DIM_VISION_HIT,AttrType.IMMUNE_TOXINS,AttrType.DESTROYED_BY_SUNLIGHT);
-			Define(ActorType.OGRE,"ogre",'O',Color.Green,55,100,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.DARKVISION,AttrType.SMALL_GROUP);
-			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,50,100,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.DIRE_RAT,"dire rat",'r',Color.DarkRed,25,90,4,0,AttrType.LOW_LIGHT_VISION,AttrType.LARGE_GROUP,AttrType.SMALL,AttrType.KEEN_SENSES);
+			Define(ActorType.SKULKING_KILLER,"skulking killer",'p',Color.DarkBlue,35,100,3,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
+			Prototype(ActorType.SKULKING_KILLER).skills[SkillType.STEALTH] = 4;
+			Define(ActorType.NAME_BOAR,"wild boar",'q',Color.DarkYellow,1,100,-1,0);
+			Define(ActorType.TROLL,"troll",'T',Color.DarkGreen,50,100,6,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.NAME_DREAMWIZ,"dream sprite",'y',Color.Cyan,1,100,-1,0);
+			Define(ActorType.CLOUD_ELEMENTAL,"cloud elemental",'E',Color.White,1,100,-1,0);
+			Define(ActorType.DERANGED_ASCETIC,"deranged ascetic",'p',Color.RandomDark,40,100,5,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.SPELL_DISRUPTION);
 			Define(ActorType.SHADOWVEIL_DUELIST,"shadowveil duelist",'p',Color.DarkCyan,40,100,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.SHADOW_CLOAK);
-			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,35,100,8,0,AttrType.PARALYSIS_HIT,AttrType.DARKVISION);
+			Define(ActorType.WARG,"warg",'c',Color.White,30,50,5,0,AttrType.LOW_LIGHT_VISION,AttrType.MEDIUM_GROUP,AttrType.KEEN_SENSES);
+			Define(ActorType.NAME_FLUXMAGE,"runic transcendent",'h',Color.Magenta,1,100,-1,0);
+			Define(ActorType.CARRION_CRAWLER,"carrion crawler",'i',Color.DarkGreen,35,100,8,0,AttrType.PARALYSIS_HIT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.SKELETAL_SABERTOOTH,"skeletal sabertooth",'f',Color.White,40,50,7,0,AttrType.NONLIVING,AttrType.DULLS_BLADES,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.LOW_LIGHT_VISION,AttrType.KEEN_SENSES);
+			Define(ActorType.MECHANICAL_KNIGHT,"mechanical knight",'K',Color.DarkRed,20,100,9,0,AttrType.NONLIVING,AttrType.MECHANICAL_SHIELD,AttrType.KEEN_SENSES,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.NAME_BATTLEMAGE,"alasi battlemage",'a',Color.Magenta,1,100,-1,0);
+			Define(ActorType.ALASI_SOLDIER,"alasi soldier",'a',Color.White,1,100,-1,0);
+			Define(ActorType.ALASI_SCOUT,"alasi scout",'a',Color.Blue,1,100,-1,0);
+			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,65,120,9,0,AttrType.NONLIVING,AttrType.STALAGMITE_HIT,AttrType.DULLS_BLADES,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.MUD_ELEMENTAL,"mud elemental",'E',Color.DarkYellow,35,100,7,0,AttrType.NONLIVING,AttrType.BLINDSIGHT,AttrType.RESIST_WEAPONS,AttrType.IMMUNE_ARROWS); //todo: keep immunity to arrows or not?
+			Define(ActorType.MUD_TENTACLE,"mud tentacle",'~',Color.DarkYellow,1,100,0,0,AttrType.NONLIVING,AttrType.BLINDSIGHT,AttrType.GRAB_HIT,AttrType.IMMOBILE);
+			Define(ActorType.NAME_BURROWINGREPTILE,"flametongue toad",'t',Color.Red,1,100,-1,0);
+			Define(ActorType.ENTRANCER,"entrancer",'p',Color.DarkMagenta,35,100,7,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.OGRE,"ogre",'O',Color.Green,55,100,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.LOW_LIGHT_VISION,AttrType.SMALL_GROUP);
+			Define(ActorType.ORC_GRENADIER,"orc grenadier",'o',Color.DarkYellow,50,100,8,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.SPELLMUDDLE_PIXIE,"spellmuddle pixie",'y',Color.RandomBright,35,50,8,0,AttrType.SMALL,AttrType.FLYING,AttrType.SPELL_DISRUPTION);
-			Define(ActorType.STONE_GOLEM,"stone golem",'x',Color.Gray,65,120,9,0,AttrType.CONSTRUCT,AttrType.STALAGMITE_HIT,AttrType.RESIST_SLASH,AttrType.RESIST_PIERCE,AttrType.RESIST_FIRE,AttrType.RESIST_COLD,AttrType.RESIST_ELECTRICITY,AttrType.DARKVISION);
-			Define(ActorType.PYREN_ARCHER,"pyren archer",'P',Color.DarkRed,55,100,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.FIERY_ARROWS,AttrType.RESIST_FIRE);
-			Define(ActorType.ORC_ASSASSIN,"orc assassin",'o',Color.DarkBlue,50,100,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY);
-			Prototype(ActorType.ORC_ASSASSIN).skills[Forays.SkillType.STEALTH] = 9;
-			Define(ActorType.TROLL_SEER,"troll seer",'T',Color.Cyan,50,100,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.DARKVISION);
+			Define(ActorType.CRUSADING_KNIGHT,"crusading knight",'K',Color.DarkGray,45,100,7,6,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Prototype(ActorType.CRUSADING_KNIGHT).skills[Forays.SkillType.DEFENSE] = 7;
+			Define(ActorType.TROLL_SEER,"troll bloodwitch",'T',Color.Cyan,50,100,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.REGENERATING,AttrType.REGENERATES_FROM_DEATH,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.TROLL_SEER).GainSpell(SpellType.GLACIAL_BLAST,SpellType.SONIC_BOOM);
 			Prototype(ActorType.TROLL_SEER).skills[SkillType.MAGIC] = 9;
-			Define(ActorType.MECHANICAL_KNIGHT,"mechanical knight",'x',Color.DarkRed,20,100,9,0,AttrType.CONSTRUCT,AttrType.MECHANICAL_SHIELD,AttrType.KEEN_SENSES,AttrType.BLINDSIGHT);
+			Define(ActorType.NAME_HULK,"savage hulk",'H',Color.DarkGreen,1,100,-1,0);
+			Define(ActorType.MARBLE_HORROR,"marble horror",'&',Color.Gray,45,100,7,0,AttrType.NONLIVING,AttrType.LOW_LIGHT_VISION,AttrType.DIM_VISION_HIT);
+			Define(ActorType.NAME_FROSTMAGE,"cryolich",'L',Color.White,1,100,-1,0);
+			Define(ActorType.PYREN_ARCHER,"pyren archer",'P',Color.DarkRed,55,100,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.FIERY_ARROWS,AttrType.RESIST_FIRE);
+			Define(ActorType.PLACEHOLDER,"PLACEHOLDER",'?',Color.RandomAny,1,100,-1,0);
+			Define(ActorType.NAME_SENTINEL,"alasi sentinel",'a',Color.DarkGray,1,100,-1,0);
+			Define(ActorType.NOXIOUS_WORM,"noxious worm",'W',Color.DarkMagenta,55,140,6,0);
+			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,50,100,10,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_FIRE,AttrType.BLINDSIGHT,AttrType.IMMOBILE);
+			Define(ActorType.VAMPIRE,"vampire",'V',Color.Blue,40,100,6,0,AttrType.NONLIVING,AttrType.MEDIUM_HUMANOID,AttrType.RESIST_NECK_SNAP,AttrType.FLYING,AttrType.LIGHT_ALLERGY,AttrType.DESTROYED_BY_SUNLIGHT,AttrType.LIFE_DRAIN_HIT,AttrType.RESIST_COLD,AttrType.LOW_LIGHT_VISION);
 			Define(ActorType.ORC_WARMAGE,"orc warmage",'o',Color.Red,50,100,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.LOW_LIGHT_VISION);
 			Prototype(ActorType.ORC_WARMAGE).GainSpell(SpellType.FORCE_BEAM,SpellType.IMMOLATE,SpellType.VOLTAIC_SURGE,SpellType.MAGIC_HAMMER,SpellType.GLACIAL_BLAST,SpellType.BLOODSCENT,SpellType.PASSAGE);
 			Prototype(ActorType.ORC_WARMAGE).skills[SkillType.MAGIC] = 10;
-			Define(ActorType.LASHER_FUNGUS,"lasher fungus",'F',Color.DarkGreen,50,100,10,0,AttrType.PLANTLIKE,AttrType.SPORE_BURST,AttrType.RESIST_BASH,AttrType.RESIST_FIRE,AttrType.DARKVISION,AttrType.BLINDSIGHT,AttrType.NEVER_MOVES);
 			Define(ActorType.NECROMANCER,"necromancer",'p',Color.Blue,40,100,10,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.NAME_BURROWINGSPIDER,"stalking webstrider",'A',Color.Red,1,100,-1,0);
+			Define(ActorType.ORC_ASSASSIN,"orc assassin",'o',Color.DarkBlue,50,100,9,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.STEALTHY,AttrType.LOW_LIGHT_VISION);
+			Prototype(ActorType.ORC_ASSASSIN).skills[Forays.SkillType.STEALTH] = 9;
 			Define(ActorType.LUMINOUS_AVENGER,"luminous avenger",'E',Color.Yellow,40,50,10,12,AttrType.HOLY_SHIELDED);
-			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,75,120,10,0,AttrType.UNDEAD,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD,AttrType.STUN_HIT);
-			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,200,50,10,2,AttrType.BOSS_MONSTER,AttrType.DARKVISION,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
-			Define(ActorType.PHANTOM,"phantom",'?',Color.Cyan,1,100,0,0,AttrType.CONSTRUCT,AttrType.FLYING,AttrType.IMMUNE_TOXINS); //the template on which the different types of phantoms are based
+			Define(ActorType.CORPSETOWER_BEHEMOTH,"corpsetower behemoth",'z',Color.DarkMagenta,75,120,10,0,AttrType.NONLIVING,AttrType.TOUGH,AttrType.REGENERATING,AttrType.RESIST_COLD,AttrType.STUN_HIT,AttrType.LOW_LIGHT_VISION);
+			Define(ActorType.MACHINE_OF_WAR,"machine of war",'M',Color.DarkGray,1,100,-1,0);
+			Define(ActorType.FIRE_DRAKE,"fire drake",'D',Color.DarkRed,200,50,10,2,AttrType.BOSS_MONSTER,AttrType.LOW_LIGHT_VISION,AttrType.IMMUNE_FIRE,AttrType.HUMANOID_INTELLIGENCE);
+			Define(ActorType.PHANTOM,"phantom",'?',Color.Cyan,1,100,0,0,AttrType.NONLIVING,AttrType.FLYING); //the template on which the different types of phantoms are based
 		}
 		private static void Define(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int level_,int light_radius_,params AttrType[] attrlist){
 			proto[type_] = new Actor(type_,name_,symbol_,color_,maxhp_,speed_,level_,light_radius_,attrlist);
@@ -261,13 +280,13 @@ namespace Forays{
 					if(insert_after_current){
 						tiebreakers.Insert(Q.Tiebreaker + 1,a);
 						Q.UpdateTiebreaker(Q.Tiebreaker + 1);
-						Event e = new Event(a,a.speed,EventType.MOVE);
+						Event e = new Event(a,a.Speed(),EventType.MOVE);
 						e.tiebreaker = Q.Tiebreaker + 1;
 						Q.Add(e);
 					}
 					else{
 						tiebreakers.Add(a);
-						Event e = new Event(a,a.speed,EventType.MOVE);
+						Event e = new Event(a,a.Speed(),EventType.MOVE);
 						e.tiebreaker = tiebreakers.Count - 1; //since it's the last one
 						Q.Add(e);
 					}
@@ -335,6 +354,20 @@ namespace Forays{
 			}
 			return a;
 		}
+		public Actor GetCorpse(){ //used to apply knockback effects to dead monsters
+			Actor a = new Actor(this,row,col);
+			a.curhp = -1;
+			//a.attrs[AttrType.INVULNERABLE]++;
+			if(name.Substring(name.Length-6) != "corpse"){
+				a.SetName(name + " corpse");
+			}
+			if(type == ActorType.PLAYER){
+				a.name = "your corpse";
+				a.a_name = "your corpse";
+				a.the_name = "your corpse";
+			}
+			return a;
+		}
 		public string AName(bool consider_visibility){
 			if(!consider_visibility || player.CanSee(this)){
 				return a_name;
@@ -394,6 +427,14 @@ namespace Forays{
 		public void Move(int r,int c){ Move(r,c,true); }
 		public void Move(int r,int c,bool trigger_traps){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
+				if(this == player && row >= 0 && row < ROWS && col >= 0 && col < COLS){
+					if(DistanceFrom(r,c) == 1){
+						tile().direction_exited = DirectionOf(new pos(r,c));
+					}
+					else{
+						tile().direction_exited = 0;
+					}
+				}
 				if(M.actor[r,c] == null){
 					if(HasAttr(AttrType.GRABBED)){
 						foreach(Actor a in ActorsAtDistance(1)){
@@ -417,7 +458,7 @@ namespace Forays{
 					if(row>=0 && row<ROWS && col>=0 && col<COLS){
 						M.actor[row,col] = null;
 						if(this == player && M.tile[row,col].inv != null){
-							M.tile[row,col].inv.ignored = true;
+							M.tile[row,col].inv.ignored = true; //todo: this will not work as intended once you can be knocked back over items.
 						}
 					}
 					row = r;
@@ -460,8 +501,8 @@ namespace Forays{
 						a.UpdateRadius(0,a.LightRadius());
 					}
 				}
-				if(type == ActorType.PLAYER){
-					M.UpdateSafetyMap(this);
+				if(this == player){
+					M.UpdateSafetyMap2(this);
 				}
 			}
 		}
@@ -509,14 +550,66 @@ namespace Forays{
 			Q.Add(new Event(this,duration,attr,value,msg,objs));
 		}
 		public void GainAttrRefreshDuration(AttrType attr,int duration){
-			Q.KillEvents(this,attr);
 			attrs[attr]++;
-			Q.Add(new Event(this,duration,attr,attrs[attr]));
+			Event e = Q.FindAttrEvent(this,attr);
+			if(e != null){
+				if(e.TimeToExecute() < duration + Q.turn){ //if the new one would last longer than the old one, replace it.
+					e.dead = true;
+					Q.Add(new Event(this,duration,attr,attrs[attr]));
+				}
+				else{ //(if the old one still lasts longer, update it so it removes the new value)
+					e.value = attrs[attr];
+				}
+			}
+			else{
+				Q.Add(new Event(this,duration,attr,attrs[attr]));
+			}
 		}
 		public void GainAttrRefreshDuration(AttrType attr,int duration,string msg,params PhysicalObject[] objs){
-			Q.KillEvents(this,attr);
 			attrs[attr]++;
-			Q.Add(new Event(this,duration,attr,attrs[attr],msg,objs));
+			Event e = Q.FindAttrEvent(this,attr);
+			if(e != null){
+				if(e.TimeToExecute() < duration + Q.turn){ //if the new one would last longer than the old one, replace it.
+					e.dead = true;
+					Q.Add(new Event(this,duration,attr,attrs[attr],msg,objs));
+				}
+				else{ //(if the old one still lasts longer, update it so it removes the new value)
+					e.value = attrs[attr];
+				}
+			}
+			else{
+				Q.Add(new Event(this,duration,attr,attrs[attr],msg,objs));
+			}
+		}
+		public void RefreshDuration(AttrType attr,int duration){
+			if(attrs[attr] == 0){
+				attrs[attr]++;
+			}
+			Event e = Q.FindAttrEvent(this,attr);
+			if(e != null){
+				if(e.TimeToExecute() < duration + Q.turn){ //if the new one would last longer than the old one, replace it.
+					e.dead = true;
+					Q.Add(new Event(this,duration,attr,attrs[attr]));
+				} //(if the old one still lasts longer, do nothing)
+			}
+			else{
+				Q.Add(new Event(this,duration,attr,attrs[attr]));
+			}
+		}
+		public void RefreshDuration(AttrType attr,int duration,string msg,params PhysicalObject[] objs){
+			if(attrs[attr] == 0){
+				attrs[attr]++;
+			}
+			Event e = Q.FindAttrEvent(this,attr);
+			if(e != null){
+				if(e.TimeToExecute() < duration + Q.turn){ //if the new one would last longer than the old one, replace it.
+					e.dead = true;
+					Q.Add(new Event(this,duration,attr,attrs[attr],msg,objs));
+				} //(if the old one still lasts longer, do nothing)
+			}
+			else{
+				Q.Add(new Event(this,duration,attr,attrs[attr],msg,objs));
+			}
 		}
 		public void GainSpell(params SpellType[] spell_list){
 			foreach(SpellType spell in spell_list){
@@ -613,18 +706,19 @@ namespace Forays{
 			}
 			return magic_items[equipped_magic_item_idx];
 		}
-		public int LightRadius(){ return Math.Max(light_radius,attrs[AttrType.ON_FIRE]); }
-		public int ArmorClass(){
-			int total = TotalSkill(SkillType.DEFENSE);
-			if(EquippedWeapon.type == WeaponType.STAFF){
-				total++;
+		public int Speed(){
+			int bloodboil = attrs[AttrType.BLOOD_BOILED]*10;
+			int vigor = HasAttr(AttrType.VIGOR)? 50 : 0;
+			int longstride = HasAttr(AttrType.LONG_STRIDE)? 20 : 0;
+			int haste = Math.Max(Math.Max(bloodboil,vigor),longstride); //only the biggest applies
+			if(HasAttr(AttrType.SLOWED)){
+				return (speed - haste) * 2;
 			}
-			if(magic_items.Contains(MagicItemType.RING_OF_PROTECTION)){
-				total++;
+			else{
+				return speed - haste;
 			}
-			total += TotalProtectionFromArmor();
-			return total;
 		}
+		public int LightRadius(){ return Math.Max(light_radius,attrs[AttrType.ON_FIRE]); } //ON_FIRE should now have a maximum of 1
 		public int TotalProtectionFromArmor(){
 			int effective_exhaustion = exhaustion;
 			if(HasFeat(FeatType.ARMOR_MASTERY)){
@@ -649,22 +743,6 @@ namespace Forays{
 			}
 			return EquippedArmor.Protection();
 		}
-		public int Stealth(){ return Stealth(row,col); }
-		public int Stealth(int r,int c){ //this method should probably become part of TotalSkill
-			if(LightRadius() > 0){
-				return 0; //negative stealth is the same as zero stealth
-			}
-			int total = TotalSkill(SkillType.STEALTH);
-			if(!M.tile[r,c].IsLit()){
-				if(type == ActorType.PLAYER || !player.HasAttr(AttrType.SHADOWSIGHT)){ //+2 stealth while in darkness unless shadowsight is in effect
-					total += 2;
-				}
-			}
-			if(!HasFeat(FeatType.SILENT_CHAINMAIL) || EquippedArmor.type != ArmorType.CHAINMAIL){
-				total -= EquippedArmor.StealthPenalty();
-			}
-			return total;
-		}
 		public int TotalSkill(SkillType skill){
 			int result = skills[skill];
 			switch(skill){
@@ -673,6 +751,13 @@ namespace Forays{
 				break;
 			case SkillType.DEFENSE:
 				result += attrs[AttrType.BONUS_DEFENSE];
+				if(EquippedWeapon.type == WeaponType.STAFF){
+					result++; //todo: +1 or +2?
+				}
+				if(magic_items.Contains(MagicItemType.RING_OF_PROTECTION)){
+					result++;
+				}
+				result += TotalProtectionFromArmor();
 				break;
 			case SkillType.MAGIC:
 				result += attrs[AttrType.BONUS_MAGIC];
@@ -682,6 +767,17 @@ namespace Forays{
 				break;
 			case SkillType.STEALTH:
 				result += attrs[AttrType.BONUS_STEALTH];
+				if(LightRadius() > 0){
+					return 0;
+				}
+				if(!tile().IsLit()){
+					if(type == ActorType.PLAYER || !player.HasAttr(AttrType.SHADOWSIGHT)){ //+2 stealth while in darkness unless shadowsight is in effect
+						result += 2;
+					}
+				}
+				if(!HasFeat(FeatType.SILENT_CHAINMAIL) || EquippedArmor.type != ArmorType.CHAINMAIL){
+					result -= EquippedArmor.StealthPenalty();
+				}
 				break;
 			}
 			return result;
@@ -721,7 +817,7 @@ namespace Forays{
 									return "(extremely damaged)";
 								}
 								else{
-									if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){
+									if(HasAttr(AttrType.NONLIVING)){
 										return "(almost destroyed)";
 									}
 									else{
@@ -826,7 +922,7 @@ namespace Forays{
 			Q.Add(new Event(this,100));
 		}
 		public void QS(){ //equal to speed
-			Q.Add(new Event(this,speed));
+			Q.Add(new Event(this,Speed()));
 		}
 		public override string ToString(){ return symbol.ToString(); }
 		public void Input(){
@@ -868,10 +964,8 @@ namespace Forays{
 				}
 				B.Add("You fall. ");
 				B.PrintAll();
-				int old_exhaustion = exhaustion;
 				int old_resting_status = attrs[Forays.AttrType.RESTING];
-				M.GenerateBossLevel(drake_on_next_level);
-				exhaustion = old_exhaustion; //falling to a new level doesn't let you rest again during the boss fight
+				M.GenerateBossLevel(drake_on_next_level); //falling to a new level doesn't let you rest again during the boss fight
 				attrs[Forays.AttrType.RESTING] = old_resting_status;
 				Q0();
 				return;
@@ -880,10 +974,8 @@ namespace Forays{
 				if(player.tile().type == TileType.CHASM){
 					B.Add("You fall. ");
 					B.PrintAll();
-					int old_exhaustion = player.exhaustion;
 					int old_resting_status = player.attrs[Forays.AttrType.RESTING];
-					M.GenerateBossLevel(true);
-					player.exhaustion = old_exhaustion; //falling to a new level doesn't let you rest again during the boss fight
+					M.GenerateBossLevel(true); //falling to a new level doesn't let you rest again during the boss fight
 					player.attrs[Forays.AttrType.RESTING] = old_resting_status;
 					return;
 				}
@@ -902,8 +994,8 @@ namespace Forays{
 			}
 			if(HasAttr(AttrType.AGGRAVATING)){ //this probably wouldn't work well for anyone but the player, yet.
 				foreach(Actor a in ActorsWithinDistance(12)){
-					a.player_visibility_duration = -1;
-					a.attrs[AttrType.PLAYER_NOTICED] = 1;
+					a.player_visibility_duration = -1; //todo: is this conceptually different than just making lots of noise?
+					a.attrs[AttrType.PLAYER_NOTICED] = 1; //todo: if not, maybe change this.
 					if(a.HasLOS(this)){
 						a.target_location = tile();
 					}
@@ -918,7 +1010,7 @@ namespace Forays{
 			if(HasAttr(AttrType.IN_COMBAT)){
 				attrs[Forays.AttrType.IN_COMBAT] = 0;
 				if(HasFeat(FeatType.CONVICTION)){
-					GainAttrRefreshDuration(AttrType.CONVICTION,Math.Max(speed,100));
+					GainAttrRefreshDuration(AttrType.CONVICTION,Math.Max(Speed(),100));
 					attrs[Forays.AttrType.BONUS_SPIRIT]++;
 					if(attrs[Forays.AttrType.CONVICTION] % 2 == 0){
 						attrs[Forays.AttrType.BONUS_COMBAT]++;
@@ -982,12 +1074,22 @@ namespace Forays{
 			if(HasAttr(AttrType.PARALYZED)){
 				attrs[AttrType.PARALYZED]--;
 				if(type == ActorType.PLAYER){
-					B.AddDependingOnLastPartialMessage("You can't move! ");
+					//B.AddDependingOnLastPartialMessage("You can't move! ");
+					if(!HasAttr(AttrType.PARALYZED)){
+						B.Add("You can move again. ");
+					}
 				}
 				else{ //handled differently for the player: since the map still needs to be drawn,
-					B.Add(the_name + " can't move! ",this);
-					Q1();						// this is handled in InputHuman().
-					skip_input = true; //the message is still printed, of course.
+					if(HasAttr(AttrType.PARALYZED)){
+						if(attrs[AttrType.PARALYZED] == 1){
+							B.Add(the_name + " can move again. ",this);
+						}
+						else{
+							B.Add(the_name + " can't move! ",this);
+						}
+						Q1();						// this is handled in InputHuman().
+						skip_input = true; //the message is still printed, of course.
+					}
 				}
 			}
 			if(HasAttr(AttrType.AMNESIA_STUN)){
@@ -1042,7 +1144,7 @@ namespace Forays{
 					skip_input = true;
 				}
 			}
-			if(curhp < maxhp){
+			if(curhp < maxhp && !HasAttr(AttrType.NONLIVING)){
 				if(HasAttr(AttrType.REGENERATING) && time_of_last_action < Q.turn){
 					curhp += attrs[AttrType.REGENERATING];
 					if(curhp > maxhp){
@@ -1067,23 +1169,33 @@ namespace Forays{
 				}
 					
 			}
-			if((HasAttr(AttrType.POISONED) || tile().Is(FeatureType.POISON_GAS)) && time_of_last_action < Q.turn){
-				int strength = attrs[Forays.AttrType.POISONED];
-				if(tile().Is(FeatureType.POISON_GAS) && strength < 3){
-					strength = 3;
+			if(tile().Is(FeatureType.POISON_GAS) && time_of_last_action < Q.turn){
+				if(!HasAttr(AttrType.NONLIVING) && type != ActorType.NOXIOUS_WORM){
+					if(!HasAttr(AttrType.POISONED) && this == player){
+						B.Add("Poisonous fumes fill your lungs! ");
+					}
+					string msg = "";
+					if(this == player){
+						msg = "You are no longer poisoned. ";
+					}
+					RefreshDuration(AttrType.POISONED,300,msg,this);
 				}
-				if(!TakeDamage(DamageType.POISON,DamageClass.NO_TYPE,Global.Roll(strength+2)-1,null,"*succumbed to poison")){
+			}
+			if(HasAttr(AttrType.POISONED) && time_of_last_action < Q.turn){
+				if(!TakeDamage(DamageType.POISON,DamageClass.NO_TYPE,Global.Roll(3)-1,null,"*succumbed to poison")){
 					return;
 				}
 			}
 			if(HasAttr(AttrType.ON_FIRE) && time_of_last_action < Q.turn){
-				if(type == ActorType.CORPSETOWER_BEHEMOTH){
-					B.Add(the_name + " burns slowly. ",this);
+				if(player.HasLOS(this)){
+					if(type == ActorType.CORPSETOWER_BEHEMOTH){
+						B.Add(the_name + " burns slowly. ",this);
+					}
+					else{
+						B.Add(YouAre() + " on fire! ",this);
+					}
 				}
-				else{
-					B.Add(YouAre() + " on fire! ",this);
-				}
-				if(!TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(attrs[AttrType.ON_FIRE],6),null,"*burned to death")){
+				if(!TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(attrs[AttrType.ON_FIRE],6),null,"*burned to death")){ //todo: should be 1d6 at all times, or maybe 2d6
 					return;
 				}
 			}
@@ -1100,7 +1212,7 @@ namespace Forays{
 			}
 			if(HasAttr(AttrType.COMPY_POISON_LETHAL) && this == player && time_of_last_action < Q.turn){
 				if(attrs[Forays.AttrType.COMPY_POISON_LETHAL] == 2){
-					if(attrs[Forays.AttrType.COMPY_POISON_COUNTER] >= curhp && !HasAttr(AttrType.IMMUNE_TOXINS)){
+					if(attrs[Forays.AttrType.COMPY_POISON_COUNTER] >= curhp && !HasAttr(AttrType.NONLIVING)){
 						B.Add("You can't resist the poison any longer. ");
 						B.Add("You lose consciousness. ");
 						if(!TakeDamage(DamageType.NORMAL,DamageClass.NO_TYPE,curhp,null,"*eaten alive by a pack of compys")){
@@ -1127,7 +1239,7 @@ namespace Forays{
 			if(HasAttr(AttrType.STEALTHY)){ //monsters only
 				if((player.IsWithinSightRangeOf(row,col) || M.tile[row,col].IsLit()) && player.HasLOS(row,col)){
 					if(IsHiddenFrom(player)){  //if they're stealthed and near the player...
-						if(Stealth() * DistanceFrom(player) * 10 - attrs[AttrType.TURNS_VISIBLE]++*5 < Global.Roll(1,100)){
+						if(TotalSkill(SkillType.STEALTH) * DistanceFrom(player) * 10 - attrs[AttrType.TURNS_VISIBLE]++*5 < Global.Roll(1,100)){
 							attrs[AttrType.TURNS_VISIBLE] = -1;
 							if(DistanceFrom(player) > 3){
 								B.Add("You notice " + a_name + ". ");
@@ -1152,7 +1264,7 @@ namespace Forays{
 					}
 				}
 			}
-			if(HasAttr(AttrType.ON_FIRE) && attrs[AttrType.ON_FIRE] < 5 && time_of_last_action < Q.turn
+			/*if(HasAttr(AttrType.ON_FIRE) && attrs[AttrType.ON_FIRE] < 5 && time_of_last_action < Q.turn
 			&& type != ActorType.CORPSETOWER_BEHEMOTH){
 				if(Global.CoinFlip()){
 					if(attrs[AttrType.ON_FIRE] >= light_radius){
@@ -1160,7 +1272,7 @@ namespace Forays{
 					}
 					attrs[AttrType.ON_FIRE]++;
 				}
-			}
+			}*/
 			if(HasAttr(AttrType.CATCHING_FIRE) && time_of_last_action < Q.turn){
 				if(Global.OneIn(3)){
 					attrs[AttrType.CATCHING_FIRE] = 0;
@@ -1168,7 +1280,8 @@ namespace Forays{
 						if(light_radius == 0){
 							UpdateRadius(0,1);
 						}
-						attrs[AttrType.ON_FIRE] = 1;
+						//attrs[AttrType.ON_FIRE] = 1;
+						RefreshDuration(AttrType.ON_FIRE,(Global.Roll(3)+4) * 100,YouAre() + " no longer on fire. ",this);
 						Help.TutorialTip(TutorialTopic.Fire);
 					}
 				}
@@ -1404,9 +1517,9 @@ namespace Forays{
 				}
 				Tile t = TileInDirection(attrs[AttrType.RUNNING]);
 				bool stopped_by_terrain = false;
-				if(t.IsKnownTrap() || t.Is(FeatureType.FUNGUS_ACTIVE) || t.Is(FeatureType.FUNGUS_PRIMED)
-				|| t.Is(FeatureType.GRENADE) || t.Is(FeatureType.POISON_GAS) || t.Is(FeatureType.QUICKFIRE)){
-					stopped_by_terrain = true;
+				if(t.IsKnownTrap() || (t.inv != null && t.inv.type == ConsumableType.BLAST_FUNGUS)/*t.Is(FeatureType.FUNGUS_ACTIVE) || t.Is(FeatureType.FUNGUS_PRIMED)*/
+				|| t.Is(FeatureType.GRENADE,FeatureType.POISON_GAS,FeatureType.QUICKFIRE)){
+					stopped_by_terrain = true; //todo! check this for new terrain.
 				}
 				if(!monsters_visible && !stopped_by_terrain && !Console.KeyAvailable){
 					if(attrs[AttrType.RUNNING] == 5){
@@ -1575,16 +1688,16 @@ namespace Forays{
 			case '5':
 			case '.':
 				if(HasFeat(FeatType.FULL_DEFENSE) && EnemiesAdjacent() > 0){
-					if(!HasAttr(AttrType.CATCHING_FIRE) && !HasAttr(AttrType.ON_FIRE)){
+					//if(!HasAttr(AttrType.CATCHING_FIRE) && !HasAttr(AttrType.ON_FIRE)){
 						attrs[AttrType.DEFENSIVE_STANCE]++;
 						B.Add("You ready yourself. ");
-					}
+					//}
 				}
 				if(HasAttr(AttrType.CATCHING_FIRE)){
 					attrs[AttrType.CATCHING_FIRE] = 0;
 					B.Add("You stop the flames from spreading. ");
 				}
-				else{
+				/*else{
 					if(HasAttr(AttrType.ON_FIRE)){
 						bool update = false;
 						int oldradius = LightRadius();
@@ -1609,7 +1722,7 @@ namespace Forays{
 							B.Add("You put out the fire. ");
 						}
 					}
-				}
+				}*/
 				if(M.tile[row,col].inv != null){
 					B.Add("You see " + M.tile[row,col].inv.AName() + ". ");
 				}
@@ -1810,12 +1923,12 @@ namespace Forays{
 							break;
 						}
 						bool target_nearest_enemy = false;
-						if(inv[num].NameOfItemType() == "orb"){
+						if(inv[num].NameOfItemType() == "orb" || inv[num].type == ConsumableType.BLAST_FUNGUS){
 							target_nearest_enemy = true;
 						}
 						List<Tile> line = GetTarget(false,12,0,false,target_nearest_enemy);
 						if(line != null){
-							if(inv[num].NameOfItemType() == "orb"){
+							if(inv[num].NameOfItemType() == "orb" || inv[num].type == ConsumableType.BLAST_FUNGUS){
 								inv[num].Use(this,line);
 								Q1();
 							}
@@ -2293,8 +2406,14 @@ namespace Forays{
 							}
 						}
 						else{
-							B.Add("There's nothing here to pick up. ");
-							Q0();
+							if(tile().type == TileType.BLAST_FUNGUS){
+								B.Add("The blast fungus is still rooted to the ground by its fuse. ");
+								Q0();
+							}
+							else{
+								B.Add("There's nothing here to pick up. ");
+								Q0();
+							}
 						}
 					}
 				}
@@ -2366,7 +2485,7 @@ namespace Forays{
 						}
 						Item i = inv[num];
 						i.revealed_by_light = true;
-						if(i.quantity <= 1){
+						if(i.quantity <= 1 || i.type == ConsumableType.BLAST_FUNGUS){
 							if(tile().type == TileType.HEALING_POOL){
 								B.Add("You drop " + i.TheName() + " into the healing pool. ");
 								inv.Remove(i);
@@ -2479,11 +2598,17 @@ namespace Forays{
 						if(StunnedThisTurn()){
 							break;
 						}
-						if(inv[num].Use(this)){
-							Q1();
-						}
-						else{
+						if(HasAttr(AttrType.NONLIVING) && inv[num].NameOfItemType() == "potion"){
+							B.Add("Potions have no effect on you in stone form. ");
 							Q0();
+						}
+						else{ //todo: brutish strength check here, too?
+							if(inv[num].Use(this)){
+								Q1();
+							}
+							else{
+								Q0();
+							}
 						}
 					}
 					else{
@@ -2651,28 +2776,28 @@ namespace Forays{
 					break;
 				}
 				if(light_radius==0){
-					if(HasAttr(AttrType.ENHANCED_TORCH)){
-						UpdateRadius(LightRadius(),Global.MAX_LIGHT_RADIUS - attrs[AttrType.DIM_LIGHT]*2,true);
-					}
-					else{
-						UpdateRadius(LightRadius(),6 - attrs[AttrType.DIM_LIGHT],true); //normal light radius is 6
-					}
 					if(!M.wiz_dark){
 						B.Add("You bring out your torch. ");
 					}
 					else{
 						B.Add("You bring out your torch, but it gives off no light! ");
 					}
+					if(HasAttr(AttrType.ENHANCED_TORCH)){
+						UpdateRadius(LightRadius(),Global.MAX_LIGHT_RADIUS - attrs[AttrType.DIM_LIGHT]*2,true);
+					}
+					else{
+						UpdateRadius(LightRadius(),6 - attrs[AttrType.DIM_LIGHT],true); //normal light radius is 6
+					}
 				}
 				else{
-					UpdateRadius(LightRadius(),0,true);
-					UpdateRadius(0,attrs[AttrType.ON_FIRE]);
 					if(!M.wiz_lite){
 						B.Add("You put away your torch. ");
 					}
 					else{
 						B.Add("You put away your torch. The air still shines brightly. ");
 					}
+					UpdateRadius(LightRadius(),0,true);
+					UpdateRadius(0,attrs[AttrType.ON_FIRE]); //todo: should be limited to radius 1
 				}
 				Q1();
 				break;
@@ -2778,14 +2903,14 @@ namespace Forays{
 					Screen.WriteMapString(line,33,s);
 					++line;
 				}
-				Screen.WriteMapString(13,0,"  - Orbs -",label_color);
-				line = 14;
+				Screen.WriteMapString(12,0,"  - Orbs -",label_color);
+				line = 13;
 				foreach(colorstring s in orbs){
 					Screen.WriteMapString(line,0,s);
 					++line;
 				}
-				Console.CursorVisible = true;
 				B.DisplayNow("Discovered item types: ");
+				Console.CursorVisible = true;
 				Console.ReadKey(true);
 				Q0();
 				break;
@@ -2944,30 +3069,31 @@ namespace Forays{
 			case '~': //debug mode 
 				if(true){
 					List<string> l = new List<string>();
-					l.Add("Throw a prismatic orb");
+					l.Add("blink");
 					l.Add("create chests");
-					l.Add("test scroll names");
-					l.Add("create fog");
+					l.Add("get knocked down (but get up again)");
+					l.Add("test input key names");
 					l.Add("Forget the map");
 					l.Add("Heal to full");
 					l.Add("Become invulnerable");
 					l.Add("get items!");
-					l.Add("Spawn a monster");
+					l.Add("other");
 					l.Add("Use a rune of passage");
 					l.Add("See the entire level");
 					l.Add("Generate new level");
-					l.Add("Gain all skills and feats");
+					l.Add("Create ice or slime");
 					l.Add("Spawn shrines");
 					l.Add("create trap");
 					l.Add("create door");
 					l.Add("spawn lots of goblins and lose neck snap");
 					l.Add("distance test");
 					l.Add("detect monsters forever");
-					l.Add("trigger floor collapse");
+					l.Add("get specific items");
 					switch(Select("Activate which cheat? ",l)){
 					case 0:
 						{
-						new Item(ConsumableType.PRISMATIC,"prismatic orb",'*',Color.White).Use(this);
+						//new Item(ConsumableType.DETONATION,"orb of detonation",'*',Color.White).Use(this);
+						new Item(ConsumableType.BLINKING,"orb of detonation",'*',Color.White).Use(this);
 						Q1();
 						break;
 						}
@@ -3027,6 +3153,7 @@ namespace Forays{
 							Screen.WriteMapString(i,0,Item.GenerateScrollName().PadToMapSize());
 						}
 						Console.ReadKey(true);
+						TileInDirection(8).KnockObjectBack(this);
 						Q0();
 						break;
 					}
@@ -3085,10 +3212,257 @@ namespace Forays{
 						break;
 					}
 					case 8:
-						//Create(ActorType.CULTIST,18,50);
-						M.SpawnMob(ActorType.DIRE_RAT);
-						Q1();
+					{
+						//int[,] a = GetBinaryNoise(ROWS,COLS);
+						/*int[,] a = GetDividedNoise(ROWS,COLS,40);
+						int[,] chances = new int[ROWS,COLS];
+						int[,] values = new int[ROWS,COLS];
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								bool passable = (a[i,j] == 1);
+								if(passable){
+									values[i,j] = -1;
+								}
+								else{
+									values[i,j] = 0;
+								}
+							}
+						}
+						int minrow = 1;
+						int maxrow = ROWS-2;
+						int mincol = 1;
+						int maxcol = COLS-2;
+						int val = 0;
+						bool done = false;
+						while(!done){
+							done = true;
+							for(int i=minrow;i<=maxrow;++i){
+								for(int j=mincol;j<=maxcol;++j){
+									if(values[i,j] == val){
+										for(int s=i-1;s<=i+1;++s){
+											for(int t=j-1;t<=j+1;++t){
+												if(values[s,t] == -1){
+													values[s,t] = val + 1;
+													done = false;
+												}
+											}
+										}
+									}
+								}
+							}
+							++val;
+						}
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								if(a[i,j] == 1){
+									//distances[i,j] = values[i,j];
+									int k = 5 + values[i,j];
+									if(k >= 10){
+										chances[i,j] = 10;
+									}
+									else{
+										chances[i,j] = k;
+									}
+								}
+							}
+						}
+						values = new int[ROWS,COLS];
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								bool passable = (a[i,j] == -1);
+								if(passable){
+									values[i,j] = -1;
+								}
+								else{
+									values[i,j] = 0;
+								}
+							}
+						}
+						val = 0;
+						done = false;
+						while(!done){
+							done = true;
+							for(int i=minrow;i<=maxrow;++i){
+								for(int j=mincol;j<=maxcol;++j){
+									if(values[i,j] == val){
+										for(int s=i-1;s<=i+1;++s){
+											for(int t=j-1;t<=j+1;++t){
+												if(values[s,t] == -1){
+													values[s,t] = val + 1;
+													done = false;
+												}
+											}
+										}
+									}
+								}
+							}
+							++val;
+						}
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								if(a[i,j] == -1){
+									//distances[i,j] = -(values[i,j]);
+									int k = 5 + values[i,j];
+									if(k >= 10){
+										chances[i,j] = 0;
+									}
+									else{
+										chances[i,j] = 10 - k;
+									}
+								}
+							}
+						}
+						DungeonGen.StandardDungeon dungeon1 = new DungeonGen.StandardDungeon();
+						char[,] map1 = dungeon1.GenerateStandard();
+						DungeonGen.StandardDungeon dungeon2 = new DungeonGen.StandardDungeon();
+						char[,] map2 = dungeon2.GenerateCave();
+						char[,] map3 = new char[ROWS,COLS];
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								if(a[i,j] == -1){
+									map3[i,j] = map1[i,j];
+								}
+								else{
+									if(a[i,j] == 1){
+										map3[i,j] = map2[i,j];
+									}
+									else{
+										if(map1[i,j] == '#'){
+											map3[i,j] = map2[i,j];
+										}
+										else{
+											if(map2[i,j] == '#'){
+												map3[i,j] = map1[i,j];
+											}
+											else{
+												if(Global.CoinFlip()){
+													map3[i,j] = map1[i,j];
+												}
+												else{
+													map3[i,j] = map2[i,j];
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								Screen.WriteMapChar(i,j,map3[i,j]);
+								/*if(distances[i,j] > -10){
+									if(distances[i,j] < 10){
+										if(distances[i,j] < 0){
+											Screen.WriteMapChar(i,j,(-distances[i,j]).ToString()[0],Color.DarkMagenta);
+										}
+										else{
+											if(distances[i,j] > 0){
+												Screen.WriteMapChar(i,j,distances[i,j].ToString()[0],Color.DarkCyan);
+											}
+											else{
+												Screen.WriteMapChar(i,j,distances[i,j].ToString()[0],Color.DarkGray);
+											}
+										}
+									}
+									else{
+										Screen.WriteMapChar(i,j,'+',Color.DarkCyan);
+									}
+								}
+								else{
+									Screen.WriteMapChar(i,j,'-',Color.DarkMagenta);
+								}
+							}
+						}*/
+						//tile().Toggle(null,TileType.BLAST_FUNGUS);
+						/*List<Tile> area = new List<Tile>();
+						foreach(Tile t in TilesWithinDistance(3).Where(x=>x.passable && HasLOE(x))){
+							t.Toggle(null,TileType.POPPY_FIELD);
+							area.Add(t);
+						}
+						Q.Add(new Event(area,100,EventType.POPPIES));*/
+						//tile().Toggle(null,Forays.TileType.TOMBSTONE);
+						//Console.ReadKey(true);
+						List<string> movement = new List<string>{"is immobile","moves quickly","moves slowly"};
+						List<string> ability = new List<string>{"can step back after attacking","moves erratically","flies","can use an aggressive stance","uses a ranged attack","uses a burst attack","lunges","has a poisonous attack","drains life","has a powerful but slow attack","grabs its targets","has a knockback attack","has a slowing attack","has a silencing attack","can steal items","explodes when defeated","stays at range",
+						"sidesteps when it attacks","has a paralyzing attack","has a stunning attack","is stealthy","appears with others of its type","carries a light source","is invisible in darkness","disrupts nearby spells","regenerates","comes back after death","wears armor","has heightened senses","has hard skin that can blunt edged weapons","casts spells","can reduce its target's attack power","can burrow"};
+						List<string> rare_ability = new List<string>{"is attracted to light","is blind in the light","can create illusions of itself","sets itself on fire","throws a bola to slow its targets","dims nearby light sources","screams to terrify its prey","howls to embolden others attacking its prey","breathes poison","is surrounded by a poisonous cloud",
+						"is surrounded by a cloud of fog","can summon a minion","can fill the area with sunlight","is resistant to weapons","can turn into a statue","can throw explosives","can create stalagmites","collapses into rubble when defeated","has a fiery attack","can teleport its foes away","can pull its targets closer from a distance","releases spores when attacked","can absorb light to heal","leaves a trail as it travels","breathes fire","can spit blinding poison","lays volatile eggs","can breach nearby walls","is knocked back by blunt weapons","causes attackers to become exhausted","can create a temporary wall","can throw its foes overhead"};
+						char randomsymbol = (char)((Global.Roll(26)-1) + (int)'a');
+						if(Global.CoinFlip()){
+							randomsymbol = randomsymbol.ToString().ToUpper()[0];
+						}
+						string s1 = "This monster is a " + Screen.GetColor(Color.RandomAny).ToString().ToLower().Replace("dark","dark ") + " '" + randomsymbol + "'. ";
+						string s2 = "It ";
+						bool add_move = Global.OneIn(5);
+						int num_abilities = Global.Roll(2) + 1;
+						if(Global.OneIn(10)){
+							++num_abilities;
+						}
+						int total = num_abilities;
+						if(add_move){ ++total; }
+						if(add_move){
+							--total;
+							if(total == 0){
+								s2 = s2 + "and " + movement.Random() + ". ";
+							}
+							else{
+								s2 = s2 + movement.Random() + ", ";
+							}
+						}
+						for(int i=num_abilities;i>0;--i){
+							--total;
+							string a = "";
+							if(Global.PercentChance(50)){
+								a = ability.Random();
+							}
+							else{
+								a = rare_ability.Random();
+							}
+							if(!s2.Contains(a)){
+								if(total == 0){
+									s2 = s2 + "and " + a + ". ";
+								}
+								else{
+									s2 = s2 + a + ", ";
+								}
+							}
+							else{
+								++i;
+								++total;
+							}
+						}
+						/*if(add_rare){
+							--total;
+							if(total == 0){
+								s2 = s2 + "and " + rare_ability.Random() + ". ";
+							}
+							else{
+								s2 = s2 + rare_ability.Random() + ", ";
+							}
+						}*/
+						B.Add(s1);
+						B.Add(s2);
+						if(s2.Contains("casts spells")){
+							List<SpellType> all_spells = new List<SpellType>();
+							foreach(SpellType spl in Enum.GetValues(typeof(SpellType))){
+								all_spells.Add(spl);
+							}
+							all_spells.Remove(SpellType.NO_SPELL);
+							all_spells.Remove(SpellType.NUM_SPELLS);
+							string sp = "It can cast ";
+							for(int num_spells = Global.Roll(4);num_spells > 0;--num_spells){
+								if(num_spells == 1){
+									sp = sp + "and " + all_spells.RemoveRandom().ToString().ToLower().Replace('_',' ') + ". ";
+								}
+								else{
+									sp = sp + all_spells.RemoveRandom().ToString().ToLower().Replace('_',' ') + ", ";
+								}
+							}
+							B.Add(sp);
+						}
+						Q0();
 						break;
+					}
 					case 9:
 						new Item(ConsumableType.PASSAGE,"rune of passage",'&',Color.White).Use(this);
 						Q1();
@@ -3110,7 +3484,55 @@ namespace Forays{
 						break;
 					case 12:
 					{
-						level = 10;
+						/*PosArray<int> map = new PosArray<int>(ROWS,COLS);
+						pos center = new pos(ROWS/2,COLS/2);
+						int n = 2;
+						foreach(pos p in center.PositionsWithinDistance(n-1)){
+							map[p] = 1;
+						}
+						bool changed = true;
+						while(changed){
+							changed = false;
+							List<pos> list = center.PositionsAtDistance(n);
+							while(list.Count > 0){
+								pos p = list.RemoveRandom();
+								int count = p.PositionsAtDistance(1).Where(x=>map[x] == 1).Count;
+								if(Global.PercentChance(count*25)){ //this number can be anywhere from ~19 to 25
+									map[p] = 1;
+									changed = true;
+								}
+							}
+							++n;
+						}
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								//pos p = new pos(i,j);
+								//if(p.PositionsWithinDistance(1).Where(x=>map[x] == 1).Count >= 5){
+								if(map[i,j] == 1){
+									Screen.WriteMapChar(i,j,'.',Color.Green);
+								}
+								else{
+									Screen.WriteMapChar(i,j,'~',Color.Blue);
+								}
+							}
+						}
+						Console.ReadKey(true);
+						for(int i=0;i<ROWS;++i){
+							for(int j=0;j<COLS;++j){
+								pos p = new pos(i,j);
+								if(p.PositionsWithinDistance(1).Where(x=>map[x] == 1).Count >= 5){
+								//if(map[i,j] == 1){
+									Screen.WriteMapChar(i,j,'.',Color.Green);
+								}
+								else{
+									Screen.WriteMapChar(i,j,'~',Color.Blue);
+								}
+							}
+						}
+						Console.ReadKey(true);*/
+						//
+						//
+						/*level = 10;
 						skills[SkillType.COMBAT] = 10;
 						skills[SkillType.DEFENSE] = 10;
 						skills[SkillType.MAGIC] = 10;
@@ -3120,9 +3542,19 @@ namespace Forays{
 							if(f != FeatType.NO_FEAT && f != FeatType.NUM_FEATS){
 								feats[f] = true;
 							}
+						}*/
+						if(Global.CoinFlip()){
+							foreach(Tile t in TilesWithinDistance(2).Where(x=>x.type == TileType.FLOOR)){
+								t.Toggle(null,TileType.ICE);
+							}
+						}
+						else{
+							foreach(Tile t in TilesWithinDistance(2).Where(x=>x.type == TileType.FLOOR)){
+								t.AddFeature(FeatureType.SLIME);
+							}
 						}
 						Q0();
-						B.Add("\"I HAVE THE POWERRRR!\" ");
+						//B.Add("\"I HAVE THE POWERRRR!\" ");
 						break;
 					}
 					case 13:
@@ -3167,20 +3599,7 @@ namespace Forays{
 					}
 					case 17:
 					{
-						/*foreach(Actor a in M.AllActors()){
-							if(a != this){
-								Q.KillEvents(a,Forays.EventType.ANY_EVENT);
-								M.RemoveTargets(a);
-								M.actor[a.p] = null;
-							}
-						}
-						foreach(Tile t in M.AllTiles()){
-							if(t.passable && t.actor() == null){
-								Create(ActorType.FIRE_DRAKE,t.row,t.col,true,false);
-								break;
-							}
-						}*/
-						List<Tile> list = new List<Tile>();
+						/*List<Tile> list = new List<Tile>();
 						while(list.Count < 15){
 							int rr = Global.Roll(ROWS-2);
 							int rc = Global.Roll(COLS-2);
@@ -3210,8 +3629,19 @@ namespace Forays{
 									}
 								}
 							}
+						}*/
+						Screen.Blank();
+						Tile[] prev = new Tile[20];
+						int idx = 0;
+						foreach(Tile t in M.ReachableTilesByDistance(row,col,false,TileType.DOOR_C)){
+							Screen.WriteMapChar(t.row,t.col,t.symbol,t.color);
+							prev[idx] = t;
+							idx = (idx + 1) % 20;
+							if(prev[idx] != null){
+								Screen.WriteMapChar(prev[idx].row,prev[idx].col,Screen.BlankChar());
+							}
+							Thread.Sleep(10);
 						}
-						Console.ReadKey(true);
 						Q0();
 						break;
 					}
@@ -3228,7 +3658,7 @@ namespace Forays{
 					}
 					case 19:
 					{
-						List<Tile> line = GetTargetTile(-1,0,false);
+						/*List<Tile> line = GetTargetTile(-1,0,false);
 						if(line != null){
 							Tile t = line.Last();
 							if(t != null){
@@ -3236,6 +3666,10 @@ namespace Forays{
 								Q.Add(new Event(t,100,EventType.FLOOR_COLLAPSE));
 								B.Add("The floor begins to collapse! ");
 							}
+						}*/
+						if(tile().inv == null){
+							tile().inv = Item.Create(ConsumableType.BREACHING,row,col);
+							B.Add("You feel something roll beneath your feet. ");
 						}
 						Q0();
 						break;
@@ -3261,7 +3695,152 @@ namespace Forays{
 				attrs[Forays.AttrType.AUTOEXPLORE] = 0;
 			}
 		}
-		/*public static int[,] GetDiamondSquarePlasmaFractal(int height,int width,int roughness){
+		public static int[,] GetBinaryNoise(int height,int width){ return GetBinaryNoise(height,width,50); }
+		public static int[,] GetBinaryNoise(int height,int width,int target_percentage){
+			int[,] a = GetDiamondSquarePlasmaFractal(height,width,false);
+			int[,] result = new int[height,width];
+			int n = 128;
+			int current_num = n;
+			int closest_total = -1;
+			int num_of_closest_total = -1;
+			while(n > 0){
+				n /= 2;
+				int total = 0;
+				for(int i=0;i<height;++i){
+					for(int j=0;j<width;++j){
+						if(a[i,j] >= current_num){
+							++total;
+						}
+					}
+				}
+				int target_total = height * width * target_percentage / 100;
+				if(Math.Abs(target_total - total) < Math.Abs(target_total - closest_total)){
+					closest_total = total;
+					num_of_closest_total = current_num;
+				}
+				if(total < target_total){
+					current_num -= n;
+				}
+				else{
+					if(total > target_total){
+						current_num += n;
+					}
+					else{
+						break; //done
+					}
+				}
+			}
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					if(a[i,j] >= num_of_closest_total){
+						result[i,j] = 1;
+					}
+					else{
+						result[i,j] = -1;
+					}
+				}
+			}
+			return result;
+		}
+		public static int[,] GetDividedNoise(int height,int width,int target_percentage_of_outer){
+			int[,] a = GetDiamondSquarePlasmaFractal(height,width,false);
+			int[,] result = new int[height,width];
+			int num_of_closest_total_one = -1;
+			int num_of_closest_total_two = -1;
+			{
+				int n = 128;
+				int current_num = n;
+				int closest_total = -1;
+				int num_of_closest_total = -1;
+				while(n > 0){
+					n /= 2;
+					int total = 0;
+					for(int i=0;i<height;++i){
+						for(int j=0;j<width;++j){
+							if(a[i,j] >= current_num){
+								++total;
+							}
+						}
+					}
+					int target_total = height * width * target_percentage_of_outer / 100;
+					if(Math.Abs(target_total - total) < Math.Abs(target_total - closest_total)){
+						closest_total = total;
+						num_of_closest_total = current_num;
+					}
+					if(total < target_total){
+						current_num -= n;
+					}
+					else{
+						if(total > target_total){
+							current_num += n;
+						}
+						else{
+							break; //done
+						}
+					}
+				}
+				num_of_closest_total_one = num_of_closest_total;
+			}
+			{
+				int n = 128;
+				int current_num = n;
+				int closest_total = -1;
+				int num_of_closest_total = -1;
+				while(n > 0){
+					n /= 2;
+					int total = 0;
+					for(int i=0;i<height;++i){
+						for(int j=0;j<width;++j){
+							if(a[i,j] >= current_num){
+								++total;
+							}
+						}
+					}
+					int target_total = height * width * (100 - target_percentage_of_outer) / 100;
+					if(Math.Abs(target_total - total) < Math.Abs(target_total - closest_total)){
+						closest_total = total;
+						num_of_closest_total = current_num;
+					}
+					if(total < target_total){
+						current_num -= n;
+					}
+					else{
+						if(total > target_total){
+							current_num += n;
+						}
+						else{
+							break; //done
+						}
+					}
+				}
+				num_of_closest_total_two = num_of_closest_total;
+			}
+			int upper = Math.Max(num_of_closest_total_one,num_of_closest_total_two);
+			int lower = Math.Min(num_of_closest_total_one,num_of_closest_total_two);
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					if(a[i,j] >= lower){
+						if(a[i,j] <= upper){
+							result[i,j] = 0;
+						}
+						else{
+							result[i,j] = 1;
+						}
+					}
+					else{
+						result[i,j] = -1;
+					}
+					/*if(a[i,j] >= num_of_closest_total){
+						result[i,j] = 1;
+					}
+					else{
+						result[i,j] = -1;
+					}*/
+				}
+			}
+			return result;
+		}
+		public static int[,] GetDiamondSquarePlasmaFractal(int height,int width,int roughness){
 			int[,] a = GetDiamondSquarePlasmaFractal(height*roughness,width*roughness);
 			int[,] result = new int[height,width];
 			for(int i=0;i<height;++i){
@@ -3271,14 +3850,15 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static int[,] GetDiamondSquarePlasmaFractal(int height,int width){
+		public static int[,] GetDiamondSquarePlasmaFractal(int height,int width){ return GetDiamondSquarePlasmaFractal(height,width,true); }
+		public static int[,] GetDiamondSquarePlasmaFractal(int height,int width,bool normalize){
 			int size = 1;
 			int max = Math.Max(height,width);
 			while(size < max){
 				size *= 2; //find the smallest square that the dungeon fits into
 			}
 			size++; //diamond-square needs 2^x + 1
-			int[,] a = GetDiamondSquarePlasmaFractal(size);
+			int[,] a = GetDiamondSquarePlasmaFractal(size,normalize);
 			int[,] result = new int[height,width];
 			for(int i=0;i<height;++i){
 				for(int j=0;j<width;++j){
@@ -3287,7 +3867,8 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static int[,] GetDiamondSquarePlasmaFractal(int size){
+		public static int[,] GetDiamondSquarePlasmaFractal(int size){ return GetDiamondSquarePlasmaFractal(size,true); }
+		public static int[,] GetDiamondSquarePlasmaFractal(int size,bool normalize){
 			int[,] a = new int[size,size];
 			a[0,0] = 128;
 			a[0,size-1] = 128;
@@ -3298,16 +3879,18 @@ namespace Forays{
 				SquareStep(a,step);
 				++step;
 			}
-			int total = 0;
-			for(int i=0;i<size;++i){
-				for(int j=0;j<size;++j){
-					total += a[i,j];
+			if(normalize){
+				int total = 0;
+				for(int i=0;i<size;++i){
+					for(int j=0;j<size;++j){
+						total += a[i,j];
+					}
 				}
-			}
-			int mean = total / (size*size);
-			for(int i=0;i<size;++i){
-				for(int j=0;j<size;++j){
-					a[i,j] -= mean;
+				int mean = total / (size*size);
+				for(int i=0;i<size;++i){
+					for(int j=0;j<size;++j){
+						a[i,j] -= mean;
+					}
 				}
 			}
 			return a;
@@ -3376,7 +3959,7 @@ namespace Forays{
 					}
 				}
 			}
-		}*/
+		}
 		public void PlayerWalk(int dir){
 			if(dir > 0){
 				if(ActorInDirection(dir)!=null){
@@ -3391,6 +3974,11 @@ namespace Forays{
 						}
 					}
 					else{
+						if(HasAttr(AttrType.IMMOBILE)){
+							B.Add("You can't move! ");
+							Q0();
+							return;
+						}
 						ActorInDirection(dir).attrs[AttrType.TURNS_VISIBLE] = -1;
 						ActorInDirection(dir).attrs[Forays.AttrType.NOTICED]++;
 						if(!IsHiddenFrom(ActorInDirection(dir))){
@@ -3417,6 +4005,11 @@ namespace Forays{
 								}
 							}
 							B.Add(grabbers.Random().the_name + " prevents you from moving away! ");
+							Q0();
+							return;
+						}
+						if(HasAttr(AttrType.IMMOBILE)){
+							B.Add("You can't move! ");
 							Q0();
 							return;
 						}
@@ -3467,10 +4060,14 @@ namespace Forays{
 							TileInDirection(dir).inv.revealed_by_light = true;
 						}
 						Move(TileInDirection(dir).row,TileInDirection(dir).col);
+						if(tile().Is(TileType.GRAVEL) && !HasAttr(AttrType.FLYING)){
+							B.Add("The gravel crunches. ",tile());
+							MakeNoise(3);
+						}
 						QS();
 						if(!Help.displayed[TutorialTopic.Recovery] && !HasAttr(AttrType.POISONED) && !HasAttr(AttrType.ON_FIRE) && !HasAttr(AttrType.CATCHING_FIRE)
-						&& curhp % 10 > 0 && curhp % 10 <= 5 && !M.AllActors().Any(a=>(a != this && CanSee(a))) && !TilesWithinDistance(1).Any(t=>t.Is(FeatureType.FUNGUS_ACTIVE)||t.Is(FeatureType.FUNGUS_PRIMED)
-						||t.Is(FeatureType.GRENADE)||t.Is(FeatureType.POISON_GAS)||t.Is(FeatureType.QUICKFIRE)||t.Is(TileType.FIRE_GEYSER))){
+						&& curhp % 10 > 0 && curhp % 10 <= 5 && !M.AllActors().Any(a=>(a != this && CanSee(a))) && !TilesWithinDistance(1).Any(t=>(t.inv != null && t.inv.type == ConsumableType.BLAST_FUNGUS)
+						|| t.Is(FeatureType.GRENADE,FeatureType.POISON_GAS,FeatureType.QUICKFIRE) || t.Is(TileType.FIRE_GEYSER))){
 							Help.TutorialTip(TutorialTopic.Recovery); //not poisoned or on fire, can recover at least 5hp, can't see any enemies, and isn't adjacent to hazardous terrain
 							Interrupt();
 						}
@@ -3496,7 +4093,22 @@ namespace Forays{
 		}
 		public void InputAI(){
 			bool no_act = false;
-			if(CanSee(player)){
+			bool aware_of_player = CanSee(player);
+			if(HasAttr(AttrType.SEES_ADJACENT_PLAYER)){
+				if(DistanceFrom(player) == 1){ //this allows them to attack when the player is shadow cloaked
+					aware_of_player = true;
+				}
+				else{
+					attrs[AttrType.SEES_ADJACENT_PLAYER] = 0;
+				}
+			}
+			if(target == player && target_location != null && target_location.actor() == player){
+				aware_of_player = true;
+			}
+			if(target == player && player_visibility_duration == -1 && DistanceFrom(player) == 1){
+				aware_of_player = true;
+			}
+			if(aware_of_player){
 				if(target_location == null && HasAttr(AttrType.BLOODSCENT)){ //orc warmages etc. when they first notice
 					player_visibility_duration = -1;
 					target = player;
@@ -3516,11 +4128,15 @@ namespace Forays{
 				}
 			}
 			else{
-				if((IsWithinSightRangeOf(player.row,player.col) || M.tile[player.row,player.col].IsLit()) //if they're stealthed and nearby...
+				if((IsWithinSightRangeOf(player.row,player.col) || (player.tile().IsLit() && !HasAttr(AttrType.BLINDSIGHT))) //if they're stealthed and nearby...
 					&& HasLOS(player.row,player.col)
-					&& (!player.HasAttr(AttrType.SHADOW_CLOAK) || HasAttr(AttrType.PLAYER_NOTICED) || player.tile().IsLit() || HasAttr(AttrType.BLINDSIGHT))){
+					&& (!player.HasAttr(AttrType.SHADOW_CLOAK) || player.tile().IsLit() || HasAttr(AttrType.BLINDSIGHT))){ //((removed player_noticed check from this line))
 					int multiplier = HasAttr(AttrType.KEEN_SENSES)? 5 : 10; //animals etc. are approximately twice as hard to sneak past
-					if(player.Stealth() * DistanceFrom(player) * multiplier - player_visibility_duration++*5 < Global.Roll(1,100)){
+					int stealth = player.TotalSkill(SkillType.STEALTH);
+					if(HasAttr(AttrType.BLINDSIGHT) && !player.tile().IsLit()){ //if this monster has blindsight, take away the stealth bonus for being in darkness
+						stealth -= 2;
+					}
+					if(player.TotalSkill(SkillType.STEALTH) * DistanceFrom(player) * multiplier - player_visibility_duration++*5 < Global.Roll(1,100)){
 						player_visibility_duration = -1;
 						attrs[Forays.AttrType.PLAYER_NOTICED]++;
 						target = player;
@@ -3561,7 +4177,7 @@ namespace Forays{
 							B.Add(TheName(true) + " moans. Uhhhhhhghhh. ");
 							MakeNoise(4);
 							break;
-						case ActorType.WOLF:
+						case ActorType.LONE_WOLF:
 							B.Add(TheName(true) + " snarls at you. ");
 							MakeNoise(4);
 							break;
@@ -3654,7 +4270,7 @@ namespace Forays{
 				B.Add("The marble horror reverts to its statue form. ",this);
 				type = ActorType.MARBLE_HORROR_STATUE;
 				SetName("marble horror statue");
-				attrs[Forays.AttrType.NEVER_MOVES] = 1;
+				attrs[Forays.AttrType.IMMOBILE] = 1;
 				attrs[Forays.AttrType.INVULNERABLE] = 1;
 				attrs[Forays.AttrType.IMMUNE_FIRE] = 1;
 			}
@@ -3662,7 +4278,7 @@ namespace Forays{
 				B.Add("The marble horror animates once more. ",this);
 				type = ActorType.MARBLE_HORROR;
 				SetName("marble horror");
-				attrs[Forays.AttrType.NEVER_MOVES] = 0;
+				attrs[Forays.AttrType.IMMOBILE] = 0;
 				attrs[Forays.AttrType.INVULNERABLE] = 0;
 				attrs[Forays.AttrType.IMMUNE_FIRE] = 0;
 			}
@@ -3675,16 +4291,16 @@ namespace Forays{
 			}
 			if(!no_act && type != ActorType.CULTIST && type != ActorType.CORPSETOWER_BEHEMOTH && type != ActorType.BLOOD_MOTH
 			&& type != ActorType.MUD_TENTACLE && type != ActorType.DREAM_CLONE && type != ActorType.ZOMBIE
-			&& type != ActorType.CARNIVOROUS_BRAMBLE){
+			&& type != ActorType.CARNIVOROUS_BRAMBLE){ //todo: double-check this list!
 				if(HasAttr(AttrType.HUMANOID_INTELLIGENCE)){
-					if(HasAttr(AttrType.CATCHING_FIRE) && Global.OneIn(10)){
-						attrs[AttrType.CATCHING_FIRE] = 0;
+					if(HasAttr(AttrType.CATCHING_FIRE) && Global.OneIn(10)){ //todo: redo this: probably only intelligent monsters will
+						attrs[AttrType.CATCHING_FIRE] = 0; //put out fires, and only if the player is out of LOS, helpless, or occupied with other monsters adjacent.
 						B.Add(the_name + " stops the flames from spreading. ",this);
 						Q1();
 						no_act = true;
 					}
 					else{
-						if(HasAttr(AttrType.ON_FIRE)){
+						/*if(HasAttr(AttrType.ON_FIRE)){
 							if(attrs[AttrType.ON_FIRE] == 1 && Global.OneIn(4)){
 								bool update = false;
 								int oldradius = LightRadius();
@@ -3766,7 +4382,7 @@ namespace Forays{
 									}
 								}
 							}
-						}
+						}*/
 					}
 				}
 				else{
@@ -3787,7 +4403,7 @@ namespace Forays{
 						no_act = true;
 					}
 					else{
-						if(HasAttr(AttrType.ON_FIRE) && Global.Roll(3) >= 2){
+						/*if(HasAttr(AttrType.ON_FIRE) && Global.Roll(3) >= 2){
 							bool update = false;
 							int oldradius = LightRadius();
 							if(attrs[AttrType.ON_FIRE] > light_radius){
@@ -3832,7 +4448,7 @@ namespace Forays{
 							}
 							Q1();
 							no_act = true;
-						}
+						}*/
 					}
 				}
 			}
@@ -3862,8 +4478,8 @@ namespace Forays{
 						}
 					}
 				}
-				if(!HasAttr(AttrType.IMMUNE_TOXINS) && !HasAttr(AttrType.UNDEAD) && !HasAttr(AttrType.CONSTRUCT)){
-					if(type != ActorType.CULTIST && type != ActorType.PHASE_SPIDER && type != ActorType.MECHANICAL_KNIGHT){
+				if(!HasAttr(AttrType.NONLIVING)){
+					if(type != ActorType.CULTIST && type != ActorType.PHASE_SPIDER){
 						foreach(Tile t in TilesWithinDistance(1)){
 							if(t.Is(FeatureType.POISON_GAS)){
 								dangerous_terrain.AddUnique(t);
@@ -3899,7 +4515,7 @@ namespace Forays{
 			}
 			if(!no_act){
 				if(target != null){
-					if(CanSee(target)){
+					if(CanSee(target) || (target == player && aware_of_player)){
 						ActiveAI();
 					}
 					else{
@@ -3921,7 +4537,9 @@ namespace Forays{
 				}
 				else{
 					if(tile().IsLit()){
-						B.Add(the_name + " is blinded by the light! ",this);
+						if(player.HasLOS(this)){
+							B.Add(the_name + " is blinded by the light! ",this);
+						}
 						attrs[Forays.AttrType.COOLDOWN_1]++;
 						attrs[Forays.AttrType.COOLDOWN_2] = 5;
 						Q.Add(new Event(this,(Global.Roll(2)+4)*100,AttrType.COOLDOWN_1,the_name + " is no longer blinded. ",this));
@@ -4297,10 +4915,15 @@ namespace Forays{
 						B.Add(You("scream") + " '" + invocation.ToUpper() + "'. ",this);
 					}
 					B.Add("Flames erupt from " + the_name + ". ",this);
-					if(LightRadius() < 2){
+					/*if(LightRadius() < 2){
 						UpdateRadius(LightRadius(),2);
 					}
-					attrs[AttrType.ON_FIRE] = Math.Max(attrs[AttrType.ON_FIRE],2);
+					attrs[AttrType.ON_FIRE] = Math.Max(attrs[AttrType.ON_FIRE],2);*/
+					if(LightRadius() < 1){
+						UpdateRadius(LightRadius(),1);
+					}
+					RefreshDuration(AttrType.ON_FIRE,(Global.Roll(3)+4) * 100,YouAre() + " no longer on fire. ",this);
+					//attrs[AttrType.ON_FIRE]++;
 					foreach(Actor a in ActorsAtDistance(1)){
 						if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.IMMUNE_FIRE)
 						&& !a.HasAttr(AttrType.ON_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE)
@@ -4485,9 +5108,12 @@ namespace Forays{
 						B.Add("A bola whirls toward " + target.the_name + ". ",this,target);
 					}
 					attrs[AttrType.TURNS_VISIBLE] = -1;
-					target.attrs[AttrType.SLOWED]++;
-					target.speed += 100;
-					Q.Add(new Event(target,(Global.Roll(3)+5)*100,AttrType.SLOWED,target.YouAre() + " no longer slowed. ",target));
+					/*if(!target.HasAttr(AttrType.SLOWED)){
+						target.speed += 100;
+					}*/
+					//target.attrs[AttrType.SLOWED]++;
+					//Q.Add(new Event(target,(Global.Roll(3)+5)*100,AttrType.SLOWED,target.YouAre() + " no longer slowed. ",target));
+					target.RefreshDuration(AttrType.SLOWED,(Global.Roll(3)+6)*100,target.YouAre() + " no longer slowed. ",target);
 					B.Add(target.YouAre() + " slowed by the bola. ",target);
 					Q1();
 				}
@@ -4662,7 +5288,7 @@ namespace Forays{
 					List<Actor> targets = new List<Actor>();
 					for(bool done=false;!done;++i){
 						a = FirstActorInLine(target,i);
-						if(a != null && !a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) && !a.HasAttr(AttrType.PLANTLIKE)){
+						if(a != null && !a.HasAttr(AttrType.NONLIVING) && !a.HasAttr(AttrType.PLANTLIKE)){
 							targets.Add(a);
 						}
 						if(a == target){
@@ -4676,8 +5302,8 @@ namespace Forays{
 					}
 					foreach(Actor actor in targets){
 						if(actor.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(6),this,"a banshee's scream")){
-							actor.attrs[AttrType.AFRAID]++;
-							Q.Add(new Event(actor,actor.DurationOfMagicalEffect((Global.Roll(3)+2))*100,AttrType.AFRAID));
+							int duration = actor.DurationOfMagicalEffect((Global.Roll(3)+2)) * 100;
+							actor.RefreshDuration(AttrType.AFRAID,duration);
 						}
 					}
 					Q1();
@@ -4862,12 +5488,12 @@ namespace Forays{
 							}
 							else{
 								if(next.actor() != null){
-									if(!next.actor().HasAttr(AttrType.NEVER_MOVES)){
+									if(!next.actor().HasAttr(AttrType.IMMOBILE)){
 										Move(next.row,next.col);
 										QS();
 									}
 									else{
-										if(next.actor().HasAttr(AttrType.NEVER_MOVES)){
+										if(next.actor().HasAttr(AttrType.IMMOBILE)){
 											if(AI_Step(next)){
 												QS();
 											}
@@ -4896,18 +5522,18 @@ namespace Forays{
 					switch(Global.Roll(4)){
 					case 1: //light allergy
 						B.Add("You become allergic to light! ");
-						target.GainAttrRefreshDuration(AttrType.LIGHT_ALLERGY,10000,"You are no longer allergic to light. ");
+						target.RefreshDuration(AttrType.LIGHT_ALLERGY,10000,"You are no longer allergic to light. ");
 						break;
 					case 2: //magical drowsiness
 						B.Add("The floor suddenly looks like a wonderful spot for a nap. ");
-						target.GainAttrRefreshDuration(AttrType.MAGICAL_DROWSINESS,10000,"You are no longer quite so drowsy. ");
+						target.RefreshDuration(AttrType.MAGICAL_DROWSINESS,10000,"You are no longer quite so drowsy. ");
 						break;
 					case 3: //aggravate monsters
 						B.Add("Every sound you make becomes amplified and echoes across the dungeon. ");
-						target.GainAttrRefreshDuration(AttrType.AGGRAVATING,10000,"Your sounds are no longer amplified. ");
+						target.RefreshDuration(AttrType.AGGRAVATING,10000,"Your sounds are no longer amplified. ");
 						break;
 					case 4: //cursed weapon
-						B.Add("Your " + target.EquippedWeapon + " becomes stuck to your hand! ");
+						B.Add("Your " + target.EquippedWeapon + " becomes stuck to your hand! "); //todo: this no longer wears off! fix it
 						target.EquippedWeapon.status[EquipmentStatus.CURSED] = true;
 						break;
 					}
@@ -4928,7 +5554,7 @@ namespace Forays{
 				if(DistanceFrom(target) == 1){
 					pos target_pos = target.p;
 					if(Attack(0,target) && M.actor[target_pos] != null && target == player && !target.HasAttr(AttrType.INVULNERABLE)
-					&& !target.HasAttr(AttrType.ARCANE_SHIELDED) && !target.HasAttr(AttrType.IMMUNE_TOXINS)){
+					&& !target.HasAttr(AttrType.ARCANE_SHIELDED) && !target.HasAttr(AttrType.NONLIVING)){
 						bool first_bite = !target.HasAttr(AttrType.COMPY_POISON_COUNTER);
 						target.GainAttrRefreshDuration(AttrType.COMPY_POISON_COUNTER,5000,"You no longer feel the effects of the poison. ");
 						if(target.attrs[Forays.AttrType.COMPY_POISON_COUNTER] >= target.curhp){
@@ -4942,7 +5568,7 @@ namespace Forays{
 						}
 						else{
 							if(target.attrs[Forays.AttrType.COMPY_POISON_COUNTER] >= target.curhp / 2 && !target.HasAttr(AttrType.COMPY_POISON_WARNING)){
-								target.GainAttrRefreshDuration(AttrType.COMPY_POISON_WARNING,5000);
+								target.RefreshDuration(AttrType.COMPY_POISON_WARNING,5000);
 								B.Add("You feel the subtle poison starting to take effect. ");
 								B.Add("Your injuries make it hard to stay awake. ");
 								B.PrintAll();
@@ -5394,7 +6020,7 @@ namespace Forays{
 						Attack(0,target);
 					}
 					else{
-						Attack(Global.Roll(1,2)-1,target);
+						Attack(1,target);
 					}
 				}
 				else{
@@ -5855,7 +6481,8 @@ namespace Forays{
 							AnimateBeam(target,Color.RandomFire,'*');
 							B.Add(TheName(true) + " breathes fire. ",target);
 							target.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(6,6),this,"*roasted by fire breath");
-							if(target != null && !target.HasAttr(AttrType.ON_FIRE) && !target.HasAttr(AttrType.CATCHING_FIRE)){
+							if(target != null && !target.HasAttr(AttrType.ON_FIRE) && !target.HasAttr(AttrType.CATCHING_FIRE)
+							   && !target.HasAttr(AttrType.IMMUNE_FIRE) && !target.HasAttr(AttrType.RESIST_FIRE)){
 								target.attrs[Forays.AttrType.CATCHING_FIRE] = 1;
 								B.Add(target.You("start") + " catching fire! ",target);
 							}
@@ -6064,12 +6691,13 @@ namespace Forays{
 				if(target_location != null){
 					if(DistanceFrom(target_location) == 1 && M.actor[target_location.p] != null){
 						if(GrabPreventsMovement(target_location) || M.actor[target_location.p].GrabPreventsMovement(tile())
-						|| HasAttr(AttrType.NEVER_MOVES) || M.actor[target_location.p].HasAttr(AttrType.NEVER_MOVES)){
+						|| HasAttr(AttrType.IMMOBILE) || M.actor[target_location.p].HasAttr(AttrType.IMMOBILE)){
 							QS(); //todo: should target_location be cleared here?
 						}
 						else{
 							Move(target_location.row,target_location.col); //swap places
 							target_location = null;
+							attrs[AttrType.FOLLOW_DIRECTION_EXITED]++;
 							QS();
 						}
 					}
@@ -6078,6 +6706,7 @@ namespace Forays{
 							QS();
 							if(DistanceFrom(target_location) == 0){
 								target_location = null;
+								attrs[AttrType.FOLLOW_DIRECTION_EXITED]++;
 							}
 						}
 						else{ //could not move, end turn.
@@ -6089,7 +6718,52 @@ namespace Forays{
 					}
 				}
 				else{
-					if(DistanceFrom(target) <= 5){
+					if(DistanceFrom(target) <= 2){
+						List<pos> path2 = GetPath(target,2);
+						if(path2.Count > 0){
+							path = path2;
+							player_visibility_duration = -1; //stay at -1 while in close pursuit
+						}
+						if(PathStep()){
+							path.Clear(); //todo testing
+							return;
+						}
+						QS();
+					}
+					else{
+						if(HasAttr(AttrType.FOLLOW_DIRECTION_EXITED) && tile().direction_exited > 0){
+							AI_Step(TileInDirection(tile().direction_exited));
+							attrs[AttrType.FOLLOW_DIRECTION_EXITED] = 0;
+						}
+						else{
+							if(group != null && group[0] != this){ //groups try to get back together
+								if(DistanceFrom(group[0]) > 1){
+									int dir = DirectionOf(group[0]);
+									bool found = false;
+									for(int i=-1;i<=1;++i){
+										Actor a = ActorInDirection(RotateDirection(dir,true,i));
+										if(a != null && group.Contains(a)){
+											found = true;
+											break;
+										}
+									}
+									if(!found){
+										if(HasLOS(group[0])){
+											AI_Step(group[0]);
+										}
+										else{
+											FindPath(group[0],8);
+											if(PathStep()){
+												return;
+											}
+										}
+									}
+								}
+							}
+						}
+						QS();
+					}
+					/*if(DistanceFrom(target) <= 5){
 						if(DistanceFrom(target) <= 3){
 							List<pos> path2 = GetPath(target,4);
 							if(path2.Count > 0){
@@ -6111,7 +6785,7 @@ namespace Forays{
 					}
 					else{ //if they're too far away, forget them and end turn.
 						target = null;
-						if(group != null && group[0] != this){
+						if(group != null && group[0] != this){ //groups try to get back together
 							if(DistanceFrom(group[0]) > 1){
 								int dir = DirectionOf(group[0]);
 								bool found = false;
@@ -6136,7 +6810,7 @@ namespace Forays{
 							}
 						}
 						QS();
-					}
+					}*/
 				}
 				break;
 			}
@@ -6444,13 +7118,13 @@ namespace Forays{
 						int difference = dimness - actor.attrs[AttrType.DIM_LIGHT];
 						actor.attrs[AttrType.DIM_LIGHT] = dimness;
 						if(actor.light_radius > 0){
-							if(actor.attrs[AttrType.ON_FIRE] < actor.light_radius){ //if the player should notice...
+							//if(actor.attrs[AttrType.ON_FIRE] < actor.light_radius){ //if the player should notice...
 								B.Add(actor.Your() + " light grows dimmer. ",actor);
 								actor.UpdateRadius(actor.light_radius,actor.light_radius - difference,true);
-								if(actor.attrs[AttrType.ON_FIRE] > actor.light_radius){
-									actor.UpdateRadius(actor.light_radius,actor.attrs[AttrType.ON_FIRE]);
-								}
-							}
+								//if(actor.attrs[AttrType.ON_FIRE] > actor.light_radius){
+									//actor.UpdateRadius(actor.light_radius,actor.attrs[AttrType.ON_FIRE]);
+								//}
+							//}
 						}
 					}
 					else{
@@ -6458,10 +7132,10 @@ namespace Forays{
 							int difference = dimness - actor.attrs[AttrType.DIM_LIGHT];
 							actor.attrs[AttrType.DIM_LIGHT] = dimness;
 							if(actor.light_radius > 0){
-								if(actor.attrs[AttrType.ON_FIRE] < actor.light_radius - difference){ //if the player should notice...
+								//if(actor.attrs[AttrType.ON_FIRE] < actor.light_radius - difference){ //if the player should notice...
 									B.Add(actor.Your() + " light grows brighter. ",actor);
 									actor.UpdateRadius(actor.LightRadius(),actor.light_radius - difference,true);
-								}
+								//}
 							}
 						}
 					}
@@ -6470,6 +7144,9 @@ namespace Forays{
 		}
 		public bool AI_Step(PhysicalObject obj){ return AI_Step(obj,false); }
 		public bool AI_Step(PhysicalObject obj,bool flee){
+			if(HasAttr(AttrType.IMMOBILE)){
+				return false;
+			}
 			int rowchange = 0;
 			int colchange = 0;
 			if(obj.row < row){
@@ -6523,12 +7200,42 @@ namespace Forays{
 				}
 			}
 			if(dirs.Count == 0){ return true; }
-			bool cw = Global.CoinFlip();
+			bool clockwise = Global.CoinFlip();
+			if(obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(true))) < obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(false)))){
+				clockwise = true;
+			}
+			if(obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(false))) < obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(true)))){
+				clockwise = false;
+			}
+			if(clockwise){
+				dirs.Add(dirs[0].RotateDirection(true));
+				dirs.Add(dirs[0].RotateDirection(false)); //building a list of directions to try: first the primary direction,
+			}
+			else{
+				dirs.Add(dirs[0].RotateDirection(false));
+				dirs.Add(dirs[0].RotateDirection(true));
+			}
+			clockwise = Global.CoinFlip(); //then the ones next to it, then the ones next to THOSE(in random order, unless one is closer)
+			if(obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(true,2))) < obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(false,2)))){
+				clockwise = true;
+			}
+			if(obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(false,2))) < obj.DistanceFrom(TileInDirection(dirs[0].RotateDirection(true,2)))){
+				clockwise = false;
+			}
+			if(clockwise){
+				dirs.Add(dirs[0].RotateDirection(true,2));
+				dirs.Add(dirs[0].RotateDirection(false,2));
+			}
+			else{
+				dirs.Add(dirs[0].RotateDirection(false,2));
+				dirs.Add(dirs[0].RotateDirection(true,2));//this completes the list of 5 directions.
+			}
+			/*bool cw = Global.CoinFlip();
 			dirs.Add(RotateDirection(dirs[0],cw));
 			dirs.Add(RotateDirection(dirs[0],!cw)); //building a list of directions to try: first the primary direction,
 			cw = Global.CoinFlip(); 				//then the ones next to it, then the ones next to THOSE(in random order)
 			dirs.Add(RotateDirection(RotateDirection(dirs[0],cw),cw));
-			dirs.Add(RotateDirection(RotateDirection(dirs[0],!cw),!cw)); //this completes the list of 5 directions.
+			dirs.Add(RotateDirection(RotateDirection(dirs[0],!cw),!cw)); //this completes the list of 5 directions.*/
 			foreach(int i in dirs){
 				if(ActorInDirection(i) != null && ActorInDirection(i).IsHiddenFrom(this)){
 					player_visibility_duration = -1;
@@ -6592,6 +7299,17 @@ namespace Forays{
 		public bool AI_MoveOrOpen(int r,int c){
 			if(M.tile[r,c].passable && M.actor[r,c] == null && !GrabPreventsMovement(M.tile[r,c]) && M.tile[r,c].type != TileType.CHASM){
 				Move(r,c);
+				if(tile().Is(TileType.GRAVEL) && !HasAttr(AttrType.FLYING)){
+					if(player.DistanceFrom(tile()) <= 3){
+						if(player.CanSee(tile())){
+							B.Add("The gravel crunches. ",tile());
+						}
+						else{
+							B.Add("You hear gravel crunching. ");
+						}
+					}
+					MakeNoise(3);
+				}
 				return true;
 			}
 			else{
@@ -6648,7 +7366,7 @@ namespace Forays{
 		}
 		public bool PathStep(){ return PathStep(false); }
 		public bool PathStep(bool never_clear_path){
-			if(path.Count > 0 && !HasAttr(AttrType.NEVER_MOVES)){
+			if(path.Count > 0 && !HasAttr(AttrType.IMMOBILE)){
 				if(DistanceFrom(path[0]) == 1 && M.actor[path[0]] != null){
 					if(group != null && group[0] == this && group.Contains(M.actor[path[0]])){
 						if(GrabPreventsMovement(M.tile[path[0]]) || M.actor[path[0]].GrabPreventsMovement(tile())){
@@ -6662,22 +7380,24 @@ namespace Forays{
 						}
 					}
 					else{
-						if(path.Count == 1){
+						if(path.Count == 1 && M.actor[path[0]] != player){
 							if(!never_clear_path){
 								path.Clear();
 							}
 						}
 						else{
 							AI_Step(M.tile[path[0]]);
-							if(DistanceFrom(path[1]) > 1){
-								if(!never_clear_path){
-									path.Clear();
+							if(path.Count > 1){
+								if(DistanceFrom(path[1]) > 1){
+									if(!never_clear_path){
+										path.Clear();
+									}
 								}
-							}
-							else{
-								if(DistanceFrom(path[1]) == 0){
-									path.RemoveAt(0);
-									path.RemoveAt(0);
+								else{
+									if(DistanceFrom(path[1]) == 0){
+										path.RemoveAt(0);
+										path.RemoveAt(0);
+									}
 								}
 							}
 						}
@@ -6735,7 +7455,7 @@ namespace Forays{
 				if(a.TileInDirection(RotateDirection(dir,false)).passable && a.ActorInDirection(RotateDirection(dir,false)) == null && !a.GrabPreventsMovement(TileInDirection(RotateDirection(dir,false)))){
 					drive_back_nowhere_to_run = false;
 				}
-				if(a.HasAttr(AttrType.FROZEN) || a.HasAttr(AttrType.NEVER_MOVES)){
+				if(a.HasAttr(AttrType.FROZEN) || a.HasAttr(AttrType.IMMOBILE)){
 					drive_back_nowhere_to_run = true;
 				}
 			}
@@ -6746,8 +7466,8 @@ namespace Forays{
 				if((this.tile().Is(FeatureType.FOG) || a.tile().Is(FeatureType.FOG))){
 					fog = true;
 				}
-				if(a.IsHiddenFrom(this) || !CanSee(a) || (a == player && a.HasAttr(AttrType.SHADOW_CLOAK) && !a.tile().IsLit() && !HasAttr(AttrType.BLINDSIGHT))){
-					hidden = false;
+				if(a.IsHiddenFrom(this) || !CanSee(a) || (a.HasAttr(AttrType.SHADOW_CLOAK) && !a.tile().IsLit() && !HasAttr(AttrType.BLINDSIGHT))){ //made shadow cloak give the player a 50% miss chance too
+					hidden = true;
 				}
 				if((fog || hidden) && Global.CoinFlip()){
 					obscured_vision_miss = true;
@@ -6759,8 +7479,9 @@ namespace Forays{
 			}
 			int plus_to_hit = TotalSkill(SkillType.COMBAT);
 			bool sneak_attack = false;
-			if(this.IsHiddenFrom(a) || !a.CanSee(this) || (this == player && HasAttr(AttrType.SHADOW_CLOAK) && !tile().IsLit() && !a.HasAttr(AttrType.BLINDSIGHT))){
+			if(this.IsHiddenFrom(a) || !a.CanSee(this) || (this == player && HasAttr(AttrType.SHADOW_CLOAK) && !tile().IsLit() && !a.HasAttr(AttrType.BLINDSIGHT))){ //todo: i think the shadow cloak check is redundant now
 				sneak_attack = true;
+				a.attrs[AttrType.SEES_ADJACENT_PLAYER] = 1;
 			} //...insert any other changes to sneak attack calculation here...
 			if(sneak_attack){ //sneak attacks get +25% accuracy. this usually totals 100% vs. unarmored targets.
 				plus_to_hit += 25;
@@ -6768,7 +7489,7 @@ namespace Forays{
 			if(HasAttr(AttrType.BLESSED)){ //todo: remove this, right, since the zealot won't use it? the total_miss_chance calculation below doesn't consider it either.
 				plus_to_hit += 10;
 			}
-			plus_to_hit -= a.ArmorClass() * 2; //todo: work ArmorClass into TotalSkill. same with Stealth().
+			plus_to_hit -= a.TotalSkill(SkillType.DEFENSE) * 2;
 			bool attack_roll_hit = a.IsHit(plus_to_hit);
 			bool blocked_by_armor_miss = false;
 			bool blocked_by_staff_miss = false;
@@ -6778,7 +7499,7 @@ namespace Forays{
 				if(sneak_attack){
 					total_miss_chance = 0;
 				}
-				total_miss_chance += a.ArmorClass() * 2;
+				total_miss_chance += a.TotalSkill(SkillType.DEFENSE) * 2;
 				int roll = Global.Roll(total_miss_chance);
 				if(roll <= a.TotalProtectionFromArmor()){
 					bool mace = (EquippedWeapon == Mace || type == ActorType.CRUSADING_KNIGHT || type == ActorType.PHANTOM_CRUSADER);
@@ -6824,7 +7545,7 @@ namespace Forays{
 				}
 				else{
 					if(blocked_by_staff_miss){
-						B.Add(a.You("block") + YourVisible() + " attack with " + a.YourVisible() + " staff. ",this,a);
+						B.Add(a.You("block") + " " + YourVisible() + " attack with " + a.YourVisible() + " staff. ",this,a);
 						B.Add(a.YourVisible() + " armor blocks " + YourVisible() + " attack. ",this,a);
 						//todo: staff effect
 					}
@@ -6926,8 +7647,7 @@ namespace Forays{
 				}
 				int dice = info.damage.dice;
 				if(sneak_attack && crit){
-					if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT) 
-						&& !a.HasAttr(AttrType.PLANTLIKE) && !a.HasAttr(AttrType.BOSS_MONSTER)){
+					if(!a.HasAttr(AttrType.NONLIVING) && !a.HasAttr(AttrType.PLANTLIKE) && !a.HasAttr(AttrType.BOSS_MONSTER)){
 						if(a.type != ActorType.PLAYER){ //being nice to the player here...
 							switch(EquippedWeapon.type){
 							case WeaponType.SWORD:
@@ -7002,6 +7722,9 @@ namespace Forays{
 						break;
 					}
 				}
+				if(dice < 2){
+					no_max_damage_message = true;
+				}
 				if(dmg == dice * 6 && !no_max_damage_message){
 					if(a != player){
 						B.Add("It was a good hit! ");
@@ -7017,27 +7740,29 @@ namespace Forays{
 				if(crit && mech_shield){
 					a.attrs[Forays.AttrType.MECHANICAL_SHIELD] = 0;
 				}
-				a.TakeDamage(info.damage.type,info.damage.damclass,dmg,this,a_name);
+				if(dice > 0){
+					a.TakeDamage(info.damage.type,info.damage.damclass,dmg,this,a_name);
+				}
 				if(M.actor[r,c] != null){ //post-damage crit effects that require the target to still be alive
 					if(crit){
 						switch(info.crit){
-						case CriticalEffect.BLIND:
+						case CriticalEffect.BLIND: //if it exists, 5-7 turns.
 							break;
-						case CriticalEffect.DIM_VISION:
+						case CriticalEffect.DIM_VISION: //2d20+20
 							break;
 						case CriticalEffect.FREEZE:
 							break;
 						case CriticalEffect.GRAB:
 							break;
-						case CriticalEffect.INCREASE_DAMAGE_TAKEN:
+						case CriticalEffect.INCREASE_DAMAGE_TAKEN: //like 2d4 turns?
 							break;
 						case CriticalEffect.KNOCKBACK:
 							break;
-						case CriticalEffect.REDUCE_ACCURACY:
+						case CriticalEffect.REDUCE_ACCURACY: //also about 2d4 turns?
 							break;
-						case CriticalEffect.SLIME:
+						case CriticalEffect.SLIME: //like 10-20 turns
 							break;
-						case CriticalEffect.STUN:
+						case CriticalEffect.STUN: //2d3 turns, at most
 							break;
 						case CriticalEffect.WEAK_POINT:
 							break;
@@ -7045,23 +7770,23 @@ namespace Forays{
 							break;
 						}
 					}
-					if(HasAttr(AttrType.POISON_HIT)){
-						if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT)
-						&& !a.HasAttr(AttrType.POISON_HIT) && !a.HasAttr(AttrType.IMMUNE_TOXINS)){
-							if(a.HasAttr(AttrType.POISONED)){
-								B.Add(a.YouAre() + " more poisoned. ",a);
-							}
-							else{
-								B.Add(a.YouAre() + " poisoned. ",a);
-							}
-							a.attrs[AttrType.POISONED]++;
-							Q.Add(new Event(a,(Global.Roll(6)+6)*100,AttrType.POISONED));
+					if(HasAttr(AttrType.POISON_HIT) && !a.HasAttr(AttrType.NONLIVING)){
+						B.Add(a.YouAre() + " poisoned. ",a);
+						string msg = "";
+						if(a == player){
+							msg = "You are no longer poisoned. ";
 						}
+						a.RefreshDuration(AttrType.POISONED,(Global.Roll(2,6)+6)*100,msg,a);
 					}
 					if(HasAttr(AttrType.PARALYSIS_HIT) && attack_idx==1 && type == ActorType.CARRION_CRAWLER){
-						if(!a.HasAttr(AttrType.IMMUNE_TOXINS)){ //hack: carrion crawler only
-							B.Add(a.YouAre() + " paralyzed. ",a);
-							a.attrs[AttrType.PARALYZED] = Global.Roll(1,3)+3;
+						if(!a.HasAttr(AttrType.NONLIVING)){ //hack: carrion crawler only
+							if(a == player){
+								B.Add("You suddenly can't move! ");
+							}
+							else{
+								B.Add(a.YouAre() + " paralyzed. ",a);
+							}
+							a.attrs[AttrType.PARALYZED] = Global.Roll(2)+1;
 						}
 					}
 					if(HasAttr(AttrType.DIM_VISION_HIT)){
@@ -7070,7 +7795,7 @@ namespace Forays{
 							B.Add("Your vision grows weak. ");
 							str = "Your vision returns to normal. ";
 						}
-						a.GainAttrRefreshDuration(AttrType.DIM_VISION,a.DurationOfMagicalEffect(Global.Roll(2,20)+20)*100,str);
+						a.RefreshDuration(AttrType.DIM_VISION,a.DurationOfMagicalEffect(Global.Roll(2,20)+20)*100,str);
 					}
 					if(HasAttr(AttrType.GRAB_HIT) && !HasAttr(AttrType.GRABBING) && DistanceFrom(a) == 1){
 						a.attrs[Forays.AttrType.GRABBED]++;
@@ -7079,8 +7804,8 @@ namespace Forays{
 					}
 					if(HasAttr(AttrType.STUN_HIT)){
 						B.Add(a.YouAre() + " stunned. ",a);
-						int duration = 550;
-						a.GainAttrRefreshDuration(AttrType.STUNNED,duration,a.YouAre() + " no longer stunned. ",a);
+						int duration = 500;
+						a.RefreshDuration(AttrType.STUNNED,duration,a.YouAre() + " no longer stunned. ",a);
 					}
 					//as well as some enchantment effects, todo
 				}
@@ -7186,7 +7911,7 @@ namespace Forays{
 				if(a.TileInDirection(RotateDirection(dir,false)).passable && a.ActorInDirection(RotateDirection(dir,false)) == null){
 					nowhere_to_run = false;
 				}
-				if(a.HasAttr(AttrType.FROZEN) || a.HasAttr(AttrType.NEVER_MOVES)){
+				if(a.HasAttr(AttrType.FROZEN) || a.HasAttr(AttrType.IMMOBILE)){
 					nowhere_to_run = true;
 				}
 				if(nowhere_to_run){
@@ -7634,10 +8359,10 @@ namespace Forays{
 							alive = false;
 						}
 					}
-					if(alive && (a.HasAttr(AttrType.DEMON) || a.HasAttr(AttrType.UNDEAD))){
+					if(alive && a.HasAttr(Forays.AttrType.NONLIVING)){
 						foreach(Weapon w in weapons){
-							if(w.type == WeaponType.BOW && w.enchantment == EnchantmentType.HOLINESS){
-								B.Add(a.the_name + " is blasted with holy energy! ",a);
+							if(w.type == WeaponType.BOW && w.enchantment == EnchantmentType.NULLIFICATION){
+								B.Add(a.the_name + " is disrupted! ",a);
 								if(!a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(3,6),this)){
 									alive = false;
 								}
@@ -7674,9 +8399,12 @@ namespace Forays{
 		public bool TakeDamage(Damage dmg,string cause_of_death){ //returns true if still alive
 			bool damage_dealt = false;
 			int old_hp = curhp;
+			if(curhp < 0){ //then we're dealing with a corpse, and they don't take damage
+				return true;
+			}
 			if(HasAttr(AttrType.FROZEN)){
 				//attrs[Forays.AttrType.FROZEN] -= (dmg.amount+1) / 2;
-				attrs[Forays.AttrType.FROZEN] -= (dmg.amount * 9) / 10;
+				attrs[Forays.AttrType.FROZEN] -= (dmg.amount * 9) / 10; //todo: make frozen block 100% of damage unless the amount is over 1000
 				if(attrs[Forays.AttrType.FROZEN] <= 0){
 					attrs[Forays.AttrType.FROZEN] = 0;
 					B.Add("The ice breaks! ",this);
@@ -7817,19 +8545,20 @@ namespace Forays{
 				break;
 				}
 			case DamageType.POISON:
-				if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT) || HasAttr(AttrType.IMMUNE_TOXINS)){
+				if(HasAttr(Forays.AttrType.NONLIVING)){
 					dmg.amount = 0;
 				}
 				if(dmg.amount > 0){
 					curhp -= dmg.amount;
 					damage_dealt = true;
 					if(type == ActorType.PLAYER){
-						if(tile().Is(FeatureType.POISON_GAS)){
+						B.Add("The poison burns! ");
+						/*if(tile().Is(FeatureType.POISON_GAS)){
 							B.Add("The poisonous gas burns your skin! ");
 						}
 						else{
 							B.Add("You feel the poison coursing through your veins! ");
-						}
+						}*/
 					}
 					else{
 						if(Global.Roll(1,5) == 5){
@@ -7838,12 +8567,12 @@ namespace Forays{
 					}
 				}
 				break;
-			case DamageType.HEAL:
+			/*case DamageType.HEAL:
 				curhp += dmg.amount;
 				if(curhp > maxhp){
 					curhp = maxhp;
 				}
-				break;
+				break;*/
 			case DamageType.NONE:
 				break;
 			}
@@ -7892,14 +8621,14 @@ namespace Forays{
 					foreach(Actor a in ActorsWithinDistance(8)){
 						if(HasLOE(a.row,a.col) && a != this){
 							B.Add("The spores hit " + a.the_name + ". ",a);
-							if(!a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT)
-							&& !a.HasAttr(AttrType.SPORE_BURST) && !a.HasAttr(AttrType.IMMUNE_TOXINS)){
+							if(!a.HasAttr(AttrType.NONLIVING) && !a.HasAttr(AttrType.SPORE_BURST)){
 								int duration = Global.Roll(2,4);
-								a.attrs[AttrType.POISONED]++;
-								Q.Add(new Event(a,duration*100,AttrType.POISONED));
-								if(a.name == "you"){
-									B.Add("You are poisoned. ");
+								B.Add(a.YouAre() + " poisoned. ",a);
+								string msg = "";
+								if(a == player){
+									msg = "You are no longer poisoned. ";
 								}
+								a.RefreshDuration(AttrType.POISONED,duration*100,msg,a);
 								if(!a.HasAttr(AttrType.STUNNED)){
 									a.attrs[AttrType.STUNNED]++;
 									Q.Add(new Event(a,duration*100,AttrType.STUNNED,a.YouAre() + " no longer stunned. ",a));
@@ -7921,26 +8650,21 @@ namespace Forays{
 					dmg.source.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,amount,this); //doesn't yet prevent loops involving 2 holy shields.
 				}
 				if(HasFeat(FeatType.BOILING_BLOOD) && dmg.type != DamageType.POISON && attrs[AttrType.BLOOD_BOILED] < 5){
-					//if(!Global.Option(OptionType.NO_BLOOD_BOIL_MESSAGE)){
-						B.Add("Your blood boils! ");
-					//}
-					speed -= 10;
-					attrs[AttrType.BLOOD_BOILED]++;
-					Q.KillEvents(this,AttrType.BLOOD_BOILED); //eventually replace this with refreshduration
-					//GainAttr(AttrType.BLOOD_BOILED,1001,attrs[Forays.AttrType.BLOOD_BOILED],"Your blood cools. ");
-					Q.Add(new Event(this,1000,Forays.AttrType.BLOOD_BOILED,attrs[Forays.AttrType.BLOOD_BOILED],"Your blood cools. "));
+					B.Add("Your blood boils! ");
+					//speed -= 10;
+					GainAttrRefreshDuration(AttrType.BLOOD_BOILED,1000,"Your blood cools. ");
 				}
 				if(type == ActorType.MECHANICAL_KNIGHT){
 					if(curhp <= 10 && curhp > 0 && !HasAttr(AttrType.COOLDOWN_1) && !HasAttr(AttrType.COOLDOWN_2)){
 						if(Global.CoinFlip()){
-							B.Add(Your() + " arms are destroyed! ",this);
+							B.Add(Your() + " arms are destroyed! ",this); //needs a rework, todo
 							attrs[Forays.AttrType.COOLDOWN_1]++;
 							attrs[Forays.AttrType.MECHANICAL_SHIELD] = 0;
 						}
 						else{
 							B.Add(Your() + " legs are destroyed! ",this);
 							attrs[Forays.AttrType.COOLDOWN_2]++;
-							attrs[Forays.AttrType.NEVER_MOVES]++;
+							attrs[Forays.AttrType.IMMOBILE]++;
 							path.Clear();
 							target_location = null;
 						}
@@ -7989,7 +8713,7 @@ namespace Forays{
 					if(type == ActorType.BERSERKER && dmg.amount < 1000){ //hack
 						if(!HasAttr(AttrType.COOLDOWN_1)){
 							attrs[AttrType.COOLDOWN_1]++;
-							Q.Add(new Event(this,350,AttrType.COOLDOWN_1));
+							Q.Add(new Event(this,300,AttrType.COOLDOWN_1)); //changed from 350
 							Q.KillEvents(this,AttrType.COOLDOWN_2);
 							if(!HasAttr(AttrType.COOLDOWN_2)){
 								attrs[AttrType.COOLDOWN_2] = DirectionOf(player);
@@ -8025,7 +8749,7 @@ namespace Forays{
 					}
 					else{
 						if(dmg.amount < 1000 && !HasAttr(AttrType.BOSS_MONSTER)){ //everything that deals this much damage
-							if(HasAttr(AttrType.UNDEAD) || HasAttr(AttrType.CONSTRUCT)){ //prints its own message
+							if(HasAttr(AttrType.NONLIVING)){ //prints its own message
 								B.Add(the_name + " is destroyed. ",this);
 							}
 							else{
@@ -8179,7 +8903,7 @@ namespace Forays{
 			}
 			return true;
 		}
-		public bool GetKnockedBack(PhysicalObject obj){ return GetKnockedBack(obj.GetBestExtendedLine(row,col)); }
+		/*public bool GetKnockedBack(PhysicalObject obj){ return GetKnockedBack(obj.GetBestExtendedLine(row,col)); }
 		public bool GetKnockedBack(List<Tile> line){
 			int idx = line.IndexOf(M.tile[row,col]);
 			if(idx == -1){
@@ -8188,7 +8912,7 @@ namespace Forays{
 			}
 			Tile next = line[idx+1];
 			Actor source = M.actor[line[0].row,line[0].col];
-			bool no_movement = (GrabPreventsMovement(next) || HasAttr(AttrType.NEVER_MOVES));
+			bool no_movement = (GrabPreventsMovement(next) || HasAttr(AttrType.IMMOBILE));
 			if(next.passable && M.actor[next.row,next.col] == null && !no_movement){
 				if(player.CanSee(tile())){
 					B.Add(YouAre() + " knocked back. ",this);
@@ -8244,7 +8968,7 @@ namespace Forays{
 				}
 			}
 			return true;
-		}
+		}*/
 		public void IncreaseExhaustion(int amount){
 			int previous = exhaustion;
 			int effective_previous = exhaustion;
@@ -8492,10 +9216,11 @@ namespace Forays{
 						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this,a_name);
 						if(Global.Roll(1,10) <= 7){
 							if(M.actor[t.row,t.col] != null){
-								a.GetKnockedBack(this);
+								KnockObjectBack(a);
+								//a.GetKnockedBack(this);
 							}
 							else{
-								if(!next.passable){
+								if(!next.passable){ //todo: check this corpse stuff
 									B.Add(s + "'s corpse is knocked into " + next.the_name + ". ",t,next);
 								}
 								else{
@@ -8541,9 +9266,9 @@ namespace Forays{
 					Actor a = FirstActorInLine(line);
 					if(a != null){
 						AnimateBoltBeam(line.ToFirstObstruction(),Color.Cyan);
-						if(!a.HasAttr(AttrType.FROZEN) && !a.HasAttr(AttrType.UNFROZEN)){
+						if(!a.HasAttr(AttrType.FROZEN)){
 							B.Add(a.YouAre() + " encased in ice. ",a);
-							a.attrs[AttrType.FROZEN] = 25;
+							a.attrs[AttrType.FROZEN] = 35;
 						}
 						else{
 							B.Add("The beam dissipates on the remaining ice. ",a);
@@ -8860,7 +9585,7 @@ namespace Forays{
 					if(a != null){
 						B.Add(You("smash",true) + " " + a.TheName(true) + ". ",this,a);
 						if(a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(4+bonus,6),this,a_name)){
-							a.GainAttrRefreshDuration(AttrType.STUNNED,201,a.YouAre() + " no longer stunned. ",a);
+							a.RefreshDuration(AttrType.STUNNED,201,a.YouAre() + " no longer stunned. ",a);
 							B.Add(a.YouAre() + " stunned. ",a);
 						}
 					}
@@ -8875,12 +9600,14 @@ namespace Forays{
 			case SpellType.RETREAT: //this is a player-only spell for now because it uses target_location to track position
 				B.Add("You cast retreat. ");
 				if(target_location == null){
+					if(tile().Is(TileType.FLOOR,TileType.ICE,TileType.WATER)){//todo: IsNormalFloorTypeOrSomething
+					}
 					target_location = M.tile[row,col];
 					B.Add("You create a rune of transport on " + M.tile[row,col].the_name + ". ");
 					target_location.features.Add(FeatureType.RUNE_OF_RETREAT);
 				}
 				else{
-					if(M.actor[target_location.row,target_location.col] == null && target_location.passable){
+					if(M.actor[target_location.row,target_location.col] == null && target_location.passable && target_location.features.Contains(FeatureType.RUNE_OF_RETREAT)){
 						B.Add("You activate your rune of transport. ");
 						Move(target_location.row,target_location.col);
 						target_location.features.Remove(FeatureType.RUNE_OF_RETREAT);
@@ -9109,9 +9836,8 @@ namespace Forays{
 						a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(3+bonus,6),this,a_name);
 						if(Global.Roll(1,10) <= 5 && M.actor[r,c] != null && !M.actor[r,c].HasAttr(AttrType.STUNNED)){
 							B.Add(a.YouAre() + " stunned. ",a);
-							a.attrs[AttrType.STUNNED]++;
-							int duration = DurationOfMagicalEffect((Global.Roll(1,4)+2)) * 100;
-							Q.Add(new Event(a,duration,AttrType.STUNNED,a.YouAre() + " no longer stunned. ",a));
+							int duration = DurationOfMagicalEffect((Global.Roll(4)+2)) * 100;
+							a.RefreshDuration(AttrType.STUNNED,duration,a.YouAre() + " no longer stunned. ",a);
 						}
 					}
 					else{
@@ -9246,9 +9972,11 @@ namespace Forays{
 						if(firstactor != null){
 							string s = firstactor.TheName(true);
 							string s2 = firstactor.a_name;
+							//Actor corpse = firstactor.GetCorpse();
 							firstactor.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,Global.Roll(1+bonus,6),this,a_name);
 							if(M.actor[firsttile.row,firsttile.col] != null){
-								firstactor.GetKnockedBack(full_line);
+								KnockObjectBack(firstactor,3);
+								//firstactor.GetKnockedBack(full_line);
 							}
 							else{
 								if(!nexttile.passable){
@@ -9311,7 +10039,7 @@ namespace Forays{
 							}
 							Screen.AnimateMapCells(cells,chars);
 						}*/
-						a.AnimateStorm(2,4,4,'*',Color.RandomPrismatic);
+						a.AnimateStorm(2,4,4,'*',Color.RandomRainbow);
 						B.Add("You fade from " + a.TheName(true) + "'s awareness. ");
 						a.player_visibility_duration = 0;
 						a.target = null;
@@ -9343,7 +10071,7 @@ namespace Forays{
 					a.TakeDamage(DamageType.COLD,DamageClass.MAGICAL,Global.Roll(5+bonus,6),this,a_name);
 					if(M.actor[r,c] != null && Global.Roll(1,10) <= 8){
 						B.Add(a.the_name + " is encased in ice. ",a);
-						a.attrs[AttrType.FROZEN] = 25;
+						a.attrs[AttrType.FROZEN] = 35;
 					}
 				}
 				break;
@@ -9363,7 +10091,11 @@ namespace Forays{
 			case SpellType.MINOR_HEAL:
 				B.Add(You("cast") + " minor heal. ",this);
 				B.Add("A bluish glow surrounds " + the_name + ". ",this);
-				TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,Global.Roll(4,6),null);
+				curhp += Global.Roll(4,6);
+				if(curhp > maxhp){
+					curhp = maxhp;
+				}
+				//TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,Global.Roll(4,6),null);
 				break;
 			case SpellType.HOLY_SHIELD:
 				if(!HasAttr(AttrType.HOLY_SHIELDED)){
@@ -9565,7 +10297,7 @@ namespace Forays{
 									B.Add("You stop the flames from spreading. ");
 								}
 								else{
-									if(HasAttr(AttrType.ON_FIRE)){
+									/*if(HasAttr(AttrType.ON_FIRE)){
 										bool update = false;
 										int oldradius = LightRadius();
 										if(attrs[AttrType.ON_FIRE] > light_radius){
@@ -9588,14 +10320,14 @@ namespace Forays{
 										else{
 											B.Add("You put out the fire. ");
 										}
-									}
+									}*/
 								}
 							}
 						}
 					}
 					if(moved){
 						foreach(Actor a in actors_moved_past){
-							int i = 10 - Global.Roll(Stealth());
+							int i = 10 - Global.Roll(TotalSkill(SkillType.STEALTH));
 							if(i < 0){
 								i = 0;
 							}
@@ -9815,7 +10547,7 @@ namespace Forays{
 		}
 		public bool StunnedThisTurn(){
 			if(HasAttr(AttrType.STUNNED) && Global.OneIn(3)){
-				if(HasAttr(AttrType.NEVER_MOVES)){
+				if(HasAttr(AttrType.IMMOBILE)){
 					QS();
 					return true;
 				}
@@ -9964,7 +10696,7 @@ namespace Forays{
 				Screen.WriteStatsString(2,4,curhp.ToString() + "  ");
 			}
 			Screen.WriteStatsString(3,0,"Depth: " + M.current_level + "  ");
-			Screen.WriteStatsString(4,0,"AC: " + ArmorClass() + "  ");
+			//Screen.WriteStatsString(4,0,"AC: " + ArmorClass() + "  ");
 			int magic_item_lines = magic_items.Count;
 			cstr cs = EquippedWeapon.StatsName();
 			cs.s = cs.s.PadRight(12);
@@ -10876,10 +11608,10 @@ E[x]plore
 			}
 			Actor a = o as Actor;
 			if(a != null){
-				if(HasAttr(AttrType.BLOODSCENT) && !a.HasAttr(AttrType.UNDEAD) && !a.HasAttr(AttrType.CONSTRUCT)){
+				if(HasAttr(AttrType.BLOODSCENT) && !a.HasAttr(AttrType.NONLIVING)){
 					int distance_of_closest = 99;
 					foreach(Actor a2 in ActorsWithinDistance(12,true)){
-						if(!a2.HasAttr(AttrType.UNDEAD) && !a2.HasAttr(AttrType.CONSTRUCT)){
+						if(!a2.HasAttr(AttrType.NONLIVING)){
 							if(DistanceFrom(a2) < distance_of_closest){
 								distance_of_closest = DistanceFrom(a2);
 							}
@@ -10893,9 +11625,9 @@ E[x]plore
 					return true;
 				}
 				if(a.HasAttr(AttrType.SHADOW_CLOAK) && !a.tile().IsLit() && !HasAttr(AttrType.BLINDSIGHT)){
-					if(a != player || !HasAttr(AttrType.PLAYER_NOTICED)){ //player is visible once noticed
+					//if(a != player || !HasAttr(AttrType.PLAYER_NOTICED)){ //player is visible once noticed
 						return false;
-					}
+					//}
 				}
 			}
 			Tile t = o as Tile;
@@ -10904,7 +11636,7 @@ E[x]plore
 					return false;
 				}
 			}
-			if(IsWithinSightRangeOf(o.row,o.col) || M.tile[o.row,o.col].IsLit()){
+			if(IsWithinSightRangeOf(o.row,o.col) || (M.tile[o.row,o.col].IsLit() && !HasAttr(AttrType.BLINDSIGHT))){
 				if(HasLOS(o.row,o.col)){
 					if(o is Actor){
 						if((o as Actor).IsHiddenFrom(this)){
@@ -10921,8 +11653,8 @@ E[x]plore
 		}
 		public int SightRange(){
 			int divisor = HasAttr(AttrType.DIM_VISION)? 3 : 1;
-			if(HasAttr(AttrType.DARKVISION)){
-				return 8 / divisor;
+			if(HasAttr(AttrType.BLINDSIGHT)){
+				return 12 / divisor;
 			}
 			if(HasAttr(AttrType.LOW_LIGHT_VISION)){
 				return 5 / divisor;
@@ -10939,7 +11671,7 @@ E[x]plore
 			if(dist <= 5/divisor && HasAttr(AttrType.LOW_LIGHT_VISION)){
 				return true;
 			}
-			if(dist <= 8/divisor && HasAttr(AttrType.DARKVISION)){
+			if(dist <= 12/divisor && HasAttr(AttrType.BLINDSIGHT)){
 				return true;
 			}
 			if(M.tile[r,c].opaque){
@@ -10988,7 +11720,7 @@ E[x]plore
 				return "The goblin is a small ugly humanoid, often found inhabiting the upper reaches of any cave, chamber, or tunnel it can find.";
 			case ActorType.LARGE_BAT:
 				return "The bats here are substantially bigger than most, perhaps because their insect prey is also unusually large.";
-			case ActorType.WOLF:
+			case ActorType.LONE_WOLF:
 				return "Lithe and quick, this canine predator has formidable teeth and powerful jaws.";
 			case ActorType.SKELETON:
 				return "A humanoid skeleton, animated by magic, seeing without eyes, and moving without muscles.";
@@ -11399,17 +12131,11 @@ E[x]plore
 			if(lookmode){
 				for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
 					foreach(Tile t in TilesAtDistance(i)){
-						if(t.type == TileType.STAIRS || t.type == TileType.CHEST
-						|| t.Is(FeatureType.GRENADE) || t.type == TileType.FIREPIT
-						|| t.Is(FeatureType.QUICKFIRE) || t.type == TileType.STALAGMITE
-						|| t.Is(FeatureType.TROLL_CORPSE) || t.Is(FeatureType.TROLL_SEER_CORPSE)
-						|| t.Is(FeatureType.RUNE_OF_RETREAT)
-						|| t.Is(TileType.FIRE_GEYSER) || t.Is(FeatureType.POISON_GAS)
-						|| t.Is(FeatureType.FOG) || t.Is(FeatureType.FUNGUS)
-						|| t.Is(FeatureType.FUNGUS_ACTIVE) || t.Is(FeatureType.FUNGUS_PRIMED)
-						|| t.Is(TileType.FOG_VENT) || t.Is(TileType.HEALING_POOL)
-						|| t.Is(TileType.POISON_GAS_VENT)
-						|| t.IsShrine() || t.inv != null){
+						if(t.Is(TileType.STAIRS,TileType.CHEST,TileType.FIREPIT,TileType.STALAGMITE,TileType.FIRE_GEYSER,TileType.FOG_VENT,
+						        TileType.POISON_GAS_VENT,TileType.HEALING_POOL,TileType.BLAST_FUNGUS)
+						|| t.Is(FeatureType.GRENADE,FeatureType.QUICKFIRE,FeatureType.FIRE,FeatureType.TROLL_CORPSE,FeatureType.TROLL_SEER_CORPSE,
+						        FeatureType.RUNE_OF_RETREAT,FeatureType.POISON_GAS,FeatureType.FOG)
+						|| t.IsShrine() || t.inv != null){ //todo: update this with new terrain & features
 							if(CanSee(t)){
 								interesting_targets.Add(t);
 							}
@@ -12626,7 +13352,7 @@ E[x]plore
 				default:
 					return null;
 				}
-			case ActorType.WOLF:
+			case ActorType.LONE_WOLF:
 				return new AttackInfo(attack[4]);
 			case ActorType.SKELETON:
 				return new AttackInfo(attack[1]);

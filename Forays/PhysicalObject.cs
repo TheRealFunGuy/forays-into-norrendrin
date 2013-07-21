@@ -35,6 +35,9 @@ namespace Forays{
 		public int light_radius{get;set;}
 		
 		public static Map M{get;set;}
+		public static Buffer B{get;set;}
+		public static Queue Q{get;set;}
+		public static Actor player{get;set;}
 		public PhysicalObject(){
 			row=-1;
 			col=-1;
@@ -125,9 +128,9 @@ namespace Forays{
 				}
 			}
 			values[row,col] = 1;
-			if(actor() != null){
+			/*if(actor() != null){
 				actors.Add(actor());
-			}
+			}*/
 			int val = 1;
 			while(true){
 				for(int i=minrow;i<=maxrow;++i){
@@ -165,6 +168,163 @@ namespace Forays{
 					}
 				}
 			}
+		}
+		public bool KnockObjectBack(Actor a){ return KnockObjectBack(a,1); }
+		public bool KnockObjectBack(Actor a,int knockback_strength){ //todo not sure of return type yet.
+			List<Tile> line = GetBestExtendedLineOfEffect(a); //todo: print "you are knocked back" !
+			int i=0;
+			while(true){
+				Tile t = line[i];
+				if(t.actor() == a){
+					break;
+				}
+				++i;
+			}
+			line.RemoveRange(0,i+1);
+			bool immobile = false;
+			while(knockback_strength > 1){ //if the knockback strength is greater than 1, you're passing *over* at least one tile.
+				Tile t = line[0];
+				line.RemoveAt(0);
+				immobile = (a.GrabPreventsMovement(t) || a.HasAttr(AttrType.IMMOBILE) || a.HasAttr(AttrType.FROZEN));
+				if(immobile){
+					if(player.CanSee(a.tile())){
+						B.Add(a.YouVisibleAre() + " knocked about. ",a);
+					}
+					a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"*crushed against the floor");
+					return true; //todo return type
+				}
+				if(!t.passable){
+					string deathstringname = t.AName(false);
+					if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR) && !a.HasAttr(AttrType.SMALL)){
+						string tilename = t.TheName(true);
+						if(t.type == TileType.HIDDEN_DOOR){
+							tilename = "a hidden door";
+							t.Toggle(a);
+						}
+						if(player.CanSee(a.tile())){
+							B.Add(a.YouVisibleAre() + " knocked through " + tilename + ". ",a,t);
+						}
+						knockback_strength -= 2;
+						t.Toggle(a);
+						Actor corpse = a.GetCorpse();
+						if(a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + deathstringname)){
+							a.Move(t.row,t.col);
+						}
+						else{
+							a = corpse;
+							M.actor[a.p] = a;
+							a.Move(t.row,t.col); //todo: test this code
+						}
+					}
+					else{
+						if(player.CanSee(a.tile())){
+							B.Add(a.YouVisibleAre() + " knocked into " + t.TheName(true) + ". ",a,t);
+						}
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + deathstringname);
+						return true;
+					}
+				}
+				else{
+					if(t.actor() != null){
+						if(player.CanSee(a.tile()) || player.CanSee(t)){
+							B.Add(a.YouVisibleAre() + " knocked into " + t.actor().TheName(true) + ". ",a,t.actor());
+						}
+						string actorname = t.actor().AName(false);
+						string actorname2 = a.AName(false);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + actorname);
+						t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + actorname2);
+						return true;
+					}
+					else{
+						a.Move(t.row,t.col,false); //todo: corpse check here? only if you can die just by moving, NOT counting traps.
+						if(a.HasAttr(AttrType.ON_FIRE)){
+							t.ApplyEffect(DamageType.FIRE); //todo: is this redundant? - does Move call this anyway?
+						}
+					}
+				}
+			}
+			if(knockback_strength < 1){
+				return true; //todo return type
+			}
+			bool slip = false;
+			bool slip_message_printed = false;
+			do{
+				Tile t = line[0];
+				line.RemoveAt(0);
+				immobile = (a.GrabPreventsMovement(t) || a.HasAttr(AttrType.IMMOBILE) || a.HasAttr(AttrType.FROZEN));
+				if(immobile){
+					if(player.CanSee(a.tile())){
+						B.Add(a.YouVisibleAre() + " knocked about. ",a);
+					}
+					a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"*crushed against the floor");
+					return true; //todo return type
+				}
+				if(!t.passable){
+					string deathstringname = t.AName(false);
+					if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR) && !a.HasAttr(AttrType.SMALL)){
+						string tilename = t.TheName(true);
+						if(t.type == TileType.HIDDEN_DOOR){
+							tilename = "a hidden door";
+							t.Toggle(a);
+						}
+						if(player.CanSee(a.tile())){
+							B.Add(a.YouVisibleAre() + " knocked through " + tilename + ". ",a,t);
+						}
+						t.Toggle(a);
+						if(a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + deathstringname)){
+							a.Move(t.row,t.col);
+						}
+						return true;
+					}
+					else{
+						if(player.CanSee(a.tile())){
+							B.Add(a.YouVisibleAre() + " knocked into " + t.TheName(true) + ". ",a,t);
+						}
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + deathstringname);
+						return true;
+					}
+				}
+				else{
+					if(t.actor() != null){
+						if(player.CanSee(a.tile()) || player.CanSee(t)){
+							B.Add(a.YouVisibleAre() + " knocked into " + t.actor().TheName(true) + ". ",a,t.actor());
+						}
+						string actorname = t.actor().AName(false);
+						string actorname2 = a.AName(false);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + actorname);
+						t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"slamming into " + actorname2);
+						return true;
+					}
+					else{
+						slip = false;
+						if(t.Is(TileType.ICE) || t.Is(FeatureType.OIL,FeatureType.SLIME)){
+							slip = true;
+							if(!slip_message_printed){
+								slip_message_printed = true;
+								B.Add(a.You("slide") + "! ");
+							}
+						}
+						bool interrupted = false;
+						if(t.inv != null && t.inv.type == ConsumableType.DETONATION){ //this will cause a new knockback effect and end the current one
+							interrupted = true;
+						}
+						a.Move(t.row,t.col); //todo: corpse check here?
+						//todo: something around here needs to handle being knocked into fire - does it refresh burning immediately?
+						if(t.Is(TileType.FIREPIT)){
+							B.Add("TODO: fire pit! ");
+						}
+						if(a.HasAttr(AttrType.ON_FIRE)){
+							t.ApplyEffect(DamageType.FIRE); //todo: is this redundant? - does Move call this anyway?
+						}
+						t.ApplyEffect(DamageType.NORMAL); //todo: corpse check here, or does 'interrupted' handle that?
+						if(interrupted){
+							return true; //todo return type?
+						}
+					}
+				}
+			}
+			while(slip);
+			return true;
 		}
 		public string YouAre(){
 			if(name == "you"){
@@ -236,7 +396,7 @@ namespace Forays{
 			int dy = Math.Abs(r-row) * 10;
 			int dx = Math.Abs(c-col) * 10;
 			if(dx > dy){
-				return dx + (dy/2);
+				return dx + (dy/2); //emphasis on the 'estimated'...
 			}
 			else{
 				return dy + (dx/2);

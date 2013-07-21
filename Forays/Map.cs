@@ -12,29 +12,29 @@ using System.Text;
 using System.Collections.Generic;
 namespace Forays{
 	public enum LevelType{Standard,Cave,Ruined,Hive,Mine,Fortress,Extravagant};
-	public class Map{
-		public class PosArray<T>{
-			private T[,] objs;
-			public T this[int row,int col]{
-				get{
-					return objs[row,col];
-				}
-				set{
-					objs[row,col] = value;
-				}
+	public class PosArray<T>{
+		public T[,] objs;
+		public T this[int row,int col]{
+			get{
+				return objs[row,col];
 			}
-			public T this[pos p]{
-				get{
-					return objs[p.row,p.col];
-				}
-				set{
-					objs[p.row,p.col] = value;
-				}
-			}
-			public PosArray(int rows,int cols){
-				objs = new T[rows,cols];
+			set{
+				objs[row,col] = value;
 			}
 		}
+		public T this[pos p]{
+			get{
+				return objs[p.row,p.col];
+			}
+			set{
+				objs[p.row,p.col] = value;
+			}
+		}
+		public PosArray(int rows,int cols){
+			objs = new T[rows,cols];
+		}
+	}
+	public class Map{
 		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
 		public int current_level{get;set;}
@@ -44,11 +44,15 @@ namespace Forays{
 				internal_wiz_lite = value;
 				if(value == true){
 					foreach(Tile t in AllTiles()){
-						if(t.Is(FeatureType.FUNGUS)){
-							Q.Add(new Event(t,200,EventType.BLAST_FUNGUS));
+						if(t.Is(TileType.BLAST_FUNGUS)){
 							B.Add("The blast fungus starts to smolder in the light. ",t);
-							t.features.Remove(FeatureType.FUNGUS);
-							t.features.Add(FeatureType.FUNGUS_ACTIVE);
+							t.Toggle(null);
+							if(t.inv == null){ //should always be true
+								t.GetItem(Item.Create(ConsumableType.BLAST_FUNGUS,t.row,t.col));
+								t.inv.quantity = 3;
+								t.inv.revealed_by_light = true;
+							}
+							Q.Add(new Event(t.inv,100,EventType.BLAST_FUNGUS));
 						}
 					}
 				}
@@ -127,6 +131,59 @@ namespace Forays{
 			}
 			return types.Random();
 		}
+		public IEnumerable<Tile> ReachableTilesByDistance(int origin_row,int origin_col,bool return_reachable_walls,params TileType[] tiles_considered_passable){
+			int[,] values = new int[ROWS,COLS];
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					bool passable = tile[i,j].passable;
+					foreach(TileType tt in tiles_considered_passable){
+						if(tile[i,j].type == tt){
+							passable = true;
+							break;
+						}
+					}
+					if(return_reachable_walls && !tile[i,j].solid_rock){
+						passable = true;
+					}
+					if(passable){
+						values[i,j] = 0;
+					}
+					else{
+						values[i,j] = -1;
+					}
+				}
+			}
+			int minrow = 1;
+			int maxrow = ROWS-2;
+			int mincol = 1; //todo: make it start at 1 radius and go out from there until it hits these limits.
+			int maxcol = COLS-2;
+			values[origin_row,origin_col] = 1;
+			int val = 1;
+			bool done = false;
+			List<Tile> just_added = new List<Tile>{tile[origin_row,origin_col]};
+			while(!done){
+				done = true;
+				while(just_added.Count > 0){
+					yield return just_added.RemoveRandom();
+				}
+				for(int i=minrow;i<=maxrow;++i){
+					for(int j=mincol;j<=maxcol;++j){
+						if(values[i,j] == val){
+							for(int s=i-1;s<=i+1;++s){
+								for(int t=j-1;t<=j+1;++t){
+									if(values[s,t] == 0){
+										values[s,t] = val + 1;
+										done = false;
+										just_added.Add(tile[s,t]);
+									}
+								}
+							}
+						}
+					}
+				}
+				++val;
+			}
+		}
 		public void GenerateLevelTypes(){
 			level_types = new List<LevelType>{LevelType.Standard,LevelType.Standard};
 			LevelType current = LevelType.Standard;
@@ -148,7 +205,14 @@ namespace Forays{
 						if(danger_sensed[t.row,t.col] == false && t.passable && !t.opaque){
 							if(a.CanSee(t)){
 								int multiplier = a.HasAttr(AttrType.KEEN_SENSES)? 5 : 10;
-								int value = (player.Stealth(t.row,t.col) * a.DistanceFrom(t) * multiplier) - 5 * a.player_visibility_duration;
+								int stealth = player.TotalSkill(SkillType.STEALTH);
+								if(!player.tile().IsLit()){
+									stealth -= 2; //remove any bonus from the player's own tile...
+								}
+								if(!t.IsLit()){
+									stealth += 2; //...and add any bonus from the tile in question
+								}
+								int value = (stealth * a.DistanceFrom(t) * multiplier) - 5 * a.player_visibility_duration;
 								if(value < 100 || a.player_visibility_duration < 0){
 									danger_sensed[t.row,t.col] = true;
 								}
@@ -157,6 +221,40 @@ namespace Forays{
 					}
 				}
 			}
+		}
+		public void UpdateSafetyMap2(params PhysicalObject[] sources){ //todo: remove one or the other
+			List<cell> sourcelist = new List<cell>();
+			foreach(PhysicalObject o in sources){
+				sourcelist.Add(new cell(o.row,o.col,0));
+			}
+			IntLocationDelegate get_cost = (r,c) => {
+				if(actor[r,c] != null){
+					return 20 + (10 * actor[r,c].attrs[AttrType.TURNS_HERE]);
+				}
+				else{
+					if(tile[r,c].Is(TileType.DOOR_C,TileType.RUBBLE)){
+						return 20;
+					}
+					else{
+						return 10;
+					}
+				}
+			};
+			PosArray<int> a = GetDijkstraMap(Global.ROWS,Global.COLS,
+			                                 (s,t)=>tile[s,t].Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.STATUE), 
+			                                 get_cost,sourcelist);
+			for(int i=0;i<Global.ROWS;++i){
+				for(int j=0;j<Global.COLS;++j){
+					if(a[i,j] != -9999){
+						a[i,j] = -(a[i,j]) * 5;
+					}
+				}
+			}
+			foreach(PhysicalObject o in sources){
+				a[o.row,o.col] = -9999; //now the player (or other sources) become blocking
+			}
+			UpdateDijkstraMap(a,get_cost);
+			safetymap = a;
 		}
 		public void UpdateSafetyMap(params PhysicalObject[] sources){
 			PriorityQueue<cell> frontier = new PriorityQueue<cell>(c => -c.value);
@@ -244,6 +342,87 @@ namespace Forays{
 							}
 							if(safetymap[c.row+s,c.col+t] > c.value+cost){
 								safetymap[c.row+s,c.col+t] = c.value+cost;
+								frontier.Add(new cell(c.row+s,c.col+t,c.value+cost));
+							}
+						}
+					}
+				}
+			}
+		}
+		public delegate bool BooleanLocationDelegate(int row,int col);
+		public delegate int IntLocationDelegate(int row,int col);
+		public static PosArray<int> GetDijkstraMap(int height,int width,BooleanLocationDelegate is_blocked,IntLocationDelegate get_cost,List<cell> sources){
+			PriorityQueue<cell> frontier = new PriorityQueue<cell>(c => -c.value);
+			PosArray<int> map = new PosArray<int>(height,width);
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					if(is_blocked(i,j)){
+						map[i,j] = -9999;
+					}
+					else{
+						map[i,j] = 9999;
+					}
+				}
+			}
+			foreach(cell c in sources){
+				map[c.row,c.col] = c.value;
+				frontier.Add(c);
+			}
+			while(frontier.list.Count > 0){
+				cell c = frontier.Pop();
+				for(int s=-1;s<=1;++s){
+					for(int t=-1;t<=1;++t){
+						if(c.row+s >= 0 && c.row+s < height && c.col+t >= 0 && c.col+t < width){
+							int cost = get_cost(c.row+s,c.col+t);
+							if(map[c.row+s,c.col+t] > c.value+cost){
+								map[c.row+s,c.col+t] = c.value+cost;
+								frontier.Add(new cell(c.row+s,c.col+t,c.value+cost));
+							}
+						}
+					}
+				}
+			}
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					if(map[i,j] == 9999){
+						map[i,j] = -9999; //any unreachable areas are marked unpassable
+					}
+				}
+			}
+			return map;
+		}
+		public static void UpdateDijkstraMap(PosArray<int> map,IntLocationDelegate get_cost){
+			PriorityQueue<cell> frontier = new PriorityQueue<cell>(c => -c.value);
+			int height = map.objs.GetLength(0);
+			int width = map.objs.GetLength(1);
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					if(map[i,j] != -9999){
+						int v = map[i,j];
+						bool good = true;
+						for(int s=-1;s<=1 && good;++s){
+							for(int t=-1;t<=1 && good;++t){
+								if(i+s >= 0 && i+s < height && j+t >= 0 && j+t < width){
+									if(map[i+s,j+t] < v && map[i+s,j+t] != -9999){
+										good = false;
+									}
+								}
+							}
+						}
+						if(good){ //find local minima and add them to the frontier
+							frontier.Add(new cell(i,j,v));
+						}
+					}
+				}
+			}
+			while(frontier.list.Count > 0){
+				cell c = frontier.Pop();
+				for(int s=-1;s<=1;++s){
+					for(int t=-1;t<=1;++t){
+						if(c.row+s >= 0 && c.row+s < height && c.col+t >= 0 && c.col+t < width){
+							int cost = get_cost(c.row+s,c.col+t);
+							if(map[c.row+s,c.col+t] > c.value+cost){
+								map[c.row+s,c.col+t] = c.value+cost;
 								frontier.Add(new cell(c.row+s,c.col+t,c.value+cost));
 							}
 						}
@@ -528,8 +707,7 @@ namespace Forays{
 			Screen.ResetColors();
 		}
 		public colorchar VisibleColorChar(int r,int c){
-			colorchar ch;
-			ch.bgcolor = Color.Black;
+			colorchar ch = Screen.BlankChar();
 			if(player.CanSee(r,c)){
 				tile[r,c].seen = true;
 				if(tile[r,c].IsLit()){
@@ -614,39 +792,27 @@ namespace Forays{
 							}
 						}
 						else{
-							if(tile[r,c].Is(FeatureType.RUNE_OF_RETREAT)){ //some features stay visible when out of sight
-								ch.c = Tile.Feature(FeatureType.RUNE_OF_RETREAT).symbol;
-								ch.color = Tile.Feature(FeatureType.RUNE_OF_RETREAT).color;
+							List<FeatureType> list = new List<FeatureType>{/*FeatureType.FUNGUS_PRIMED,FeatureType.FUNGUS_ACTIVE,*/FeatureType.TELEPORTAL,FeatureType.RUNE_OF_RETREAT,/*FeatureType.FUNGUS,*/FeatureType.SLIME};
+							bool feature = false;
+							foreach(FeatureType ft in list){ //some features stay visible when out of sight
+								if(tile[r,c].Is(ft)){
+									feature = true;
+									ch.c = Tile.Feature(ft).symbol;
+									ch.color = Tile.Feature(ft).color;
+									break;
+								}
 							}
-							else{
-								if(tile[r,c].Is(FeatureType.FUNGUS)){
-									ch.c = Tile.Feature(FeatureType.FUNGUS).symbol;
-									ch.color = Tile.Feature(FeatureType.FUNGUS).color;
+							if(!feature){
+								ch.c = tile[r,c].symbol;
+								if(tile[r,c].revealed_by_light){
+									ch.color = tile[r,c].color;
 								}
 								else{
-									if(tile[r,c].Is(FeatureType.FUNGUS_ACTIVE)){
-										ch.c = Tile.Feature(FeatureType.FUNGUS_ACTIVE).symbol;
-										ch.color = Tile.Feature(FeatureType.FUNGUS_ACTIVE).color;
-									}
-									else{
-										if(tile[r,c].Is(FeatureType.FUNGUS_PRIMED)){
-											ch.c = Tile.Feature(FeatureType.FUNGUS_PRIMED).symbol;
-											ch.color = Tile.Feature(FeatureType.FUNGUS_PRIMED).color;
-										}
-										else{
-											ch.c = tile[r,c].symbol;
-											if(tile[r,c].revealed_by_light){
-												ch.color = tile[r,c].color;
-											}
-											else{
-												ch.color = unseencolor;
-											}
-											/*if((ch.c=='.' && ch.color == Color.White) || (ch.c=='#' && ch.color == Color.Gray)){
-												ch.color = Color.DarkGray;
-											}*/
-										}
-									}
+									ch.color = unseencolor;
 								}
+								/*if((ch.c=='.' && ch.color == Color.White) || (ch.c=='#' && ch.color == Color.Gray)){
+												ch.color = Color.DarkGray;
+								}*/
 							}
 						}
 					}
@@ -683,20 +849,53 @@ namespace Forays{
 			return null;
 		}
 		public ActorType MobType(){
-			/*List<ActorType> types = new List<ActorType>();
-			while(types.Count == 0){
-				foreach(ActorType atype in Enum.GetValues(typeof(ActorType))){
-					if(atype != ActorType.PLAYER){
-						int i = 1 + Math.Abs(Actor.Prototype(atype).level - (current_level+1)/2);
-						if(i <= 3 && Global.OneIn(i)){ //level-based check
-							if(Global.Roll(Actor.Rarity(atype)) == Actor.Rarity(atype)){ //note that Roll(0) apparently returns 1. hmm.
-								types.Add(atype); // at least that has the nice side effect of not generating 0-rarity monsters.
+			ActorType result = ActorType.RAT;
+			bool good_result = false;
+			while(!good_result){
+				int level = 1;
+				int monster_depth = (current_level+1) / 2; //1-10, not 1-20
+				if(current_level != 1){ //depth 1 only generates level 1 monsters
+					List<int> levels = new List<int>();
+					for(int i=-2;i<=2;++i){
+						if(monster_depth + i >= 1 && monster_depth + i <= 10){
+							int j = 1 + Math.Abs(i);
+							if(Global.OneIn(j)){ //current depth is considered 1 out of 1 times, depth+1 and depth-1 one out of 2 times, etc.
+								levels.Add(monster_depth + i);
 							}
 						}
 					}
+					level = levels.Random();
+				}
+				if(monster_depth == 1){ //level 1 monsters are all equal in rarity
+					result = (ActorType)(level*7 + Global.Between(-4,2));
+				}
+				else{
+					int roll = Global.Roll(100);
+					if(roll <= 3){ //3% rare
+						result = (ActorType)(level*7 + 2);
+					}
+					else{
+						if(roll <= 22){ //19% uncommon (9.5% each)
+							result = (ActorType)(level*7 + Global.Between(0,1));
+						}
+						else{ //78% common (19.5% each)
+							result = (ActorType)(level*7 + Global.Between(-4,-1));
+						}
+					}
+				}
+				if(generated_this_level[result] == 0){
+					good_result = true;
+				}
+				else{
+					if(Global.OneIn(generated_this_level[result]+1)){ // 1 in 2 for the 2nd, 1 in 3 for the 3rd, and so on
+						good_result = true;
+					}
 				}
 			}
-			return types.Random();*/
+			generated_this_level[result]++;
+			return result;
+		}
+		/*public ActorType MobType(){
 			ActorType result = ActorType.RAT;
 			bool good_result = false;
 			while(!good_result){
@@ -715,34 +914,25 @@ namespace Forays{
 					level = levels.Random();
 				}
 				if(monster_depth == 1){
-					result = (ActorType)(level*5 + Global.Roll(5) - 3); //equal probability for the level 1 monsters
+					//result = (ActorType)(level*5 + Global.Roll(5) - 3); //equal probability for the level 1 monsters
+					result = (ActorType)(level*7 + Global.Between(-4,2));
 				}
 				else{
-					if(Global.OneIn(5)){ //rarer types
-						if(Global.CoinFlip()){
-							result = (ActorType)(level*5 + 1);
-						}
-						else{
-							result = (ActorType)(level*5 + 2);
-						}
+					int roll = Global.Roll(100);
+					if(roll <= 4){ //4% rare
+						result = (ActorType)(level*7 + 2);
 					}
 					else{
-						int roll = Global.Roll(3);
-						if(roll == 1){
-							result = (ActorType)(level*5 - 2);
+						if(roll <= 20){ //16% uncommon (8% each)
+							result = (ActorType)(level*7 + Global.Between(0,1));
 						}
-						else{
-							if(roll == 2){
-								result = (ActorType)(level*5 - 1);
-							}
-							else{
-								result = (ActorType)(level*5);
-							}
+						else{ //80% common (20% each)
+							result = (ActorType)(level*7 + Global.Between(-4,-1));
 						}
 					}
 				}
 				if(current_level <= 2){ //the first 2 levels try to generate a wider variety of types
-					if(generated_this_level[result] == 0){
+					if(generated_this_level[result] == 0){ //todo update
 						good_result = true;
 					}
 					else{
@@ -764,7 +954,7 @@ namespace Forays{
 			}
 			generated_this_level[result]++;
 			return result;
-		}
+		}*/
 		public Actor SpawnMob(){ return SpawnMob(MobType()); }
 		public Actor SpawnMob(ActorType type){
 			Actor result = null;
@@ -820,7 +1010,7 @@ namespace Forays{
 				number = Global.Roll(2)+2;
 			}
 			if(Actor.Prototype(type).HasAttr(AttrType.LARGE_GROUP)){
-				number = Global.Roll(3)+4;
+				number = Global.Roll(2)+4;
 			}
 			List<Tile> group_tiles = new List<Tile>();
 			List<Actor> group = null;
@@ -1335,8 +1525,8 @@ namespace Forays{
 						Tile.Create(TileType.HEALING_POOL,i,j);
 						break;
 					case 'F':
-						Tile.Create(TileType.FLOOR,i,j);
-						tile[i,j].features.Add(FeatureType.FUNGUS);
+						Tile.Create(TileType.BLAST_FUNGUS,i,j);
+						//tile[i,j].features.Add(FeatureType.FUNGUS);
 						break;
 					case '=':
 						Tile.Create(TileType.CHEST,i,j);
@@ -2208,7 +2398,7 @@ namespace Forays{
 			return result;
 		}
 	}
-	struct cell{
+	public struct cell{
 		public int row;
 		public int col;
 		public int value;
