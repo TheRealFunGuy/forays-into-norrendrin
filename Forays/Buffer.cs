@@ -32,11 +32,19 @@ namespace Forays{
 			M = g.M;
 			player = g.player;
 		}
+		//
+		// todo: fix this, somehow:
+		/*You hit the banshee. The banshee claws you. The runic
+transcendent casts mercurial sphere. The banshee is destroyed.
+The sphere bounces between the skulking killer, the banshee, the r
+		 */
+		//
+		//
 		public void Add(string s,params PhysicalObject[] objs){ //if there's at least one object, the player must be able to
 			bool add = false;
 			if(objs != null && objs.Length > 0){ //see at least one of them. if not, no message is added. 
 				foreach(PhysicalObject obj in objs){
-					if(obj == player || player.CanSee(obj)){
+					if(obj == player || (obj != null && player.CanSee(obj))){
 						add = true;
 						break;
 					}

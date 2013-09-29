@@ -8,6 +8,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
 using System.Collections.Generic;
+using Utilities;
 namespace Forays{
 	public class Queue{
 		public LinkedList<Event> list;
@@ -131,6 +132,29 @@ namespace Forays{
 				}
 			}
 			return null;
+		}
+		public Event FindTargetedEvent(PhysicalObject target,EventType type){
+			for(LinkedListNode<Event> current = list.First;current!=null;current = current.Next){
+				if(!current.Value.dead && current.Value.target == target && current.Value.type == type){
+					return current.Value;
+				}
+			}
+			return null;
+		}
+		public void RemoveTilesFromEventAreas(List<Tile> to_be_removed,EventType type){
+			for(LinkedListNode<Event> current = list.First;current!=null;current = current.Next){
+				if(current.Value.type == type){
+					foreach(Tile t in to_be_removed){
+						if(current.Value.area.Contains(t)){
+							current.Value.area.Remove(t);
+							if(current.Value.area.Count == 0){
+								current.Value.dead = true;
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 		public bool Contains(EventType type){
 			for(LinkedListNode<Event> current = list.First;current!=null;current = current.Next){
@@ -290,14 +314,17 @@ namespace Forays{
 			dead=false;
 			tiebreaker = Q.Tiebreaker;
 		}
-		public Event(int delay_,string msg_){
+		public Event(int delay_,string msg_,params PhysicalObject[] objs){
 			target=null;
 			delay=delay_;
 			type=EventType.ANY_EVENT;
 			attr=AttrType.NO_ATTR;
 			value=0;
 			msg=msg_;
-			msg_objs = null;
+			msg_objs = new List<PhysicalObject>();
+			foreach(PhysicalObject obj in objs){
+				msg_objs.Add(obj);
+			}
 			time_created=Q.turn;
 			dead=false;
 			tiebreaker = Q.Tiebreaker;
@@ -313,6 +340,23 @@ namespace Forays{
 			type=type_;
 			attr=AttrType.NO_ATTR;
 			value=0;
+			msg="";
+			msg_objs = null;
+			time_created=Q.turn;
+			dead=false;
+			tiebreaker = Q.Tiebreaker;
+		}
+		public Event(List<Tile> area_,int delay_,EventType type_,int value_){
+			target=null;
+			area = new List<Tile>();
+			foreach(Tile t in area_){
+				area.Add(t);
+			}
+			//area=area_;
+			delay=delay_;
+			type=type_;
+			attr=AttrType.NO_ATTR;
+			value=value_;
 			msg="";
 			msg_objs = null;
 			time_created=Q.turn;
@@ -383,7 +427,11 @@ namespace Forays{
 				dead = true;*/
 				area.Remove(t);
 			}
-			if(target==target_ && (type==type_ || type_==EventType.ANY_EVENT)){
+			if(target_ == target && type == EventType.TOMBSTONE_GHOST && (type_ == type || type_ == EventType.ANY_EVENT)){
+				target = null;
+				return; //don't destroy the event, just remove the reference to the ghost.
+			}
+			if(target==target_ && (type==type_ || type_==EventType.ANY_EVENT)){ //todo: wtf? doesn't this break on attribute events?
 				target = null;
 				if(msg_objs != null){
 					msg_objs.Clear();
@@ -437,7 +485,7 @@ namespace Forays{
 				case EventType.REMOVE_ATTR:
 				{
 					Actor temp = target as Actor;
-					if(attr == AttrType.ON_FIRE && temp.light_radius == 0){
+					if(attr == AttrType.BURNING && temp.light_radius == 0){
 						temp.UpdateRadius(1,0);
 					}
 					if(temp.type == ActorType.BERSERKER && attr == AttrType.COOLDOWN_2){
@@ -446,13 +494,27 @@ namespace Forays{
 					else{
 						temp.attrs[attr] -= value;
 					}
-					if(attr == AttrType.TELEPORTING || attr == AttrType.ARCANE_SHIELDED){
+					if(attr == AttrType.TELEPORTING){
 						temp.attrs[attr] = 0;
 					}
-					if(attr==AttrType.ENHANCED_TORCH && temp.light_radius > 0){
-						temp.UpdateRadius(temp.LightRadius(),6 - temp.attrs[AttrType.DIM_LIGHT],true); //where 6 is the default radius
-						/*if(temp.attrs[AttrType.ON_FIRE] > temp.light_radius){
-							temp.UpdateRadius(temp.light_radius,temp.attrs[AttrType.ON_FIRE]);
+					if(attr==AttrType.SHINING && temp.light_radius > 0){
+						if(temp == player){
+							temp.UpdateRadius(temp.LightRadius(),6 - temp.attrs[AttrType.DIM_LIGHT],true); //where 6 is the default radius
+						}
+						else{
+							int default_radius = 0;
+							if(temp.type.ToString().Contains("phantom")){
+								if(temp.type == ActorType.PHANTOM_CRUSADER){
+									default_radius = 6; //todo check this value
+								}
+							}
+							else{
+								default_radius = Actor.Prototype(temp.type).light_radius;
+							}
+							temp.UpdateRadius(temp.LightRadius(),default_radius - temp.attrs[AttrType.DIM_LIGHT],true);
+						}
+						/*if(temp.attrs[AttrType.BURNING] > temp.light_radius){
+							temp.UpdateRadius(temp.light_radius,temp.attrs[AttrType.BURNING]);
 						}*/
 					}
 					/*if(attr==AttrType.SLOWED){
@@ -476,18 +538,18 @@ namespace Forays{
 					}*/
 					if(attr==AttrType.CONVICTION){
 						if(temp.HasAttr(AttrType.IN_COMBAT)){
-							temp.attrs[Forays.AttrType.CONVICTION] += value; //whoops, undo that
+							temp.attrs[AttrType.CONVICTION] += value; //whoops, undo that
 						}
 						else{
-							temp.attrs[Forays.AttrType.BONUS_SPIRIT] -= value;      //otherwise, set things to normal
-							temp.attrs[Forays.AttrType.BONUS_COMBAT] -= value / 2;
-							if(temp.attrs[Forays.AttrType.KILLSTREAK] >= 2){
+							temp.attrs[AttrType.BONUS_SPIRIT] -= value;      //otherwise, set things to normal
+							temp.attrs[AttrType.BONUS_COMBAT] -= value / 2;
+							if(temp.attrs[AttrType.KILLSTREAK] >= 2){
 								B.Add("You wipe off your weapon. ");
 							}
-							temp.attrs[Forays.AttrType.KILLSTREAK] = 0;
+							temp.attrs[AttrType.KILLSTREAK] = 0;
 						}
 					}
-					if(attr==AttrType.STUNNED && msg.Contains("disoriented")){
+					if(attr==AttrType.STUNNED && msg.Contains("disoriented")){ //todo
 						if(!player.CanSee(target)){
 							msg = "";
 						}
@@ -495,7 +557,7 @@ namespace Forays{
 					if(attr==AttrType.COOLDOWN_1 && temp.type == ActorType.BERSERKER){
 						B.Add(temp.Your() + " rage diminishes. ",temp);
 						B.Add(temp.the_name + " dies. ",temp);
-						temp.TakeDamage(DamageType.NORMAL,DamageClass.NO_TYPE,8888,null);
+						temp.Kill();
 					}
 					break;
 				}
@@ -505,7 +567,7 @@ namespace Forays{
 					foreach(Tile t in area){
 						if(player.CanSee(t)){
 							int exponent = player.DistanceFrom(t) + 1;
-							if(player.HasAttr(AttrType.KEEN_EYES)){
+							if(player.magic_trinkets.Contains(MagicTrinketType.RING_OF_KEEN_SIGHT)){
 								--exponent;
 							}
 							if(!t.IsLit()){
@@ -520,7 +582,7 @@ namespace Forays{
 							for(int i=exponent;i>0;--i){
 								difficulty = difficulty * 2;
 							}
-							if(Global.Roll(difficulty) == difficulty){
+							if(R.Roll(difficulty) == difficulty){
 								if(t.IsTrap() || t.Is(TileType.FIRE_GEYSER) || t.Is(TileType.FOG_VENT) || t.Is(TileType.POISON_GAS_VENT)){
 									t.name = Tile.Prototype(t.type).name;
 									t.a_name = Tile.Prototype(t.type).a_name;
@@ -555,14 +617,14 @@ namespace Forays{
 						B.PrintAll();
 					}
 					else{
-						Q.Add(new Event((Global.Roll(20)+40)*100,EventType.RELATIVELY_SAFE));
+						Q.Add(new Event((R.Roll(20)+40)*100,EventType.RELATIVELY_SAFE));
 					}
 					break;
 				}
 				case EventType.POLTERGEIST:
 				{
 					if(target != null && target is Actor){ //target can either be a stolen item, or the currently manifested poltergeist.
-						Q.Add(new Event(target,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
+						Q.Add(new Event(target,area,(R.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
 						break; //if it's manifested, the event does nothing for now.
 					}
 					if(area.Any(t => t.actor() == player)){
@@ -592,7 +654,7 @@ namespace Forays{
 										Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
 										player.tile().GetItem(item);
 										B.Add(item.TheName() + " hits you. ");
-										player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),temporary,"a flying " + item.Name());
+										player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),temporary,"a flying " + item.Name());
 									}
 									target = null;
 								}
@@ -620,13 +682,13 @@ namespace Forays{
 									}
 									Actor.tiebreakers[tiebreaker] = a;
 									B.Add("A poltergeist manifests in front of you! ");
-									Q.Add(new Event(a,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
+									Q.Add(new Event(a,area,(R.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
 									manifested = true;
 								}
 								else{
 									if(player.tile().type == TileType.DOOR_O){
 										B.Add("The door slams closed on you! ");
-										player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"a slamming door");
+										player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"a slamming door");
 									}
 									else{
 										Tile tile = null; //check for items to throw...
@@ -657,7 +719,7 @@ namespace Forays{
 												Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
 												player.tile().GetItem(item);
 												B.Add(item.TheName() + " hits you. ");
-												player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),temporary,"a flying " + item.Name());
+												player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),temporary,"a flying " + item.Name());
 											}
 										}
 										else{
@@ -695,7 +757,7 @@ namespace Forays{
 																B.Add("You hear a door slamming and a grunt of pain. ");
 															}
 														}
-														door.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(6),null,"a slamming door");
+														door.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"a slamming door");
 													}
 												}
 											}
@@ -708,11 +770,11 @@ namespace Forays{
 							}
 						}
 						if(!manifested){
-							Q.Add(new Event(target,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,value+1,""));
+							Q.Add(new Event(target,area,(R.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,value+1,""));
 						}
 					}
 					else{
-						Q.Add(new Event(target,area,(Global.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
+						Q.Add(new Event(target,area,(R.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
 					}
 					break;
 				}
@@ -730,7 +792,7 @@ namespace Forays{
 					if(area[0].inv == item){
 						bool attacked = false;
 						if(player.DistanceFrom(area[0]) == 1 && area[0].actor() == null){
-							if(player.TotalSkill(SkillType.STEALTH) * 5 < Global.Roll(1,100)){
+							if(player.TotalSkill(SkillType.STEALTH) * 5 < R.Roll(1,100)){
 								B.Add(item.TheName(true) + " suddenly grows tentacles! ");
 								attacked = true;
 								area[0].inv = null;
@@ -802,13 +864,19 @@ namespace Forays{
 							}
 						}
 						Screen.AnimateMapCells(cells,new colorchar('*',Color.RandomExplosion));
-						foreach(Actor a in t.ActorsWithinDistance(1)){
-							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(3,6),null,"an exploding grenade");
+						Actor a = t.actor();
+						if(a != null){
+							a.attrs[AttrType.TURN_INTO_CORPSE] = 1;
 						}
-						if(t.actor() != null){
+						foreach(Actor a2 in t.ActorsWithinDistance(1)){
+							a2.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(3,6),null,"an exploding grenade");
+						}
+						if(a != null){
 							int dir = Global.RandomDirection(); //todo! make the other explosions use the new knockback
-							//t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
-							t.TileInDirection(dir).KnockObjectBack(t.actor()); //todo: handle corpses too
+							if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
+								t.TileInDirection(dir).KnockObjectBack(a);
+							}
+							a.CorpseCleanup();
 						}
 						t.MakeNoise(8);
 					}
@@ -817,10 +885,10 @@ namespace Forays{
 				case EventType.BLAST_FUNGUS:
 				{
 					Item i = target as Item;
-					i.quantity--;
-					if(i.quantity == 0){
+					i.other_data--;
+					if(i.other_data == 0){
 						Tile t = null;
-						if(Global.BoundsCheck(i.row,i.col) && M.tile[i.p].inv == i){
+						if(U.BoundsCheck(i.row,i.col) && M.tile[i.p].inv == i){
 							t = M.tile[i.p];
 							t.inv = null;
 						}
@@ -850,20 +918,19 @@ namespace Forays{
 							}
 							foreach(Actor a in t.ActorsWithinDistance(3)){
 								if(t.HasLOE(a)){
-									a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(5,6),null,"an exploding blast fungus");
+									a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(5,6),null,"an exploding blast fungus");
 								}
 							}
 							if(t.actor() != null){
-								int dir = Global.RandomDirection();
-								t.TileInDirection(dir.RotateDirection(true,4)).KnockObjectBack(t.actor());
-								//t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
+								int dir = Global.RandomDirection(); //todo: update explosion radius and knockback here. I didn't bother yet.
+								t.TileInDirection(dir.RotateDir(true,4)).KnockObjectBack(t.actor());
 							}
 							t.MakeNoise(8);
 						}
 					}
 					else{
 						Tile t = null;
-						if(Global.BoundsCheck(i.row,i.col) && M.tile[i.p].inv == i){
+						if(U.BoundsCheck(i.row,i.col) && M.tile[i.p].inv == i){
 							t = M.tile[i.p];
 						}
 						else{
@@ -875,50 +942,12 @@ namespace Forays{
 							}
 						}
 						if(t != null){
-							Screen.AnimateMapCell(t.row,t.col,new colorchar(i.quantity.ToString()[0],Color.Red),100);
+							Screen.AnimateMapCell(t.row,t.col,new colorchar(i.other_data.ToString()[0],Color.Red),100);
 						}
 						Q.Add(new Event(i,100,EventType.BLAST_FUNGUS));
 					}
 					break;
 				}
-				/*case EventType.BLAST_FUNGUS:
-				{
-					Tile t = target as Tile;
-					if(t.Is(FeatureType.FUNGUS_PRIMED)){
-						t.features.Remove(FeatureType.FUNGUS_PRIMED);
-						B.Add("The blast fungus explodes! ",t);
-						if(t.seen){
-							Screen.WriteMapChar(t.row,t.col,M.VisibleColorChar(t.row,t.col));
-						}
-						B.DisplayNow();
-						for(int i=1;i<=3;++i){
-							List<pos> cells = new List<pos>();
-							foreach(Tile tile in t.TilesWithinDistance(i)){
-								if(t.HasLOE(tile) && tile.passable && tile.seen){
-									cells.Add(tile.p);
-								}
-							}
-							Screen.AnimateMapCells(cells,new colorchar('*',Color.DarkRed));
-						}
-						foreach(Actor a in t.ActorsWithinDistance(3)){
-							if(t.HasLOE(a)){
-								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,Global.Roll(5,6),null,"an exploding blast fungus");
-							}
-						}
-						if(t.actor() != null){
-							int dir = Global.RandomDirection();
-							t.TileInDirection(dir.RotateDirection(true,4)).KnockObjectBack(t.actor());
-							//t.actor().GetKnockedBack(t.TileInDirection(t.actor().RotateDirection(dir,true,4)));
-						}
-						t.MakeNoise(8);
-					}
-					if(t.Is(FeatureType.FUNGUS_ACTIVE)){
-						t.features.Remove(FeatureType.FUNGUS_ACTIVE);
-						t.features.Add(FeatureType.FUNGUS_PRIMED);
-						Q.Add(new Event(t,100,EventType.BLAST_FUNGUS));
-					}
-					break;
-				}*/
 				case EventType.STALAGMITE:
 				{
 					int stalagmites = 0;
@@ -954,7 +983,7 @@ namespace Forays{
 						number_of_values -= diff;
 						minimum_value = 5;
 					}
-					int delay = ((minimum_value - 1) + Global.Roll(number_of_values)) * 100;
+					int delay = ((minimum_value - 1) + R.Roll(number_of_values)) * 100;
 					Q.Add(new Event(target,delay+200,EventType.FIRE_GEYSER,value));
 					Q.Add(new Event(target,delay,EventType.FIRE_GEYSER_ERUPTION,2));
 					break;
@@ -1004,9 +1033,9 @@ namespace Forays{
 						foreach(Tile t in target.TilesWithinDistance(1)){
 							Actor a = t.actor();
 							if(a != null){
-								if(a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(2,6),null,"a fiery eruption")){
-									if(!a.HasAttr(AttrType.RESIST_FIRE) && !a.HasAttr(AttrType.IMMUNE_FIRE)
-									&& !a.HasAttr(AttrType.ON_FIRE) && !a.HasAttr(AttrType.CATCHING_FIRE)
+								if(a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,R.Roll(2,6),null,"a fiery eruption")){
+									if(!a.HasAttr(AttrType.IMMUNE_BURNING) && !a.HasAttr(AttrType.IMMUNE_FIRE)
+									&& !a.HasAttr(AttrType.BURNING) && !a.HasAttr(AttrType.CATCHING_FIRE)
 									&& !a.HasAttr(AttrType.STARTED_CATCHING_FIRE_THIS_TURN)){
 										if(a.name == "you"){
 											B.Add("You start to catch fire! ");
@@ -1019,11 +1048,11 @@ namespace Forays{
 								}
 							}
 							if(t.Is(FeatureType.TROLL_CORPSE)){
-								t.features.Remove(FeatureType.TROLL_CORPSE);
+								t.features.Remove(FeatureType.TROLL_CORPSE); //todo: update to apply(fire)
 								B.Add("The troll corpse burns to ashes! ",t);
 							}
-							if(t.Is(FeatureType.TROLL_SEER_CORPSE)){
-								t.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+							if(t.Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){
+								t.features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
 								B.Add("The troll seer corpse burns to ashes! ",t);
 							}
 						}
@@ -1060,7 +1089,9 @@ namespace Forays{
 					Tile current = target as Tile;
 					if(!current.Is(FeatureType.FOG)){
 						current.AddFeature(FeatureType.FOG);
-						Q.Add(new Event(new List<Tile>{current},400,EventType.FOG));
+						List<Tile> new_area = new List<Tile>{current};
+						Q.RemoveTilesFromEventAreas(new_area,EventType.FOG);
+						Q.Add(new Event(new_area,600,EventType.FOG,25)); //todo why does this make a new event for each, anyway?
 					}
 					else{
 						for(int tries=0;tries<50;++tries){
@@ -1074,7 +1105,9 @@ namespace Forays{
 								Tile possible = open.Random();
 								if(!possible.Is(FeatureType.FOG)){
 									possible.AddFeature(FeatureType.FOG);
-									Q.Add(new Event(new List<Tile>{possible},400,EventType.FOG));
+									List<Tile> new_area = new List<Tile>{possible};
+									Q.RemoveTilesFromEventAreas(new_area,EventType.FOG);
+									Q.Add(new Event(new_area,600,EventType.FOG,25));
 									break;
 								}
 								else{
@@ -1094,7 +1127,7 @@ namespace Forays{
 					List<Tile> removed = new List<Tile>();
 					foreach(Tile t in area){
 						if(t.Is(FeatureType.FOG)){
-							if(Global.OneIn(4)){
+							if(R.PercentChance(value)){
 								t.RemoveFeature(FeatureType.FOG);
 								removed.Add(t);
 							}
@@ -1107,7 +1140,7 @@ namespace Forays{
 						area.Remove(t);
 					}
 					if(area.Count > 0){
-						Q.Add(new Event(area,100,EventType.FOG));
+						Q.Add(new Event(area,100,EventType.FOG,value));
 					}
 					break;
 				}
@@ -1135,12 +1168,12 @@ namespace Forays{
 						}
 					}
 					Tile current = target as Tile;
-					if(Global.OneIn(7)){
-						int num = Global.Roll(5) + 2;
+					if(R.OneIn(7)){
+						int num = R.Roll(5) + 2;
 						List<Tile> new_area = new List<Tile>();
 						for(int i=0;i<num;++i){
 							if(!current.Is(FeatureType.POISON_GAS)){
-								current.features.Add(FeatureType.POISON_GAS);
+								current.AddFeature(FeatureType.POISON_GAS);
 								new_area.Add(current);
 							}
 							else{
@@ -1154,7 +1187,7 @@ namespace Forays{
 									if(open.Count > 0){
 										Tile possible = open.Random();
 										if(!possible.Is(FeatureType.POISON_GAS)){
-											possible.features.Add(FeatureType.POISON_GAS);
+											possible.AddFeature(FeatureType.POISON_GAS);
 											new_area.Add(possible);
 											break;
 										}
@@ -1181,7 +1214,7 @@ namespace Forays{
 					List<Tile> removed = new List<Tile>();
 					foreach(Tile t in area){
 						if(t.Is(FeatureType.POISON_GAS)){
-							if(Global.OneIn(6)){
+							if(R.OneIn(6)){
 								t.RemoveFeature(FeatureType.POISON_GAS);
 								removed.Add(t);
 							}
@@ -1195,6 +1228,28 @@ namespace Forays{
 					}
 					if(area.Count > 0){
 						Q.Add(new Event(area,100,EventType.POISON_GAS));
+					}
+					break;
+				}
+				case EventType.PIXIE_DUST: //yeah, these should be combined into a single event type - once I add a 2nd "value" variable to events.
+				{
+					List<Tile> removed = new List<Tile>();
+					foreach(Tile t in area){
+						if(t.Is(FeatureType.PIXIE_DUST)){
+							if(R.OneIn(4)){
+								t.RemoveFeature(FeatureType.PIXIE_DUST);
+								removed.Add(t);
+							}
+						}
+						else{
+							removed.Add(t);
+						}
+					}
+					foreach(Tile t in removed){
+						area.Remove(t);
+					}
+					if(area.Count > 0){
+						Q.Add(new Event(area,100,EventType.PIXIE_DUST));
 					}
 					break;
 				}
@@ -1250,7 +1305,7 @@ namespace Forays{
 								}
 							}
 							a.Q0();
-							switch(Global.Roll(2)){
+							switch(R.Roll(2)){
 							case 1:
 								B.Add("You think that statue might have just moved... ");
 								break;
@@ -1272,9 +1327,11 @@ namespace Forays{
 				}
 				case EventType.REGENERATING_FROM_DEATH:
 				{
+					int health = value % 1000; //hack. I might eventually add a 2nd "value" field to events to fix this.
+					int permanent_damage = value / 1000;
 					if(target.tile().Is(FeatureType.TROLL_CORPSE)){ //otherwise, assume it was destroyed by fire
-						value++;
-						if(value > 0 && target.actor() == null){
+						health++;
+						if(health > 0 && target.actor() == null){
 							Actor a = Actor.Create(ActorType.TROLL,target.row,target.col);
 							foreach(Event e in Q.list){
 								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
@@ -1283,25 +1340,25 @@ namespace Forays{
 								}
 							}
 							Actor.tiebreakers[tiebreaker] = a;
-							target.actor().curhp = value;
-							target.actor().level = 0;
-							target.actor().attrs[Forays.AttrType.NO_ITEM]++;
+							target.actor().curhp = health;
+							target.actor().attrs[AttrType.PERMANENT_DAMAGE] = permanent_damage;
+							target.actor().attrs[AttrType.NO_ITEM]++;
 							B.Add("The troll stands up! ",target);
 							target.actor().player_visibility_duration = -1;
 							if(target.tile().type == TileType.DOOR_C){
 								target.tile().Toggle(target.actor());
 							}
 							target.tile().features.Remove(FeatureType.TROLL_CORPSE);
-							if(Global.OneIn(3)){
-								target.actor().attrs[Forays.AttrType.WANDERING]++;
+							if(R.OneIn(3)){
+								target.actor().attrs[AttrType.WANDERING]++;
 							}
 						}
 						else{
-							int roll = Global.Roll(20);
-							if(value == -1){
+							int roll = R.Roll(20);
+							if(health == -1){
 								roll = 1;
 							}
-							if(value == 0){
+							if(health == 0){
 								roll = 3;
 							}
 							switch(roll){
@@ -1319,13 +1376,38 @@ namespace Forays{
 							default:
 								break;
 							}
-							Q.Add(new Event(target,null,100,EventType.REGENERATING_FROM_DEATH,attr,value,""));
+							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,health + permanent_damage*1000));
 						}
 					}
-					if(target.tile().Is(FeatureType.TROLL_SEER_CORPSE)){ //otherwise, assume it was destroyed by fire
-						value++;
-						if(value > 0 && target.actor() == null){
-							Actor a = Actor.Create(ActorType.TROLL_SEER,target.row,target.col);
+					if(target.tile().Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){ //otherwise, assume it was destroyed by fire
+						int recovered = 3;
+						if(health + recovered > 45 - permanent_damage){ //assumes 45hp
+							recovered = (45 - permanent_damage) - health;
+						}
+						health += recovered;
+						if(player.CanSee(target) && player.HasLOS(target)){
+							List<pos> cells = new List<pos>();
+							List<colorchar> cch = new List<colorchar>();
+							foreach(pos p2 in target.PositionsWithinDistance(6)){
+								if(M.actor[p2] != null && target.HasLOE(M.actor[p2]) && player.CanSee(M.actor[p2])){
+									cells.Add(p2);
+									colorchar ch = new colorchar(M.actor[p2].symbol,Color.DarkRed);
+									if(M.actor[p2].color == Color.DarkRed){
+										ch.color = Color.Red;
+									}
+									cch.Add(ch);
+								}
+							}
+							M.Draw();
+							Screen.AnimateMapCells(cells,cch,150);
+						}
+						foreach(Actor a in target.ActorsWithinDistance(6)){
+							if(target.HasLOE(a)){
+								a.TakeDamage(DamageType.NORMAL,DamageClass.MAGICAL,recovered,null,"trollish blood magic");
+							}
+						}
+						if(health > 0 && target.actor() == null){
+							Actor a = Actor.Create(ActorType.TROLL_BLOODWITCH,target.row,target.col);
 							foreach(Event e in Q.list){
 								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
 									e.tiebreaker = this.tiebreaker;
@@ -1333,47 +1415,102 @@ namespace Forays{
 								}
 							}
 							Actor.tiebreakers[tiebreaker] = a;
-							target.actor().curhp = value;
-							target.actor().level = 0;
-							target.actor().attrs[Forays.AttrType.NO_ITEM]++;
-							B.Add("The troll seer stands up! ",target);
+							target.actor().curhp = health;
+							target.actor().attrs[AttrType.PERMANENT_DAMAGE] = permanent_damage;
+							target.actor().attrs[AttrType.NO_ITEM]++;
+							B.Add("The troll bloodwitch rises! ",target);
 							target.actor().player_visibility_duration = -1;
 							if(attr == AttrType.COOLDOWN_1){
-								target.actor().attrs[Forays.AttrType.COOLDOWN_1]++;
+								target.actor().attrs[AttrType.COOLDOWN_1]++;
 							}
 							if(target.tile().type == TileType.DOOR_C){
 								target.tile().Toggle(target.actor());
 							}
-							target.tile().features.Remove(FeatureType.TROLL_SEER_CORPSE);
-							if(Global.OneIn(3)){
-								target.actor().attrs[Forays.AttrType.WANDERING]++;
+							target.tile().features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
+							if(R.OneIn(3)){
+								target.actor().attrs[AttrType.WANDERING]++;
 							}
 						}
 						else{
-							int roll = Global.Roll(20);
-							if(value == -1){
+							int roll = R.Roll(20);
+							if(health == -1){
 								roll = 1;
 							}
-							if(value == 0){
+							if(health == 0){
 								roll = 3;
 							}
 							switch(roll){
 							case 1:
 							case 2:
-								B.Add("The troll seer's corpse twitches. ",target);
+								B.Add("The bloodwitch's corpse twitches. ",target);
 								break;
 							case 3:
 							case 4:
-								B.Add("You hear sounds coming from the troll seer's corpse. ",target);
+								B.Add("You feel a pulse like a heartbeat coming from the bloodwitch. ",target);
 								break;
 							case 5:
-								B.Add("The troll seer on the floor regenerates. ",target);
+								B.Add("The troll bloodwitch on the floor regenerates. ",target);
 								break;
 							default:
 								break;
 							}
-							Q.Add(new Event(target,null,100,EventType.REGENERATING_FROM_DEATH,attr,value,""));
+							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,health + permanent_damage*1000));
 						}
+					}
+					break;
+				}
+				case EventType.REASSEMBLING:
+				{
+					Tile t = target as Tile;
+					if(t.Is(FeatureType.BONES)){
+						if(t.actor() == null){
+							Actor a = Actor.Create(ActorType.SKELETON,target.row,target.col);
+							foreach(Event e in Q.list){
+								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
+									e.tiebreaker = this.tiebreaker;
+									break;
+								}
+							}
+							Actor.tiebreakers[tiebreaker] = a;
+							B.Add("The skeleton reassembles itself. ",target);
+							target.actor().player_visibility_duration = -1;
+							if(target.tile().type == TileType.DOOR_C){
+								target.tile().Toggle(target.actor());
+							}
+							target.tile().features.Remove(FeatureType.BONES);
+							if(R.OneIn(3)){
+								target.actor().attrs[AttrType.WANDERING]++;
+							}
+						}
+						else{
+							Q.Add(new Event(target,100,EventType.REASSEMBLING));
+						}
+					}
+					break;
+				}
+				case EventType.SHIELDING:
+				{
+					List<pos> cells = new List<pos>();
+					List<colorchar> symbols = new List<colorchar>();
+					int animation_delay = 75;
+					foreach(Tile tile in area){
+						if(tile.actor() != null){
+							animation_delay = 150;
+							if(tile.actor().attrs[AttrType.ARCANE_SHIELDED] < 10){
+								tile.actor().attrs[AttrType.ARCANE_SHIELDED] = 10;
+							}
+							symbols.Add(new colorchar(tile.actor().symbol,Color.Blue));
+						}
+						else{
+							symbols.Add(new colorchar('+',Color.Blue));
+						}
+						cells.Add(tile.p);
+					}
+					M.Draw();
+					Screen.AnimateMapCells(cells,symbols,animation_delay);
+					--value;
+					if(value > 0){
+						Q.Add(new Event(area,100,EventType.SHIELDING,value));
 					}
 					break;
 				}
@@ -1391,8 +1528,8 @@ namespace Forays{
 									t.features.Remove(FeatureType.TROLL_CORPSE); //todo apply fire
 									B.Add("The troll corpse burns to ashes! ",t);
 								}
-								if(t.Is(FeatureType.TROLL_SEER_CORPSE)){
-									t.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+								if(t.Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){
+									t.features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
 									B.Add("The troll seer corpse burns to ashes! ",t);
 								}
 								/*if(t.Is(TileType.BLAST_FUNGUS)){
@@ -1406,7 +1543,7 @@ namespace Forays{
 									t.Toggle(null);
 									if(t.inv == null){ //should always be true
 										t.GetItem(Item.Create(ConsumableType.BLAST_FUNGUS,t.row,t.col));
-										t.inv.quantity = 3;
+										t.inv.other_data = 3;
 										t.inv.revealed_by_light = true;
 									}
 									Q.Add(new Event(t.inv,100,EventType.BLAST_FUNGUS));
@@ -1450,8 +1587,8 @@ namespace Forays{
 									t.features.Remove(FeatureType.TROLL_CORPSE);
 									B.Add("The troll corpse burns to ashes! ",t); //todo apply fire
 								}
-								if(t.Is(FeatureType.TROLL_SEER_CORPSE)){
-									t.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+								if(t.Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){
+									t.features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
 									B.Add("The troll seer corpse burns to ashes! ",t);
 								}
 								/*if(t.Is(FeatureType.FUNGUS)){
@@ -1465,7 +1602,7 @@ namespace Forays{
 									t.Toggle(null);
 									if(t.inv == null){ //should always be true
 										t.GetItem(Item.Create(ConsumableType.BLAST_FUNGUS,t.row,t.col));
-										t.inv.quantity = 3;
+										t.inv.other_data = 3;
 										t.inv.revealed_by_light = true;
 									}
 									Q.Add(new Event(t.inv,100,EventType.BLAST_FUNGUS));
@@ -1482,7 +1619,7 @@ namespace Forays{
 							if(player.CanSee(a.tile())){
 								B.Add("The quickfire burns " + a.the_name + ". ",a);
 							}
-							a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,Global.Roll(6),null,"quickfire");
+							a.TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,R.Roll(6),null,"quickfire");
 						}
 					}
 					--value;
@@ -1494,7 +1631,7 @@ namespace Forays{
 				case EventType.BOSS_SIGN:
 				{
 					string s = "";
-					switch(Global.Roll(8)){
+					switch(R.Roll(8)){
 					case 1:
 						s = "You see scratch marks on the walls and floor. ";
 						break;
@@ -1526,7 +1663,7 @@ namespace Forays{
 					if(!player.HasAttr(AttrType.RESTING)){
 						B.AddIfEmpty(s);
 					}
-					Q.Add(new Event((Global.Roll(20)+35)*100,EventType.BOSS_SIGN));
+					Q.Add(new Event((R.Roll(20)+35)*100,EventType.BOSS_SIGN));
 					break;
 				}
 				case EventType.BOSS_ARRIVE:
@@ -1546,9 +1683,9 @@ namespace Forays{
 								troll.features.Remove(FeatureType.TROLL_CORPSE);
 							}
 							else{
-								if(troll.Is(FeatureType.TROLL_SEER_CORPSE)){
-									B.Add("The troll seer corpse burns to ashes! ",troll);
-									troll.features.Remove(FeatureType.TROLL_SEER_CORPSE);
+								if(troll.Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){
+									B.Add("The troll bloodwitch corpse burns to ashes! ",troll);
+									troll.features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
 								}
 							}
 						}
@@ -1565,7 +1702,7 @@ namespace Forays{
 						}
 						if(goodtiles.Count > 0){
 							B.Add("You hear a loud crash and a nearby roar! ");
-							Tile t = goodtiles[Global.Roll(goodtiles.Count)-1];
+							Tile t = goodtiles[R.Roll(goodtiles.Count)-1];
 							a = Actor.Create(ActorType.FIRE_DRAKE,t.row,t.col,true,false);
 							spawned = true;
 						}
@@ -1579,7 +1716,7 @@ namespace Forays{
 						}
 					}
 					if(!spawned){
-						Q.Add(new Event(null,null,(Global.Roll(20)+10)*100,EventType.BOSS_ARRIVE,attr,value,""));
+						Q.Add(new Event(null,null,(R.Roll(20)+10)*100,EventType.BOSS_ARRIVE,attr,value,""));
 					}
 					else{
 						if(value > 0){
@@ -1595,7 +1732,7 @@ namespace Forays{
 								(tile as Tile).Toggle(null,TileType.CHASM);
 							}
 							Q.Add(new Event(tile,100,EventType.FLOOR_COLLAPSE));
-							Q.Add(new Event((Global.Roll(20)+20)*100,EventType.CEILING_COLLAPSE));
+							Q.Add(new Event((R.Roll(20)+20)*100,EventType.CEILING_COLLAPSE));
 
 						}
 					}
@@ -1652,8 +1789,8 @@ namespace Forays{
 							Tile t = M.tile[i,j];
 							if(t.Is(TileType.WALL)){
 								int num_walls = t.TilesAtDistance(1).Where(x=>x.Is(TileType.WALL)).Count;
-								if(num_walls < 8 && Global.OneIn(20)){
-									if(Global.CoinFlip()){
+								if(num_walls < 8 && R.OneIn(20)){
+									if(R.CoinFlip()){
 										t.Toggle(null,Forays.TileType.FLOOR);
 										foreach(Tile neighbor in t.TilesAtDistance(1)){
 											neighbor.solid_rock = false;
@@ -1663,7 +1800,7 @@ namespace Forays{
 										t.Toggle(null,Forays.TileType.RUBBLE);
 										foreach(Tile neighbor in t.TilesAtDistance(1)){
 											neighbor.solid_rock = false;
-											if(neighbor.type == TileType.FLOOR && Global.OneIn(10)){
+											if(neighbor.type == TileType.FLOOR && R.OneIn(10)){
 												neighbor.Toggle(null,Forays.TileType.RUBBLE);
 											}
 										}
@@ -1672,12 +1809,12 @@ namespace Forays{
 							}
 							else{
 								int num_walls = t.TilesAtDistance(1).Where(x=>x.Is(TileType.WALL)).Count;
-								if(num_walls == 0 && Global.OneIn(100)){
-									if(Global.OneIn(6)){
+								if(num_walls == 0 && R.OneIn(100)){
+									if(R.OneIn(6)){
 										t.Toggle(null,Forays.TileType.RUBBLE);
 									}
 									foreach(Tile neighbor in t.TilesAtDistance(1)){
-										if(neighbor.type == TileType.FLOOR && Global.OneIn(6)){
+										if(neighbor.type == TileType.FLOOR && R.OneIn(6)){
 											neighbor.Toggle(null,Forays.TileType.RUBBLE);
 										}
 									}
@@ -1685,7 +1822,7 @@ namespace Forays{
 							}
 						}
 					}
-					Q.Add(new Event((Global.Roll(20)+20)*100,EventType.CEILING_COLLAPSE));
+					Q.Add(new Event((R.Roll(20)+20)*100,EventType.CEILING_COLLAPSE));
 					break;
 				}
 				case EventType.NORMAL_LIGHTING:
@@ -1703,21 +1840,31 @@ namespace Forays{
 				case EventType.TELEPORTAL:
 				{
 					Tile t = target as Tile;
-					if(t != null && t.Is(FeatureType.TELEPORTAL)){
+					if(t != null && t.Is(FeatureType.TELEPORTAL,FeatureType.STABLE_TELEPORTAL)){
+						if(t.Is(FeatureType.TELEPORTAL)){
+							value--; //unstable teleportals (from the item) degrade each turn
+						}
+						else{
+							if(value < 100){
+								value++; //stable ones repair themselves after use
+							}
+						}
 						Actor a = t.actor();
-						if(a != null){
-							Tile dest = null;
+						Tile dest = null;
+						if(a != null && !a.HasAttr(AttrType.JUST_TELEPORTED)){
 							if(area != null){
 								dest = area.Random();
 							}
 							else{
-								List<Tile> tiles = M.AllTiles().Where(x => x.passable && x.actor() == null && t.EstimatedEuclideanDistanceFromX10(x) >= 45);
+								List<Tile> tiles = M.AllTiles().Where(x => x.passable && x.actor() == null && t.ApproximateEuclideanDistanceFromX10(x) >= 45);
 								dest = tiles.Random();
 							}
 							if(dest != null){
+								a.RefreshDuration(AttrType.JUST_TELEPORTED,101);
+								value -= 25;
 								bool visible = false;
 								if(a == player){
-									B.Add("The teleportal sends you away. ");
+									B.Add("You disappear into the teleportal. "); //todo message?
 								}
 								else{
 									if(player.CanSee(a)){
@@ -1736,13 +1883,45 @@ namespace Forays{
 								}
 							}
 						}
+						else{
+							if(a != null){
+								a.RefreshDuration(AttrType.JUST_TELEPORTED,101);
+							}
+						}
+						if(value > 0){
+							Q.Add(new Event(target,area,100,EventType.TELEPORTAL,AttrType.NO_ATTR,value,""));
+							if(value < 25){
+								if(dest != null || R.OneIn(8)){
+									B.Add("The teleportal flickers. ",t,dest);
+								}
+							}
+						}
+						else{
+							if(t.Is(FeatureType.TELEPORTAL)){
+								t.RemoveFeature(FeatureType.TELEPORTAL);
+							}
+							if(t.Is(FeatureType.STABLE_TELEPORTAL)){
+								foreach(Tile t2 in area){
+									Event e2 = Q.FindTargetedEvent(t2,EventType.TELEPORTAL);
+									if(e2 != null && t2.features.Contains(FeatureType.STABLE_TELEPORTAL)){
+										e2.area.Remove(t);
+										if(e2.area.Count == 0){
+											t2.RemoveFeature(FeatureType.STABLE_TELEPORTAL);
+											t2.AddFeature(FeatureType.INACTIVE_TELEPORTAL);
+											e2.dead = true;
+										}
+									}
+								}
+								t.RemoveFeature(FeatureType.STABLE_TELEPORTAL);
+							}
+							B.Add("The teleportal flickers and vanishes. ",t,dest);
+						}
 					}
-					Q.Add(new Event(target,area,100,EventType.TELEPORTAL)); //todo: make sure this doesn't recur if there's no target
 					break;
 				}
 				case EventType.BREACH:
 				{
-					if(Global.Roll(3) >= 2){
+					if(R.Roll(3) >= 2){
 						Tile t = area.WhereGreatest(x=>x.DistanceFrom(target)).Random();
 						if(t != null){
 							t.Toggle(null);
@@ -1809,14 +1988,39 @@ namespace Forays{
 				{
 					foreach(Tile t in area){
 						Actor a = t.actor();
-						if(a != null && !a.HasAttr(AttrType.IMMOBILE) && !a.HasAttr(AttrType.JUST_GRABBED) && !a.HasAttr(AttrType.FLYING) && Global.OneIn(1)){
+						if(a != null && a.type != ActorType.CORPSETOWER_BEHEMOTH && !a.HasAttr(AttrType.IMMOBILE) && !a.HasAttr(AttrType.JUST_GRABBED) && !a.HasAttr(AttrType.FLYING) && R.OneIn(1)){ //todo change probability
 							B.Add("A dead hand reaches up and grabs " + a.the_name + "! ",a);
-							int duration = Global.Roll(4) * 100;
-							a.RefreshDuration(AttrType.IMMOBILE,duration,"The dead hand releases " + a.the_name + ". ",a);
+							int duration = R.Roll(4) * 100;
+							a.attrs[AttrType.IMMOBILE]++;
+							Q.Add(new Event(a,duration,AttrType.IMMOBILE,"The dead hand releases " + a.the_name + ". ",a)); //todo: test this. IMMOBILE should now be tracked separately for each source, meaning that stoneform won't break grabs etc.
 							a.RefreshDuration(AttrType.JUST_GRABBED,duration + 100);
 						}
 					}
 					Q.Add(new Event(area,100,EventType.GRAVE_DIRT));
+					break;
+				}
+				case EventType.TOMBSTONE_GHOST:
+				{
+					if(area.Count > 0){
+						Tile t = area[0];
+						if(target == null && t.actor() == player){
+							foreach(Tile t2 in M.ReachableTilesByDistance(player.row,player.col,false)){
+								if(t2.passable && t2.actor() == null){
+									Actor ghost = Actor.Create(ActorType.GHOST,t2.row,t2.col);
+									if(ghost != null){
+										target = ghost;
+										ghost.player_visibility_duration = -1;
+										ghost.target = player;
+										t.color = Color.White;
+										B.Add("A vengeful ghost rises! ");
+										B.PrintAll();
+										break;
+									}
+								}
+							}
+						}
+						Q.Add(new Event(target,area,100,EventType.TOMBSTONE_GHOST));
+					}
 					break;
 				}
 				case EventType.POPPIES:
@@ -1840,7 +2044,7 @@ namespace Forays{
 									if(!a.HasAttr(AttrType.MAGICAL_DROWSINESS)){
 										B.Add("TODO: whoa, these poppies. ");
 									}
-									a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,(Global.Roll(3)+4)*100,a.YouFeel() + " less drowsy. ",a);
+									a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100,a.YouFeel() + " less drowsy. ",a);
 								}
 							}
 						}

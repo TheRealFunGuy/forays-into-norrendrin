@@ -9,6 +9,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 using System.IO;
 using System.Collections.Generic;
+using Utilities;
 namespace Forays{
 	public static class Global{
 		public const string VERSION = "version 0.7.0 ";
@@ -33,58 +34,12 @@ namespace Forays{
 			Options.TryGetValue(option,out result);
 			return result;
 		}
-		public static Random r = new Random();
-		public static void SetSeed(int seed){ r = new Random(seed); }
-		public static int Roll(int dice,int sides){
-			if(sides == 0){
-				return 0;
-			}
-			int total = 0;
-			for(int i=0;i<dice;++i){
-				total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
-			}
-			return total;
-		}
-		public static int Roll(int sides){
-			if(sides == 0){
-				return 0;
-			}
-			int total = 0;
-			total += r.Next(1,sides+1); //Next's maxvalue is exclusive, thus the +1
-			return total;
-		}
-		public static int Between(int a,int b){ //inclusive
-			int min = Math.Min(a,b);
-			int max = Math.Max(a,b);
-			return Roll((max-min)+1) + (min-1);
-		}
-		public static bool CoinFlip(){
-			return r.Next(1,3) == 2;
-		}
-		public static bool OneIn(int x){
-			return r.Next(1,x+1) == x;
-		}
-		public static bool PercentChance(int x){
-			return r.Next(1,101) <= x;
-		}
 		public static int RandomDirection(){
-			int result = r.Next(1,8);
+			int result = R.Roll(8);
 			if(result == 5){
 				result = 9;
 			}
 			return result;
-		}
-		public static int[] EightDirections(){
-			return new int[]{7,8,9,4,6,1,2,3};
-		}
-		public static int[] FourDirections(){
-			return new int[]{8,4,6,2};
-		}
-		public static bool BoundsCheck(int r,int c){
-			if(r>=0 && r<ROWS && c>=0 && c<COLS){
-				return true;
-			}
-			return false;
 		}
 		public static void FlushInput(){
 			while(Console.KeyAvailable){
@@ -139,24 +94,24 @@ namespace Forays{
 			ConsoleKeyInfo command;
 			Console.CursorVisible = true;
 			bool done = false;
-			int pos = Console.CursorLeft;
-			Screen.WriteString(Console.CursorTop,pos,"".PadRight(max_length));
+			int cursor = Console.CursorLeft;
+			Screen.WriteString(Console.CursorTop,cursor,"".PadRight(max_length));
 			while(!done){
-				Console.SetCursorPosition(pos,Console.CursorTop);
+				Console.SetCursorPosition(cursor,Console.CursorTop);
 				command = Console.ReadKey(true);
 				if((command.KeyChar >= '!' && command.KeyChar <= '~') || command.KeyChar == ' '){
 					if(s.Length < max_length){
 						s = s + command.KeyChar;
-						Screen.WriteChar(Console.CursorTop,pos,command.KeyChar);
-						++pos;
+						Screen.WriteChar(Console.CursorTop,cursor,command.KeyChar);
+						++cursor;
 					}
 				}
 				else{
 					if(command.Key == ConsoleKey.Backspace && s.Length > 0){
 						s = s.Substring(0,s.Length-1);
-						--pos;
-						Screen.WriteChar(Console.CursorTop,pos,' ');
-						Console.SetCursorPosition(pos,Console.CursorTop);
+						--cursor;
+						Screen.WriteChar(Console.CursorTop,cursor,' ');
+						Console.SetCursorPosition(cursor,Console.CursorTop);
 					}
 					else{
 						if(command.Key == ConsoleKey.Escape){
@@ -236,6 +191,31 @@ namespace Forays{
 			default: //0
 				return "";
 			}
+		}
+		public static string GenerateCharacterName(){
+			List<string> vowel = new List<string>{"a","e","i","o","u","ei","a","e","i","o","u","a","e","i","o","u","a","e","i","o","a","e","o"};
+			List<string> end_vowel = new List<string>{"a","e","i","o","u","io","ia","a","e","i","o","a","e","i","o","a","e","o","a","e","o"};
+			List<string> consonant = new List<string>{"k","s","t","n","h","m","y","r","w","g","d","p","b","f","l","v","z","ch","br","cr","dr","fr","gr","kr","pr","tr","th","sc","sh","sk","sl","sm","sn","sp","st","s","t","n","m","r","g","d","p","b","l","k","s","t","n","m","d","p","b","l"};
+			List<string> end_consonant = new List<string>{"k","s","t","n","m","r","g","d","p","b","l","z","ch","th","sh","sk","sp","st","k","s","t","n","m","r","n","d","p","b","l","k","s","t","n","m","r","d","p","l","sk","th","st","d","m","s"};
+			string result = "";
+			if(R.OneIn(5)){
+				if(R.CoinFlip()){
+					result = vowel.Random() + consonant.Random() + vowel.Random() + consonant.Random() + vowel.Random() + end_consonant.Random();
+				}
+				else{
+					result = vowel.Random() + consonant.Random() + vowel.Random() + consonant.Random() + end_vowel.Random();
+				}
+			}
+			else{
+				if(R.CoinFlip()){
+					result = consonant.Random() + vowel.Random() + consonant.Random() + vowel.Random() + consonant.Random() + vowel.Random() + end_consonant.Random();
+				}
+				else{
+					result = consonant.Random() + vowel.Random() + consonant.Random() + vowel.Random() + consonant.Random() + end_vowel.Random();
+				}
+			}
+			result = result.Substring(0,1).ToUpper() + result.Substring(1);
+			return result;
 		}
 		public static void LoadOptions(){
 			StreamReader file = new StreamReader("options.txt");
@@ -354,7 +334,6 @@ namespace Forays{
 				b.Write(a.maxhp);
 				b.Write(a.curhp);
 				b.Write(a.speed);
-				b.Write(a.level);
 				b.Write(a.light_radius);
 				b.Write(GetID(a.target));
 				b.Write(a.inv.Count);
@@ -412,8 +391,8 @@ namespace Forays{
 				foreach(ArmorType ar in a.armors){
 					b.Write((int)ar);
 				}*/
-				b.Write(a.magic_items.Count);
-				foreach(MagicItemType m in a.magic_items){
+				b.Write(a.magic_trinkets.Count);
+				foreach(MagicTrinketType m in a.magic_trinkets){
 					b.Write((int)m);
 				}
 			}
@@ -517,178 +496,35 @@ namespace Forays{
 			Environment.Exit(0);
 		}
 	}
-	public class Dict<TKey,TValue>{
-		public Dictionary<TKey,TValue> d;// = new Dictionary<TKey,TValue>();
-		public TValue this[TKey key]{
-			get{
-				return d.ContainsKey(key)? d[key] : default(TValue);
-			}
-			set{
-				d[key] = value;
-			}
-		}
-		public Dict(){ d = new Dictionary<TKey,TValue>(); }
-		public Dict(Dict<TKey,TValue> d2){ d = new Dictionary<TKey, TValue>(d2.d); }
-	}
-	public struct pos{
-		public int row;
-		public int col;
-		public pos(int r,int c){
-			row = r;
-			col = c;
-		}
-		public int DistanceFrom(PhysicalObject o){ return DistanceFrom(o.row,o.col); }
-		public int DistanceFrom(pos p){ return DistanceFrom(p.row,p.col); }
-		//public int DistanceFrom(ICoord o){ return DistanceFrom(o.row,o.col); }
-		public int DistanceFrom(int r,int c){
-			int dy = Math.Abs(r-row);
-			int dx = Math.Abs(c-col);
-			if(dx > dy){
-				return dx;
-			}
-			else{
-				return dy;
-			}
-		}
-		public int EstimatedEuclideanDistanceFromX10(PhysicalObject o){ return EstimatedEuclideanDistanceFromX10(o.row,o.col); }
-		public int EstimatedEuclideanDistanceFromX10(pos p){ return EstimatedEuclideanDistanceFromX10(p.row,p.col); }
-		public int EstimatedEuclideanDistanceFromX10(int r,int c){ // x10 so that orthogonal directions are closer than diagonals
-			int dy = Math.Abs(r-row) * 10;
-			int dx = Math.Abs(c-col) * 10;
-			if(dx > dy){
-				return dx + (dy/2);
-			}
-			else{
-				return dy + (dx/2);
-			}
-		}
-		public List<pos> PositionsWithinDistance(int dist){ return PositionsWithinDistance(dist,false); }
-		public List<pos> PositionsWithinDistance(int dist,bool exclude_origin){
-			List<pos> result = new List<pos>();
-			for(int i=row-dist;i<=row+dist;++i){
-				for(int j=col-dist;j<=col+dist;++j){
-					if(i!=row || j!=col || exclude_origin==false){
-						if(Global.BoundsCheck(i,j)){
-							result.Add(new pos(i,j));
-						}
-					}
-				}
-			}
-			return result;
-		}
-		public List<pos> PositionsAtDistance(int dist){
-			List<pos> result = new List<pos>();
-			for(int i=row-dist;i<=row+dist;++i){
-				for(int j=col-dist;j<=col+dist;++j){
-					if(DistanceFrom(i,j) == dist && Global.BoundsCheck(i,j)){
-						result.Add(new pos(i,j));
-					}
-				}
-			}
-			return result;
-		}
-		public pos PositionInDirection(int dir){
-			switch(dir){
-			case 1:
-				return new pos(row+1,col-1);
-			case 2:
-				return new pos(row+1,col);
-			case 3:
-				return new pos(row+1,col+1);
-			case 4:
-				return new pos(row,col-1);
-			case 5:
-				return new pos(row,col);
-			case 6:
-				return new pos(row,col+1);
-			case 7:
-				return new pos(row-1,col-1);
-			case 8:
-				return new pos(row-1,col);
-			case 9:
-				return new pos(row-1,col+1);
-			default:
-				return new pos(-2,-2);
-			}
-		}
-		public bool BoundsCheck(){
-			if(row>=0 && row<Global.ROWS && col>=0 && col<Global.COLS){
-				return true;
-			}
-			return false;
-		}
-	}
 	public static class Extensions{
-		public static T Random<T>(this List<T> l){
-			if(l.Count == 0){
-				return default(T);
+		/*public static int NumberOfConsecutiveAdjacentPositionsWhere(this pos p,U.BooleanPositionDelegate condition){
+			int max_count = 0;
+			int count = 0;
+			for(int times=0;times<2;++times){
+				for(int i=0;i<8;++i){
+					if(condition(p.PosInDir(8.RotateDir(true,i)))){
+						++count;
+					}
+					else{
+						if(count > max_count){
+							max_count = count;
+						}
+						count = 0;
+					}
+				}
+				if(count == 8){
+					return 8;
+				}
 			}
-			return l[Global.Roll(l.Count)-1];
-		}
-		public static T RemoveRandom<T>(this List<T> l){
-			if(l.Count == 0){
-				return default(T);
-			}
-			T result = l[Global.Roll(l.Count)-1];
-			l.Remove(result);
-			return result;
-		}
-		public static void AddUnique<T>(this List<T> l,T obj){
-			if(!l.Contains(obj)){
-				l.Add(obj);
-			}
-		}
+			return max_count;
+		}*/
 		public static T Last<T>(this List<T> l){ //note that this doesn't work the way I wanted it to - 
 			if(l.Count == 0){ // you can't assign to list.Last()
 				return default(T);
 			}
 			return l[l.Count-1];
 		}
-		public static void Randomize<T>(this List<T> l){
-			List<T> temp = new List<T>(l);
-			l.Clear();
-			while(temp.Count > 0){
-				l.Add(temp.RemoveRandom());
-			}
-		}
-		public static int RotateDirection(this int dir,bool clockwise){ return dir.RotateDirection(clockwise,1); }
-		public static int RotateDirection(this int dir,bool clockwise,int num){
-			for(int i=0;i<num;++i){
-				switch(dir){
-				case 7:
-					dir = clockwise?8:4;
-					break;
-				case 8:
-					dir = clockwise?9:7;
-					break;
-				case 9:
-					dir = clockwise?6:8;
-					break;
-				case 4:
-					dir = clockwise?7:1;
-					break;
-				case 5:
-					break;
-				case 6:
-					dir = clockwise?3:9;
-					break;
-				case 1:
-					dir = clockwise?4:2;
-					break;
-				case 2:
-					dir = clockwise?1:3;
-					break;
-				case 3:
-					dir = clockwise?2:6;
-					break;
-				default:
-					dir = 0;
-					break;
-				}
-			}
-			return dir;
-		}
-		public static List<string> GetWordWrappedList(this string s,int max_length){
+		public static List<string> GetWordWrappedList(this string s,int max_length){ //max_length MUST be longer than any single word in the string
 			List<string> result = new List<string>();
 			while(s.Length > max_length){
 				for(int i=max_length;i>=0;--i){
@@ -702,23 +538,29 @@ namespace Forays{
 			result.Add(s);
 			return result;
 		}
-		public static string PadOuter(this string s,int totalWidth){
-			return s.PadOuter(totalWidth,' ');
-		}
-		public static string PadOuter(this string s,int totalWidth,char paddingChar){
-			if(s.Length >= totalWidth){
-				return s;
+		public static string ConcatenateListWithCommas(this List<string> ls){
+			//"one" returns "one"
+			//"one" "two" returns "one and two"
+			//"one" "two" "three" returns "one, two, and three", and so on
+			if(ls.Count == 1){
+				return ls[0];
 			}
-			int added = totalWidth - s.Length;
-			string left = "";
-			for(int i=0;i<(added+1)/2;++i){
-				left = left + paddingChar;
+			if(ls.Count == 2){
+				return ls[0] + " and " + ls[1];
 			}
-			string right = "";
-			for(int i=0;i<added/2;++i){
-				right = right + paddingChar;
+			if(ls.Count > 2){
+				string result = "";
+				for(int i=0;i<ls.Count;++i){
+					if(i == ls.Count - 1){
+						result = result + "and " + ls[i];
+					}
+					else{
+						result = result + ls[i] + ", ";
+					}
+				}
+				return result;
 			}
-			return left + s + right;
+			return "";
 		}
 		public static string PadToMapSize(this string s){
 			return s.PadRight(Global.COLS);
@@ -776,77 +618,6 @@ namespace Forays{
 				del(t);
 			}
 		}
-		public delegate bool BooleanDelegate<T>(T t);
-		public static List<T> Where<T>(this List<T> l,BooleanDelegate<T> condition){ //now THIS one is useful. probably the same as the official version.
-			List<T> result = new List<T>();
-			foreach(T t in l){
-				if(condition(t)){
-					result.Add(t);
-				}
-			}
-			return result;
-		}
-		public static bool Any<T>(this List<T> l,BooleanDelegate<T> condition){
-			foreach(T t in l){
-				if(condition(t)){
-					return true;
-				}
-			}
-			return false;
-		}
-		public delegate int IntegerDelegate<T>(T t);
-		public static List<T> WhereGreatest<T>(this List<T> l,IntegerDelegate<T> value){
-			List<T> result = new List<T>();
-			int highest = 0;
-			bool first = true;
-			foreach(T t in l){
-				int i = value(t);
-				if(first){
-					first = false;
-					highest = i;
-					result.Add(t);
-				}
-				else{
-					if(i > highest){
-						highest = i;
-						result.Clear();
-						result.Add(t);
-					}
-					else{
-						if(i == highest){
-							result.Add(t);
-						}
-					}
-				}
-			}
-			return result;
-		}
-		public static List<T> WhereLeast<T>(this List<T> l,IntegerDelegate<T> value){
-			List<T> result = new List<T>();
-			int lowest = 0;
-			bool first = true;
-			foreach(T t in l){
-				int i = value(t);
-				if(first){
-					first = false;
-					lowest = i;
-					result.Add(t);
-				}
-				else{
-					if(i < lowest){
-						lowest = i;
-						result.Clear();
-						result.Add(t);
-					}
-					else{
-						if(i == lowest){
-							result.Add(t);
-						}
-					}
-				}
-			}
-			return result;
-		}
 		public static List<Tile> ToFirstSolidTile(this List<Tile> line){
 			List<Tile> result = new List<Tile>();
 			foreach(Tile t in line){
@@ -881,6 +652,19 @@ namespace Forays{
 			}
 			return result;
 		}
+		public static List<Tile> From(this List<Tile> line,PhysicalObject o){
+			List<Tile> result = new List<Tile>();
+			bool found = false;
+			foreach(Tile t in line){
+				if(o.row == t.row && o.col == t.col){
+					found = true;
+				}
+				if(found){
+					result.Add(t);
+				}
+			}
+			return result;
+		}
 		public static Tile LastBeforeSolidTile(this List<Tile> line){
 			Tile result = null;
 			foreach(Tile t in line){
@@ -893,12 +677,5 @@ namespace Forays{
 			}
 			return result;
 		}
-		/*public static List<ICoord> ToICoord(this List<Tile> l){
-			List<ICoord> result = new List<ICoord>();
-			foreach(Tile t in l){
-				result.Add(t);
-			}
-			return result;
-		}*/
 	}
 }
