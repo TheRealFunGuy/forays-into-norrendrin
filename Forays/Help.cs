@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading;
+using Utilities;
 namespace Forays{
 	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced,Tips};
 	public enum TutorialTopic{Movement,Attacking,Torch,Resistance,Fire,Recovery,RangedAttacks,Feats,Armor,HealingPool,Consumables};

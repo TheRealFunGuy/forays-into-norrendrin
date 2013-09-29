@@ -9,25 +9,26 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Utilities;
 using Forays;
 namespace Forays{
 	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,QUICKFIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,UNDEAD_TRAP,GRENADE_TRAP,STUN_TRAP,ALARM_TRAP,DARKNESS_TRAP,POISON_GAS_TRAP,DIM_VISION_TRAP,ICE_TRAP,PHANTOM_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,SPELL_EXCHANGE_SHRINE,RUBBLE,FIRE_GEYSER,STATUE,HEALING_POOL,FOG_VENT,POISON_GAS_VENT,STONE_SLAB,CHASM,BREACHED_WALL,WATER,ICE,CRACKED_WALL,BRUSH,POPPY_FIELD,JUNGLE,GRAVEL,BLAST_FUNGUS,GLOWING_FUNGUS,TOMBSTONE,GRAVE_DIRT};
-	public enum FeatureType{GRENADE,TROLL_CORPSE,TROLL_SEER_CORPSE,QUICKFIRE,RUNE_OF_RETREAT,FOG,POISON_GAS,SLIME,TELEPORTAL,OIL,FIRE};
-	public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,LARGE_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,NAME_SPOREPOD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,NAME_DARTFROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,ROBED_ZEALOT,NAME_SLUG,NAME_DEMON,BANSHEE,CAVERN_HAG,BERSERKER,DIRE_RAT,SKULKING_KILLER,NAME_BOAR,TROLL,NAME_DREAMWIZ,CLOUD_ELEMENTAL,DERANGED_ASCETIC,SHADOWVEIL_DUELIST,WARG,NAME_FLUXMAGE,CARRION_CRAWLER,SKELETAL_SABERTOOTH,MECHANICAL_KNIGHT,NAME_BATTLEMAGE,ALASI_SOLDIER,ALASI_SCOUT,STONE_GOLEM,MUD_ELEMENTAL,NAME_BURROWINGREPTILE,ENTRANCER,OGRE,ORC_GRENADIER,SPELLMUDDLE_PIXIE,CRUSADING_KNIGHT,TROLL_SEER,NAME_HULK,MARBLE_HORROR,NAME_FROSTMAGE,PYREN_ARCHER,PLACEHOLDER,NAME_SENTINEL,NOXIOUS_WORM,LASHER_FUNGUS,VAMPIRE,ORC_WARMAGE,NECROMANCER,NAME_BURROWINGSPIDER,ORC_ASSASSIN,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,DREAM_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR,COMPY};
-	public enum AttrType{STEALTHY,NONLIVING,PLANTLIKE,DEMON,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,WANDERING,IMMOBILE,SHADOW_CLOAK,BRUTISH_STRENGTH,VIGOR,SILENCED,NOTICED,PLAYER_NOTICED,ENHANCED_TORCH,MAGICAL_BLOOD,KEEN_EYES,TOUGH,LONG_STRIDE,RUNIC_BIRTHMARK,LOW_LIGHT_VISION,REGENERATING,REGENERATES_FROM_DEATH,NO_ITEM,STUNNED,PARALYZED,POISONED,FROZEN,ON_FIRE,CATCHING_FIRE,STARTED_CATCHING_FIRE_THIS_TURN,AFRAID,SLOWED,POPPY_COUNTER,MAGICAL_DROWSINESS,ASLEEP,AGGRAVATING,DETECTING_MONSTERS,BLOODSCENT,TELEPORTING,TAKES_EXTRA_DAMAGE,LIGHT_ALLERGY,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,POISON_HIT,PARALYSIS_HIT,DIM_VISION_HIT,STALAGMITE_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,FIERY_ARROWS,DULLS_BLADES,RESIST_FIRE,RESIST_COLD,RESIST_ELECTRICITY,RESIST_WEAPONS,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ARROWS,RESIST_NECK_SNAP,COOLDOWN_1,COOLDOWN_2,BLESSED,HOLY_SHIELDED,ARCANE_SHIELDED,SPORE_BURST,SPELL_DISRUPTION,MECHANICAL_SHIELD,TURNS_HERE,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,DEFENSIVE_STANCE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,JUST_GRABBED,IGNORES_QUIET_SOUNDS,ALERTED,SEES_ADJACENT_PLAYER,FOLLOW_DIRECTION_EXITED,AMNESIA_STUN,COMPY_POISON_COUNTER,COMPY_POISON_WARNING,COMPY_POISON_LETHAL,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
-	public enum SpellType{SHINE,IMMOLATE,FORCE_PALM,FREEZE,BLINK,SCORCH,BLOODSCENT,LIGHTNING_BOLT,SHADOWSIGHT,VOLTAIC_SURGE,MAGIC_HAMMER,RETREAT,GLACIAL_BLAST,PASSAGE,FLASHFIRE,SONIC_BOOM,COLLAPSE,FORCE_BEAM,AMNESIA,BLIZZARD,BLESS,MINOR_HEAL,HOLY_SHIELD,NUM_SPELLS,NO_SPELL};
+	public enum FeatureType{GRENADE,TROLL_CORPSE,TROLL_BLOODWITCH_CORPSE,QUICKFIRE,FOG,POISON_GAS,SLIME,TELEPORTAL,INACTIVE_TELEPORTAL,STABLE_TELEPORTAL,OIL,FIRE,BONES,WEB,PIXIE_DUST};
+	public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,GIANT_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,SPORE_POD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,GOLDEN_DART_FROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,ROBED_ZEALOT,GIANT_SLUG,VULGAR_DEMON,BANSHEE,CAVERN_HAG,BERSERKER,DIRE_RAT,SKULKING_KILLER,WILD_BOAR,TROLL,DREAM_SPRITE,CLOUD_ELEMENTAL,DERANGED_ASCETIC,SHADOWVEIL_DUELIST,WARG,ALASI_SCOUT,CARRION_CRAWLER,MECHANICAL_KNIGHT,RUNIC_TRANSCENDENT,ALASI_BATTLEMAGE,ALASI_SOLDIER,INFESTED_MASS_TODO_NAME,STONE_GOLEM,MUD_ELEMENTAL,FLAMETONGUE_TOAD,ENTRANCER,OGRE,ORC_GRENADIER,SPELLMUDDLE_PIXIE,CRUSADING_KNIGHT,TROLL_BLOODWITCH,SAVAGE_HULK,MARBLE_HORROR,CRYOLICH,PYREN_ARCHER,PLACEHOLDER,ALASI_SENTINEL,NOXIOUS_WORM,LASHER_FUNGUS,VAMPIRE,ORC_WARMAGE,NECROMANCER,STALKING_WEBSTRIDER,ORC_ASSASSIN,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,DREAM_WARRIOR_CLONE,DREAM_SPRITE_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,GHOST,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
+	public enum AttrType{STEALTHY,NONLIVING,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,WANDERING,IMMOBILE,SHADOW_CLOAK,BRUTISH_STRENGTH,VIGOR,SILENCED,NOTICED,PLAYER_NOTICED,DANGER_SENSED,SHINING,LOW_LIGHT_VISION,REGENERATING,REGENERATES_FROM_DEATH,REASSEMBLES,NO_ITEM,STUNNED,PARALYZED,BLIND,POISONED,FROZEN,CHILLED,SLIMED,GREASED,BURNING,CATCHING_FIRE,STARTED_CATCHING_FIRE_THIS_TURN,AFRAID,SLOWED,POPPY_COUNTER,MAGICAL_DROWSINESS,ASLEEP,AGGRAVATING,DETECTING_MONSTERS,DETECTING_MOVEMENT,TELEPORTING,VULNERABLE,SUSCEPTIBLE_TO_CRITS,LIGHT_SENSITIVE,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,POISON_HIT,PARALYSIS_HIT,DIM_VISION_HIT,STALAGMITE_HIT,WORN_OUT_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,FIERY_ARROWS,DULLS_BLADES,IMMUNE_BURNING,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ELECTRICITY,RESIST_WEAPONS,IMMUNE_ARROWS,RESIST_NECK_SNAP,COMBO_ATTACK,COOLDOWN_1,COOLDOWN_2,HOLY_SHIELDED,ARCANE_SHIELDED,SPORE_BURST,CAN_POISON_BLADES,SPELL_DISRUPTION,TERRIFYING,DAMAGE_REDUCTION,MECHANICAL_SHIELD,TURNS_HERE,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,EMPOWERED_SPELLS,WARG_HOWL,PERMANENT_DAMAGE,JUST_GRABBED,JUST_TELEPORTED,JUST_FLUNG,JUST_BITTEN,LUNGING_AUTO_HIT,ROOTS,DODGED,CHAIN_CAST,IGNORES_QUIET_SOUNDS,ALERTED,SEES_ADJACENT_PLAYER,DIRECTION_OF_PREVIOUS_TILE,FOLLOW_DIRECTION_EXITED,AMNESIA_STUN,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,TURN_INTO_CORPSE,CORPSE,NO_CORPSE_KNOCKBACK,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
+	public enum SpellType{SHINE,FORCE_PALM,DETECT_MOVEMENT,RADIANCE,MERCURIAL_SPHERE,GREASE,BLINK,FREEZE,SCORCH,LIGHTNING_BOLT,MAGIC_HAMMER,PORTAL,GLACIAL_BLAST,PASSAGE,AMNESIA,SHADOWSIGHT,COLLAPSE,BLIZZARD,FIRE_BLITZ,PLACEHOLDER,NUM_SPELLS,NO_SPELL};
 	public enum SkillType{COMBAT,DEFENSE,MAGIC,SPIRIT,STEALTH,NUM_SKILLS,NO_SKILL};
-	public enum FeatType{QUICK_DRAW,LETHALITY,LUNGE,DRIVE_BACK,SILENT_CHAINMAIL,ARMOR_MASTERY,FULL_DEFENSE,TUMBLE,MASTERS_EDGE,STUDENTS_LUCK,ARCANE_SHIELD,FORCE_OF_WILL,CONVICTION,ENDURING_SOUL,FEEL_NO_PAIN,BOILING_BLOOD,DISTRACT,DISARM_TRAP,NECK_SNAP,DANGER_SENSE,NUM_FEATS,NO_FEAT};
-	public enum ConsumableType{HEALING,REGENERATION,STONEFORM,VAMPIRISM,BRUTISH_STRENGTH,ROOTS,VIGOR,SILENCE,CLOAKING,BLINKING,PASSAGE,TIME,DETECT_MONSTERS,MAGIC_MAP,SUNLIGHT,DARKNESS,REPAIR,CALLING,TRAP_CLEARING,FREEZING,FLAMES,FOG,DETONATION,BREACHING,SHIELDING,TELEPORTAL,PAIN,BANDAGE,BLAST_FUNGUS};
+	public enum FeatType{QUICK_DRAW,ATTACK_EVERYTHING_TODO,LUNGE,DRIVE_BACK,ARMOR_MASTERY,CUNNING_DODGE,DEFLECT_ATTACK,TUMBLE,MASTERS_EDGE,ARCANE_INTERFERENCE,CHAIN_CASTING,FORCE_OF_WILL,CONVICTION,ENDURING_SOUL,FEEL_NO_PAIN,BOILING_BLOOD,NECK_SNAP,DISARM_TRAP,CORNER_CLIMB,DANGER_SENSE,NUM_FEATS,NO_FEAT};
+	public enum ConsumableType{HEALING,REGENERATION,STONEFORM,VAMPIRISM,BRUTISH_STRENGTH,ROOTS,VIGOR,SILENCE,CLOAKING,BLINKING,PASSAGE,TIME,DETECT_MONSTERS,MAGIC_MAP,SUNLIGHT,DARKNESS,REPAIR,CALLING,TRAP_CLEARING,ENCHANTMENT,FREEZING,FLAMES,FOG,DETONATION,BREACHING,SHIELDING,TELEPORTAL,PAIN,BANDAGE,BLAST_FUNGUS,TRAP};
 	public enum WeaponType{SWORD,MACE,DAGGER,STAFF,BOW,NUM_WEAPONS,NO_WEAPON};
 	public enum ArmorType{LEATHER,CHAINMAIL,FULL_PLATE,NUM_ARMORS,NO_ARMOR};
-	public enum EnchantmentType{FIRE,ICE,FORCE,ECHOES,NULLIFICATION,PRECISION,NUM_ENCHANTMENTS,NO_ENCHANTMENT};
+	public enum EnchantmentType{CHILLING,ECHOES,DISRUPTION,PRECISION,VICTORY,NUM_ENCHANTMENTS,NO_ENCHANTMENT};
 	public enum EquipmentStatus{DULLED,POSSESSED,BURDENSOME,NEGATED,CURSED,INFESTED,RUSTED,WEAK_POINT,WORN_OUT,DAMAGED,NUM_STATUS};
-	public enum MagicItemType{PENDANT_OF_LIFE,RING_OF_RESISTANCE,RING_OF_PROTECTION,CLOAK_OF_DISAPPEARANCE,NUM_MAGIC_ITEMS,NO_MAGIC_ITEM};
+	public enum MagicTrinketType{PENDANT_OF_LIFE,CLOAK_OF_SAFETY,BRACERS_OF_ARROW_DEFLECTION,CIRCLET_OF_THE_THIRD_EYE,RING_OF_KEEN_SIGHT,RING_OF_THE_LETHARGIC_FLAME,LENS_OF_SCRYING,BELT_OF_TOUGHNESS,NUM_MAGIC_TRINKETS,NO_MAGIC_TRINKET};
 	public enum DamageType{NORMAL,FIRE,COLD,ELECTRIC,POISON,MAGIC,NONE};
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
-	public enum CriticalEffect{STUN,MAX_DAMAGE,PERCENT_DAMAGE,WEAK_POINT,WORN_OUT,REDUCE_ACCURACY,DRAIN_LIFE,GRAB,FREEZE,SUMMON_CLONE,INCREASE_DAMAGE_TAKEN,KNOCKBACK,DIM_VISION,SWAP_POSITIONS,SLIME,MAKE_NOISE,BLIND,HIDE,NO_CRIT};
-	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,FOG,POISON_GAS_VENT,POISON_GAS,STONE_SLAB,MARBLE_HORROR,QUICKFIRE,BOSS_SIGN,BOSS_ARRIVE,FLOOR_COLLAPSE,CEILING_COLLAPSE,NORMAL_LIGHTING,TELEPORTAL,BREACH,GRAVE_DIRT,POPPIES};
+	public enum CriticalEffect{STUN,ONE_TURN_STUN,MAX_DAMAGE,PERCENT_DAMAGE,WEAK_POINT,WORN_OUT,REDUCE_ACCURACY,DRAIN_LIFE,GRAB,CHILL,FREEZE,INFLICT_VULNERABILITY,TRIP,KNOCKBACK,STRONG_KNOCKBACK,IGNITE,DIM_VISION,SWAP_POSITIONS,SLIME,MAKE_NOISE,BLIND,SLOW,POISON,PARALYZE,ONE_TURN_PARALYZE,STALAGMITES,FLING,SILENCE,INFEST,DISRUPTION,VICTORY,NO_CRIT};
+	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,REASSEMBLING,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,FOG,POISON_GAS_VENT,POISON_GAS,STONE_SLAB,MARBLE_HORROR,QUICKFIRE,BOSS_SIGN,BOSS_ARRIVE,FLOOR_COLLAPSE,CEILING_COLLAPSE,NORMAL_LIGHTING,TELEPORTAL,BREACH,GRAVE_DIRT,POPPIES,TOMBSTONE_GHOST,SHIELDING,PIXIE_DUST};
 	public enum OptionType{LAST_TARGET,AUTOPICKUP,NO_ROMAN_NUMERALS,HIDE_OLD_MESSAGES,HIDE_COMMANDS,NEVER_DISPLAY_TIPS,ALWAYS_RESET_TIPS};
 	public class Game{
 		public Map M;
@@ -62,6 +63,7 @@ namespace Forays{
 				Console.BufferHeight = Global.SCREEN_H; //25
 			}
 			Console.TreatControlCAsInput = true;
+			U.SetBoundsStartingAtZero(22,66);
 			//Console.CursorSize = 100;
 			for(int i=0;i<24;++i){
 				Color color = Color.Yellow;
@@ -120,6 +122,7 @@ namespace Forays{
 					Game game = new Game();
 					if(!saved_game){
 						game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,0,0,AttrType.HUMANOID_INTELLIGENCE);
+						Actor.attack[ActorType.PLAYER] = new List<AttackInfo>{new AttackInfo(100,2,CriticalEffect.NO_CRIT,"& hit *","& miss *")};
 						game.player.inv = new List<Item>();
 						Actor.feats_in_order = new List<FeatType>();
 						Actor.spells_in_order = new List<SpellType>();
@@ -141,18 +144,6 @@ namespace Forays{
 					PhysicalObject.B = game.B;
 					PhysicalObject.Q = game.Q;
 					PhysicalObject.player = game.player;
-					/*Actor.M = game.M;
-					Actor.Q = game.Q;
-					//Actor.B = game.B;
-					Actor.player = game.player;
-					Item.M = game.M;
-					Item.Q = game.Q;
-					//Item.B = game.B;
-					Item.player = game.player;
-					Tile.M = game.M;
-					//Tile.B = game.B;
-					Tile.Q = game.Q;
-					Tile.player = game.player;*/
 					Event.Q = game.Q;
 					Event.B = game.B;
 					Event.M = game.M;
@@ -162,160 +153,132 @@ namespace Forays{
 						if(File.Exists("name.txt")){
 							StreamReader file = new StreamReader("name.txt");
 							string base_name = file.ReadLine();
-							Actor.player_name = base_name;
-							int num = 1;
-							if(!Global.Option(OptionType.NO_ROMAN_NUMERALS) && file.Peek() != -1){
+							if(base_name == "%random%"){
+								Actor.player_name = Global.GenerateCharacterName();
+							}
+							else{
+								Actor.player_name = base_name;
+							}
+							int num = 0;
+							if(base_name != "%random%" && file.Peek() != -1){
 								num = Convert.ToInt32(file.ReadLine());
 								if(num > 1){
 									Actor.player_name = Actor.player_name + " " + Global.RomanNumeral(num);
 								}
 							}
 							file.Close();
-							StreamWriter fileout = new StreamWriter("name.txt",false);
-							fileout.WriteLine(base_name);
-							if(!Global.Option(OptionType.NO_ROMAN_NUMERALS)){
+							if(num > 0){
+								StreamWriter fileout = new StreamWriter("name.txt",false);
+								fileout.WriteLine(base_name);
 								fileout.WriteLine(num+1);
+								fileout.Close();
 							}
-							fileout.Close();
 						}
-						while(Actor.player_name == ""){
-							Console.CursorVisible = false;
-							game.B.DisplayNow("".PadRight(Global.COLS),false);
-							game.B.DisplayNow("Enter name: ",false);
-							Actor.player_name = Global.EnterString(26);
+						if(Actor.player_name == ""){
+							for(int i=4;i<=7;++i){
+								Screen.WriteMapString(i,0,"".PadToMapSize());
+							}
+							string s = "";
+							int name_option = 0;
+							while(true){
+								Screen.WriteMapString(4,0,"Enter name: ");
+								if(s == ""){
+									Screen.WriteMapString(6,0,"(Press [Enter] for a random name)".GetColorString());
+								}
+								else{
+									Screen.WriteMapString(6,0,"(Press [Enter] when finished)    ".GetColorString());
+								}
+								List<string> name_options = new List<string>{"Default: Choose a new name for each character","Static:  Use this name for every character","Legacy:  Name all future characters after this one","Random:  Name all future characters randomly"};
+								for(int i=0;i<4;++i){
+									Color option_color = Color.DarkGray;
+									if(i == name_option){
+										option_color = Color.White;
+									}
+									Screen.WriteMapString(15+i,0,name_options[i],option_color);
+								}
+								Screen.WriteMapString(20,0,"(Press [Tab] to change naming preference)".GetColorString());
+								if(name_option != 0){
+									Screen.WriteMapString(21,0,"(To stop naming characters automatically, delete name.txt)");
+								}
+								else{
+									Screen.WriteMapString(21,0,"".PadToMapSize());
+								}
+								Screen.WriteMapString(4,12,s.PadRight(26));
+								Console.SetCursorPosition(Global.MAP_OFFSET_COLS + 12 + s.Length,Global.MAP_OFFSET_ROWS + 4);
+								Console.CursorVisible = true;
+								command = Console.ReadKey(true);
+								if((command.KeyChar >= '!' && command.KeyChar <= '~') || command.KeyChar == ' '){
+									if(s.Length < 26){
+										s = s + command.KeyChar;
+									}
+								}
+								else{
+									if(command.Key == ConsoleKey.Backspace && s.Length > 0){
+										s = s.Substring(0,s.Length-1);
+									}
+									else{
+										if(command.Key == ConsoleKey.Escape){
+											s = "";
+										}
+										else{
+											if(command.Key == ConsoleKey.Tab){
+												name_option = (name_option + 1) % 4;
+											}
+											else{
+												if(command.Key == ConsoleKey.Enter){
+													if(s.Length == 0){
+														s = Global.GenerateCharacterName();
+													}
+													else{
+														Actor.player_name = s;
+														break;
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+							switch(name_option){
+							case 1: //static
+							{
+								StreamWriter fileout = new StreamWriter("name.txt",false);
+								fileout.WriteLine(s);
+								fileout.WriteLine(0);
+								fileout.Close();
+								break;
+							}
+							case 2: //legacy
+							{
+								StreamWriter fileout = new StreamWriter("name.txt",false);
+								fileout.WriteLine(s);
+								fileout.WriteLine(2);
+								fileout.Close();
+								break;
+							}
+							case 3: //random
+							{
+								StreamWriter fileout = new StreamWriter("name.txt",false);
+								fileout.WriteLine("%random%");
+								fileout.WriteLine(0);
+								fileout.Close();
+								break;
+							}
+							}
 						}
 						Item.GenerateUnIDedNames();
 						game.M.GenerateLevelTypes();
 						game.M.GenerateLevel();
-						Screen.Blank();
-						Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
-						Screen.WriteMapString(1,0,"[a] Toughness - You have a slight resistance to physical damage.");
-						Screen.WriteMapString(2,0,"[b] Magical blood - Your natural recovery is faster than normal.");
-						Screen.WriteMapString(3,0,"[c] Low-light vision - You can see farther in darkness.");
-						Screen.WriteMapString(4,0,"[d] Keen eyes - You're better at spotting traps and aiming arrows.");
-						Screen.WriteMapString(5,0,"[e] Long stride - You walk a good bit faster than normal.");
-						Screen.WriteMapString(6,0,"".PadRight(Global.COLS,'-'));
-						Screen.WriteMapString(9,4,"(Your character will keep the chosen trait");
-						Screen.WriteMapString(10,4,"     for his or her entire adventuring career.)");
-						/*if(File.Exists("quickstart.txt")){
-							Screen.WriteMapString(16,5,"[ ] Repeat previous choices and start immediately.");
-							Screen.WriteMapChar(16,6,new colorchar('p',Color.Cyan));
-						}*/
-						if(!File.Exists("name.txt")){
-							Screen.WriteMapString(18,5,"[ ] Automatically name future characters after this one.");
-							Screen.WriteMapChar(18,6,new colorchar('n',Color.Cyan));
-						}
-						for(int i=0;i<5;++i){
-							Screen.WriteMapChar(i+1,1,new colorchar(Color.Cyan,(char)(i+'a')));
-						}
-						Screen.WriteMapString(-1,0,"Select a trait: "); //haha, it works
-						Console.CursorVisible = true;
-						bool quickstarted = false;
-						Global.quickstartinfo = new List<string>();
-						for(bool good=false;!good;){
-							command = Console.ReadKey(true);
-							switch(command.KeyChar){
-							case 'a':
-								good = true;
-								game.player.attrs[AttrType.TOUGH]++;
-								Global.quickstartinfo.Add("tough");
-								break;
-							case 'b':
-								good = true;
-								game.player.attrs[AttrType.MAGICAL_BLOOD]++;
-								Global.quickstartinfo.Add("magical_blood");
-								break;
-							case 'c':
-								good = true;
-								game.player.attrs[AttrType.LOW_LIGHT_VISION]++;
-								Global.quickstartinfo.Add("low_light_vision");
-								break;
-							case 'd':
-								good = true;
-								game.player.attrs[AttrType.KEEN_EYES]++;
-								Global.quickstartinfo.Add("keen_eyes");
-								break;
-							case 'e':
-								good = true;
-								game.player.attrs[AttrType.LONG_STRIDE]++;
-								game.player.speed = 80;
-								Global.quickstartinfo.Add("long_stride");
-								break;
-							/*case 'p':
-							{
-								if(File.Exists("quickstart.txt")){
-									quickstarted = true;
-									good = true;
-									game.B.Add("Welcome, " + Actor.player_name + "! ");
-									StreamReader file = new StreamReader("quickstart.txt");
-									AttrType attr = (AttrType)Enum.Parse(typeof(AttrType),file.ReadLine(),true);
-									game.player.attrs[attr]++;
-									bool magic = false;
-									for(int i=0;i<3;++i){
-										SkillType skill = (SkillType)Enum.Parse(typeof(SkillType),file.ReadLine(),true);
-										if(skill == SkillType.MAGIC){
-											magic = true;
-										}
-										game.player.skills[skill]++;
-									}
-									for(int i=0;i<3;++i){
-										FeatType feat = (FeatType)Enum.Parse(typeof(FeatType),file.ReadLine(),true);
-										game.player.feats[feat]--;
-										if(game.player.feats[feat] == -(Feat.MaxRank(feat))){
-											game.player.feats[feat] = 1;
-											game.B.Add("You learn the " + Feat.Name(feat) + " feat. ");
-										}
-									}
-									if(magic){
-										SpellType spell = (SpellType)Enum.Parse(typeof(SpellType),file.ReadLine(),true);
-										game.player.spells[spell]++;
-										game.B.Add("You learn " + Spell.Name(spell) + ". ");
-									}
-									file.Close();
-								}
-								break;
-							}*/
-							case 'n':
-								if(!File.Exists("name.txt")){
-									StreamWriter fileout = new StreamWriter("name.txt",false);
-									fileout.WriteLine(Actor.player_name);
-									if(!Global.Option(OptionType.NO_ROMAN_NUMERALS)){
-										fileout.WriteLine("2");
-									}
-									fileout.Close();
-									//Screen.WriteMapString(18,5,"                                                        ");
-									Screen.WriteMapString(18,5,"(to stop automatically naming characters, delete name.txt)");
-									Console.SetCursorPosition(16+Global.MAP_OFFSET_COLS,1);
-								}
-								break;
-							default:
-								break;
-							}
-						}
-						//game.player.Q0();
 						{
 							Event e = new Event(game.player,0,EventType.MOVE);
 							e.tiebreaker = 0;
 							game.Q.Add(e);
 						}
-						//game.player.Move(10,20,false); //this is why the voodoo was needed before: the player must be moved onto the map *before*
-						game.player.UpdateRadius(0,6,true); //gaining a light radius.
+						game.player.UpdateRadius(0,6,true);
 						Item.Create(ConsumableType.HEALING,game.player);
 						Item.Create(ConsumableType.BLINKING,game.player);
 						Item.Create(ConsumableType.BANDAGE,game.player);
 						Item.Create(ConsumableType.BANDAGE,game.player);
-						if(quickstarted){
-							game.player.level = 1;
-						}
-						else{
-							//game.player.GainXP(1);
-							var fileout = new StreamWriter("quickstart.txt",false);
-							foreach(string s in Global.quickstartinfo){
-								fileout.WriteLine(s.ToLower());
-							}
-							fileout.Close();
-							Global.quickstartinfo = null;
-						}
 					}
 					else{ //loading
 						FileStream file = new FileStream("forays.sav",FileMode.Open);
@@ -371,7 +334,6 @@ namespace Forays{
 							a.maxhp = b.ReadInt32();
 							a.curhp = b.ReadInt32();
 							a.speed = b.ReadInt32();
-							a.level = b.ReadInt32();
 							a.light_radius = b.ReadInt32();
 							int target_ID = b.ReadInt32();
 							if(id.ContainsKey(target_ID)){
@@ -443,9 +405,9 @@ namespace Forays{
 							for(int j=0;j<num_armors;++j){
 								//a.armors.AddLast((ArmorType)b.ReadInt32());
 							}
-							int num_magic_items = b.ReadInt32();
-							for(int j=0;j<num_magic_items;++j){
-								//a.magic_items.AddLast((MagicItemType)b.ReadInt32());
+							int num_magic_trinkets = b.ReadInt32();
+							for(int j=0;j<num_magic_trinkets;++j){
+								//a.magic_trinkets.AddLast((MagicTrinketType)b.ReadInt32());
 							}
 						}
 						int num_groups = b.ReadInt32();
@@ -651,6 +613,9 @@ namespace Forays{
 								Help.TutorialTip(TutorialTopic.Consumables); //todo! this needs to check for identification, and more consumable types too.
 								Global.SaveOptions();
 							}
+						}
+						foreach(Item i in game.player.inv){
+							Item.identified[i.type] = true;
 						}
 						List<string> ls = new List<string>();
 						ls.Add("See the map");

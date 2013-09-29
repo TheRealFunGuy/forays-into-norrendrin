@@ -484,8 +484,8 @@ namespace DungeonGen{
 			}
 			return dir;
 		}
-		public static int EstimatedEuclideanDistanceFromX10(pos p1,pos p2){ return EstimatedEuclideanDistanceFromX10(p1.r,p1.c,p2.r,p2.c); }
-		public static int EstimatedEuclideanDistanceFromX10(int r1,int c1,int r2,int c2){ // x10 so that orthogonal directions are closer than diagonals
+		public static int ApproximateEuclideanDistanceFromX10(pos p1,pos p2){ return ApproximateEuclideanDistanceFromX10(p1.r,p1.c,p2.r,p2.c); }
+		public static int ApproximateEuclideanDistanceFromX10(int r1,int c1,int r2,int c2){ // x10 so that orthogonal directions are closer than diagonals
 			int dy = Math.Abs(r1-r2) * 10;
 			int dx = Math.Abs(c1-c2) * 10;
 			if(dx > dy){
@@ -1358,7 +1358,7 @@ namespace DungeonGen{
 				for(int i=0;i<size;++i){
 					for(int j=0;j<size;++j){
 						submap[i,j] = map[i+top,j+left];
-						if(EstimatedEuclideanDistanceFromX10(rr,rc,i+top,j+left) <= radiusx10){
+						if(ApproximateEuclideanDistanceFromX10(rr,rc,i+top,j+left) <= radiusx10){
 							map[i+top,j+left] = '#';
 						}
 					}
@@ -1366,7 +1366,7 @@ namespace DungeonGen{
 				if(IsConnected()){
 					for(int i=0;i<size;++i){
 						for(int j=0;j<size;++j){
-							if(EstimatedEuclideanDistanceFromX10(rr,rc,i+top,j+left) <= radiusx10){
+							if(ApproximateEuclideanDistanceFromX10(rr,rc,i+top,j+left) <= radiusx10){
 								map[i+top,j+left] = 'W';
 							}
 						}
@@ -2451,12 +2451,12 @@ Console.ReadKey(true);*/
 					foreach(pos exit in exits){
 						int greatest_distance = 0;
 						foreach(pos center in centers){
-							if(EstimatedEuclideanDistanceFromX10(exit,center) > greatest_distance){
-								greatest_distance = EstimatedEuclideanDistanceFromX10(exit,center);
+							if(ApproximateEuclideanDistanceFromX10(exit,center) > greatest_distance){
+								greatest_distance = ApproximateEuclideanDistanceFromX10(exit,center);
 							}
 						}
 						foreach(pos potential in in_middle_row_or_column){
-							if(EstimatedEuclideanDistanceFromX10(exit,potential) <= greatest_distance){
+							if(ApproximateEuclideanDistanceFromX10(exit,potential) <= greatest_distance){
 								rejected.Add(potential);
 							}
 						}
@@ -2470,7 +2470,7 @@ Console.ReadKey(true);*/
 						foreach(pos potential in in_middle_row_or_column){
 							int total_distance = 0;
 							foreach(pos exit in exits){
-								total_distance += EstimatedEuclideanDistanceFromX10(potential,exit);
+								total_distance += ApproximateEuclideanDistanceFromX10(potential,exit);
 							}
 							if(total_distance > greatest_total_distance){
 								greatest_total_distance = total_distance;

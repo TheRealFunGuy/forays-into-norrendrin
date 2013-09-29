@@ -9,11 +9,8 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Utilities;
 namespace Forays{
-	/*public interface ICoord{ //Now uses ICoords, so it'll work with anything that has row and column
-		int row{get;set;}
-		int col{get;set;} //scratch that, c# doesn't make this easy enough yet.
-	}*/
 	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
 	public struct colorchar{ //todo: engine code version should be char,color
 		public Color color;
@@ -250,7 +247,7 @@ namespace Forays{
 					ForegroundColor = co;
 				}
 				co = GetColor(ch.bgcolor);
-				if(co != Console.BackgroundColor || (Global.LINUX && ch.c == ' ' && ch.color == Color.Black)){//voodoo here. not sure why this is needed. (possible Mono bug)
+				if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
 					BackgroundColor = co;
 				}
 				Console.SetCursorPosition(c,r);
@@ -817,7 +814,7 @@ namespace Forays{
 		public static Color ResolveColor(Color c){
 			switch(c){
 			case Color.RandomFire:
-				switch(Global.Roll(1,3)){
+				switch(R.Roll(1,3)){
 				case 1:
 					return Color.Red;
 				case 2:
@@ -828,7 +825,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomIce:
-				switch(Global.Roll(1,4)){
+				switch(R.Roll(1,4)){
 				case 1:
 					return Color.White;
 				case 2:
@@ -841,7 +838,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomLightning:
-				switch(Global.Roll(1,4)){
+				switch(R.Roll(1,4)){
 				case 1:
 					return Color.White;
 				case 2:
@@ -855,11 +852,11 @@ namespace Forays{
 				}
 			case Color.RandomBreached:
 			{
-				if(Global.OneIn(4)){
+				if(R.OneIn(4)){
 					return Color.DarkGreen;
 				}
 				return Color.Green;
-				/*switch(Global.Roll(1,4)){
+				/*switch(R.Roll(1,4)){
 				case 1:
 					return Color.Green;;
 				case 2:
@@ -873,7 +870,7 @@ namespace Forays{
 				}*/
 			}
 			case Color.RandomExplosion:
-				/*switch(Global.Roll(4)){
+				/*switch(R.Roll(4)){
 				case 1:
 					return Color.DarkRed;
 				case 2:
@@ -885,17 +882,17 @@ namespace Forays{
 				default:
 					return Color.Black;
 				}*/
-				if(Global.OneIn(4)){
+				if(R.OneIn(4)){
 					return Color.Red;
 				}
 				return Color.DarkRed;
 			case Color.RandomGlowingFungus:
-				if(Global.OneIn(25)){
+				if(R.OneIn(25)){
 					return Color.DarkCyan;
 				}
 				return Color.Cyan;
 			case Color.RandomDark:
-				switch(Global.Roll(7)){
+				switch(R.Roll(7)){
 				case 1:
 					return Color.DarkBlue;
 				case 2:
@@ -914,7 +911,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomBright:
-				switch(Global.Roll(8)){
+				switch(R.Roll(8)){
 				case 1:
 					return Color.Blue;
 				case 2:
@@ -935,7 +932,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomRGB:
-				switch(Global.Roll(1,3)){
+				switch(R.Roll(1,3)){
 				case 1:
 					return Color.Red;
 				case 2:
@@ -946,7 +943,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomDRGB:
-				switch(Global.Roll(1,3)){
+				switch(R.Roll(1,3)){
 				case 1:
 					return Color.DarkRed;
 				case 2:
@@ -957,7 +954,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomCMY:
-				switch(Global.Roll(1,3)){
+				switch(R.Roll(1,3)){
 				case 1:
 					return Color.Cyan;
 				case 2:
@@ -968,7 +965,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomDCMY:
-				switch(Global.Roll(1,3)){
+				switch(R.Roll(1,3)){
 				case 1:
 					return Color.DarkCyan;
 				case 2:
@@ -979,7 +976,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomRainbow:
-				switch(Global.Roll(1,12)){
+				switch(R.Roll(1,12)){
 				case 1:
 					return Color.Red;
 				case 2:
@@ -1008,7 +1005,7 @@ namespace Forays{
 					return Color.Black;
 				}
 			case Color.RandomAny:
-				switch(Global.Roll(15)){
+				switch(R.Roll(15)){
 				case 1:
 					return Color.DarkBlue;
 				case 2:
