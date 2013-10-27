@@ -1,8 +1,5 @@
 Tips and advanced topics:
 
-Be sure to take advantage of your natural recovery. Press 'w5'
-or 'w.' to wait in place until you've recovered.
-
 Damage:
 
 Damage values are described as die rolls. For instance, a 2d6
@@ -26,4 +23,5 @@ the formula.
 
 Because of this, you're much more likely to remain unseen
 if you stay two or more spaces away. Enemies automatically see
-you if you're carrying a light source.
+you if you're carrying a light source, or if you're wearing plate
+mail and simply standing in the light.

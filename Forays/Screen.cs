@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Utilities;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
 	public struct colorchar{ //todo: engine code version should be char,color
 		public Color color;
 		public Color bgcolor;
@@ -798,6 +798,8 @@ namespace Forays{
 			case Color.RandomBreached:
 			case Color.RandomExplosion:
 			case Color.RandomGlowingFungus:
+			case Color.RandomTorch:
+			case Color.RandomDoom:
 			case Color.RandomDark:
 			case Color.RandomBright:
 			case Color.RandomRGB:
@@ -891,6 +893,27 @@ namespace Forays{
 					return Color.DarkCyan;
 				}
 				return Color.Cyan;
+			case Color.RandomTorch:
+				if(R.OneIn(8)){
+					if(R.CoinFlip()){
+						return Color.White;
+					}
+					else{
+						return Color.Red;
+					}
+				}
+				return Color.Yellow;
+			case Color.RandomDoom:
+				switch(R.Roll(4)){
+				case 1:
+				case 2:
+					return Color.DarkGray;
+				case 3:
+					return Color.DarkRed;
+				case 4:
+				default:
+					return Color.DarkMagenta;
+				}
 			case Color.RandomDark:
 				switch(R.Roll(7)){
 				case 1:

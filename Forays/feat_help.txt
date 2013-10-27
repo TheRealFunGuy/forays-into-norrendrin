@@ -1,13 +1,14 @@
+
 Combat  - Measures your deadliness with blade and bow.
           Each level grants +1 damage and +1% to hit with all
           weapons.
 
 Defense - Measures your ability to avoid physical harm.
-          Each level grants +1 to armor class.
+          Each level adds 2% to your chance to avoid attacks.
 
 Magic   - Measures your ability to cast spells.
-          Each level grants another spell and makes casting less
-          likely to fail.
+          Each level grants another spell and increases your
+          mana by 5.
 
 Spirit  - Measures your willpower and ability to tap into your
           emotions, whether devotion or rage.
@@ -23,103 +24,37 @@ Combat feats:
 
 Quick draw - Instantly swap between weapons. 
              Fire arrows without needing to explicitly switch
-             to your bow first. (2 points, passive)
-
-Lethality - Increases your chance to score a critical hit by 10%
-            plus an additional 5% for each 20% health that the
-            target is missing. (3 points, passive)
-
-Lunge - Leap from one space away to deal extra damage. You get
-        +4 to Combat during this attack, but the space in
-        between must be unoccupied. (3 points, active)
-
-Drive back - Enemies must yield ground in order to avoid your
-             attacks. If the enemy has no space to retreat,
-             you'll automatically hit. (3 points, passive)
+             to your bow first.
 
 
 Defense feats:
 
-Silent chainmail - Removes chainmail's stealth penalty.
-                   (2 points, passive)
-
-Armored mage - Cast spells with no penalty from your armor.
-               (3 points, passive)
-
-Full defense - Stand still('5' or '.') to ready yourself for
-               attack. You gain an extra 50% chance to avoid
-               attacks, and any enemy that misses you will
-               have its attack redirected to another adjacent
-               enemy. (3 points, passive)
-
 Tumble - Move up to 2 spaces while avoiding arrows. You'll dodge
-         the first arrow fired at you before your next turn. If
-         you're on fire, you'll put some of it out, and if you
-         move past an enemy, they might lose track of you.
-         (3 points, active)
+         the first arrow fired at you before your next turn. 
 
 
 Magic feats:
 
 Master's edge - The first damaging spell in your spell list will
-                deal 1d6 extra magic damage. (4 points, passive)
+                deal 1d6 extra magic damage.
 
-Student's luck - Casting a spell of higher level than your Magic
-                 skill will now only drain your magic half the
-                 time (instead of every time).
-                 (3 points, passive)
-
-Arcane shield - Drain your magic reserves to shield yourself.
-                (+25% fail rate which is restored when you rest
-                to block 25 damage, plus 1d6 for every two
-                points of Magic skill you have. Lasts for 20
-                turns.) (3 points, active)
-
-Force of will - Drain your magic reserves to flawlessly cast a
-                spell. (Draining your magic reserves still
-                decreases your chance of success, but the
-                spell's level and the weight of your armor
-                don't matter. If you have skill in Spirit, your
-                chances are increased - 2% for each point.)
-                (3 points, active)
 
 
 Spirit feats:
 
 Conviction - Each turn you're engaged in combat, you gain bonus
              Spirit, and bonus Combat skill equal to half that.
-             (3 points, passive)
-
-Enduring soul - Improves the amount by which your natural
-                recovery can heal you - your health will stop
-                recovering at a multiple of 20 instead of 10.
-                (4 points, passive)
 
 Feel no pain - When your health drops under 20%, you briefly
                enter a state of invulnerability where you take
                no damage (but other effects still happen).
-               (3 points, passive)
 
 Boiling blood - Taking damage briefly increases your movement
                 speed. (Up to five stacks. At 5 stacks, your
-                speed is doubled. (2 points, passive)
+                speed is doubled.
 
 
 Stealth feats:
 
-Distract - You attempt to misdirect an unaware enemy, causing it
-           to investigate the source of the sound(radius 3).
-           (2 points, passive)
-
-Disarm trap - Attempt to disable a trap without setting it
-              off. (80% success rate. If you fail, Defense skill
-              might let you avoid triggering the trap - 5%
-              chance for each point.) (2 points, active)
-
 Neck snap - Perform a stealth kill on a medium humanoid. (Living
             enemies of approximately human size.)
-            (4 points, passive)
-
-Danger sense - You see where it's safe and where enemies might
-               detect you, if you extinguish your light sources.
-               (4 points, passive)

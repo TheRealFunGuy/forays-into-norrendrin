@@ -346,6 +346,27 @@ The sphere bounces between the skulking killer, the banshee, the r
 				Add(s);
 			}
 		}
+		public bool YesOrNoPrompt(string s){ return YesOrNoPrompt(s,true); }
+		public bool YesOrNoPrompt(string s,bool easy_cancel){
+			player.Interrupt();
+			DisplayNow(s + " (y/n): ");
+			Console.CursorVisible = true;
+			while(true){
+				switch(Console.ReadKey(true).KeyChar){
+				case 'y':
+				case 'Y':
+					return true;
+				case 'n':
+				case 'N':
+					return false;
+				default:
+					if(easy_cancel){
+						return false;
+					}
+					break;
+				}
+			}
+		}
 	}
 }
 

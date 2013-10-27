@@ -185,16 +185,11 @@ namespace Forays{
 			switch(h){
 			case HelpTopic.Overview:
 				path = "help.txt";
-				num_lines = 54;
+				num_lines = 41;
 				break;
 			case HelpTopic.Commands:
 				path = "help.txt";
-				/*if(Option(OptionType.VI_KEYS)){
-					startline = 85;
-				}
-				else{*/
-				startline = 56;
-				//}
+				startline = 42;
 				num_lines = 26;
 				break;
 			case HelpTopic.Items:

@@ -11,10 +11,10 @@ namespace Forays{
 	public static class Spell{
 		public static int Level(SpellType spell){
 			switch(spell){
-			case SpellType.SHINE:
+			case SpellType.RADIANCE:
 			case SpellType.FORCE_PALM:
 			case SpellType.DETECT_MOVEMENT:
-			case SpellType.RADIANCE:
+			case SpellType.FLYING_LEAP:
 				return 1;
 			case SpellType.MERCURIAL_SPHERE:
 			case SpellType.GREASE:
@@ -27,14 +27,14 @@ namespace Forays{
 			case SpellType.PORTAL:
 				return 3;
 			case SpellType.PASSAGE:
-			case SpellType.GLACIAL_BLAST:
 			case SpellType.AMNESIA:
+			case SpellType.CORRODE:
 			case SpellType.SHADOWSIGHT:
 				return 4;
 			case SpellType.BLIZZARD:
 			case SpellType.COLLAPSE:
-			case SpellType.FIRE_BLITZ:
-			case SpellType.PLACEHOLDER:
+			case SpellType.DOOM:
+			case SpellType.TELEKINESIS:
 				return 5;
 			default:
 				return 5;
@@ -42,14 +42,14 @@ namespace Forays{
 		}
 		public static string Name(SpellType spell){
 			switch(spell){
-			case SpellType.SHINE:
-				return "Shine";
+			case SpellType.RADIANCE:
+				return "Radiance";
 			case SpellType.FORCE_PALM:
 				return "Force palm";
 			case SpellType.DETECT_MOVEMENT:
 				return "Detect movement";
-			case SpellType.RADIANCE:
-				return "Radiance";
+			case SpellType.FLYING_LEAP:
+				return "Flying leap";
 			case SpellType.MERCURIAL_SPHERE:
 				return "Mercurial sphere";
 			case SpellType.GREASE:
@@ -68,8 +68,8 @@ namespace Forays{
 				return "Portal";
 			case SpellType.PASSAGE:
 				return "Passage";
-			case SpellType.GLACIAL_BLAST:
-				return "Glacial blast";
+			case SpellType.DOOM:
+				return "Doom";
 			case SpellType.AMNESIA:
 				return "Amnesia";
 			case SpellType.SHADOWSIGHT:
@@ -78,10 +78,10 @@ namespace Forays{
 				return "Blizzard";
 			case SpellType.COLLAPSE:
 				return "Collapse";
-			case SpellType.FIRE_BLITZ:
-				return "Fire blitz";
-			case SpellType.PLACEHOLDER:
-				return "PLACEHOLDER";
+			case SpellType.TELEKINESIS:
+				return "Telekinesis";
+			case SpellType.CORRODE:
+				return "Corrode";
 			default:
 				return "unknown spell";
 			}
@@ -90,83 +90,82 @@ namespace Forays{
 			switch(spell){
 			case SpellType.BLIZZARD:
 			case SpellType.COLLAPSE:
-			case SpellType.FIRE_BLITZ:
 			case SpellType.FORCE_PALM:
-			case SpellType.GLACIAL_BLAST:
+			case SpellType.DOOM:
 			case SpellType.LIGHTNING_BOLT:
 			case SpellType.MAGIC_HAMMER:
 			case SpellType.SCORCH:
 			case SpellType.MERCURIAL_SPHERE:
 			case SpellType.RADIANCE:
-			case SpellType.PLACEHOLDER: //todo!
+			case SpellType.CORRODE:
 				return true;
 			}
 			return false;
 		}
 		public static colorstring Description(SpellType spell){
 			switch(spell){
-			case SpellType.SHINE:
-				return new colorstring("  Doubles your torch's radius     ",Color.Gray);
-			case SpellType.FORCE_PALM:
-				return new colorstring("  1d6 damage, range 1, knockback  ",Color.Gray);
-			case SpellType.DETECT_MOVEMENT:
-				return new colorstring("  PLACEHOLDER TODO                ",Color.Gray);
 			case SpellType.RADIANCE:
-				return new colorstring("  PLACEHOLDER TODO                ",Color.Gray);
+				return new colorstring("Light source brightens and deals 1d6 ",Color.Gray);
+			case SpellType.FORCE_PALM:
+				return new colorstring("Deals 1d6 damage, knocks target back ",Color.Gray);
+			case SpellType.DETECT_MOVEMENT:
+				return new colorstring("Nearby movement is revealed          ",Color.Gray);
+			case SpellType.FLYING_LEAP:
+				return new colorstring("Fly and move at double speed briefly ",Color.Gray);
 			case SpellType.MERCURIAL_SPHERE:
-				return new colorstring("  PLACEHOLDER TODO                ",Color.Gray);
+				return new colorstring("2d6, bounces to nearby foes 3 times  ",Color.Gray);
 			case SpellType.GREASE:
-				return new colorstring("  PLACEHOLDER TODO                ",Color.Gray);
+				return new colorstring("Creates a pool of oil on the floor   ",Color.Gray);
 			case SpellType.BLINK:
-				return new colorstring("  Teleports you a short distance  ",Color.Gray);
+				return new colorstring("Teleport a short distance randomly   ",Color.Gray);
 			case SpellType.FREEZE:
-				return new colorstring("  Encases an enemy in ice         ",Color.Gray);
+				return new colorstring("Encase your target in ice            ",Color.Gray);
 			case SpellType.SCORCH:
-				return new colorstring("  2d6 fire damage, ranged         ",Color.Gray); //todo change ALL the descriptions!
+				return new colorstring("Set your target on fire              ",Color.Gray);
 			case SpellType.LIGHTNING_BOLT:
-				return new colorstring("  2d6 electric, leaps between foes",Color.Gray);
+				return new colorstring("3d6, jumps to other nearby foes      ",Color.Gray);
 			case SpellType.MAGIC_HAMMER:
-				return new colorstring("  4d6 damage, range 1, stun       ",Color.Gray);
+				return new colorstring("Range 1, deals 4d6 damage and stuns  ",Color.Gray);
 			case SpellType.PORTAL:
-				return new colorstring("  PLACEHOLDER TODO                ",Color.Gray);
+				return new colorstring("Create linked teleportation portals  ",Color.Gray);
 			case SpellType.PASSAGE:
-				return new colorstring("  Move to the other side of a wall",Color.Gray);
-			case SpellType.GLACIAL_BLAST:
-				return new colorstring("  3d6 cold damage, ranged         ",Color.Gray);
+				return new colorstring("Travel to the other side of a wall   ",Color.Gray);
+			case SpellType.DOOM:
+				return new colorstring("4d6 damage, inflicts vulnerability   ",Color.Gray);
 			case SpellType.AMNESIA:
-				return new colorstring("  An enemy forgets your presence  ",Color.Gray);
+				return new colorstring("An enemy forgets your presence       ",Color.Gray);
 			case SpellType.SHADOWSIGHT:
-				return new colorstring("  Grants better vision in the dark",Color.Gray);
+				return new colorstring("See farther and better in darkness   ",Color.Gray);
 			case SpellType.BLIZZARD:
-				return new colorstring("  5d6 radius 5 burst, freezes foes",Color.Gray);
-			case SpellType.FIRE_BLITZ:
-				return new colorstring("  placeholder todo                ",Color.Gray);
+				return new colorstring("Radius 5 burst, 5d6 and slows enemies",Color.Gray);
+			case SpellType.TELEKINESIS:
+				return new colorstring("Throw your target forcefully         ",Color.Gray);
 			case SpellType.COLLAPSE:
-				return new colorstring("  4d6, breaks walls, leaves rubble",Color.Gray);
-			case SpellType.PLACEHOLDER:
-				return new colorstring("  PLACEHOLDER TODO                ",Color.Gray);
+				return new colorstring("Radius 1, breaks walls & drops rubble",Color.Gray);
+			case SpellType.CORRODE:
+				return new colorstring("4d6 damage, can damage metal armor   ",Color.Gray);
 			default:
-				return new colorstring("  Unknown.                        ",Color.Gray);
+				return new colorstring("  Unknown.                           ",Color.Gray);
 			}
 		}
 		public static colorstring DescriptionWithIncreasedDamage(SpellType spell){
 			switch(spell){
+			case SpellType.RADIANCE:
+				return new colorstring("Light source brightens and deals ",Color.Gray,"2d6 ",Color.Yellow);
 			case SpellType.FORCE_PALM:
-				return new colorstring("  2d6",Color.Yellow," damage, range 1, knockback  ",Color.Gray); //todo!
-			case SpellType.SCORCH:
-				return new colorstring("  3d6",Color.Yellow," fire damage, ranged         ",Color.Gray);
+				return new colorstring("Deals ",Color.Gray,"2d6",Color.Yellow," damage, knocks target back ",Color.Gray);
+			case SpellType.MERCURIAL_SPHERE:
+				return new colorstring("3d6",Color.Yellow,", bounces to nearby foes 3 times  ",Color.Gray);
 			case SpellType.LIGHTNING_BOLT:
-				return new colorstring("  3d6",Color.Yellow," electric, leaps between foes",Color.Gray);
+				return new colorstring("4d6",Color.Yellow,", jumps to other nearby foes      ",Color.Gray);
 			case SpellType.MAGIC_HAMMER:
-				return new colorstring("  5d6",Color.Yellow," damage, range 1, stun       ",Color.Gray);
-			case SpellType.GLACIAL_BLAST:
-				return new colorstring("  4d6",Color.Yellow," cold damage, ranged         ",Color.Gray);
-			case SpellType.COLLAPSE:
-				return new colorstring("  5d6",Color.Yellow,", breaks walls, leaves rubble",Color.Gray);
-			case SpellType.FIRE_BLITZ:
-				return new colorstring("  Three ",Color.Gray,"2d6",Color.Yellow," beams knock foes back ",Color.Gray);
+				return new colorstring("Range 1, deals ",Color.Gray,"5d6",Color.Yellow," damage and stuns  ",Color.Gray);
+			case SpellType.DOOM:
+				return new colorstring("5d6",Color.Yellow," damage, inflicts vulnerability   ",Color.Gray);
 			case SpellType.BLIZZARD:
-				return new colorstring("  6d6",Color.Yellow," radius 5 burst, freezes foes",Color.Gray);
+				return new colorstring("Radius 5 burst, ",Color.Gray,"6d6",Color.Yellow," and slows enemies",Color.Gray);
+			case SpellType.CORRODE:
+				return new colorstring("5d6",Color.Yellow," damage, can damage metal armor   ",Color.Gray);
 			default:
 				return Description(spell);
 			}

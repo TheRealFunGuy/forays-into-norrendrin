@@ -1,9 +1,9 @@
 Options:
 Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):
-last_target autopickup no_roman_numerals hide_old_messages hide_commands never_display_tips always_reset_tips
+last_target autopickup top_row_movement hide_old_messages hide_commands never_display_tips always_reset_tips
 f last_target
 f autopickup
-f no_roman_numerals
+f top_row_movement
 f hide_old_messages
 f hide_commands
 f never_display_tips
@@ -12,12 +12,12 @@ f always_reset_tips
 t movement
 t attacking
 t torch
-t resistance
+f resistance
 t fire
 t recovery
 t rangedattacks
 t feats
 f armor
 t healingpool
-f consumables
+t consumables
 --
