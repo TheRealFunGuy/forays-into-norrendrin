@@ -5,14 +5,6 @@
 
 How to play:
 
-After choosing New Game, follow the instructions to pick your
-character's name and trait. By finding shrines within the
-dungeon, you'll be able to increase your skills, and put
-a point toward mastering one of that skill's associated feats.
-(If you increase your Magic skill, you'll also choose one new
- spell.)
-
-
 Important commands to remember are 'e' to examine and change
 your equipment, and 'a' to use your consumable items.
 If your health drops, press 'r' to rest - but only once per
@@ -28,36 +20,30 @@ Press tab to look at your surroundings. (Pressing escape or
  space will exit most menus and selections.)
 
 
-If you've learned a spell, you can cast it by pressing 'z'. If
-your magic skill isn't high enough compared to the spell's
-level, you'll have trouble casting it repeatedly. (Heavy armor
- also makes casting harder.)
+If you've learned a spell, you can cast it by pressing 'z'. 
 
 
-You can view and activate feats by pressing 'f'. (Some feats are
- activated, while some are entirely passive.)
+You can view and activate feats from the character screen 'c'.
+(Some feats are activated, while some are entirely passive.)
 
 
 Try switching to your bow and firing some arrows('e' to switch,
 's' to shoot). You always have access to five different weapons
-and three different armors. You can find better versions of each
-in the dungeon.
+and three different armors. 
 
 
-Remember: If you catch on fire, stand still with '.' (or '5' on
-the numpad) to put it out. When you find stairs, you can walk
-down them with '>'. (It's a one-way trip, so don't leave
- anything behind!)
+When you find stairs, you can walk down them with '>'. (It's a
+one-way trip, so don't leave anything behind!)
 
 
-Press 'f' now to see the command help page. (The command list
- can be accessed directly in-game by pressing '-'.)
+Press 'f' now to switch to the command help page. (The command
+list can be accessed directly in-game by pressing '-'.)
 
 
 Command list:
 
 tab : look around                              z : cast a spell 
-r : rest to recover health and spells          f : use a feat
+r : rest to recover health and mana            c : use a feat
 t : turn your torch on/off                     s : fire an arrow
 e : view and change equipment
 
@@ -68,7 +54,7 @@ g : pick up an item                        d : drop an item
 > : take stairs to next level              o : operate terrain
 w : walk automatically in a direction      x : explore
 
-c : view character information
+c : view character information (and activate feats)
 p : view previous messages
 
 = : change options

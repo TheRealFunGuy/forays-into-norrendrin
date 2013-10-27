@@ -39,6 +39,8 @@ namespace Forays{
 		public static Buffer B{get;set;}
 		public static Queue Q{get;set;}
 		public static Actor player{get;set;}
+		public const int ROWS = Global.ROWS;
+		public const int COLS = Global.COLS;
 		public PhysicalObject(){
 			row=-1;
 			col=-1;
@@ -111,6 +113,15 @@ namespace Forays{
 				light_radius = to;
 			}
 		}
+		public bool IsBurning(){
+			if(this is Actor){
+				return (this as Actor).HasAttr(AttrType.BURNING);
+			}
+			if(this is Tile){
+				return (this as Tile).features.Contains(FeatureType.FIRE);
+			}
+			return false;
+		}
 		public void MakeNoise(int volume){
 			if(actor() != null && actor().HasAttr(AttrType.SILENCED)){
 				return;
@@ -178,17 +189,19 @@ namespace Forays{
 				}
 			}
 		}
-		public bool KnockObjectBack(Actor a){ return KnockObjectBack(a,1); }
-		public bool KnockObjectBack(Actor a,int knockback_strength){ //todo the return value should answer the question "did it survive?" just like TakeDamage does.
-			if(knockback_strength == 0){ //note that TURN_INTO_CORPSE should be set for 'a' - therefore it won't be removed and we can do what we want with it.
-				return a.CollideWith(a.tile()); //todo message?
-			}
+		public bool KnockObjectBack(Actor a,int knockback_strength){
 			List<Tile> line = null;
 			if(DistanceFrom(a) == 0){
 				line = GetBestExtendedLineOfEffect(TileInDirection(Global.RandomDirection()));
 			}
 			else{
-				line = GetBestExtendedLineOfEffect(a); //todo: print "you are knocked back" !
+				line = GetBestExtendedLineOfEffect(a);
+			}
+			return KnockObjectBack(a,line,knockback_strength);
+		}
+		public bool KnockObjectBack(Actor a,List<Tile> line,int knockback_strength){
+			if(knockback_strength == 0){ //note that TURN_INTO_CORPSE should be set for 'a' - therefore it won't be removed and we can do what we want with it.
+				return a.CollideWith(a.tile());
 			}
 			int i=0;
 			while(true){
@@ -199,16 +212,31 @@ namespace Forays{
 				++i;
 			}
 			line.RemoveRange(0,i+1);
-			bool immobile = false;
+			bool immobile = a.MovementPrevented(line[0]);
+			if(!a.HasAttr(AttrType.TELEKINETICALLY_THROWN,AttrType.SELF_TK_NO_DAMAGE) && !immobile){
+				B.Add(a.YouAre() + " knocked back. ",a);
+			}
+			int dice = 1;
+			int damage_dice_to_other = 1;
+			if(a.HasAttr(AttrType.TELEKINETICALLY_THROWN)){
+				dice = 3;
+				damage_dice_to_other = 3;
+			}
+			if(a.HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
+				dice = 0;
+			}
 			while(knockback_strength > 1){ //if the knockback strength is greater than 1, you're passing *over* at least one tile.
 				Tile t = line[0];
 				line.RemoveAt(0);
-				immobile = (a.GrabPreventsMovement(t) || a.HasAttr(AttrType.IMMOBILE) || a.HasAttr(AttrType.FROZEN));
+				immobile = a.MovementPrevented(t);
 				if(immobile){
 					if(player.CanSee(a.tile())){
 						B.Add(a.YouVisibleAre() + " knocked about. ",a);
 					}
-					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"crashing into the floor");
+					if(a.type == ActorType.SPORE_POD){
+						return true;
+					}
+					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"crashing into the floor");
 				}
 				if(!t.passable){
 					string deathstringname = t.AName(false);
@@ -223,14 +251,19 @@ namespace Forays{
 						}
 						knockback_strength -= 2; //todo: is this what I want to do here?
 						t.Toggle(null);
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + deathstringname);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
 						a.Move(t.row,t.col); //todo: test this code
 					}
 					else{
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked into " + t.TheName(true) + ". ",a,t);
 						}
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + deathstringname);
+						if(a.type != ActorType.SPORE_POD){
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
+						}
+						if(!a.HasAttr(AttrType.SMALL)){
+							t.Bump(a.DirectionOf(t));
+						}
 						a.CollideWith(a.tile());
 						return !a.HasAttr(AttrType.CORPSE);
 					}
@@ -242,18 +275,26 @@ namespace Forays{
 						}
 						string actorname = t.actor().AName(false);
 						string actorname2 = a.AName(false);
-						t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + actorname2); //todo: how about "colliding with a foo" instead?
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + actorname);
+						if(t.actor().type != ActorType.SPORE_POD && !t.actor().HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
+							t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice_to_other,6),null,"colliding with " + actorname2);
+						}
+						if(a.type != ActorType.SPORE_POD){
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"colliding with " + actorname);
+						}
 						a.CollideWith(a.tile());
 						return !a.HasAttr(AttrType.CORPSE);
 					}
 					else{
+						if(t.Is(FeatureType.WEB) && !a.HasAttr(AttrType.SMALL)){
+							t.RemoveFeature(FeatureType.WEB);
+						}
 						a.Move(t.row,t.col,false);
-						if(a.HasAttr(AttrType.BURNING)){
-							t.ApplyEffect(DamageType.FIRE); //todo: is this redundant? - does Move call this anyway?
+						if(t.Is(FeatureType.WEB) && a.HasAttr(AttrType.SMALL) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
+							knockback_strength = 0;
 						}
 					}
 				}
+				M.Draw();
 				knockback_strength--;
 			}
 			if(knockback_strength < 1){
@@ -264,12 +305,15 @@ namespace Forays{
 			do{
 				Tile t = line[0];
 				line.RemoveAt(0);
-				immobile = (a.GrabPreventsMovement(t) || a.HasAttr(AttrType.IMMOBILE) || a.HasAttr(AttrType.FROZEN));
+				immobile = a.MovementPrevented(t);
 				if(immobile){
 					if(player.CanSee(a.tile())){
 						B.Add(a.YouVisibleAre() + " knocked about. ",a);
 					}
-					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"crashing into the floor");
+					if(a.type == ActorType.SPORE_POD){
+						return true;
+					}
+					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"crashing into the floor");
 				}
 				if(!t.passable){
 					string deathstringname = t.AName(false);
@@ -283,7 +327,7 @@ namespace Forays{
 							B.Add(a.YouVisibleAre() + " knocked through " + tilename + ". ",a,t);
 						}
 						t.Toggle(a);
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + deathstringname);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
 						return !a.HasAttr(AttrType.CORPSE);
 					}
@@ -291,7 +335,12 @@ namespace Forays{
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked into " + t.TheName(true) + ". ",a,t);
 						}
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + deathstringname);
+						if(a.type != ActorType.SPORE_POD){
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
+						}
+						if(!a.HasAttr(AttrType.SMALL)){
+							t.Bump(a.DirectionOf(t));
+						}
 						a.CollideWith(a.tile());
 						return !a.HasAttr(AttrType.CORPSE);
 					}
@@ -303,8 +352,12 @@ namespace Forays{
 						}
 						string actorname = t.actor().AName(false);
 						string actorname2 = a.AName(false);
-						t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + actorname2);
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),null,"slamming into " + actorname);
+						if(t.actor().type != ActorType.SPORE_POD && !t.actor().HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
+							t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice_to_other,6),null,"colliding with " + actorname2);
+						}
+						if(a.type != ActorType.SPORE_POD){
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"colliding with " + actorname);
+						}
 						a.CollideWith(a.tile());
 						return !a.HasAttr(AttrType.CORPSE);
 					}
@@ -321,24 +374,158 @@ namespace Forays{
 						if(t.inv != null && t.inv.type == ConsumableType.DETONATION){ //this will cause a new knockback effect and end the current one
 							interrupted = true;
 						}
+						if(t.Is(FeatureType.WEB) && !a.HasAttr(AttrType.SMALL)){
+							t.RemoveFeature(FeatureType.WEB);
+						}
 						a.Move(t.row,t.col);
-						//todo: something around here needs to handle being knocked into fire - does it refresh burning immediately?
-						a.CollideWith(a.tile());
-						/*if(t.Is(TileType.FIREPIT)){
-							B.Add("TODO: fire pit! ");
+						if(t.Is(FeatureType.WEB) && a.HasAttr(AttrType.SMALL) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
+							interrupted = true;
 						}
-						if(a.HasAttr(AttrType.BURNING)){
-							t.ApplyEffect(DamageType.FIRE); //todo: is this redundant? - does Move call this anyway?
+						else{
+							a.CollideWith(a.tile());
 						}
-						t.ApplyEffect(DamageType.NORMAL); //todo: corpse check here, or does 'interrupted' handle that?*/
 						if(interrupted){
 							return !a.HasAttr(AttrType.CORPSE);
 						}
 					}
 				}
+				M.Draw();
 			}
 			while(slip);
 			return !a.HasAttr(AttrType.CORPSE);
+		}
+		public void ApplyExplosion(int radius,int damage_dice,string cause_of_death){ ApplyExplosion(radius,damage_dice,null,cause_of_death); }
+		public void ApplyExplosion(int radius,int damage_dice,Actor damage_source,string cause_of_death){
+			List<pos> cells = new List<pos>();
+			foreach(Tile nearby in TilesWithinDistance(radius)){
+				if(nearby.seen && player.HasLOS(nearby) && HasLOE(nearby)){
+					cells.Add(nearby.p);
+				}
+			}
+			Screen.AnimateMapCells(cells,new colorchar('*',Color.RandomExplosion));
+			int inner_radius = (radius - 1) / 2;
+			List<Tile> affected_walls = new List<Tile>();
+			for(int dist=radius;dist>=0;--dist){
+				if(dist > inner_radius){ //weak explosive force
+					foreach(Tile t in TilesAtDistance(dist)){
+						if(HasLOE(t)){
+							Actor a = t.actor();
+							if(a != null){
+								a.attrs[AttrType.TURN_INTO_CORPSE] = 1;
+								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
+								if(a.HasAttr(AttrType.SMALL)){
+									if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
+										KnockObjectBack(a,1);
+									}
+								}
+								a.CorpseCleanup();
+							}
+							if(t.inv != null /*&& t.inv.IsBreakable()*/){
+								if(t.inv.quantity > 1){
+									if(t.inv.IsBreakable()){
+										B.Add(t.inv.TheName(true) + " break! ",t);
+									}
+									else{
+										B.Add(t.inv.TheName(true) + " are destroyed! ",t);
+									}
+								}
+								else{
+									if(t.inv.IsBreakable()){
+										B.Add(t.inv.TheName(true) + " breaks! ",t);
+									}
+									else{
+										B.Add(t.inv.TheName(true) + " is destroyed! ",t);
+									}
+								}
+								if(t.inv.NameOfItemType() != "orb"){
+									t.inv = null;
+								}
+								else{
+									Item i = t.inv;
+									t.inv = null;
+									i.Use(null,new List<Tile>{t});
+								}
+							}
+							if(t.Is(TileType.CRACKED_WALL)){
+								affected_walls.AddUnique(t);
+							}
+							if(t.Is(TileType.POISON_BULB)){
+								t.Bump(0);
+							}
+						}
+					}
+				}
+				else{ //strong explosive force
+					foreach(Tile t in TilesAtDistance(dist)){
+						if(HasLOE(t)){
+							Actor a = t.actor();
+							if(a != null){
+								a.attrs[AttrType.TURN_INTO_CORPSE] = 1;
+								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
+								if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
+									KnockObjectBack(a,1);
+								}
+								a.CorpseCleanup();
+							}
+							if(t.inv != null && t.inv.IsBreakable()){
+								if(t.inv.quantity > 1){
+									if(t.inv.IsBreakable()){
+										B.Add(t.inv.TheName(true) + " break! ",t);
+									}
+									else{
+										B.Add(t.inv.TheName(true) + " are destroyed! ",t);
+									}
+								}
+								else{
+									if(t.inv.IsBreakable()){
+										B.Add(t.inv.TheName(true) + " breaks! ",t);
+									}
+									else{
+										B.Add(t.inv.TheName(true) + " is destroyed! ",t);
+									}
+								}
+								if(t.inv.NameOfItemType() != "orb"){
+									t.inv = null;
+								}
+								else{
+									Item i = t.inv;
+									t.inv = null;
+									i.Use(null,new List<Tile>{t});
+								}
+							}
+							if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.RUBBLE)){
+								affected_walls.Add(t);
+							}
+							if(t.Is(TileType.POISON_BULB,TileType.BARREL,TileType.STANDING_TORCH)){
+								t.Bump(DirectionOf(t));
+							}
+							if(t.Is(TileType.WALL) && R.PercentChance(70)){
+								affected_walls.Add(t);
+							}
+							if(t.Is(TileType.WAX_WALL) && R.PercentChance(40)){
+								affected_walls.Add(t);
+							}
+						}
+					}
+				}
+			}
+			foreach(Tile t in affected_walls){
+				if(t.p.BoundsCheck(M.tile,false)){
+					if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.RUBBLE,TileType.WAX_WALL)){
+						t.Toggle(null,TileType.FLOOR);
+						foreach(Tile neighbor in t.TilesAtDistance(1)){
+							neighbor.solid_rock = false;
+						}
+					}
+					if(t.Is(TileType.WALL) && R.PercentChance(70)){
+						t.Toggle(null,TileType.CRACKED_WALL);
+						foreach(Tile neighbor in t.TilesAtDistance(1)){
+							neighbor.solid_rock = false;
+						}
+					}
+				}
+			}
+			MakeNoise(8);
 		}
 		public string YouAre(){
 			if(name == "you"){
@@ -356,17 +543,23 @@ namespace Forays{
 				return the_name + "'s";
 			}
 		}
-		public string You(string s){ return You(s,false); }
-		public string You(string s,bool ends_in_es){
+		public string You(string s){ return You(s,false,false); }
+		public string You(string s,bool ends_in_es){ return You(s,ends_in_es,false); }
+		public string You(string s,bool ends_in_es,bool ends_in_y){
 			if(name == "you"){
 				return "you " + s;
 			}
 			else{
-				if(ends_in_es){
-					return the_name + " " + s + "es";
+				if(ends_in_y){
+					return the_name + " " + s.Substring(0,s.Length-1) + "ies";
 				}
 				else{
-					return the_name + " " + s + "s";
+					if(ends_in_es){
+						return the_name + " " + s + "es";
+					}
+					else{
+						return the_name + " " + s + "s";
+					}
 				}
 			}
 		}
@@ -2250,6 +2443,549 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 				return result;
 			}
+		}
+		public List<Tile> GetTargetTile(int max_distance,int radius,bool no_line,bool start_at_interesting_target){ return GetTarget(false,max_distance,radius,no_line,false,start_at_interesting_target,""); }
+		public List<Tile> GetTargetLine(int max_distance){ return GetTarget(false,max_distance,0,false,true,true,""); }
+		public List<Tile> GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool start_at_interesting_target,string always_displayed){
+			List<Tile> result = null;
+			ConsoleKeyInfo command;
+			int r,c;
+			int minrow = 0;
+			int maxrow = Global.ROWS-1;
+			int mincol = 0;
+			int maxcol = Global.COLS-1;
+			if(max_distance > 0){
+				minrow = Math.Max(minrow,row - max_distance);
+				maxrow = Math.Min(maxrow,row + max_distance);
+				mincol = Math.Max(mincol,col - max_distance);
+				maxcol = Math.Min(maxcol,col + max_distance);
+			}
+			bool hide_descriptions = false;
+			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
+			for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
+				foreach(Actor a in ActorsAtDistance(i)){
+					if(player.CanSee(a)){
+						if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOS(a))){
+							interesting_targets.Add(a);
+						}
+					}
+				}
+			}
+			if(lookmode){
+				for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
+					foreach(Tile t in TilesAtDistance(i)){
+						if(t.Is(TileType.STAIRS,TileType.CHEST,TileType.FIREPIT,TileType.STALAGMITE,TileType.FIRE_GEYSER,TileType.FOG_VENT,
+						        TileType.POISON_GAS_VENT,TileType.POOL_OF_RESTORATION,TileType.BLAST_FUNGUS)
+						|| t.Is(FeatureType.GRENADE,FeatureType.FIRE,FeatureType.TROLL_CORPSE,FeatureType.TROLL_BLOODWITCH_CORPSE,
+						        FeatureType.INACTIVE_TELEPORTAL,FeatureType.POISON_GAS,FeatureType.FOG)
+						|| t.IsShrine() || t.inv != null){ //todo: update this with new terrain & features
+							if(player.CanSee(t)){
+								interesting_targets.Add(t);
+							}
+						}
+						if(t.IsKnownTrap() && player.CanSee(t)){
+							interesting_targets.AddUnique(t);
+						}
+					}
+				}
+			}
+			colorchar[,] mem = new colorchar[ROWS,COLS];
+			List<Tile> line = new List<Tile>();
+			List<Tile> oldline = new List<Tile>();
+			bool description_shown_last_time = false;
+			int desc_row = -1;
+			int desc_col = -1;
+			int desc_height = -1;
+			int desc_width = -1;
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					mem[i,j] = Screen.MapChar(i,j);
+				}
+			}
+			if(always_displayed == ""){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					if(lookmode){
+						B.DisplayNow("Move the cursor to look around. ");
+					}
+					else{
+						B.DisplayNow("Move cursor to choose target, then press Enter. ");
+					}
+				}
+			}
+			else{
+				B.DisplayNow(always_displayed);
+			}
+			if(lookmode){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					r = row;
+					c = col;
+				}
+				else{
+					r = interesting_targets[0].row;
+					c = interesting_targets[0].col;
+				}
+			}
+			else{
+				if(player.target == null || !player.CanSee(player.target)
+				|| (max_distance > 0 && player.DistanceFrom(player.target) > max_distance)){
+					if(!start_at_interesting_target || interesting_targets.Count == 0){
+						r = row;
+						c = col;
+					}
+					else{
+						r = interesting_targets[0].row;
+						c = interesting_targets[0].col;
+					}
+				}
+				else{
+					r = player.target.row;
+					c = player.target.col;
+					if(Global.Option(OptionType.LAST_TARGET)){ //probably remove this option todo
+						List<Tile> bestline = null;
+						if(extend_line){
+							bestline = GetBestExtendedLineOfEffect(player.target).ToFirstSolidTile();
+							if(bestline.Count > max_distance+1){
+								bestline.RemoveRange(max_distance+1,bestline.Count - max_distance - 1);
+							}
+						}
+						else{
+							bestline = GetBestLineOfEffect(player.target).ToFirstSolidTile();
+						}
+						return bestline;
+					}
+				}
+			}
+			bool first_iteration = true;
+			bool done=false; //when done==true, we're ready to return 'result'
+			while(!done){
+				Screen.ResetColors();
+				if(always_displayed == ""){
+					string contents = "You see ";
+					List<string> items = new List<string>();
+					if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c])){
+						items.Add(M.actor[r,c].a_name + " " + M.actor[r,c].WoundStatus());
+					}
+					if(M.tile[r,c].inv != null){
+						items.Add(M.tile[r,c].inv.AName(true));
+					}
+					foreach(FeatureType f in M.tile[r,c].features){
+						items.Add(Tile.Feature(f).a_name);
+					}
+					if(items.Count == 0){
+						contents += M.tile[r,c].AName(true);
+					}
+					else{
+						if(items.Count == 1){
+							contents += items[0] + M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+						}
+						else{
+							if(items.Count == 2){
+								if(M.tile[r,c].type != TileType.FLOOR){
+									if(M.tile[r,c].Preposition() == " and "){
+										contents += items[0] + ", " + items[1] + ",";
+										contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+									}
+									else{
+										contents += items[0] + " and " + items[1];
+										contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+									}
+								}
+								else{
+									contents += items[0] + " and " + items[1]; //todo: this might be able to use the ConcatenateWithCommas extension method
+								}
+							}
+							else{
+								foreach(string s in items){
+									if(s != items.Last()){
+										contents += s + ", ";
+									}
+									else{
+										if(M.tile[r,c].type != TileType.FLOOR){
+											contents += s + ","; //because preposition contains a space already
+										}
+										else{
+											contents += "and " + s;
+										}
+									}
+								}
+								if(M.tile[r,c].type != TileType.FLOOR){
+									contents += M.tile[r,c].Preposition() + M.tile[r,c].AName(true);
+								}
+							}
+						}
+					}
+					if(r == player.row && c == player.col){
+						if(!first_iteration){
+							string s = "You're standing here. ";
+							if(items.Count == 0 && M.tile[r,c].type == TileType.FLOOR){
+								B.DisplayNow(s);
+							}
+							else{
+								B.DisplayNow(s + contents + " here. ");
+							}
+						}
+					}
+					else{
+						if(player.CanSee(M.tile[r,c])){
+							B.DisplayNow(contents + ". ");
+						}
+						else{
+							if(M.actor[r,c] != null && player.CanSee(M.actor[r,c])){
+								B.DisplayNow("You sense " + M.actor[r,c].a_name + " " + M.actor[r,c].WoundStatus() + ". ");
+							}
+							else{
+								if(M.tile[r,c].seen){
+									colorchar tilech = new colorchar(M.tile[r,c].symbol,M.tile[r,c].color);
+									colorchar screench = Screen.MapChar(r,c);
+									if(M.tile[r,c].inv != null && (tilech.c != screench.c || tilech.color != screench.color)){ //hacky, but it seems to work (when a monster drops an item you haven't seen yet)
+										if(M.tile[r,c].inv.quantity > 1){
+											B.DisplayNow("You can no longer see these " + M.tile[r,c].inv.Name(true) + ". "); //todo: double check this hack. it might not work.
+										}
+										else{
+											B.DisplayNow("You can no longer see this " + M.tile[r,c].inv.Name(true) + ". ");
+										}
+									}
+									else{
+										B.DisplayNow("You can no longer see this " + M.tile[r,c].Name(true) + ". ");
+									}
+								}
+								else{
+									if(lookmode){
+										B.DisplayNow("");
+									}
+									else{
+										B.DisplayNow("Move cursor to choose target, then press Enter. ");
+									}
+								}
+							}
+						}
+					}
+				}
+				else{
+					B.DisplayNow(always_displayed);
+				}
+				if(!lookmode){
+					bool blocked=false;
+					Console.CursorVisible = false;
+					if(!no_line){
+						if(extend_line){
+							line = GetBestExtendedLineOfEffect(r,c);
+							if(line.Count > max_distance+1){
+								line.RemoveRange(max_distance+1,line.Count - max_distance - 1);
+							}
+						}
+						else{
+							line = GetBestLineOfEffect(r,c);
+						}
+					}
+					else{
+						line = new List<Tile>{M.tile[r,c]};
+						if(!player.HasLOS(r,c)){
+							blocked = true;
+						}
+					}
+					foreach(Tile t in line){
+						if(t.row != row || t.col != col || this != player){
+							colorchar cch = mem[t.row,t.col];
+							if(t.row == r && t.col == c){
+								if(!blocked){
+									cch.bgcolor = Color.Green;
+									if(Global.LINUX){ //no bright bg in terminals
+										cch.bgcolor = Color.DarkGreen;
+									}
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+								else{
+									cch.bgcolor = Color.Red;
+									if(Global.LINUX){
+										cch.bgcolor = Color.DarkRed;
+									}
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+							}
+							else{
+								if(!blocked){
+									cch.bgcolor = Color.DarkGreen;
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+								else{
+									cch.bgcolor = Color.DarkRed;
+									if(cch.color == cch.bgcolor){
+										cch.color = Color.Black;
+									}
+									Screen.WriteMapChar(t.row,t.col,cch);
+								}
+							}
+							if(t.seen && !t.passable && t != line.Last()){
+								blocked=true;
+							}
+						}
+						oldline.Remove(t);
+					}
+					if(radius > 0){
+						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+							if(!line.Contains(t)){
+								colorchar cch = mem[t.row,t.col];
+								if(blocked){
+									cch.bgcolor = Color.DarkRed;
+								}
+								else{
+									cch.bgcolor = Color.DarkGreen;
+								}
+								if(cch.color == cch.bgcolor){
+									cch.color = Color.Black;
+								}
+								Screen.WriteMapChar(t.row,t.col,cch);
+								oldline.Remove(t);
+							}
+						}
+					}
+					foreach(Tile t in oldline){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+				}
+				else{
+					colorchar cch = mem[r,c];
+					cch.bgcolor = Color.Green;
+					if(Global.LINUX){ //no bright bg in terminals
+						cch.bgcolor = Color.DarkGreen;
+					}
+					if(cch.color == cch.bgcolor){
+						cch.color = Color.Black;
+					}
+					Screen.WriteMapChar(r,c,cch);
+					line = new List<Tile>{M.tile[r,c]};
+					oldline.Remove(M.tile[r,c]);
+					foreach(Tile t in oldline){ //to prevent the previous target appearing on top of the description box
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					if(!hide_descriptions && M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c])){
+						bool description_on_right = false;
+						int max_length = 29;
+						if(c - 6 < max_length){
+							max_length = c - 6;
+						}
+						if(max_length < 20){
+							description_on_right = true;
+							max_length = 29;
+						}
+						List<colorstring> desc = Actor.MonsterDescriptionBox(M.actor[r,c].type,max_length);
+						if(description_on_right){
+							int start_c = COLS - desc[0].Length();
+							description_shown_last_time = true;
+							desc_row = 0;
+							desc_col = start_c;
+							desc_height = desc.Count;
+							desc_width = desc[0].Length();
+							for(int i=0;i<desc.Count;++i){
+								Screen.WriteMapString(i,start_c,desc[i]);
+							}
+						}
+						else{
+							description_shown_last_time = true;
+							desc_row = 0;
+							desc_col = 0;
+							desc_height = desc.Count;
+							desc_width = desc[0].Length();
+							for(int i=0;i<desc.Count;++i){
+								Screen.WriteMapString(i,0,desc[i]);
+							}
+						}
+					}
+					else{
+						//description_shown_last_time = false;
+					}
+				}
+				/*foreach(Tile t in oldline){ //moved. see above.
+					Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+				}*/
+				oldline = new List<Tile>(line);
+				if(radius > 0){
+					foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+						oldline.AddUnique(t);
+					}
+				}
+				first_iteration = false;
+				M.tile[r,c].Cursor();
+				Console.CursorVisible = true;
+				command = Console.ReadKey(true);
+				char ch = Actor.ConvertInput(command);
+				ch = Actor.ConvertVIKeys(ch);
+				int move_value = 1;
+				if((command.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt
+				|| (command.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control
+				|| (command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+					move_value = 6;
+				}
+				switch(ch){
+				case '7':
+					r -= move_value;
+					c -= move_value;
+					break;
+				case '8':
+					r -= move_value;
+					break;
+				case '9':
+					r -= move_value;
+					c += move_value;
+					break;
+				case '4':
+					c -= move_value;
+					break;
+				case '6':
+					c += move_value;
+					break;
+				case '1':
+					r += move_value;
+					c -= move_value;
+					break;
+				case '2':
+					r += move_value;
+					break;
+				case '3':
+					r += move_value;
+					c += move_value;
+					break;
+				case (char)9:
+					if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+						if(interesting_targets.Count > 0){
+							List<PhysicalObject> reversed_targets = new List<PhysicalObject>(interesting_targets);
+							reversed_targets.Reverse();
+							int idx = 0;
+							int dist = DistanceFrom(r,c);
+							int idx_of_next_closest = -1;
+							bool found = false;
+							foreach(PhysicalObject o in reversed_targets){
+								if(o.row == r && o.col == c){
+									int prev_idx = idx + 1; //this goes backwards because the list goes backwards
+									if(prev_idx == reversed_targets.Count){
+										prev_idx = 0;
+									}
+									r = reversed_targets[prev_idx].row;
+									c = reversed_targets[prev_idx].col;
+									found = true;
+									break;
+								}
+								else{
+									if(idx_of_next_closest == -1 && DistanceFrom(o) < dist){
+										idx_of_next_closest = idx;
+									}
+								}
+								++idx;
+							}
+							if(!found){
+								if(idx_of_next_closest == -1){
+									r = reversed_targets[0].row;
+									c = reversed_targets[0].col;
+								}
+								else{
+									r = reversed_targets[idx_of_next_closest].row;
+									c = reversed_targets[idx_of_next_closest].col;
+								}
+							}
+						}
+					}
+					else{
+						if(interesting_targets.Count > 0){
+							int idx = 0;
+							int dist = DistanceFrom(r,c);
+							int idx_of_next_farthest = -1;
+							bool found = false;
+							foreach(PhysicalObject o in interesting_targets){
+								if(o.row == r && o.col == c){
+									int next_idx = idx + 1;
+									if(next_idx == interesting_targets.Count){
+										next_idx = 0;
+									}
+									r = interesting_targets[next_idx].row;
+									c = interesting_targets[next_idx].col;
+									found = true;
+									break;
+								}
+								else{
+									if(idx_of_next_farthest == -1 && DistanceFrom(o) > dist){
+										idx_of_next_farthest = idx;
+									}
+								}
+								++idx;
+							}
+							if(!found){
+								if(idx_of_next_farthest == -1){
+									r = interesting_targets[0].row;
+									c = interesting_targets[0].col;
+								}
+								else{
+									r = interesting_targets[idx_of_next_farthest].row;
+									c = interesting_targets[idx_of_next_farthest].col;
+								}
+							}
+						}
+					}
+					break;
+				case '=':
+					if(lookmode){
+						hide_descriptions = !hide_descriptions;
+					}
+					break;
+				case (char)27:
+				case ' ':
+					done = true;
+					break;
+				case (char)13:
+				case 's':
+					if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c]) && player.HasLOE(M.actor[r,c])){
+						player.target = M.actor[r,c];
+					}
+					result = line.ToFirstSolidTile();
+					if(no_line && !player.HasLOS(line[0])){
+						result = null;
+					}
+					done = true;
+					break;
+				default:
+					break;
+				}
+				if(r < minrow){
+					r = minrow;
+				}
+				if(r > maxrow){
+					r = maxrow;
+				}
+				if(c < mincol){
+					c = mincol;
+				}
+				if(c > maxcol){
+					c = maxcol;
+				}
+				if(description_shown_last_time){
+					Screen.MapDrawWithStrings(mem,desc_row,desc_col,desc_height,desc_width);
+					description_shown_last_time = false;
+				}
+				if(done){
+					Console.CursorVisible = false;
+					foreach(Tile t in line){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					if(radius > 0){
+						foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+							if(!line.Contains(t)){
+								Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+							}
+						}
+					}
+					Console.CursorVisible = true;
+				}
+			}
+			return result;
 		}
 	}
 }

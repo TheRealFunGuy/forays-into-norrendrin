@@ -24,10 +24,6 @@ namespace Forays{
 
 		private static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
 		public static Item Prototype(ConsumableType type){ return proto[type]; }
-		//public static Map M{get;set;} //inherited
-		//public static Buffer B{get;set;}
-		//public static Queue Q{get;set;}
-		//public static Actor player{get;set;}
 		static Item(){
 			Define(ConsumableType.HEALING,"potion~ of healing",'!',Color.White);
 			Define(ConsumableType.REGENERATION,"potion~ of regeneration",'!',Color.White);
@@ -57,11 +53,11 @@ namespace Forays{
 			Define(ConsumableType.SHIELDING,"orb~ of shielding",'*',Color.White);
 			Define(ConsumableType.TELEPORTAL,"orb~ of teleportal",'*',Color.White);
 			Define(ConsumableType.PAIN,"orb~ of pain",'*',Color.White);
-			Define(ConsumableType.BANDAGE,"bandage~",'{',Color.White);
+			Define(ConsumableType.BANDAGES,"roll~ of bandages",'{',Color.White);
+			Define(ConsumableType.FLINT_AND_STEEL,"flint & steel~",'}',Color.Red);
+			proto[ConsumableType.FLINT_AND_STEEL].a_name = "flint & steel~";
 			Define(ConsumableType.BLAST_FUNGUS,"blast fungus",'"',Color.Red);
 			proto[ConsumableType.BLAST_FUNGUS].do_not_stack = true;
-			Define(ConsumableType.TRAP,"trap",'%',Color.White);
-			proto[ConsumableType.TRAP].do_not_stack = true;
 		}
 		private static void Define(ConsumableType type_,string name_,char symbol_,Color color_){
 			proto[type_] = new Item(type_,name_,symbol_,color_);
@@ -236,6 +232,9 @@ namespace Forays{
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
 					}
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+						result = result + " (" + other_data.ToString() + ")";
+					}
 					return result;
 				}
 				else{
@@ -252,6 +251,9 @@ namespace Forays{
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+					}
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+						result = result + " (" + other_data.ToString() + ")";
 					}
 					return result;
 				}
@@ -299,6 +301,9 @@ namespace Forays{
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
 					}
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+						result = result + " (" + other_data.ToString() + ")";
+					}
 					return result;
 				}
 				else{
@@ -320,6 +325,9 @@ namespace Forays{
 					position = result.IndexOf('~');
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
+					}
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+						result = result + " (" + other_data.ToString() + ")";
 					}
 					return result;
 				}
@@ -350,6 +358,9 @@ namespace Forays{
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
 					}
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+						result = result + " (" + other_data.ToString() + ")";
+					}
 					return result;
 				}
 				else{
@@ -367,6 +378,9 @@ namespace Forays{
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
 					}
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+						result = result + " (" + other_data.ToString() + ")";
+					}
 					return result;
 				}
 				else{
@@ -375,45 +389,7 @@ namespace Forays{
 			}
 		}
 		public string NameOfItemType(){
-			switch(type){
-			case ConsumableType.HEALING:
-			case ConsumableType.REGENERATION:
-			case ConsumableType.STONEFORM:
-			case ConsumableType.VAMPIRISM:
-			case ConsumableType.BRUTISH_STRENGTH:
-			case ConsumableType.ROOTS:
-			case ConsumableType.VIGOR:
-			case ConsumableType.SILENCE:
-			case ConsumableType.CLOAKING:
-				return "potion";
-			case ConsumableType.BLINKING:
-			case ConsumableType.PASSAGE:
-			case ConsumableType.TIME:
-			case ConsumableType.DETECT_MONSTERS:
-			case ConsumableType.MAGIC_MAP:
-			case ConsumableType.SUNLIGHT:
-			case ConsumableType.DARKNESS:
-			case ConsumableType.REPAIR:
-			case ConsumableType.CALLING:
-			case ConsumableType.TRAP_CLEARING:
-			case ConsumableType.ENCHANTMENT:
-				return "scroll";
-			case ConsumableType.FREEZING:
-			case ConsumableType.FLAMES:
-			case ConsumableType.FOG:
-			case ConsumableType.DETONATION:
-			case ConsumableType.BREACHING:
-			case ConsumableType.SHIELDING:
-			case ConsumableType.TELEPORTAL:
-			case ConsumableType.PAIN:
-				return "orb";
-			case ConsumableType.BANDAGE:
-			case ConsumableType.BLAST_FUNGUS:
-			case ConsumableType.TRAP:
-				return "other";
-			default:
-				return "unknown item";
-			}
+			return NameOfItemType(type);
 		}
 		public static string NameOfItemType(ConsumableType type){
 			switch(type){
@@ -448,9 +424,9 @@ namespace Forays{
 			case ConsumableType.TELEPORTAL:
 			case ConsumableType.PAIN:
 				return "orb";
-			case ConsumableType.BANDAGE:
+			case ConsumableType.BANDAGES:
+			case ConsumableType.FLINT_AND_STEEL:
 			case ConsumableType.BLAST_FUNGUS:
-			case ConsumableType.TRAP:
 				return "other";
 			default:
 				return "unknown item";
@@ -489,8 +465,8 @@ namespace Forays{
 			case ConsumableType.TELEPORTAL:
 			case ConsumableType.PAIN:
 				return 2;
-			case ConsumableType.BANDAGE:
-			case ConsumableType.TRAP:
+			case ConsumableType.BANDAGES:
+			case ConsumableType.FLINT_AND_STEEL:
 				return 3;
 			case ConsumableType.BLAST_FUNGUS:
 				return 4;
@@ -520,9 +496,10 @@ namespace Forays{
 			case ConsumableType.TELEPORTAL:
 			case ConsumableType.PAIN:
 				return 2;
-			case ConsumableType.BANDAGE:
+			case ConsumableType.BANDAGES:
+			case ConsumableType.FLINT_AND_STEEL:
 			case ConsumableType.BLAST_FUNGUS:
-			case ConsumableType.TRAP:
+			case ConsumableType.MAGIC_TRINKET:
 				return 0;
 			default:
 				return 1;
@@ -554,10 +531,16 @@ namespace Forays{
 			}
 			if(R.OneIn(player.magic_trinkets.Count + 1) && player.magic_trinkets.Count < 10){
 				for(int i=0;i<3;++i){
-					list.Add(ConsumableType.TRAP); //hack! traps aren't ever actually generated - this value means 'generate a magic trinket'
+					list.Add(ConsumableType.MAGIC_TRINKET);
 				}
 			}
 			return list.Random();
+		}
+		public bool IsBreakable(){
+			if(NameOfItemType() == "potion" || NameOfItemType() == "orb"){
+				return true;
+			}
+			return false;
 		}
 		public static void GenerateUnIDedNames(){
 			identified = new Dict<ConsumableType,bool>();
@@ -587,7 +570,7 @@ namespace Forays{
 							}
 						}
 						else{
-							identified[type] = true; //bandage, trap, blast fungus...
+							identified[type] = true; //bandages, trap, blast fungus...
 						}
 					}
 				}
@@ -663,7 +646,7 @@ namespace Forays{
 			case ConsumableType.REGENERATION:
 			{
 				if(user.name == "you"){
-					B.Add("Your blood tingles. ",user); //todo: yeah, maybe change this one too?
+					B.Add("Your blood tingles. ",user);
 				}
 				else{
 					B.Add(user.the_name + " looks energized. ",user);
@@ -675,7 +658,7 @@ namespace Forays{
 			}
 			case ConsumableType.STONEFORM:
 			{
-				B.Add("You transform into a being of animated stone. "); //todo message
+				B.Add("You transform into a being of animated stone. ");
 				int duration = R.Roll(2,20) + 20;
 				List<AttrType> attributes = new List<AttrType>{AttrType.REGENERATING,AttrType.BRUTISH_STRENGTH,AttrType.VIGOR,AttrType.SILENCED,AttrType.SHADOW_CLOAK};
 				foreach(AttrType at in attributes){
@@ -721,7 +704,7 @@ namespace Forays{
 							else{
 								if(e.attr == AttrType.BONUS_DEFENSE && e.value == 10){
 									e.dead = true; //this would break if there were other timed effects that gave 5 defense
-									user.attrs[AttrType.BONUS_DEFENSE] -= 10; //todo test this. make sure all the effects end properly.
+									user.attrs[AttrType.BONUS_DEFENSE] -= 10;
 								}
 								else{
 									if(e.attr == AttrType.ROOTS){
@@ -741,16 +724,17 @@ namespace Forays{
 			case ConsumableType.VAMPIRISM:
 			{
 				B.Add("You become vampiric. ");
-				int duration = R.Roll(20) + 20;
+				B.Add("You rise into the air. ");
+				int duration = R.Roll(2,20) + 20;
 				user.RefreshDuration(AttrType.LIGHT_SENSITIVE,duration*100);
-				user.RefreshDuration(AttrType.FLYING,duration*100); //todo: i'm pretty sure this can break with other sources of flying.
+				user.RefreshDuration(AttrType.FLYING,duration*100); //todo: i'm pretty sure this can break with other sources of flying. test with flying leap.
 				user.RefreshDuration(AttrType.LIFE_DRAIN_HIT,duration*100,"You are no longer vampiric. ");
 				break;
 			}
 			case ConsumableType.BRUTISH_STRENGTH:
 			{
 				B.Add("You feel a surge of strength. ");
-				user.RefreshDuration(AttrType.BRUTISH_STRENGTH,(R.Roll(3,6)+6)*100,"Your incredible strength wears off. ");
+				user.RefreshDuration(AttrType.BRUTISH_STRENGTH,(R.Roll(3,6)+16)*100,"Your incredible strength wears off. ");
 				break;
 			}
 			case ConsumableType.ROOTS:
@@ -765,7 +749,7 @@ namespace Forays{
 							else{
 								if(e.attr == AttrType.BONUS_DEFENSE && e.value == 10){
 									e.dead = true; //this would break if there were other timed effects that gave 5 defense
-									user.attrs[AttrType.BONUS_DEFENSE] -= 10; //todo test this. make sure all the effects end properly.
+									user.attrs[AttrType.BONUS_DEFENSE] -= 10;
 								}
 								else{
 									if(e.attr == AttrType.ROOTS){
@@ -776,7 +760,7 @@ namespace Forays{
 							}
 						}
 					}
-					//todo: message when refreshed?
+					B.Add("Your roots extend deeper into the ground. ");
 				}
 				else{
 					B.Add("You grow roots and a hard shell of bark. ");
@@ -784,8 +768,8 @@ namespace Forays{
 				int duration = R.Roll(20) + 20;
 				user.RefreshDuration(AttrType.ROOTS,duration*100);
 				user.attrs[AttrType.BONUS_DEFENSE] += 10;
-				Q.Add(new Event(user,duration*100,AttrType.BONUS_DEFENSE,10)); //todo now, check every form of movement to see whether it should be stopped.
-				user.attrs[AttrType.IMMOBILE]++; //MOST of them should be stopped, but not breach events.
+				Q.Add(new Event(user,duration*100,AttrType.BONUS_DEFENSE,10));
+				user.attrs[AttrType.IMMOBILE]++;
 				Q.Add(new Event(user,duration*100,AttrType.IMMOBILE,"You are no longer rooted to the ground. "));
 				break;
 			}
@@ -836,7 +820,7 @@ namespace Forays{
 				List<int> valid_dirs = new List<int>();
 				foreach(int dir in U.FourDirections){
 					Tile t = user.TileInDirection(dir);
-					if(t != null && t.Is(TileType.WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR)){ //todo: update passage spell with these
+					if(t != null && t.Is(TileType.WALL,TileType.CRACKED_WALL,TileType.WAX_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.STONE_SLAB)){
 						while(!t.passable){
 							if(t.row == 0 || t.row == Global.ROWS-1 || t.col == 0 || t.col == Global.COLS-1){
 								break;
@@ -874,7 +858,7 @@ namespace Forays{
 						last_wall = t;
 						t = t.TileInDirection(dir);
 					}
-					if(M.actor[t.row,t.col] == null){
+					if(t.actor() == null){
 						int r = user.row;
 						int c = user.col;
 						user.Move(t.row,t.col);
@@ -927,6 +911,11 @@ namespace Forays{
 			}
 			case ConsumableType.TIME:
 				B.Add("Time stops for a moment. ");
+				if(Fire.fire_event == null){ //this prevents fire from updating while time is frozen
+					Fire.fire_event = new Event(0,EventType.FIRE);
+					Fire.fire_event.tiebreaker = 0;
+					Q.Add(Fire.fire_event);
+				}
 				Q.turn -= 200;
 				break;
 			case ConsumableType.DETECT_MONSTERS:
@@ -937,7 +926,7 @@ namespace Forays{
 				else{
 					B.Add("The scroll reveals a lack of foes on this level. ");
 				}
-				int duration = R.Roll(20)+30;
+				int duration = R.Roll(2,20)+60;
 				user.RefreshDuration(AttrType.DETECTING_MONSTERS,duration*100,user.Your() + " foes are no longer revealed. ",user);
 				break;
 			}
@@ -974,13 +963,36 @@ namespace Forays{
 						if(t.Is(TileType.HIDDEN_DOOR)){
 							t.Toggle(null);
 						}
+						colorchar ch2 = Screen.BlankChar();
+						if(t.inv != null){
+							t.inv.revealed_by_light = true;
+							ch2.c = t.inv.symbol;
+							ch2.color = t.inv.color;
+							M.last_seen[t.row,t.col] = ch2;
+						}
+						else{
+							if(t.features.Count > 0){
+								ch2.c = t.FeatureSymbol();
+								ch2.color = t.FeatureColor();
+								M.last_seen[t.row,t.col] = ch2;
+							}
+							else{
+								ch2.c = t.symbol;
+								ch2.color = t.color;
+								if(ch2.c == '#' && ch2.color == Color.RandomGlowingFungus){
+									ch2.color = Color.Gray;
+								}
+								M.last_seen[t.row,t.col] = ch2;
+							}
+						}
 						Screen.WriteMapChar(t.row,t.col,t.symbol,Color.RandomRainbow);
 						//Screen.WriteMapChar(t.row,t.col,M.VisibleColorChar(t.row,t.col));
 						if(user.DistanceFrom(t) > max_dist){
 							max_dist = user.DistanceFrom(t);
 							while(last_tiles.Count > 0){
 								Tile t2 = last_tiles.RemoveRandom();
-								Screen.WriteMapChar(t2.row,t2.col,M.VisibleColorChar(t2.row,t2.col));
+								Screen.WriteMapChar(t2.row,t2.col,M.last_seen[t2.row,t2.col]);
+								//Screen.WriteMapChar(t2.row,t2.col,M.VisibleColorChar(t2.row,t2.col));
 							}
 							Thread.Sleep(20);
 						}
@@ -1022,7 +1034,7 @@ namespace Forays{
 				break;
 			case ConsumableType.REPAIR:
 			{
-				B.Add("Your equipment glows briefly. ");
+				B.Add("A glow envelops your equipment. ");
 				bool repaired = false;
 				foreach(EquipmentStatus eqstatus in Enum.GetValues(typeof(EquipmentStatus))){
 					foreach(Weapon w in user.weapons){
@@ -1041,6 +1053,14 @@ namespace Forays{
 				if(repaired){
 					B.Add("It looks as good as new! ");
 				}
+				if(user.HasAttr(AttrType.SLIMED)){
+					B.Add("You are no longer covered in slime. ");
+					user.attrs[AttrType.SLIMED] = 0;
+				}
+				if(user.HasAttr(AttrType.OIL_COVERED)){
+					B.Add("You are no longer covered in oil. ");
+					user.attrs[AttrType.OIL_COVERED] = 0;
+				}
 				break;
 			}
 			case ConsumableType.CALLING:
@@ -1050,6 +1070,13 @@ namespace Forays{
 					List<Tile> tiles = user.TilesAtDistance(dist).Where(x=>x.actor() != null && !x.actor().HasAttr(AttrType.IMMOBILE));
 					if(tiles.Count > 0){
 						Actor a = tiles.Random().actor();
+						Tile t2 = user.TileInDirection(user.DirectionOf(a));
+						if(t2.passable && t2.actor() == null){
+							B.Add("The scroll calls " + a.a_name + " to you. ");
+							a.Move(t2.row,t2.col);
+							found = true;
+							break;
+						}
 						foreach(Tile t in M.ReachableTilesByDistance(user.row,user.col,false)){
 							if(t.actor() == null){
 								B.Add("The scroll calls " + a.a_name + " to you. ");
@@ -1083,16 +1110,16 @@ namespace Forays{
 							case TileType.ALARM_TRAP:
 							case TileType.TELEPORT_TRAP:
 							case TileType.ICE_TRAP:
-							case TileType.DIM_VISION_TRAP:
-							case TileType.STUN_TRAP:
-							case TileType.QUICKFIRE_TRAP:
+							case TileType.BLINDING_TRAP:
+							case TileType.SHOCK_TRAP:
+							case TileType.FIRE_TRAP:
 								traparray[0].Add(t);
 								break;
 							case TileType.POISON_GAS_TRAP:
 							case TileType.GRENADE_TRAP:
 								traparray[1].Add(t);
 								break;
-							case TileType.UNDEAD_TRAP:
+							case TileType.SLIDING_WALL_TRAP:
 							case TileType.PHANTOM_TRAP:
 								traparray[2].Add(t);
 								break;
@@ -1127,9 +1154,9 @@ namespace Forays{
 				while(ench == user.EquippedWeapon.enchantment){
 					ench = (EnchantmentType)R.Between(0,4);
 				}
+				B.Add("Your " + user.EquippedWeapon.NameWithEnchantment() + " glows brightly! ");
 				user.EquippedWeapon.enchantment = ench;
 				B.Add("Your " + user.EquippedWeapon.NameWithoutEnchantment() + " is now a " + user.EquippedWeapon.NameWithEnchantment() + "! ");
-				//todo message?
 				break;
 			}
 			case ConsumableType.FREEZING:
@@ -1139,40 +1166,54 @@ namespace Forays{
 					if(!identified[type]){
 						radius = 0;
 					}
-					line = user.GetTargetTile(12,radius,true);
+					line = user.GetTargetTile(12,radius,false,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
-					user.AnimateExplosion(t,2,'*',Color.RandomIce); //todo: improve animation
-					List<Actor> targets = new List<Actor>();
+					Screen.AnimateExplosion(t,2,new colorchar('*',Color.RandomIce));
+					List<Tile> targets = new List<Tile>();
 					Tile LOE_tile = t;
 					if(!t.passable && prev != null){
 						LOE_tile = prev;
 					}
-					foreach(Actor ac in t.ActorsWithinDistance(2)){
-						if(LOE_tile.HasLOE(ac)){
-							targets.Add(ac);
+					foreach(Tile t2 in t.TilesWithinDistance(2)){
+						if(LOE_tile.HasLOE(t2)){
+							targets.Add(t2);
 						}
 					}
 					while(targets.Count > 0){
-						Actor ac = targets.RemoveRandom();
-						B.Add(ac.YouAre() + " encased in ice. ",ac);
-						ac.attrs[AttrType.FROZEN] = 35;
+						Tile t2 = targets.RemoveRandom();
+						t2.ApplyEffect(DamageType.COLD);
+						Actor ac = t2.actor();
+						if(ac != null){
+							if(!ac.IsBurning()){
+								B.Add(ac.YouAre() + " encased in ice. ",ac);
+								ac.attrs[AttrType.FROZEN] = 35;
+								ac.attrs[AttrType.SLIMED] = 0;
+								ac.attrs[AttrType.OIL_COVERED] = 0;
+							}
+						}
 					}
 					t.MakeNoise(2);
 					if(trigger_trap && t.IsTrap()){
@@ -1191,25 +1232,31 @@ namespace Forays{
 					if(!identified[type]){
 						radius = 0;
 					}
-					line = user.GetTargetTile(12,radius,true);
+					line = user.GetTargetTile(12,radius,false,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					List<Tile> area = new List<Tile>();
 					List<pos> cells = new List<pos>();
 					Tile LOE_tile = t;
@@ -1217,14 +1264,20 @@ namespace Forays{
 						LOE_tile = prev;
 					}
 					foreach(Tile tile in t.TilesWithinDistance(2)){
-						if(tile.passable && LOE_tile.HasLOE(tile)){
-							tile.AddFeature(FeatureType.FIRE);
-							area.Add(tile);
+						if(LOE_tile.HasLOE(tile)){
+							if(tile.passable){
+								tile.AddFeature(FeatureType.FIRE);
+							}
+							else{
+								tile.ApplyEffect(DamageType.FIRE);
+							}
+							if(tile.Is(FeatureType.FIRE)){
+								area.Add(tile);
+							}
 							cells.Add(tile.p);
 						}
 					}
 					Screen.AnimateMapCells(cells,new colorchar('&',Color.RandomFire));
-					//Q.Add(new Event(area,600,EventType.,25)); //todo: fire event
 					t.MakeNoise(2);
 					if(trigger_trap && t.IsTrap()){
 						t.TriggerTrap();
@@ -1242,32 +1295,48 @@ namespace Forays{
 					if(!identified[type]){
 						radius = 0;
 					}
-					line = user.GetTargetTile(12,radius,true);
+					line = user.GetTargetTile(12,radius,false,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					List<Tile> area = new List<Tile>();
 					List<pos> cells = new List<pos>();
 					Tile LOE_tile = t;
 					if(!t.passable && prev != null){
 						LOE_tile = prev;
 					}
-					foreach(Tile tile in t.TilesWithinDistance(3)){
+					for(int i=0;i<=3;++i){
+						foreach(Tile tile in t.TilesAtDistance(i)){
+							if(tile.passable && LOE_tile.HasLOE(tile)){
+								tile.AddFeature(FeatureType.FOG);
+								area.Add(tile);
+								cells.Add(tile.p);
+							}
+						}
+						Screen.AnimateMapCells(cells,new colorchar('*',Color.Gray),40);
+					}
+					/*foreach(Tile tile in t.TilesWithinDistance(3)){
 						if(tile.passable && LOE_tile.HasLOE(tile)){
 							tile.AddFeature(FeatureType.FOG);
 							area.Add(tile);
@@ -1275,7 +1344,7 @@ namespace Forays{
 						}
 					}
 					Screen.AnimateMapCells(cells,new colorchar('*',Color.Gray));
-					Q.RemoveTilesFromEventAreas(area,EventType.FOG);
+			*/		Q.RemoveTilesFromEventAreas(area,EventType.FOG);
 					Q.Add(new Event(area,600,EventType.FOG,25));
 					t.MakeNoise(2);
 					if(trigger_trap && t.IsTrap()){
@@ -1290,36 +1359,43 @@ namespace Forays{
 			case ConsumableType.DETONATION:
 			{
 				if(line == null){
-					int radius = 2;
+					int radius = 3;
 					if(!identified[type]){
 						radius = 0;
 					}
-					line = user.GetTargetTile(12,radius,true);
+					line = user.GetTargetTile(12,radius,false,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					//List<Tile> area = new List<Tile>();
 					List<pos> cells = new List<pos>();
 					Tile LOE_tile = t;
 					if(!t.passable && prev != null){
 						LOE_tile = prev;
 					}
-					foreach(Tile tile in LOE_tile.TilesWithinDistance(2)){
+					LOE_tile.ApplyExplosion(3,10,"an orb of detonation");
+					/*foreach(Tile tile in LOE_tile.TilesWithinDistance(2)){
 						if(LOE_tile.HasLOE(tile)){
 							cells.Add(tile.p);
 						}
@@ -1340,7 +1416,7 @@ namespace Forays{
 										a2.attrs[AttrType.TURN_INTO_CORPSE] = 1;
 										a2.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(10,6),user,"an orb of detonation");
 										if(a2.curhp > 0 || !a2.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
-											LOE_tile.KnockObjectBack(a2);
+											LOE_tile.KnockObjectBack(a2,1);
 										}
 										a2.CorpseCleanup();
 										break;
@@ -1358,13 +1434,16 @@ namespace Forays{
 									else{
 										if(t2.type == TileType.WALL && R.PercentChance(70)){
 											t2.Toggle(null,TileType.CRACKED_WALL);
+											foreach(Tile neighbor in t2.TilesAtDistance(1)){
+												neighbor.solid_rock = false;
+											}
 										}
 									}
 								}
 							}
 						}
 					}
-					t.MakeNoise(8);
+					t.MakeNoise(8);*/
 					if(trigger_trap && t.IsTrap()){
 						t.TriggerTrap();
 					}
@@ -1381,31 +1460,37 @@ namespace Forays{
 					if(!identified[type]){
 						radius = 0;
 					}
-					line = user.GetTargetTile(12,radius,true);
+					line = user.GetTargetTile(12,radius,false,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					//Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					int max_dist = -1;
-					foreach(Tile t2 in M.ReachableTilesByDistance(t.row,t.col,false,TileType.WALL,TileType.STONE_SLAB,TileType.DOOR_C,TileType.STALAGMITE,TileType.RUBBLE,TileType.HIDDEN_DOOR)){
+					foreach(Tile t2 in M.ReachableTilesByDistance(t.row,t.col,false,TileType.WALL,TileType.WAX_WALL,TileType.STONE_SLAB,TileType.DOOR_C,TileType.STALAGMITE,TileType.RUBBLE,TileType.HIDDEN_DOOR)){
 						if(t.DistanceFrom(t2) > 5){
 							break;
 						}
-						if(t2.type == TileType.WALL){
+						if(t2.Is(TileType.WALL,TileType.WAX_WALL)){
 							Screen.WriteMapChar(t2.row,t2.col,t2.symbol,Color.RandomBreached);
 							if(t.DistanceFrom(t2) > max_dist){
 								max_dist = t.DistanceFrom(t2);
@@ -1415,9 +1500,13 @@ namespace Forays{
 					}
 					List<Tile> area = new List<Tile>();
 					foreach(Tile tile in t.TilesWithinDistance(5)){
-						if(tile.type == TileType.WALL && tile.row > 0 && tile.col > 0 && tile.row < Global.ROWS-1 && tile.col < Global.COLS-1){
+						if(tile.Is(TileType.WALL,TileType.WAX_WALL) && tile.row > 0 && tile.col > 0 && tile.row < Global.ROWS-1 && tile.col < Global.COLS-1){
+							bool wax = tile.Is(TileType.WAX_WALL);
 							tile.Toggle(null,TileType.BREACHED_WALL);
 							tile.solid_rock = false;
+							if(wax){
+								tile.toggles_into = TileType.WAX_WALL;
+							}
 							area.Add(tile);
 						}
 					}
@@ -1446,25 +1535,31 @@ namespace Forays{
 					if(!identified[type]){
 						radius = 0;
 					}
-					line = user.GetTargetTile(12,radius,!identified[type]); //don't suggest shielding monsters once it's known
+					line = user.GetTargetTile(12,radius,false,!identified[type]); //don't suggest shielding monsters once it's known
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					List<Tile> area = new List<Tile>();
 					List<pos> cells = new List<pos>();
 					List<colorchar> symbols = new List<colorchar>();
@@ -1509,25 +1604,31 @@ namespace Forays{
 			{
 				if(line == null){
 					int radius = 0;
-					line = user.GetTargetTile(12,radius,true);
+					line = user.GetTargetTile(12,radius,false,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					Tile target_tile = t;
 					if(!t.passable && prev != null){
 						target_tile = prev;
@@ -1551,25 +1652,31 @@ namespace Forays{
 					if(!identified[type]){
 						radius = 0;
 					}
-					line = user.GetTargetTile(12,radius,true);
+					line = user.GetTargetTile(12,radius,false,true);
 				}
 				if(line != null){
 					Tile t = line.Last();
 					Tile prev = line.LastBeforeSolidTile();
-					Actor first = user.FirstActorInLine(line);
-					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+					Actor first = null;
 					bool trigger_trap = true;
-					if(first != null && first != user){
-						trigger_trap = false;
-						t = first.tile();
-						B.Add("It shatters on " + first.the_name + "! ",first);
-						first.player_visibility_duration = -1;
-						first.attrs[AttrType.PLAYER_NOTICED]++;
+					if(user != null){
+						first = user.FirstActorInLine(line);
+						B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
+						if(first != null && first != user){
+							trigger_trap = false;
+							t = first.tile();
+							B.Add("It shatters on " + first.the_name + "! ",first);
+							first.player_visibility_duration = -1;
+							first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							B.Add("It shatters on " + t.the_name + "! ",t);
+						}
+						user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					}
 					else{
-						B.Add("It shatters on " + t.the_name + "! ",t);
+						trigger_trap = false;
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
 					List<pos> cells = new List<pos>();
 					List<colorchar> symbols = new List<colorchar>();
 					Tile LOE_tile = t;
@@ -1580,7 +1687,7 @@ namespace Forays{
 						if(LOE_tile.HasLOE(tile)){
 							if(tile.actor() != null){
 								if(tile.actor().TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,R.Roll(2,6),user,"an orb of pain")){
-									B.Add(tile.actor().You("become") + " vulnerable. ",tile.actor()); //todo: implement VULNERABLE
+									B.Add(tile.actor().You("become") + " vulnerable. ",tile.actor());
 									tile.actor().RefreshDuration(AttrType.VULNERABLE,(R.Roll(2,6)+6)*100,tile.actor().YouFeel() + " less vulnerable. ",tile.actor());
 								}
 							}
@@ -1607,7 +1714,7 @@ namespace Forays{
 			case ConsumableType.BLAST_FUNGUS:
 			{
 				if(line == null){
-					line = user.GetTarget(false,12,0,false,true);
+					line = user.GetTarget(false,12,0,false,false,true,"");
 				}
 				revealed_by_light = true;
 				ignored = true;
@@ -1655,27 +1762,31 @@ namespace Forays{
 				}
 				break;
 			}
-			case ConsumableType.BANDAGE:
-				if(user.curhp < user.maxhp){
-					user.curhp += 1;
-				}
-				//user.TakeDamage(DamageType.HEAL,DamageClass.NO_TYPE,1,null);
-				user.recover_time = Q.turn + 500;
-				if(user.name == "you"){
+			case ConsumableType.BANDAGES:
+				if(!user.HasAttr(AttrType.BANDAGE_COUNTER)){
+					user.attrs[AttrType.BANDAGE_COUNTER] = 10;
+					user.recover_time = Q.turn + 500;
 					B.Add("You apply a bandage. ");
 				}
 				else{
-					B.Add(user.the_name + " applies a bandage. ",user);
+					B.Add("You can't apply another bandage yet. ");
+					used = false;
 				}
 				break;
-			case ConsumableType.TRAP:
+			case ConsumableType.FLINT_AND_STEEL:
 			{
-				if(user.tile().Is(TileType.FLOOR)){
-					user.tile().Toggle(user,(TileType)other_data);
-					B.Add("You arm " + user.tile().the_name + ". ");
+				int dir = user.GetDirection("Which direction? ",false,true);
+				if(dir != -1){
+					Tile t = user.TileInDirection(dir);
+					B.Add("You use your flint & steel. ");
+					if(t.actor() != null && t.actor().HasAttr(AttrType.OIL_COVERED) && !t.Is(FeatureType.POISON_GAS)){
+						t.actor().ApplyBurning();
+					}
+					if(!t.Is(TileType.WAX_WALL)){
+						t.ApplyEffect(DamageType.FIRE);
+					}
 				}
 				else{
-					B.Add("You can't place a trap here. ");
 					used = false;
 				}
 				break;
@@ -1686,7 +1797,7 @@ namespace Forays{
 			}
 			if(used){
 				if(IDed){
-					if(!identified[type]){
+					if(!identified[type] && (user != null || player.CanSee(line[0]))){
 						identified[type] = true;
 						B.Add("(It was " + SingularName(true) + "!) ");
 					}
@@ -1700,8 +1811,36 @@ namespace Forays{
 					--quantity;
 				}
 				else{
-					if(user != null){
-						user.inv.Remove(this);
+					if(type == ConsumableType.BANDAGES){
+						--other_data;
+						if(user != null && other_data == 0){
+							B.Add("You use your last bandage. ");
+							user.inv.Remove(this);
+						}
+					}
+					else{
+						if(type == ConsumableType.FLINT_AND_STEEL){
+							if(R.OneIn(3)){
+								--other_data;
+								if(user != null){
+									if(other_data == 2){
+										B.Add("Your flint & steel shows signs of wear. ");
+									}
+									if(other_data == 1){
+										B.Add("Your flint & steel is almost depleted. ");
+									}
+									if(other_data == 0){
+										B.Add("Your flint & steel is used up. ");
+										user.inv.Remove(this);
+									}
+								}
+							}
+						}
+						else{ //wands eventually go here
+							if(user != null){
+								user.inv.Remove(this);
+							}
+						}
 					}
 				}
 			}
@@ -1709,39 +1848,88 @@ namespace Forays{
 		}
 		public string Description(){
 			if(!revealed_by_light){
-				if(NameOfItemType(type) == "scroll"){
-					return "Unseen scroll. Lorem ipsum blah blah etc etc more info about scroltions and porbs goes here, bizzaro am number one. ";
-				}
-				else{
-					if(NameOfItemType(type) == "potion"){
-						return "Unseen potion. Lorem ipsum blah blah etc etc more info about scroltions and porbs goes here, bizzaro am number one. ";
-					}
-					else{
-						if(NameOfItemType(type) == "orb"){
-							return "Unseen orb. Lorem ipsum blah blah etc etc more info about scroltions and porbs goes here, bizzaro am number one. ";
-						}
-					}
-				}
+				return "You can't see what this " + NameOfItemType(type) + " is yet.";
 			}
 			else{
 				if(!identified[type]){
 					if(NameOfItemType(type) == "scroll"){
-						return "Unknown scroll. Lorem ipsum blah blah etc etc more info about scroltions and porbs goes here, bizzaro am number one. ";
+						return "Rolled paper with words of magic, activated by speaking them aloud. The words on this scroll are unfamiliar to you.";
 					}
 					else{
 						if(NameOfItemType(type) == "potion"){
-							return "Unknown potion. Lorem ipsum blah blah etc etc more info about scroltions and porbs goes here, bizzaro am number one. ";
+							return "A glass bottle filled with mysterious liquid.";
 						}
 						else{
 							if(NameOfItemType(type) == "orb"){
-								return "Unknown orb. Lorem ipsum blah blah etc etc more info about scroltions and porbs goes here, bizzaro am number one. ";
+								return "Shifting lights dance inside this orb. Breaking it will release the unknown magic contained within.";
 							}
 						}
 					}
 				}
 				switch(type){
 				default:
-					return "[DATA EXPUNGED] YOU DO NOT HAVE CLEARANCE TO ACCESS THIS INFORMATION [DATA EXPUNGED]";
+				case ConsumableType.BANDAGES:
+					return "Applying a bandage will slowly restore 10 HP.";
+				case ConsumableType.BLAST_FUNGUS:
+					return "This blast fungus is about to explode!";
+				case ConsumableType.BLINKING:
+					return "This scroll will teleport you a short distance randomly.";
+				case ConsumableType.BREACHING:
+					return "This orb will temporarily lower nearby walls, which will slowly return to their original state.";
+				case ConsumableType.BRUTISH_STRENGTH:
+					return "Drinking this potion grants the strength of a juggernaut. During this short time, you can crush several types of dungeon features. Additionally, you'll still move after making an attack, which will deal maximum damage and knock foes back 5 spaces.";
+				case ConsumableType.CALLING:
+					return "";
+				case ConsumableType.CLOAKING:
+					return "";
+				case ConsumableType.DARKNESS:
+					return "";
+				case ConsumableType.DETECT_MONSTERS:
+					return "";
+				case ConsumableType.DETONATION:
+					return "";
+				case ConsumableType.ENCHANTMENT:
+					return "";
+				case ConsumableType.FLAMES:
+					return "";
+				case ConsumableType.FLINT_AND_STEEL:
+					return "Used for creating sparks, enough to ignite flammable objects (but not enough to damage a foe).";
+				case ConsumableType.FOG:
+					return "";
+				case ConsumableType.FREEZING:
+					return "";
+				case ConsumableType.HEALING:
+					return "";
+				case ConsumableType.MAGIC_MAP:
+					return "";
+				case ConsumableType.PAIN:
+					return "";
+				case ConsumableType.PASSAGE:
+					return "";
+				case ConsumableType.REGENERATION:
+					return "";
+				case ConsumableType.REPAIR:
+					return "";
+				case ConsumableType.ROOTS:
+					return "";
+				case ConsumableType.SHIELDING:
+					return "";
+				case ConsumableType.SILENCE:
+					return "";
+				case ConsumableType.STONEFORM:
+					return "";
+				case ConsumableType.SUNLIGHT:
+					return "";
+				case ConsumableType.TELEPORTAL:
+					return "";
+				case ConsumableType.TIME:
+					return "";
+				case ConsumableType.TRAP_CLEARING:
+					return "";
+				case ConsumableType.VAMPIRISM:
+					return "";
+				case ConsumableType.VIGOR:
+					return "";
 				}
 			}
 			return "Unknown item.";
@@ -1865,9 +2053,9 @@ namespace Forays{
 		}
 		public static Color StatusColor(EquipmentStatus status){
 			switch(status){
-			case EquipmentStatus.BURDENSOME:
+			case EquipmentStatus.HEAVY:
 				return Color.DarkBlue;
-			case EquipmentStatus.CURSED:
+			case EquipmentStatus.STUCK:
 				return Color.DarkGray;
 			case EquipmentStatus.DAMAGED:
 				return Color.DarkMagenta;
@@ -1891,10 +2079,12 @@ namespace Forays{
 		}
 		public static string StatusName(EquipmentStatus status){
 			switch(status){
-			case EquipmentStatus.BURDENSOME: //todo update
-				return "Burdensome";
-			case EquipmentStatus.CURSED:
-				return "Cursed";
+			case EquipmentStatus.HEAVY:
+				return "Heavy";
+			case EquipmentStatus.STUCK:
+				return "Stuck";
+			case EquipmentStatus.MERCIFUL:
+				return "Merciful";
 			case EquipmentStatus.DAMAGED:
 				return "Damaged";
 			case EquipmentStatus.DULLED:
@@ -1911,6 +2101,8 @@ namespace Forays{
 				return "Weak point";
 			case EquipmentStatus.WORN_OUT:
 				return "Worn out";
+			case EquipmentStatus.POISONED:
+				return "Poisoned";
 			default:
 				return "No status";
 			}
@@ -1925,20 +2117,25 @@ namespace Forays{
 			}
 			return result;
 		}
-		public string Description(){
+		public string[] Description(){
 			switch(type){
 			case WeaponType.SWORD:
-				return "Sword -- A powerful 3d6 damage slashing weapon."; //todo update
+				return new string[]{"Sword -- A basic weapon, the sword delivers powerful",
+									"     critical hits that remove half of a foe's maximum health."};
 			case WeaponType.MACE:
-				return "Mace -- A powerful 3d6 damage bashing weapon.";
+				return new string[]{"Mace -- Capable of punching through armor. Critical hits",
+									"              will knock the foe back two spaces."};
 			case WeaponType.DAGGER:
-				return "Dagger -- 2d6 damage. Extra chance for critical hits.";
+				return new string[]{"Dagger -- In darkness, the dagger always hits and is",
+									"     twice as likely to score a critical hit, stunning the foe."};
 			case WeaponType.STAFF:
-				return "Staff -- 1d6 damage. Grants a small bonus to defense.";
+				return new string[]{"Staff -- Attacking an enemy that just moved will swap",
+									"           places. Critical hits will trip the foe."};
 			case WeaponType.BOW:
-				return "Bow -- 3d6 damage at range. Less accurate than melee.";
+				return new string[]{"Bow -- A ranged weapon, less accurate than melee.",
+									"        Critical hits will immobilize the target briefly."};
 			default:
-				return "no weapon";
+				return new string[]{"no weapon","description"};
 			}
 		}
 		public string DescriptionOfEnchantment(){
@@ -1981,7 +2178,7 @@ namespace Forays{
 				return 0;
 			}
 		}
-		public int StealthPenalty(){ //todo
+		public int StealthPenalty(){
 			switch(type){
 			case ArmorType.CHAINMAIL:
 				return 1;
@@ -2008,7 +2205,7 @@ namespace Forays{
 		}
 		public string NameWithEnchantment(){
 			string ench = "";
-			/*switch(enchantment){ todo
+			/*switch(enchantment){
 			case EnchantmentType.ECHOES:
 				ench = " of echoes";
 				break;
@@ -2054,20 +2251,7 @@ namespace Forays{
 			return cs;
 		}
 		public Color EnchantmentColor(){
-			/*switch(enchantment){
-			case EnchantmentType.ECHOES:
-				return Color.Green;
-			case EnchantmentType.FIRE:
-				return Color.Red;
-			case EnchantmentType.FORCE:
-				return Color.Magenta;
-			case EnchantmentType.NULLIFICATION:
-				return Color.Cyan;
-			case EnchantmentType.ICE:
-				return Color.Blue;
-			default:*/
-				return Color.Gray;
-			//}todo
+			return Color.Gray;
 		}
 		public colorstring EquipmentScreenName(){
 			colorstring result = new colorstring(StatsName());
@@ -2079,79 +2263,34 @@ namespace Forays{
 			}
 			return result;
 		}
-		/*public cstr EquipmentScreenName(){
-			cstr cs;
-			cs.bgcolor = Color.Black;
-			cs.color = Color.Gray;
-			cs.s = NameWithEnchantment();
-			cs.s = cs.s[0].ToString().ToUpper() + cs.s.Substring(1); //capitalize
-			cs.color = EnchantmentColor();
-			return cs;
-		}*/
-		public string Description(){
+		public string[] Description(){
 			switch(type){
 			case ArmorType.LEATHER:
-				return "Leather -- Light armor. Provides some basic protection.";
+				return new string[]{"Leather -- +2 Defense. Leather armor is light and quiet",
+									"         but provides only basic protection against attacks."};
 			case ArmorType.CHAINMAIL:
-				return "Chainmail -- Good protection. Noisy and hard to cast in.";
+				return new string[]{"Chainmail -- +5 Defense, -1 Stealth. Chainmail provides",
+									"            good protection but hampers stealth slightly."};
 			case ArmorType.FULL_PLATE:
-				return "Full plate -- The thickest, noisiest, and bulkiest armor.";
+				return new string[]{"Full plate -- +8 Defense, -3 Stealth. Plate armor is noisy",
+									"       and shiny, providing great defense at the cost of stealth."};
 			default:
-				return "no armor";
+				return new string[]{"no armor",""};
 			}
 		}
 		public string DescriptionOfEnchantment(){
-			/*switch(enchantment){ //todo
-			case EnchantmentType.ECHOES:
-				return "echoes";
-			case EnchantmentType.FIRE:
-				return "fire";
-			case EnchantmentType.FORCE:
-				return "force";
-			case EnchantmentType.NULLIFICATION:
-				return "nullification";
-			case EnchantmentType.ICE:
-				return "ice";
-			}*/
 			return "";
 		}
 	}
 	public static class MagicTrinket{
-		public static cstr StatsName(MagicTrinketType type){ //todo remove this, right?
-			cstr cs;
-			cs.bgcolor = Color.Black;
-			cs.color = Color.DarkGreen;
-			switch(type){
-			/*case MagicTrinketType.RING_OF_PROTECTION:
-				cs.s = "Ring (prot)";
-				break;
-			case MagicTrinketType.RING_OF_RESISTANCE:
-				cs.s = "Ring (res)";
-				break;*/
-			case MagicTrinketType.PENDANT_OF_LIFE:
-				cs.s = "Pendant";
-				break;
-			case MagicTrinketType.CLOAK_OF_SAFETY:
-				cs.s = "Cloak";
-				break;
-			default:
-				cs.s = "No item";
-				break;
-			}
-			return cs;
-		}
 		public static string Name(MagicTrinketType type){
 			switch(type){
 			case MagicTrinketType.PENDANT_OF_LIFE:
 				return "pendant of life";
-			/*case MagicTrinketType.RING_OF_PROTECTION:
-				return "ring of protection";
-			case MagicTrinketType.RING_OF_RESISTANCE:
-				return "ring of resistance";*/
 			case MagicTrinketType.CLOAK_OF_SAFETY:
 				return "cloak of safety";
-			case MagicTrinketType.BELT_OF_TOUGHNESS:
-				return "belt of toughness";
+			case MagicTrinketType.BELT_OF_WARDING:
+				return "belt of warding";
 			case MagicTrinketType.BRACERS_OF_ARROW_DEFLECTION:
 				return "bracers of arrow deflection";
 			case MagicTrinketType.CIRCLET_OF_THE_THIRD_EYE:
@@ -2162,22 +2301,20 @@ namespace Forays{
 				return "ring of keen sight";
 			case MagicTrinketType.RING_OF_THE_LETHARGIC_FLAME:
 				return "ring of the lethargic flame";
+			case MagicTrinketType.BOOTS_OF_GRIPPING:
+				return "boots of gripping";
 			default:
 				return "no item";
 			}
 		}
 		public static string[] Description(MagicTrinketType type){
 			switch(type){
-			case MagicTrinketType.PENDANT_OF_LIFE:
-				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but only works once.",""};
-			/*case MagicTrinketType.RING_OF_PROTECTION:
-				return new string[]{"Ring of protection -- Grants a small bonus to","defense.",""};
-			case MagicTrinketType.RING_OF_RESISTANCE:
-				return new string[]{"Ring of resistance -- Grants resistance to cold,","fire, and electricity.",""};*/
+			case MagicTrinketType.PENDANT_OF_LIFE: //note that these are now 2 lines, not 3
+				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but only works once."};
 			case MagicTrinketType.CLOAK_OF_SAFETY:
-				return new string[]{"Cloak of disappearance -- When your health falls,","gives you a chance to escape to safety.",""};
+				return new string[]{"Cloak of disappearance -- When your health falls,","gives you a chance to escape to safety."};
 			default:
-				return new string[]{"no","item","here"};
+				return new string[]{"no item","here"}; //todo
 			}
 		}
 	}

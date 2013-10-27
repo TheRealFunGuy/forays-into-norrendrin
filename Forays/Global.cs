@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using Utilities;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.7.0 ";
+		public const string VERSION = "version 0.X.X ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -264,7 +264,7 @@ namespace Forays{
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):");
-			file.WriteLine("last_target autopickup no_roman_numerals hide_old_messages hide_commands never_display_tips always_reset_tips");
+			file.WriteLine("last_target autopickup top_row_movement hide_old_messages hide_commands never_display_tips always_reset_tips");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");
@@ -346,9 +346,6 @@ namespace Forays{
 					b.Write((int)i.type);
 					b.Write(i.quantity);
 					b.Write(i.ignored);
-				}
-				for(int i=0;i<13;++i){
-					b.Write((int)a.F[i]);
 				}
 				b.Write(a.attrs.d.Count);
 				foreach(AttrType at in a.attrs.d.Keys){
@@ -565,8 +562,9 @@ namespace Forays{
 		public static string PadToMapSize(this string s){
 			return s.PadRight(Global.COLS);
 		}
-		public static colorstring GetColorString(this string s){ return GetColorString(s,Color.Gray); }
-		public static colorstring GetColorString(this string s,Color color){
+		public static colorstring GetColorString(this string s){ return GetColorString(s,Color.Gray,Color.Cyan); }
+		public static colorstring GetColorString(this string s,Color text_color){ return GetColorString(s,text_color,Color.Cyan); }
+		public static colorstring GetColorString(this string s,Color text_color,Color key_color){
 			if(s.Contains("[")){
 				string temp = s;
 				colorstring result = new colorstring();
@@ -574,35 +572,35 @@ namespace Forays{
 					int open = temp.IndexOf('[');
 					int close = temp.IndexOf(']');
 					if(close == -1){
-						result.strings.Add(new cstr(temp,color));
+						result.strings.Add(new cstr(temp,text_color));
 						temp = "";
 					}
 					else{
 						int hyphen = temp.IndexOf('-');
 						if(hyphen != -1 && hyphen > open && hyphen < close){
-							result.strings.Add(new cstr(temp.Substring(0,open+1),color));
+							result.strings.Add(new cstr(temp.Substring(0,open+1),text_color));
 							//result.strings.Add(new cstr(temp.Substring(open+1,(close-open)-1),Color.Cyan));
-							result.strings.Add(new cstr(temp.Substring(open+1,(hyphen-open)-1),Color.Cyan));
-							result.strings.Add(new cstr("-",color));
-							result.strings.Add(new cstr(temp.Substring(hyphen+1,(close-hyphen)-1),Color.Cyan));
-							result.strings.Add(new cstr("]",color));
+							result.strings.Add(new cstr(temp.Substring(open+1,(hyphen-open)-1),key_color));
+							result.strings.Add(new cstr("-",text_color));
+							result.strings.Add(new cstr(temp.Substring(hyphen+1,(close-hyphen)-1),key_color));
+							result.strings.Add(new cstr("]",text_color));
 							temp = temp.Substring(close+1);
 						}
 						else{
-							result.strings.Add(new cstr(temp.Substring(0,open+1),color));
-							result.strings.Add(new cstr(temp.Substring(open+1,(close-open)-1),Color.Cyan));
-							result.strings.Add(new cstr("]",color));
+							result.strings.Add(new cstr(temp.Substring(0,open+1),text_color));
+							result.strings.Add(new cstr(temp.Substring(open+1,(close-open)-1),key_color));
+							result.strings.Add(new cstr("]",text_color));
 							temp = temp.Substring(close+1);
 						}
 					}
 				}
 				if(temp != ""){
-					result.strings.Add(new cstr(temp,color));
+					result.strings.Add(new cstr(temp,text_color));
 				}
 				return result;
 			}
 			else{
-				return new colorstring(s,color);
+				return new colorstring(s,text_color);
 			}
 		}
 		public static List<colorstring> GetColorStrings(this List<string> l){
