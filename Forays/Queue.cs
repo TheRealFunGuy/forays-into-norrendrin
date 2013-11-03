@@ -1273,9 +1273,7 @@ namespace Forays{
 								target.tile().Toggle(target.actor());
 							}
 							target.tile().features.Remove(FeatureType.TROLL_CORPSE);
-							if(R.OneIn(3)){
-								target.actor().attrs[AttrType.WANDERING]++;
-							}
+							target.actor().attrs[AttrType.WANDERING]++;
 						}
 						else{
 							int roll = R.Roll(20);
@@ -1304,9 +1302,10 @@ namespace Forays{
 						}
 					}
 					if(target.tile().Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){ //otherwise, assume it was destroyed by fire
-						int recovered = 3;
-						if(health + recovered > 45 - permanent_damage){ //assumes 45hp
-							recovered = (45 - permanent_damage) - health;
+						int maxhp = Actor.Prototype(ActorType.TROLL_BLOODWITCH).maxhp;
+						int recovered = Actor.Prototype(ActorType.TROLL_BLOODWITCH).attrs[AttrType.REGENERATING];
+						if(health + recovered > maxhp - permanent_damage){
+							recovered = (maxhp - permanent_damage) - health;
 						}
 						health += recovered;
 						if(player.CanSee(target) && player.HasLOS(target)){
@@ -1351,9 +1350,7 @@ namespace Forays{
 								target.tile().Toggle(target.actor());
 							}
 							target.tile().features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
-							if(R.OneIn(3)){
-								target.actor().attrs[AttrType.WANDERING]++;
-							}
+							target.actor().attrs[AttrType.WANDERING]++;
 						}
 						else{
 							int roll = R.Roll(20);

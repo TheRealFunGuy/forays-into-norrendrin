@@ -2464,7 +2464,7 @@ compare this number to 1/2:  if less than 1/2, major.
 			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
 			for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
 				foreach(Actor a in ActorsAtDistance(i)){
-					if(player.CanSee(a)){
+					if(player.CanSee(a) && player.HasLOS(a)){ //todo make sure this works
 						if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOS(a))){
 							interesting_targets.Add(a);
 						}
@@ -2474,17 +2474,15 @@ compare this number to 1/2:  if less than 1/2, major.
 			if(lookmode){
 				for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
 					foreach(Tile t in TilesAtDistance(i)){
-						if(t.Is(TileType.STAIRS,TileType.CHEST,TileType.FIREPIT,TileType.STALAGMITE,TileType.FIRE_GEYSER,TileType.FOG_VENT,
-						        TileType.POISON_GAS_VENT,TileType.POOL_OF_RESTORATION,TileType.BLAST_FUNGUS)
-						|| t.Is(FeatureType.GRENADE,FeatureType.FIRE,FeatureType.TROLL_CORPSE,FeatureType.TROLL_BLOODWITCH_CORPSE,
-						        FeatureType.INACTIVE_TELEPORTAL,FeatureType.POISON_GAS,FeatureType.FOG)
-						|| t.IsShrine() || t.inv != null){ //todo: update this with new terrain & features
+						if(t.Is(TileType.STAIRS,TileType.CHEST,TileType.FIREPIT,TileType.FIRE_GEYSER,TileType.FOG_VENT,TileType.POISON_GAS_VENT,
+						        TileType.POOL_OF_RESTORATION,TileType.BLAST_FUNGUS,TileType.BARREL,TileType.STANDING_TORCH,TileType.POISON_BULB)
+						|| t.Is(FeatureType.GRENADE,FeatureType.FIRE,FeatureType.TROLL_CORPSE,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.BONES,
+						        FeatureType.INACTIVE_TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.TELEPORTAL,FeatureType.POISON_GAS,
+						        FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.SPORES,FeatureType.WEB)
+						|| t.IsShrine() || t.inv != null || t.IsKnownTrap()){ //todo: update this with new terrain & features
 							if(player.CanSee(t)){
 								interesting_targets.Add(t);
 							}
-						}
-						if(t.IsKnownTrap() && player.CanSee(t)){
-							interesting_targets.AddUnique(t);
 						}
 					}
 				}
@@ -2768,36 +2766,73 @@ compare this number to 1/2:  if less than 1/2, major.
 					foreach(Tile t in oldline){ //to prevent the previous target appearing on top of the description box
 						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 					}
-					if(!hide_descriptions && M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c])){
-						bool description_on_right = false;
-						int max_length = 29;
-						if(c - 6 < max_length){
-							max_length = c - 6;
-						}
-						if(max_length < 20){
-							description_on_right = true;
-							max_length = 29;
-						}
-						List<colorstring> desc = Actor.MonsterDescriptionBox(M.actor[r,c].type,max_length);
-						if(description_on_right){
-							int start_c = COLS - desc[0].Length();
-							description_shown_last_time = true;
-							desc_row = 0;
-							desc_col = start_c;
-							desc_height = desc.Count;
-							desc_width = desc[0].Length();
-							for(int i=0;i<desc.Count;++i){
-								Screen.WriteMapString(i,start_c,desc[i]);
+					if(!hide_descriptions){
+						if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c])){
+							bool description_on_right = false;
+							int max_length = 29;
+							if(c - 6 < max_length){
+								max_length = c - 6;
+							}
+							if(max_length < 20){
+								description_on_right = true;
+								max_length = 29;
+							}
+							List<colorstring> desc = Actor.MonsterDescriptionBox(M.actor[r,c].type,max_length);
+							if(description_on_right){
+								int start_c = COLS - desc[0].Length();
+								description_shown_last_time = true;
+								desc_row = 0;
+								desc_col = start_c;
+								desc_height = desc.Count;
+								desc_width = desc[0].Length();
+								for(int i=0;i<desc.Count;++i){
+									Screen.WriteMapString(i,start_c,desc[i]);
+								}
+							}
+							else{
+								description_shown_last_time = true;
+								desc_row = 0;
+								desc_col = 0;
+								desc_height = desc.Count;
+								desc_width = desc[0].Length();
+								for(int i=0;i<desc.Count;++i){
+									Screen.WriteMapString(i,0,desc[i]);
+								}
 							}
 						}
 						else{
-							description_shown_last_time = true;
-							desc_row = 0;
-							desc_col = 0;
-							desc_height = desc.Count;
-							desc_width = desc[0].Length();
-							for(int i=0;i<desc.Count;++i){
-								Screen.WriteMapString(i,0,desc[i]);
+							if(M.tile[r,c].inv != null && player.CanSee(r,c)){
+								bool description_on_right = false;
+								int max_length = 29;
+								if(c - 6 < max_length){
+									max_length = c - 6;
+								}
+								if(max_length < 20){
+									description_on_right = true;
+									max_length = 29;
+								}
+								List<colorstring> desc = Actor.ItemDescriptionBox(M.tile[r,c].inv,true,max_length);
+								if(description_on_right){
+									int start_c = COLS - desc[0].Length();
+									description_shown_last_time = true;
+									desc_row = 0;
+									desc_col = start_c;
+									desc_height = desc.Count;
+									desc_width = desc[0].Length();
+									for(int i=0;i<desc.Count;++i){
+										Screen.WriteMapString(i,start_c,desc[i]);
+									}
+								}
+								else{
+									description_shown_last_time = true;
+									desc_row = 0;
+									desc_col = 0;
+									desc_height = desc.Count;
+									desc_width = desc[0].Length();
+									for(int i=0;i<desc.Count;++i){
+										Screen.WriteMapString(i,0,desc[i]);
+									}
+								}
 							}
 						}
 					}

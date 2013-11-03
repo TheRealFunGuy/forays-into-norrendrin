@@ -495,7 +495,7 @@ namespace Forays{
 			case ConsumableType.DETONATION:
 			case ConsumableType.TELEPORTAL:
 			case ConsumableType.PAIN:
-				return 2;
+				return 2; //todo: check rarities again
 			case ConsumableType.BANDAGES:
 			case ConsumableType.FLINT_AND_STEEL:
 			case ConsumableType.BLAST_FUNGUS:
@@ -1490,7 +1490,7 @@ namespace Forays{
 						if(t.DistanceFrom(t2) > 5){
 							break;
 						}
-						if(t2.Is(TileType.WALL,TileType.WAX_WALL)){
+						if(t2.Is(TileType.WALL,TileType.WAX_WALL,TileType.STALAGMITE)){
 							Screen.WriteMapChar(t2.row,t2.col,t2.symbol,Color.RandomBreached);
 							if(t.DistanceFrom(t2) > max_dist){
 								max_dist = t.DistanceFrom(t2);
@@ -1500,14 +1500,19 @@ namespace Forays{
 					}
 					List<Tile> area = new List<Tile>();
 					foreach(Tile tile in t.TilesWithinDistance(5)){
-						if(tile.Is(TileType.WALL,TileType.WAX_WALL) && tile.row > 0 && tile.col > 0 && tile.row < Global.ROWS-1 && tile.col < Global.COLS-1){
+						if(tile.Is(TileType.WALL,TileType.WAX_WALL,TileType.STALAGMITE) && tile.row > 0 && tile.col > 0 && tile.row < Global.ROWS-1 && tile.col < Global.COLS-1){
 							bool wax = tile.Is(TileType.WAX_WALL);
-							tile.Toggle(null,TileType.BREACHED_WALL);
+							if(tile.Is(TileType.STALAGMITE)){
+								tile.Toggle(null,TileType.FLOOR);
+							}
+							else{
+								tile.Toggle(null,TileType.BREACHED_WALL);
+								area.Add(tile);
+							}
 							tile.solid_rock = false;
 							if(wax){
 								tile.toggles_into = TileType.WAX_WALL;
 							}
-							area.Add(tile);
 						}
 					}
 					if(area.Count > 0){
@@ -1867,7 +1872,6 @@ namespace Forays{
 					}
 				}
 				switch(type){
-				default:
 				case ConsumableType.BANDAGES:
 					return "Applying a bandage will slowly restore 10 HP.";
 				case ConsumableType.BLAST_FUNGUS:
@@ -1877,59 +1881,59 @@ namespace Forays{
 				case ConsumableType.BREACHING:
 					return "This orb will temporarily lower nearby walls, which will slowly return to their original state.";
 				case ConsumableType.BRUTISH_STRENGTH:
-					return "Drinking this potion grants the strength of a juggernaut. During this short time, you can crush several types of dungeon features. Additionally, you'll still move after making an attack, which will deal maximum damage and knock foes back 5 spaces.";
+					return "Drinking this potion grants the strength of a juggernaut. For a short time you'll be able to smash through various dungeon features. Additionally, you'll still move after making an attack, which will deal maximum damage and knock foes back 5 spaces.";
 				case ConsumableType.CALLING:
-					return "";
+					return "This scroll's magic will find the nearest foe and transport it next to you. Immobile creatures are immune to this effect.";
 				case ConsumableType.CLOAKING:
-					return "";
+					return "This potion will cause you to fade to invisibility while in the shadows.";
 				case ConsumableType.DARKNESS:
-					return "";
+					return "This scroll covers the dungeon in a blanket of darkness that suppresses all light.";
 				case ConsumableType.DETECT_MONSTERS:
-					return "";
+					return "This scroll reveals the location of foes on the current dungeon level for a while.";
 				case ConsumableType.DETONATION:
-					return "";
+					return "On impact, this orb will explode violently, inflicting great damage on its surroundings.";
 				case ConsumableType.ENCHANTMENT:
-					return "";
+					return "This potent scroll will impart a permanent magical effect on the weapon you're holding.";
 				case ConsumableType.FLAMES:
-					return "";
+					return "Leaping flames will pour from this orb when it shatters.";
 				case ConsumableType.FLINT_AND_STEEL:
 					return "Used for creating sparks, enough to ignite flammable objects (but not enough to damage a foe).";
 				case ConsumableType.FOG:
-					return "";
+					return "Thick fog will expand from this orb when it breaks, blocking sight and reducing accuracy.";
 				case ConsumableType.FREEZING:
-					return "";
+					return "Breaking this orb will encase nearby entities in ice.";
 				case ConsumableType.HEALING:
-					return "";
+					return "This invaluable elixir will instantly restore you to full health.";
 				case ConsumableType.MAGIC_MAP:
-					return "";
+					return "This scroll will show you the layout of the current level, including secret doors and traps.";
 				case ConsumableType.PAIN:
-					return "";
+					return "Anything caught in this orb's area of effect will become vulnerable to extra damage.";
 				case ConsumableType.PASSAGE:
-					return "";
+					return "This scroll will move you to the other side of an adjacent wall (but not diagonally).";
 				case ConsumableType.REGENERATION:
-					return "";
+					return "The potent healing magic in this potion will steadily grant you health for 100 turns.";
 				case ConsumableType.REPAIR:
-					return "";
+					return "This scroll's power will strip negative effects from your weapons & armor, and will remove any slime or oil covering you.";
 				case ConsumableType.ROOTS:
-					return "";
+					return "Drinking this potion will cause thick roots to grow from you, holding you tightly to the ground and providing defense against attacks.";
 				case ConsumableType.SHIELDING:
-					return "";
+					return "This orb will create a zone of protection, shielding entities within for several turns.";
 				case ConsumableType.SILENCE:
-					return "";
+					return "This potion will cause your actions to become entirely soundless. You'll attract less attention, but you'll be unable to speak words of magic."; //meh
 				case ConsumableType.STONEFORM:
-					return "";
+					return "This potion will change you temporarily to unliving stone. You'll no longer be able to catch fire, and no toxin or potion will affect you.";
 				case ConsumableType.SUNLIGHT:
-					return "";
+					return "This scroll fills the level with sunlight, illuminating every corner of the dungeon.";
 				case ConsumableType.TELEPORTAL:
-					return "";
+					return "Releasing this orb's energy will create an unstable rift. Creatures stepping into the rift will be transported elsewhere in the dungeon.";
 				case ConsumableType.TIME:
-					return "";
+					return "Reading this scroll will halt the flow of time for a single turn, allowing you to take an extra action.";
 				case ConsumableType.TRAP_CLEARING:
-					return "";
+					return "This scroll will cause all traps within 12 spaces to be triggered simultaneously.";
 				case ConsumableType.VAMPIRISM:
-					return "";
+					return "Consuming this potion will grant many of the powers of a true vampire. You'll fly and drain life from living enemies, but light will leave you vulnerable.";
 				case ConsumableType.VIGOR:
-					return "";
+					return "This potion will relieve your exhaustion and temporarily double your movement speed.";
 				}
 			}
 			return "Unknown item.";
@@ -2171,9 +2175,9 @@ namespace Forays{
 			case ArmorType.LEATHER:
 				return 2;
 			case ArmorType.CHAINMAIL:
-				return 5;
+				return 6;
 			case ArmorType.FULL_PLATE:
-				return 8;
+				return 10;
 			default:
 				return 0;
 			}
@@ -2269,10 +2273,10 @@ namespace Forays{
 				return new string[]{"Leather -- +2 Defense. Leather armor is light and quiet",
 									"         but provides only basic protection against attacks."};
 			case ArmorType.CHAINMAIL:
-				return new string[]{"Chainmail -- +5 Defense, -1 Stealth. Chainmail provides",
+				return new string[]{"Chainmail -- +6 Defense, -1 Stealth. Chainmail provides",
 									"            good protection but hampers stealth slightly."};
 			case ArmorType.FULL_PLATE:
-				return new string[]{"Full plate -- +8 Defense, -3 Stealth. Plate armor is noisy",
+				return new string[]{"Full plate -- +10 Defense, -3 Stealth. Plate armor is noisy",
 									"       and shiny, providing great defense at the cost of stealth."};
 			default:
 				return new string[]{"no armor",""};

@@ -28,7 +28,7 @@ namespace Forays{
 				return 3;
 			case SpellType.PASSAGE:
 			case SpellType.AMNESIA:
-			case SpellType.CORRODE:
+			case SpellType.PLACEHOLDER:
 			case SpellType.SHADOWSIGHT:
 				return 4;
 			case SpellType.BLIZZARD:
@@ -80,8 +80,8 @@ namespace Forays{
 				return "Collapse";
 			case SpellType.TELEKINESIS:
 				return "Telekinesis";
-			case SpellType.CORRODE:
-				return "Corrode";
+			case SpellType.PLACEHOLDER:
+				return "Placeholder";
 			default:
 				return "unknown spell";
 			}
@@ -97,7 +97,7 @@ namespace Forays{
 			case SpellType.SCORCH:
 			case SpellType.MERCURIAL_SPHERE:
 			case SpellType.RADIANCE:
-			case SpellType.CORRODE:
+			case SpellType.PLACEHOLDER:
 				return true;
 			}
 			return false;
@@ -142,8 +142,8 @@ namespace Forays{
 				return new colorstring("Throw your target forcefully         ",Color.Gray);
 			case SpellType.COLLAPSE:
 				return new colorstring("Radius 1, breaks walls & drops rubble",Color.Gray);
-			case SpellType.CORRODE:
-				return new colorstring("4d6 damage, can damage metal armor   ",Color.Gray);
+			case SpellType.PLACEHOLDER:
+				return new colorstring("Unknown spell                        ",Color.Gray);
 			default:
 				return new colorstring("  Unknown.                           ",Color.Gray);
 			}
@@ -164,8 +164,8 @@ namespace Forays{
 				return new colorstring("5d6",Color.Yellow," damage, inflicts vulnerability   ",Color.Gray);
 			case SpellType.BLIZZARD:
 				return new colorstring("Radius 5 burst, ",Color.Gray,"6d6",Color.Yellow," and slows enemies",Color.Gray);
-			case SpellType.CORRODE:
-				return new colorstring("5d6",Color.Yellow," damage, can damage metal armor   ",Color.Gray);
+			//case SpellType.PLACEHOLDER:
+			//	return new colorstring("5d6",Color.Yellow," damage, can damage metal armor   ",Color.Gray);
 			default:
 				return Description(spell);
 			}
