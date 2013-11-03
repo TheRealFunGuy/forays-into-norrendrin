@@ -41,7 +41,7 @@ namespace Forays{
 		public TileType? toggles_into;
 		public Item inv{get;set;}
 		public List<FeatureType> features = new List<FeatureType>();
-		private List<FeatureType> feature_priority = new List<FeatureType>{FeatureType.GRENADE,FeatureType.FIRE,FeatureType.SPORES,FeatureType.POISON_GAS,FeatureType.PIXIE_DUST,FeatureType.TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.FOG,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.TROLL_CORPSE,FeatureType.BONES,FeatureType.WEB,FeatureType.INACTIVE_TELEPORTAL,FeatureType.OIL,FeatureType.SLIME,FeatureType.FORASECT_EGG};
+		private List<FeatureType> feature_priority = new List<FeatureType>{FeatureType.GRENADE,FeatureType.FIRE,FeatureType.SPORES,FeatureType.POISON_GAS,FeatureType.PIXIE_DUST,FeatureType.TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.FOG,FeatureType.WEB,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.TROLL_CORPSE,FeatureType.BONES,FeatureType.INACTIVE_TELEPORTAL,FeatureType.OIL,FeatureType.SLIME,FeatureType.FORASECT_EGG};
 		
 		private static Dictionary<TileType,Tile> proto= new Dictionary<TileType, Tile>();
 		public static Tile Prototype(TileType type){ return proto[type]; }
@@ -88,7 +88,7 @@ namespace Forays{
 			proto[TileType.POOL_OF_RESTORATION].revealed_by_light = true;
 			Define(TileType.FOG_VENT,"fog vent",'~',Color.Gray,true,false,null);
 			Prototype(TileType.FOG_VENT).revealed_by_light = true;
-			Define(TileType.POISON_GAS_VENT,"gas vent",'~',Color.DarkGreen,true,false,null);
+			Define(TileType.POISON_GAS_VENT,"poison gas vent",'~',Color.DarkGreen,true,false,null);
 			Prototype(TileType.POISON_GAS_VENT).revealed_by_light = true;
 			Define(TileType.STONE_SLAB,"stone slab",'#',Color.White,false,true,null);
 			proto[TileType.STONE_SLAB].revealed_by_light = true;
@@ -126,7 +126,7 @@ namespace Forays{
 			Prototype(TileType.STANDING_TORCH).revealed_by_light = true;
 			Define(TileType.VINE,"vine",';',Color.DarkGreen,true,false,null);
 			Prototype(TileType.VINE).revealed_by_light = true;
-			Define(TileType.POISON_BULB,"poison bulb",'*',Color.Green,false,false,null);
+			Define(TileType.POISON_BULB,"poison bulb",'%',Color.Green,false,false,null);
 			Prototype(TileType.POISON_BULB).revealed_by_light = true;
 			Define(TileType.WAX_WALL,"wax wall",'#',Color.DarkYellow,false,true,null);
 			Prototype(TileType.WAX_WALL).revealed_by_light = true;
@@ -247,7 +247,7 @@ namespace Forays{
 				return name;
 			}
 			else{
-				if(IsTrap()){
+				if(IsKnownTrap()){
 					return "trap";
 				}
 				if(IsShrine() || type == TileType.RUINED_SHRINE){
@@ -264,7 +264,7 @@ namespace Forays{
 				return a_name;
 			}
 			else{
-				if(IsTrap()){
+				if(IsKnownTrap()){
 					return "a trap";
 				}
 				if(IsShrine() || type == TileType.RUINED_SHRINE){
@@ -281,7 +281,7 @@ namespace Forays{
 				return the_name;
 			}
 			else{
-				if(IsTrap()){
+				if(IsKnownTrap()){
 					return "the trap";
 				}
 				if(IsShrine() || type == TileType.RUINED_SHRINE){
@@ -372,8 +372,11 @@ namespace Forays{
 		}
 		public bool GetItem(Item item){
 			if(inv == null && !Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
-				if(IsBurning() && (item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES)){
-					B.Add(item.TheName(true) + " burns up! ",this);
+				if((IsBurning() || Is(TileType.FIREPIT)) && (item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES)){
+					B.Add(item.TheName(true) + " burns up! ",this); //todo: slime/poison gas check?
+					if(Is(TileType.FIREPIT)){
+						AddFeature(FeatureType.FIRE);
+					}
 				}
 				else{
 					item.row = row;
@@ -393,8 +396,11 @@ namespace Forays{
 				else{
 					foreach(Tile t in M.ReachableTilesByDistance(row,col,false,TileType.DOOR_C,TileType.RUBBLE,TileType.STONE_SLAB)){
 						if(t.passable && t.inv == null && !t.Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
-							if(t.IsBurning() && item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES){
-								B.Add(item.TheName(true) + " burns up! ",t);
+							if((t.IsBurning() || t.Is(TileType.FIREPIT)) && item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES){
+								B.Add(item.TheName(true) + " burns up! ",t); //todo: slime/poison gas check?
+								if(t.Is(TileType.FIREPIT)){
+									t.AddFeature(FeatureType.FIRE);
+								}
 							}
 							else{
 								item.row = t.row;
@@ -443,7 +449,8 @@ namespace Forays{
 				if(TileInDirection(direction_of_motion).passable){
 					B.Add("The torch tips over. ",this);
 					TurnToFloor();
-					TileInDirection(direction_of_motion).ApplyEffect(DamageType.FIRE);
+					TileInDirection(direction_of_motion).AddFeature(FeatureType.FIRE);
+					//TileInDirection(direction_of_motion).ApplyEffect(DamageType.FIRE);
 				}
 				break;
 			case TileType.POISON_BULB:
@@ -802,11 +809,11 @@ namespace Forays{
 				UpdateRadius(light_radius,3);
 				if(actor_here){
 					if(player.CanSee(actor())){
-						B.Add("Electricity arcs to " + actor().the_name + ". ",this);
+						B.Add("Electricity zaps " + actor().the_name + ". ",this);
 					}
 					if(actor().TakeDamage(DamageType.ELECTRIC,DamageClass.PHYSICAL,R.Roll(3,6),null,"a shock trap")){
 						B.Add(actor().YouAre() + " stunned! ",actor());
-						actor().RefreshDuration(AttrType.STUNNED,actor().DurationOfMagicalEffect(R.Roll(10)+7)*100,(actor().YouAre() + " no longer stunned. "),actor());
+						actor().RefreshDuration(AttrType.STUNNED,actor().DurationOfMagicalEffect(R.Roll(6)+7)*100,(actor().YouAre() + " no longer stunned. "),actor());
 					}
 				}
 				else{
@@ -1006,7 +1013,7 @@ namespace Forays{
 				if(actor_here){
 					B.Add("Scalding oil pours over " + actor().TheName(true) + "! ",this);
 					if(actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(3,6),null,"a scalding oil trap")){
-						if(!actor().IsBurning() && !IsBurning()){
+						if(!actor().HasAttr(AttrType.BURNING,AttrType.SLIMED) && !IsBurning()){
 							actor().attrs[AttrType.OIL_COVERED] = 1;
 							B.Add(actor().YouAre() + " covered in oil. ",actor());
 						}
@@ -1069,6 +1076,7 @@ namespace Forays{
 					}
 					Item i = Item.Create(Item.RandomItem(),player);
 					if(i != null){
+						i.revealed_by_light = true;
 						B.Add("You find " + Item.Prototype(i.type).AName() + ". ");
 						if(no_room){
 							B.Add("Your pack is too full to pick it up. ");
@@ -1154,6 +1162,7 @@ namespace Forays{
 			case TileType.ICE_TRAP:
 			case TileType.PHANTOM_TRAP:
 			case TileType.POISON_GAS_TRAP:
+			case TileType.SCALDING_OIL_TRAP:
 				return true;
 			default:
 				return false;
@@ -1288,8 +1297,17 @@ namespace Forays{
 						foreach(Tile t in current.TilesAtDistance(1)){
 							if(t.passable){
 								open.Add(t);
+								if(!t.Is(f)){
+									open.Add(t); //3x as likely if it can expand there
+									open.Add(t);
+								}
 							}
 						}
+						/*foreach(int dir in U.FourDirections){
+							if(current.TileInDirection(dir).passable){
+								open.Add(current.TileInDirection(dir));
+							}
+						}*/
 						if(open.Count > 0){
 							Tile possible = open.Random();
 							if(!possible.Is(f)){
@@ -1495,7 +1513,7 @@ namespace Forays{
 					Toggle(null);
 				}
 				if(IsTrap()){
-					TriggerTrap();
+					TriggerTrap(); //?
 				}
 				if(Is(TileType.RUBBLE)){
 					Toggle(null);

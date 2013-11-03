@@ -1,6 +1,5 @@
 
 things to do soon but not yet:
--redo gas placement algorithm to be more regular
 -redo vents so they pour out gas for a few turns at a time
 -rework Select with that property thing, like Select.NoBorder.NoCancel.etc
 -consider displaying danger differently once you've already been spotted.
@@ -19,30 +18,39 @@ things to do soon but not yet:
 -either enable dart frog to poison all weapons, or replace it with something that
 	has poisonous blood
 -consider letting small monsters go through cracked walls (if those walls border floors)
--add X-to-travel support to lookmode
--remove poison gas traps?
+-add X-to-travel support to lookmode (check for path after GetTarget)
 -consider figuring out a way to not have dwellers blinded by fungus. check for light_value?
 -option for wall sliding?
+-option for 'safe mode' that prevents 'y,y' for prompts and ignores key repeat? (is that part even possible?)
 -check Print(true) calls - switch them to PrintAll(). not sure it matters.
 -more territorial monsters
 -magic trinkets on the character screen?
--slug spitting slime - should it really deal damage?
--explosions destroy all items, plus piles of bones. (what about skeletons themselves?)
+-explosions destroy all items, plus piles of bones. (what about skeletons themselves?) (they should also destroy webs, yeah?)
 -"The runic transcendent casts mercurial sphere. The dire rat dies.
 The sphere bounces between the dire rat, the runic transcendent, a" (notice that this is
 only 2 lines and there's plenty of room. fix this.)
 -ballistas in fortresses (and other unique features in levels)
+-blast fungus into water or slime?
+-feature that blasts Vulnerable nearby, to make fighting deadly
+-make wolves not snarl at you until you get close (until their target is set)
+-caltrops trap (once AI can consider them a lesser threat than, say, fire)
+-throwing items into webs (would orbs fail to break?)
+-remind player about resting in every equipment damage tutorial tip
+-place player far away from the stairs (and also from hazards)
+-ice should block most effects, and be treated as a solid tile for some effects. ice traps can create ice anyway, which works like a wall.
+-on death, display the entire map properly. clear burning, frozen, and blind.
 
 "you can no longer see this %item%" might be a problem - if I print its name, it reveals that it's still there. If I ignore it, you can't travel to it. If I don't want to reveal that it's still there, I have to remember it somehow.
 
-
-
-arrows need to consider armor
-
+arrows need to consider armor (and fog)
+so, it needs to use the same calculation as melee, and figuring out whether it missed because of fog, armor, tumbling, or whatever.
+(what about fog? rather than fog, I think it should be a penalty based on whether you can see them.)
 
 
 
 things to do now:
+
+
 
 bump up difficulty with more damage to equipment, more danger, more puzzle enemies.
 
@@ -57,11 +65,22 @@ bump up difficulty with more damage to equipment, more danger, more puzzle enemi
  9: cryolich pyren BLANK sentinel worm lasher vampire
 10: warmage necro webstrider assassin avenger behemoth warmachine
 
+...so, what needs to be replaced? ascetic probably needs another ability, and either it or the pixie could be replaced. cryolich is going. still have [REDACTED] to rework or replace. (and those last 2 are both level 9...)
+
+okay, spell disruption will become silence, and the ascetic can extend his vow of silence to others. (MakeNoise will check nearby actors for silence auras, as will scroll reading and casting)
+
+
+
+
+
 More equipment damage. More reason to use items.
 
-make acid take a few turns to take effect, so you can still fight for a few turns (while it deals damage).
 
-...make corrode work on enemies, of course, by giving them proper armor.
+
+
+
+
+rust? i don't want to make water something to avoid, but maybe only when knocked in? would it affect chainmail or just plate? (it would make plate have a chance to squeak loudly)
 
 
 
@@ -70,37 +89,14 @@ wall spears-spears come out of nearby walls - what defines nearby?
 
 
 crypt levels seem to be disconnected more often than most 
+-if anything is disconnected right now, the bug is in RemoveUnconnected() itself.
 
 
 
-acid for the missing spell? wears out, then damages armor? metal only? what enemies have metal?
-
-rust? i don't want to make water something to avoid, but maybe only when knocked in? would it affect chainmail or just plate? (it would make plate have a chance to squeak loudly)
-
-
-
-
+-cracked walls as a feature or something
 
 -to find more messages to fix, just turn on detection and sit for a while
--let TK work on corpses, grenades(make them explode immediately instead of being
-	placed again), maybe bones, webs, eggs.
--and let TK throw barrels, torches, rubble, and cracked walls for damage + effects
-rubble: 3d6, breaks on first impact, otherwise acts like a corpse
-cracked wall: same as rubble
-barrel: same as rubble but spreads oil to all adjacent tiles, plus maybe more.
-torch: same as rubble but applies fire to the struck tile
-bulb: bursts instantly, no damage or throwing.
-grenade: no impact damage, but it explodes instantly, dealing 3d6 anyway.
-troll(+) corpse: like a normal corpse
-bones: not sure this should work...
-web: destroys web, no damage or throwing.
-door: open or close, i guess
-statue: same as rubble
 
-allow '5' targeting for TK, which deals 3d6 and 'trips'
-(this should be a 'lift and slam', right, which means that all these things break as usual, right? okay.)
-
--for travel mode, traps should probably be given steep but not infinite costs
 
 if a monster is functional, don't mess with it right now, unless it's ridiculous to the point of brokenness. (including frostlings(rework), cryoliches(rework), hulk(check damage on hit vs. on slam), battlemage(just those 2 spells?), kobold(poison ticks for Q5), cultist(consider burning forever), machine of war (it does basically what it should), mud elemental(resist weapons), 
 
@@ -248,7 +244,8 @@ vision benefits of america: 1 800 432 4966
 10: warmage necro webstrider assassin avenger behemoth warmachine
 
 
-nonliving things that could come from sliding wall traps: spore pod, mechknight, golem, behemoth, war machine.
+
+
 
 
 
@@ -257,8 +254,7 @@ nonliving things that could come from sliding wall traps: spore pod, mechknight,
 -realign descriptions for enchantments and magic items?
 -add reminder to use shift if player presses '.' on stairs
 -redo endgame
--add more possibilities to sliding wall traps. probably check dlevel, too, to scale properly.
-	-chests, for sure. rare, but possible. (you shouldn't be able to pick up and reset sliding wall traps, though) (wait, why not? what's the benefit?)
+-low chance to find a chest in a sliding wall trap?
 -lit rooms, finally? <--currently implemented but they might need work
 -add a lot more combat info to monster description boxes: speed, damage, "Melee effect:" or "On hit:", "Critical effect:", "Abilities:".
 -now that there's so much room, add target health to sidebar. (but "corpsetower behemoth" doesn't fit! maybe use its symbol?)
@@ -287,12 +283,11 @@ nonliving things that could come from sliding wall traps: spore pod, mechknight,
 -let cloud e. and any other erratically moving monster also do so while wandering.
 -perhaps a bigger penalty than -1 for each fork in the road when corridor-seeking?
 -what if dim vision just automatically returned false for cansee checks at range 2+?
--consider option to change out-of-fov color
 -w5 probably shouldn't go forever because that makes you consume another keystroke. go back to ~20 turns.
 -IMMOBILE doesn't prevent teleportals yet. also check other forms of teleport.
 -check all instances of someTile.Add(FeatureType.SomeFeature); replace with AddFeature.
 -bug: "The grenade explodes! A noxious worm bursts through the wall! [more" <--the cursor was of course on the next row down, and the 'e' remained on the screen.
--make item and terrain descriptions appear in lookmode
+-make terrain descriptions appear in lookmode
 -there's a double redraw somewhere triggered just by walking. try it with brush + fire.
 -for territorial monsters, why not change their "notices" message, then have them print
 	their 'aggressive' message the first time ActiveAI is called?
@@ -332,14 +327,15 @@ dim vision traps might need to go. they suck vs monsters and sometimes the playe
 ARMOR: add several things that can affect your armor (some could even be good), like Infested, Rusted, Red-hot, Slimed, Blurred, Glowing, 
 
 Give the player a "vulnerable" or "takes more damage" status for 1 turn when switching armor, so it's risky to do when something is actually hitting you.
+ -actually, it should be the same as having damaged armor for that turn - you get no defense from it, and get the extra crit chance.
+
+
 Maybe heavy armor should give a penalty to dodging spell-like (elemental) ranged attacks? -that should do it
 
 full plate (in addition to its stealth penalty) is shiny and makes noise when you do anything but stand still - volume 3, same as gravel.
 
 
 MONSTERS:
-wargs will get a howl. what will it do? perhaps they'll split up. more likely it'll be used when some of them can't reach you, and increase crit% for a turn.
-
 shadow(veil) could gain a message when it steps from visible light to visible darkness: "fades from view as it steps into the shadows" - cooldown on this msg?
 
 ADDITIONS:
@@ -350,8 +346,6 @@ several idols/totems/whatever that spawn in a group, with LOS and LOE to each ot
 
 more traps that, like the sliding wall trap, depend on the shape of their surroundings - this one would cause spikes to appear from the nearby walls for a few turns. Could be useless, could be awful if you're in a corridor.
 
-scalding oil trap
-
 immunity to fire should be separated from immunity to burning, so I can implement permanently burning monsters.
 
 elemental stone terrain features? lightning, ice, fire? hit them to activate.
@@ -359,8 +353,6 @@ elemental stone terrain features? lightning, ice, fire? hit them to activate.
 scroll of reality shift - generates a new level at the same depth, taking used shrines into account.
 
 
-
-add boots of gripping that only prevent slipping (not sliding).
 
 
 remember to make the player vulnerable (to damage or to crits?) for a turn when switching armor.
@@ -397,7 +389,6 @@ warmachine - perhaps a siege engine run amok, this clattering clanking clicking 
 
 
 descriptions that might kinda suck:
-goblin - 
 giant bat - 
 lone wolf - 
 skeleton - 
@@ -421,6 +412,8 @@ assassin -
 
 split skin of wounds 
 
+
+goblins are stunted and primitive scavengers, a frequent nuisance to the civilized races.
 
 			case ActorType.GOBLIN:
 				return "The goblin is a small ugly humanoid, often found inhabiting the upper reaches of any cave, chamber, or tunnel it can find.";
@@ -561,10 +554,6 @@ descriptions that are cool:
 
 
 
-warg: perhaps they could split up a bit more, and howl to summon the
-  others. it might even have other effects - a warg that can see the
-  player but can't reach might howl to increase the deadliness of any
-  wargs that DO attack the player on the next turn.
 assassin: better AI. another ability? or is it not needed? poison?
 mknight: rename to clockwork knight? No, but maybe 'mechanized knight' or 'something automaton' or 'somethingforge knight'
 
@@ -847,7 +836,7 @@ stack trace printed to file on fatal exception?
 
 check every new class member and make sure it gets cleared between games if needed.
 
-
+update roguebasin entry: remove coffeebreak designation.
 
 -write cave corridor & twisty cave article for RB. also possibly dijkstra maps part 2 with screenshots.
 

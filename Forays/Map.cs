@@ -212,7 +212,7 @@ namespace Forays{
 				}
 			}
 		}
-		public void UpdateSafetyMap2(params PhysicalObject[] sources){ //todo: remove one or the other
+		public void UpdateSafetyMap(params PhysicalObject[] sources){
 			List<cell> sourcelist = new List<cell>();
 			foreach(PhysicalObject o in sources){
 				sourcelist.Add(new cell(o.row,o.col,0));
@@ -252,99 +252,6 @@ namespace Forays{
 				}
 			}
 			safetymap = a;
-		}
-		public void UpdateSafetyMap(params PhysicalObject[] sources){
-			PriorityQueue<cell> frontier = new PriorityQueue<cell>(c => -c.value);
-			for(int i=0;i<Global.ROWS;++i){
-				for(int j=0;j<Global.COLS;++j){
-					if(tile[i,j].Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.STATUE)){
-						safetymap[i,j] = -9999; //wall or other blocking object, including stationary monsters
-					}
-					else{
-						safetymap[i,j] = 9999; //otherwise, cells start at a very high number
-					}
-				}
-			}
-			foreach(PhysicalObject o in sources){
-				safetymap[o.row,o.col] = 0;
-				frontier.Add(new cell(o.row,o.col,0));
-			}
-			while(frontier.list.Count > 0){
-				cell c = frontier.Pop();
-				for(int s=-1;s<=1;++s){
-					for(int t=-1;t<=1;++t){
-						if(BoundsCheck(c.row+s,c.col+t)){
-							int cost = 10;
-							if(actor[c.row+s,c.col+t] != null){
-								cost = 20 + (10 * actor[c.row+s,c.col+t].attrs[AttrType.TURNS_HERE]);
-							}
-							else{
-								if(tile[c.row+s,c.col+t].Is(TileType.DOOR_C,TileType.RUBBLE)){
-									cost = 20;
-								}
-							}
-							if(safetymap[c.row+s,c.col+t] > c.value+cost){
-								safetymap[c.row+s,c.col+t] = c.value+cost;
-								frontier.Add(new cell(c.row+s,c.col+t,c.value+cost));
-							}
-						}
-					}
-				}
-			}
-			for(int i=0;i<Global.ROWS;++i){
-				for(int j=0;j<Global.COLS;++j){
-					if(safetymap[i,j] == 9999){
-						safetymap[i,j] = -9999; //treat any unreachable areas as walls
-					}
-					if(safetymap[i,j] != -9999){
-						safetymap[i,j] = -(safetymap[i,j]) * 5;
-					}
-				}
-			}
-			foreach(PhysicalObject o in sources){
-				safetymap[o.row,o.col] = -9999; //now the player (or other sources) become blocking
-				//frontier.Add(new cell(o.row,o.col,0));
-			}
-			for(int i=1;i<Global.ROWS-1;++i){
-				for(int j=1;j<Global.COLS-1;++j){
-					if(safetymap[i,j] != -9999){
-						int v = safetymap[i,j];
-						bool good = true;
-						for(int s=-1;s<=1 && good;++s){
-							for(int t=-1;t<=1 && good;++t){
-								if(safetymap[i+s,j+t] < v && safetymap[i+s,j+t] != -9999){
-									good = false;
-								}
-							}
-						}
-						if(good){
-							frontier.Add(new cell(i,j,v));
-						}
-					}
-				}
-			}
-			while(frontier.list.Count > 0){
-				cell c = frontier.Pop();
-				for(int s=-1;s<=1;++s){
-					for(int t=-1;t<=1;++t){
-						if(BoundsCheck(c.row+s,c.col+t)){
-							int cost = 10;
-							if(actor[c.row+s,c.col+t] != null){
-								cost = 20 + (10 * actor[c.row+s,c.col+t].attrs[AttrType.TURNS_HERE]);
-							}
-							else{
-								if(tile[c.row+s,c.col+t].Is(TileType.DOOR_C,TileType.RUBBLE)){
-									cost = 20;
-								}
-							}
-							if(safetymap[c.row+s,c.col+t] > c.value+cost){
-								safetymap[c.row+s,c.col+t] = c.value+cost;
-								frontier.Add(new cell(c.row+s,c.col+t,c.value+cost));
-							}
-						}
-					}
-				}
-			}
 		}
 		public delegate bool BooleanLocationDelegate(int row,int col);
 		public delegate int IntLocationDelegate(int row,int col);
@@ -756,7 +663,7 @@ namespace Forays{
 						tile[r,c].inv.revealed_by_light = true;
 					}
 				}
-				if(tile[r,c].inv != null){
+				if(tile[r,c].inv != null && !tile[r,c].IsBurning()){
 					ch.c = tile[r,c].inv.symbol;
 					ch.color = tile[r,c].inv.color;
 					if(!tile[r,c].inv.revealed_by_light && !tile[r,c].IsLit()){
@@ -1317,6 +1224,7 @@ namespace Forays{
 					//d.CaveWidenRooms(30,30);
 					//d.AddPillars(30);
 					d.MarkInterestingLocations();
+					d.RemoveUnconnectedAreas();
 					if(d.NumberOfFloors() < 320 || d.HasLargeUnusedSpaces(300)){
 						d.Clear();
 					}
@@ -2358,7 +2266,13 @@ namespace Forays{
 						Tile.Create(TileType.WALL,i,j);
 						break;
 					case CellType.Door:
-						Tile.Create(TileType.DOOR_C,i,j);
+						if(R.OneIn(150)){
+							Tile.Create(TileType.STONE_SLAB,i,j);
+							Q.Add(new Event(tile[i,j],new List<Tile>{tile[i,j]},100,EventType.STONE_SLAB));
+						}
+						else{
+							Tile.Create(TileType.DOOR_C,i,j);
+						}
 						break;
 					case CellType.Stairs:
 						if(current_level < 20){
@@ -3533,6 +3447,26 @@ namespace Forays{
 								else{
 									map[p2] = CellType.Vine;
 								}
+							}
+							break;
+						}
+					}
+					break;
+				case DungeonFeature.BLAST_FUNGUS:
+				case DungeonFeature.FOG_VENT:
+				case DungeonFeature.POISON_VENT:
+					for(int i=0;i<50;++i){
+						int rr = R.Roll(ROWS-2);
+						int rc = R.Roll(COLS-2);
+						if(map[rr,rc].IsFloor()){
+							if(df == DungeonFeature.BLAST_FUNGUS){
+								map[rr,rc] = CellType.BlastFungus;
+							}
+							if(df == DungeonFeature.FOG_VENT){
+								map[rr,rc] = CellType.FogVent;
+							}
+							if(df == DungeonFeature.POISON_VENT){
+								map[rr,rc] = CellType.PoisonVent;
 							}
 							break;
 						}
