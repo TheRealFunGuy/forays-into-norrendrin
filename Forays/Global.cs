@@ -264,7 +264,7 @@ namespace Forays{
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):");
-			file.WriteLine("last_target autopickup top_row_movement hide_old_messages hide_commands never_display_tips always_reset_tips");
+			file.WriteLine("no_wall_sliding autopickup top_row_movement never_display_tips always_reset_tips");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Options[op]){
 					file.Write("t ");

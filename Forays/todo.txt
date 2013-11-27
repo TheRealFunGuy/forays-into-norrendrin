@@ -1,51 +1,29 @@
 
-things to do soon but not yet:
--redo vents so they pour out gas for a few turns at a time
--rework Select with that property thing, like Select.NoBorder.NoCancel.etc
--consider displaying danger differently once you've already been spotted.
--more items, especially slime/oil/knockback and that sort of thing
--minor bug, not sure how to fix it: when you cover and then uncover a tile with rubble, its 
-	revealed_by_light flag is reset.
--consider an invulnerable but short-lived guardian that sometimes appears when you open a
-	secret chest - this only works if the traps also appear at the same time.
--conditional printing of corpse knockback message - maybe save the message in reserve,
-	and print it only if something else happens that could cause a message.
--consider not adding extra damage to trolls - they could get up quite quickly.
--if there's a reason to bring back "torch on" and "torch off", it's to see whether the
-	level is darkened or not
--roll spell disruption into silence
--"darkness dweller adjusts to light" message?
--either enable dart frog to poison all weapons, or replace it with something that
-	has poisonous blood
--consider letting small monsters go through cracked walls (if those walls border floors)
--add X-to-travel support to lookmode (check for path after GetTarget)
--consider figuring out a way to not have dwellers blinded by fungus. check for light_value?
--option for wall sliding?
--option for 'safe mode' that prevents 'y,y' for prompts and ignores key repeat? (is that part even possible?)
--check Print(true) calls - switch them to PrintAll(). not sure it matters.
--more territorial monsters
--magic trinkets on the character screen?
--explosions destroy all items, plus piles of bones. (what about skeletons themselves?) (they should also destroy webs, yeah?)
--"The runic transcendent casts mercurial sphere. The dire rat dies.
-The sphere bounces between the dire rat, the runic transcendent, a" (notice that this is
-only 2 lines and there's plenty of room. fix this.)
--ballistas in fortresses (and other unique features in levels)
--blast fungus into water or slime?
--feature that blasts Vulnerable nearby, to make fighting deadly
--make wolves not snarl at you until you get close (until their target is set)
--caltrops trap (once AI can consider them a lesser threat than, say, fire)
--throwing items into webs (would orbs fail to break?)
--remind player about resting in every equipment damage tutorial tip
--place player far away from the stairs (and also from hazards)
--ice should block most effects, and be treated as a solid tile for some effects. ice traps can create ice anyway, which works like a wall.
--on death, display the entire map properly. clear burning, frozen, and blind.
+ahh, autoexplore pathing IS broken - it's trying to reach the nearest ones even if it goes over traps.
+	-can't figure out why, though.
 
-"you can no longer see this %item%" might be a problem - if I print its name, it reveals that it's still there. If I ignore it, you can't travel to it. If I don't want to reveal that it's still there, I have to remember it somehow.
 
-arrows need to consider armor (and fog)
-so, it needs to use the same calculation as melee, and figuring out whether it missed because of fog, armor, tumbling, or whatever.
-(what about fog? rather than fog, I think it should be a penalty based on whether you can see them.)
 
+...and what about the endgame?
+
+
+
+okay, spell disruption will become silence, and the ascetic can extend his vow of silence to others. (MakeNoise will check nearby actors for silence auras, as will scroll reading and casting)
+
+
+
+
+do I add doors before altering rooms in standard levels? that can lead to doors in the middle of corridors when cross rooms are involved.
+
+
+subterranean colossus is go
+ - has 1d3 rocks to throw: 5d6 damage and stun
+ - should path through smashable terrain
+ - when staggering blindly, should crash through walls
+
+
+
+add active feat tip.
 
 
 things to do now:
@@ -60,202 +38,54 @@ bump up difficulty with more damage to equipment, more danger, more puzzle enemi
  4: spider zombie berserker slug demon banshee hag
  5: zealot direrat killer boar troll dreamsprite cloude
  6: ascetic duelist warg scout crawler mechknight transcendent
- 7: battlemage soldier infestedmass golem mude flametongue entrancer
+ 7: battlemage soldier skittermoss golem mude flametongue entrancer
  8: ogre grenadier pixie cknight bloodwitch hulk marblehorror
- 9: cryolich pyren BLANK sentinel worm lasher vampire
+ 9: ooze pyren titan sentinel worm lasher vampire
 10: warmage necro webstrider assassin avenger behemoth warmachine
 
-...so, what needs to be replaced? ascetic probably needs another ability, and either it or the pixie could be replaced. cryolich is going. still have [REDACTED] to rework or replace. (and those last 2 are both level 9...)
-
-okay, spell disruption will become silence, and the ascetic can extend his vow of silence to others. (MakeNoise will check nearby actors for silence auras, as will scroll reading and casting)
-
-
-
-
-
-More equipment damage. More reason to use items.
-
-
-
-
-
-
-rust? i don't want to make water something to avoid, but maybe only when knocked in? would it affect chainmail or just plate? (it would make plate have a chance to squeak loudly)
-
-
-
-wall spears-spears come out of nearby walls - what defines nearby?
-	-instead of all nearby walls, this should do (maybe) just one. it would deal heavy damage and immobilize for a few turns. (and wear out armor)
 
 
 crypt levels seem to be disconnected more often than most 
 -if anything is disconnected right now, the bug is in RemoveUnconnected() itself.
 
+for the unconnected level thing, it might not be alterrooms after all. I got one that called RemoveUnconnected, then RemoveDeadEnds, then MarkInteresting, and it still happened, so the problem is in one of those two, or in removeunconnected itself.
 
 
 -cracked walls as a feature or something
 
--to find more messages to fix, just turn on detection and sit for a while
-
-
-if a monster is functional, don't mess with it right now, unless it's ridiculous to the point of brokenness. (including frostlings(rework), cryoliches(rework), hulk(check damage on hit vs. on slam), battlemage(just those 2 spells?), kobold(poison ticks for Q5), cultist(consider burning forever), machine of war (it does basically what it should), mud elemental(resist weapons), 
-
-
-OKAY. floor type generation is going nicely - next, I need to stop adding 1 instance of each type per level, and generate a list like I do with the features.
-
-great - but I'm not going to remove any features, right? instead i'll just add a certain number, drawing randomly.
-
-possibilities: all are rarity 2 or greater. keep trying until you have at least 1.
-	-cons: sometimes you get a grave dirt-only level.
-same as before, but try until you have at least 2.
-	-cons: you almost always have brush or water. not really a big problem.
-pick a major type (which can be anything but poppies or grave dirt), and any number of minor types. 60% major, the rest are random minor types.
 
 
 
-/////
-observations:
 
-vines shouldn't go across corridors. vines and several other features probably need minimums - so, a vine needs at least 3 or 4 pieces, say, and a puddle of slime needs at least 5, etc.
+if a monster is functional, don't mess with it right now, unless it's ridiculous to the point of brokenness.
 
-torches might look good with a lower chance to vanish
+(hulk(check damage on hit vs. on slam),
 
-allow brush/poppies/gravel/slime/oil/water/ice/glowing fungus next to each other, but restrict placement of all other features: pool/geyser/bfungus/vents/barrels/pits/torch
 
-consider undoing any floor types that are less than X tiles, where X is probably 6.
+kobold(poison ticks for Q5),
 
-so, clumps can go next to each other, but not single tile features?
-
-what about tombstones + grave dirt (probably a clump) and vines? rubble is a clumping feature type too, isn't it?
+machine of war (it does basically what it should),
 
 
 
-/////
 
 
 player placement must check for webs and other hazards
 
-increase duration on geysers again?
-
 don't print 'unburnt' messages for toads on fire. can toads be on fire?
 
-for vines to work right, cave widen must update room edges.
 
-wandering monsters should avoid webs
-
-
-
-
-
-what about making fire geysers increase in radius each turn? 1, 2, 3? it'd be even more likely for the fire to go out in the right order then.
-
-no IMMOBILIZATION of flying enemies with arrows, i think
-
-plus, roots should end flying, but that's probably not needed because it'll outlast it.
-
-
-
-
-lots of generation rules and level types
-
--now, which level types are currently working?
-normal is working, except for the alterrooms bug.
-hives are working but need wax walls and eggs.
-fortresses are working.
-crypts are working (but that one type is still a little weird).
-caves are working.
-fog caves look nice, but are basically just caves right now.
-
-
-
-wtf? unconnected normal level. and the "no longer blinded" message still appears whether you can see the thing or not.
-	-okay, i never fixed the unconnected level problem with AlterRooms. no problem.
-	 - however, it's interesting that the unconnected parts weren't altered. they're
-	  - plain rectangles. what gives? (one is lit, but that shouldn't matter...?)
-
-for the unconnected level thing, it might not be alterrooms after all. I got one that called RemoveUnconnected, then RemoveDeadEnds, then MarkInteresting, and it still happened, so the problem is in one of those two, or in removeunconnected itself.
-
-
--okay, i think i'll do vines + poison pods like this: find room spaces (not adjacent to walls), then find space in rooms that IS next to walls. find walls not adjacent to doors or corridors. place ; vines and [%^*] poison pods. attacking them, hitting them with arrows, or being knocked into them will destroy them.
-	-do vines work exactly like brush, then?
-
-
-next I need a "notes for generation" section:
--sometimes place gravel around rubble. clearing rubble should always|sometimes leave gravel.
-
-
-magic-throwing statue feature, bell, altar. (those last few are tentative)
-
-
-features that can be placed as a single tile: pool, geyser, blast fungus, vent, vent,
-	barrel, fire pit, torch
-ones that might want to avoid walls: (geyser might need its own open area), (pools look nice in the open), (fire pits shouldn't go in corridors, same for pool, geyser, barrel, torch)
-
-features placed with clumping algo: poppies, ice, glowing fungus, (tombstone is placed normally but grave dirt is clumped), webs, slime, oil, gravel, rubble, water, brush
-
-(vines go along edges)
-
-once more:
-single tile, middle of rooms only: pool, fire pit
-single tile, anywhere in a room: barrel, torch
-
-clumps, rooms only: poppies, ice, tombstone, webs, rubble
-clumps, anywhere: glowing fungus, slime, oil, gravel, brush
-clumps, either in a large room or in their own section: fire geyser, water
-
-for clumps: maybe start with the origin and have an x% chance to add each cardinally adjacent tile, and do that 3 or 4 times.
-
-
-room edges: vines
-
-next: should any features be prevented from touching or bordering? 
-
-(any special consideration for placing torches in rooms in place of pillars?)
-
-grave dirt, poppies, 
-
-
-----
-
-
--implement new monsters
--update old monsters
--implement new level types
 -update list of traps for secret rooms
 -change endgame
-
-and/or
-
-remaining level types & new elements for them
 
 
 vision benefits of america: 1 800 432 4966
 
 
- 1: goblin bat wolf moth dweller bramble frostling
- 2: swordsman dreamwarrior cobra kobold sporepod forasect poltergeist
- 3: cultist archer shaman dartfrog skeleton shadow mimic
- 4: spider zombie zealot slug demon banshee hag
- 5: berserker direrat killer boar troll dreamsprite cloude
- 6: ascetic duelist warg scout crawler mechknight transcendent
- 7: battlemage soldier infestedmass golem mude flametongue entrancer
- 8: ogre grenadier pixie cknight bloodwitch hulk marblehorror
- 9: cryolich pyren BLANK sentinel worm lasher vampire
-10: warmage necro webstrider assassin avenger behemoth warmachine
-
-
-
-
-
-
-
 
 -broke save/load, of course
--realign descriptions for enchantments and magic items?
 -add reminder to use shift if player presses '.' on stairs
--redo endgame
 -low chance to find a chest in a sliding wall trap?
--lit rooms, finally? <--currently implemented but they might need work
 -add a lot more combat info to monster description boxes: speed, damage, "Melee effect:" or "On hit:", "Critical effect:", "Abilities:".
 -now that there's so much room, add target health to sidebar. (but "corpsetower behemoth" doesn't fit! maybe use its symbol?)
 -you see a goblin (damaged, unaware) <--add awareness, based on turns_visible or whatever, to lookmode.
@@ -270,6 +100,7 @@ vision benefits of america: 1 800 432 4966
 -(looking at the code...) blizzard seems to go through walls and use raw name strings.
 -noxious worms currently flee from poison gas
 -check spirit duration reductions for everything
+-spirit should be 8% per level, not 5.
 -add new minions to entrancer list
 -likewise, check for cool new phantoms (and symbol updates for old ones)
 -make sure blast fungi can't appear in the player's LOS or in lit tiles
@@ -278,7 +109,6 @@ vision benefits of america: 1 800 432 4966
 -kobolds aren't quite done yet - Q5() doesn't work right with poison and fire etc.
 -casters with no mana should act like their spells are disrupted (unless they can get more)
 -consider brogue-style "traps don't block corridors" rule
--auto-targeting for arrows etc. shouldn't consider detected monsters, only ones with LOS
 -monsters seem to EITHER continue down corridors OR continue down paths after seeing the player (if the player ducks out of LOS). THEN they go to the target_location.
 -let cloud e. and any other erratically moving monster also do so while wandering.
 -perhaps a bigger penalty than -1 for each fork in the road when corridor-seeking?
@@ -289,408 +119,15 @@ vision benefits of america: 1 800 432 4966
 -bug: "The grenade explodes! A noxious worm bursts through the wall! [more" <--the cursor was of course on the next row down, and the 'e' remained on the screen.
 -make terrain descriptions appear in lookmode
 -there's a double redraw somewhere triggered just by walking. try it with brush + fire.
--for territorial monsters, why not change their "notices" message, then have them print
-	their 'aggressive' message the first time ActiveAI is called?
 -make grabs interact with frozen - frozen probably breaks & prevents grabs.
+-remind player about resting in every equipment damage tutorial tip
+-make sure fog/darkness/invis doesn't make you miss guys if you're detecting them
+-make sure burning enemies *advance* out of fire when possible, toward the player.
+-minor visual bug with passage when triggering a trap
+-allow game to be started with no options.txt, then create a default.
+-allow capital letters for descriptions in inventory screens.
 
 
-
-
-
--also, critical sneak attacks with arrows should also kill - but misses should alert enemies!
-
-
-
-
-add a tutorial tip for shininess if you're lit while wearing plate but with no torch
-
-CHANGES:
-
-MECHANICS:
-	-might still need a message for when you CAN wear your armor effectively again. but maybe not.
-
-possible combination of bosses and special levels. example: grab poison to buff yourself for fighting the boss, or just fight it. X levers that must be flipped, or items collected. Heavy use of minions and other 'smaller versions'.
-	-"boss levels" will now be the penultimate level. the final one will be more puzzlelike, perhaps.
-
-
-FEATS:
-specific feat changes:
- boiling blood: add another bonus when you're at 5 stacks.
-	-immunity to burning? immunity to fire? a single turn of b.strength?
-
-TERRAIN:
-stone slab: should now appear occasionally(!) instead of a normal door.
-             opens when light hits it. (target tile is set to self)
-what if trap corridors used an event to create all the traps at once? when the chest is opened? also, LOS could be blocked by walls partway down, too.
-dim vision traps might need to go. they suck vs monsters and sometimes the player too.
-
-ARMOR: add several things that can affect your armor (some could even be good), like Infested, Rusted, Red-hot, Slimed, Blurred, Glowing, 
-
-Give the player a "vulnerable" or "takes more damage" status for 1 turn when switching armor, so it's risky to do when something is actually hitting you.
- -actually, it should be the same as having damaged armor for that turn - you get no defense from it, and get the extra crit chance.
-
-
-Maybe heavy armor should give a penalty to dodging spell-like (elemental) ranged attacks? -that should do it
-
-full plate (in addition to its stealth penalty) is shiny and makes noise when you do anything but stand still - volume 3, same as gravel.
-
-
-MONSTERS:
-shadow(veil) could gain a message when it steps from visible light to visible darkness: "fades from view as it steps into the shadows" - cooldown on this msg?
-
-ADDITIONS:
-several idols/totems/whatever that spawn in a group, with LOS and LOE to each other one. Each turn, or every few turns, a bolt of magic would go from one to
-	another, hitting anything in the way. (when this happens, a new magic bolt will form in a few turns. the idol changes color to show this.)
-		-again, AI is the problem here. i'd want them to consider it slightly dangerous. however, if it was radius 1, the player couldn't just fight them
-	-make this feature not attackable, but vulnerable to brutish str.
-
-more traps that, like the sliding wall trap, depend on the shape of their surroundings - this one would cause spikes to appear from the nearby walls for a few turns. Could be useless, could be awful if you're in a corridor.
-
-immunity to fire should be separated from immunity to burning, so I can implement permanently burning monsters.
-
-elemental stone terrain features? lightning, ice, fire? hit them to activate.
-
-scroll of reality shift - generates a new level at the same depth, taking used shrines into account.
-
-
-
-
-remember to make the player vulnerable (to damage or to crits?) for a turn when switching armor.
-	-and while firing arrows?
-
-
-
-
-descriptions that don't exist yet:
-cobra - In addition to having a toxic bite, this snake can spit its venom into (a target's?) (face|eyes) with uncanny accuracy.
-kobold - Kobolds appear as small goblins with canine muzzles. They are wont to fire at intruders from the safety of their secret holes.
-sporepod - A sac full of spores that floats through the air. Any (piercing|edge|poke|etc) will cause it to burst.
-forasect - An insect with six legs, built low to the ground. The forasect has powerful (mandibles|jaws) and can burrow through the ground faster than a man can walk.
-dartfrog - 
-slug - This enormous slug is always covered in the slime it creates, and which it can spit great distances.
-demon - A displaced denizen of some distant Hell, this creature...
-boar - tusked beast, can pierce chainmail, taller than you and can feed a goblin tribe for weeks.
-dreamsprite - illusion-casting fae that likes to mislead travelers, then zap them.
-cloude - animated bank of vapor, you think you hear the rumblings of thunder from within.
-transcendent - Glowing symbols are carved deeply into this creature's flesh. Its form is human but its manner is something entirely alien.
-infested - -a roiling mass of filth and debris that is also filled with bugs. shrinks away from light but moves quickly in darkness.
-battlemage - Using the magical craft of (his|her) race, this caster wears armor inscribed fully with magic runes, (defense|proof) against both physical and magical (attacks|assaults).
-soldier - Alasi soldiers wield runed spears
-scout - At the forefront of the alasi force, the scout is equipped with an enchanted sword and feather-weight armor.
-flametongue - (though small|not physically imposing) it totally burrows and shoots fire. maybe some notes on coloration?
-bloodwitch - a practitioner of blood magic that turns a troll's defensive nature into a potent weapon. (<--boo) many a militia has been wiped out when they try to (eject|kill|evict) a (practitioner|bloodwitch|blood magic user) from their town's influence|area.
-hulk - a massively muscled giant, with a canter or a gorilla walk or something.
-cryolich - Powered in undeath by the chill of the grave, this skeletal form is sheathed in a rime of ice crystals. Utter cold drips from its voice as it speaks the words of a doomspell.
-BLANK - [DATA EXPUNGED]
-sentinel - a juggernaut in runed armor, the sentinels of the alasi are well protected inside their enchanted suits.
-webstrider - 
-warmachine - perhaps a siege engine run amok, this clattering clanking clicking contraption sputters forward haltingly, swiveling its turret madly|constantly. flames are occasionally emitted from its (some side).
-
-
-
-descriptions that might kinda suck:
-giant bat - 
-lone wolf - 
-skeleton - 
-blood moth - 
-swordsman - 
-dream warrior - 
-goblin archer - 
-mimic - 
-skulking killer - 
-dire rat - 
-warg - 
-noxious worm - 
-berserker - 
-troll - 
-ogre - 
-grenadier - 
-duelist - 
-crawler - 
-golem - 
-assassin - 
-
-split skin of wounds 
-
-
-goblins are stunted and primitive scavengers, a frequent nuisance to the civilized races.
-
-			case ActorType.GOBLIN:
-				return "The goblin is a small ugly humanoid, often found inhabiting the upper reaches of any cave, chamber, or tunnel it can find.";
-			case ActorType.GIANT_BAT:
-				return "The bats here are substantially bigger than most, perhaps because their insect prey is also unusually large.";
-			case ActorType.LONE_WOLF:
-				return "Lithe and quick, this canine predator has formidable teeth and powerful jaws.";
-			case ActorType.SKELETON:
-				return "A humanoid skeleton, animated by magic, seeing without eyes, and moving without muscles.";
-			case ActorType.BLOOD_MOTH:
-				return "Found fluttering around any source of light, this huge moth is named for the rivulets of crimson on its wings that mimic dripping blood. Unlike most moths, it has a wide razor-filled mouth.";
-			case ActorType.SWORDSMAN:
-				return "Always ready for a fight, the swordsman twirls his sword in his hand as he walks. His eyes never leave his foe, watching and waiting for the next advance.";
-			case ActorType.DREAM_WARRIOR:
-			case ActorType.DREAM_WARRIOR_CLONE:
-				return "The features of this warrior are hard to make out, but the curved blade held at the ready is clear enough.";
-			case ActorType.GOBLIN_ARCHER:
-				return "This goblin carries a crude bow and wears a quiver of arrows. It glances around, looking for inviting targets.";
-			case ActorType.MIMIC:
-				return "The mimic changes its shape to that of an ordinary object, then waits for an unwary goblin or adventurer. It can secrete a powerful adhesive to hold its prey.";
-			case ActorType.SKULKING_KILLER:
-				return "This rogue dashes from shadow to shadow, dagger in hand. A smirk appears as the killer overtakes another victim.";
-			case ActorType.DIRE_RAT:
-				return "With red eyes and long yellow teeth, most dire rats outweigh forty of their smaller brethren.";
-			case ActorType.WARG:
-				return "This wolf has white fur with black markings. Its eyes are too human for your liking.";
-			case ActorType.NOXIOUS_WORM:
-				return "The noxious worm, almost as tall as a man, slams foes with its bulk. It vomits a thick stench from its maw.";
-			case ActorType.BERSERKER:
-				return "In battle, the berserker enters a state of unfeeling rage, axe swinging at anything within reach. Trophies of war adorn the berserker's minimally armored form.";
-			case ActorType.TROLL:
-				return "The troll towers above you, all muscles, claws, and warty greenish skin. The regenerative powers of the troll are well-known, as is the suggestion to fight them with fire.";
-			case ActorType.OGRE:
-				return "Built like an orc, but as big as a troll, this tusked brute wields a giant club.";
-			case ActorType.ORC_GRENADIER:
-				return "Orcs are a burly and warlike race, quick to make enemies. This one carries a satchel filled with deadly orcish explosives.";
-			case ActorType.SHADOWVEIL_DUELIST:
-				return "The shadowveil duelist hides under a cloak of shadows to strike unseen. A spinning, feinting fighting style keeps the duelist in motion.";
-			case ActorType.CARRION_CRAWLER:
-				return "This many-legged segmented insect crawls over the ground and walls in search of carrion. When threatened or lacking another source of food, tentacles on its head are used to apply a paralyzing substance to living prey.";
-			case ActorType.STONE_GOLEM:
-				return "Constructs of stone are often created to guard or serve. Their rocky nature grants them a degree of resistance to many forms of attack.";
-			case ActorType.ORC_ASSASSIN:
-				return "This orcish stalker is well camouflaged. A wicked grin shows off sharp teeth as the assassin brandishes a long blade.";
-			case ActorType.TROLL_BLOODWITCH:
-				return "The seer is a leader among the solitary troll population, sought for augury and council. Spells and arcane tricks are passed down from seer to seer. ";
-
-
-
-
-
-descriptions that need updates for accuracy:
-			case ActorType.BANSHEE:
-				return "The banshee floats shrieking, trailing wisps of a faded dress behind her. Her nails are blood-caked claws. The banshee's hateful scream is painful for the living to hear.";
-(painful, yet it deals no damage currently)
-			case ActorType.ROBED_ZEALOT:
-				return "A holy symbol hangs, silver and forked, from the neck of the zealot. The holy magic of the church's spells promises the zealot a swift victory over heretics.";
-("spells", yet not stopped by spell disruption)
-			default:
-				return "Phantoms are beings of illusion, but real enough to do lasting harm. Because they vanish at the slightest touch, they are easily dispatched with magic spells.";
-(no need for the 'use spells' hint, probably)
-
-
-
-
-descriptions that might be cool, but are a bit short or have 1 or 2 words out of place:
-
-			case ActorType.DARKNESS_DWELLER:
-				return "This pale dirty humanoid wears tattered rags. Its huge eyes are sensitive to light.";
-(short)
-			case ActorType.CARNIVOROUS_BRAMBLE:
-				return "Sharp tangles of thorny branches spread out from its center. The closest branches seem to follow your movements.";
-("branches" x2)
-			case ActorType.CULTIST:
-				return "This cultist wears a crimson robe that reaches the ground. His head has been shaved and tattooed in devotion to his demon lord.";
-("reaches" or "drags"? also, "this cultist"?)
-			case ActorType.GOBLIN_SHAMAN:
-				return "This goblin's markings identify it as a tribe leader and shaman. It carries a small staff and wears a necklace of ears and fingers.";
-("this goblin"? maybe "the goblin shaman"?)
-			case ActorType.DERANGED_ASCETIC:
-				return "This solitary monk constantly kicks and punches at empty space, madly repeating words of nonsense. Those nearby will find themselves uttering the same gibberish.";
-			case ActorType.VAMPIRE:
-				return "The vampire floats above the ground with hunger in its eyes. A dark cape flows around its pale form.";
-			case ActorType.CRUSADING_KNIGHT:
-				return "This knight's armor bears the holy symbols of his church. He holds his torch aloft, awaiting the appearance of evildoers.";
-			case ActorType.MUD_ELEMENTAL:
-				return "As the mud elemental oozes across the floor, bits of dirt seem to animate and are absorbed into its body.";
-			case ActorType.MUD_TENTACLE:
-				return "A writhing, grasping tendril of mud emerges from the wall.";
-			case ActorType.ENTRANCER:
-				return "The entrancer bends a weak-minded being to her will and has it fight on her behalf, at least until a more desirable thrall appears. In battle, the entrancer can protect and teleport the enthralled creature.";
-			case ActorType.MARBLE_HORROR:
-				return "Its shape is still that of a statue, but the darkness reveals the diseased appearance of its pale skin. No light is reflected from its empty eyes.";
-			case ActorType.MARBLE_HORROR_STATUE:
-				return "As a statue, the marble horror is invulnerable and inactive. It will remain in this form as long as light falls upon it.";
-			case ActorType.SPELLMUDDLE_PIXIE:
-				return "Using fairy enchantments to influence the flow of magic, this pixie causes its every wingbeat to reverberate in the skulls of those nearby, stifling words of magic.";
-			case ActorType.PYREN_ARCHER:
-				return "Tall and wide-shouldered descendants of flame, the pyren are a strange race of men. Though they are flesh and blood, they still possess the power to ignite nearby objects.";
-			case ActorType.MECHANICAL_KNIGHT:
-				return "The mechanical knight's shield moves with unnatural speed, ready to foil any onslaught. Its exposed gears appear vulnerable to any attack that could bypass its shield.";
-			case ActorType.ORC_WARMAGE:
-				return "The destruction wreaked by warmages evokes respect and fear even among their own kind. They often lead raids and war parties, using tracking spells to complement their lethal magic.";
-			case ActorType.LASHER_FUNGUS:
-				return "The lasher is a tall mass of fungal growth with several ropelike tentacles extending from it.";
-			case ActorType.NECROMANCER:
-				return "Necromancers practice the dark arts, raising the dead to serve them. They gain power through unholy rituals that make them unwelcome in any civilized place.";
-			case ActorType.LUMINOUS_AVENGER:
-				return "The radiance of this empyreal being makes your eyes hurt after a few seconds. When you look again it still has the shape of a human, but occasionally its silhouette seems to have wings, horns, or four legs.";
-			case ActorType.CORPSETOWER_BEHEMOTH:
-				return "This monstrosity looks like it was stitched together from corpses of several different species. You see pieces of humans, orcs, and trolls, in addition to some you can't begin to identify.";
-			case ActorType.FIRE_DRAKE:
-				return "Huge, deadly, and hungry for your charred flesh, the fire drake prepares to drag your valuables back to its lair. You have no doubts that you now face the snarling fiery master of this dungeon.";
-
-
-
-
-
-
-
-descriptions that are cool:
-
-			case ActorType.FROSTLING:
-				return "An alien-looking creature of cold, the frostling possesses insectlike mandibles, claws, and smooth whitish skin. A fog of chill condensation surrounds it.";
-			case ActorType.ZOMBIE:
-				return "The zombie is a rotting, shambling corpse animated by the dark art of necromancy. It mindlessly seeks the flesh of the living.";
-			case ActorType.SHADOW:
-				return "Shadows are manifest darkness, barely maintaining a physical presence. A dark environment hides them utterly, but the light reveals their warped human shape.";
-			case ActorType.PHASE_SPIDER:
-				return "Heedless of the laws of nature, this brilliantly iridescent spider steps to the side and appears twenty feet away. Even when you're looking right at it, you think you can hear it behind you.";
-			case ActorType.POLTERGEIST:
-				return "This troublesome spirit has a penchant for throwing things and upending furniture. It affords no rest to intruders in the area that it haunts.";
-			case ActorType.CAVERN_HAG:
-				return "The hag's foul brand of magic can impart a nasty curse on those who cross her. Cracked, warty skin hides surprising strength, used to wrestle her victims into the stewpot.";
-
-
-
-
-
-
-assassin: better AI. another ability? or is it not needed? poison?
-mknight: rename to clockwork knight? No, but maybe 'mechanized knight' or 'something automaton' or 'somethingforge knight'
-
-
-
-fix Parabola: Redraw(), and everything else, shouldn't draw in the last screen position.
-
-
-
-###############
-#####....###### <--for round rooms with even dimensions, calculate the room for dim-1 and 
-####......#####       then include each position, plus the positions to the E, S, and SE.
-####......#####
-####......#####    (same result as calculating it 4 times)
-####......#####
-#####....######
-###############
-
-###############
-###############
-######...######
-#####.....#####
-####.......####
-####.......####
-####.......####
-#####.....#####
-######...######
-###############
-###############
-###############
-
-################ <--elliptical rooms
-#####...a..##### <--a has a total distance of 13
-###..........###
-#..............#
-#b!..........!.# <--b has a total distance of 13
-#..............#
-###..........###
-#####......#####
-################
-so i've gotta find the focal points at which the distances are closest, and then simply compare the distances.
-
-1. determine major direction - horizontal here
-2. find center or centers in the minor direction
-3. for each row or column in the major direction, compare the total distances between the major edge midpoint and the minor edge midpoint.
-4. the closest to zero is chosen as the set of focal points.
-5. 
-
-
-
-
-
-
-
-
-slime levels: lots of elliptical rooms. pools and streamers/trails of slime. fog or poison gas vents. enemy type: slimes or slug-men or something
-	-calculate pools based on distance from walls. create a noise map. remove slime from very low noise positions. add slime to very high noise positions.
-
-
-more: moving parts? corridor features? carve rooms for chests in caves?
-
-LEVEL LIST:
-terrain types to keep in mind: fire pit, stalagmite, rubble, fire geyser, healing pool, fog vent, poison vent, water, ice, cracked wall, brush, poppies, jungle, gravel, blast fungus, glowing fungus, tombstone(+grave dirt), oil, slime, fog, teleportals, barrels
-(statue, door, stone slab)
-
-NORMAL:
-rooms & corridors!
-terrain:
-common - statue (but not super common)
-uncommon - fire pit(random), lit room, pile of rubble, cracked wall, brush(or common?), gravel
-rare - healing pool, pool of water, ice(?), tombstone
-
-SLIME:
-elliptical rooms with wide corridors between them. use dijkstra to find good spots for pools of slime.
-terrain:
-common - slime!
-uncommon - vents, water, cracked wall
-rare - healing pool
-
-HIVE:
-3x3 rooms with short corridors, tightly packed. (needs something else! maybe wax walls that melt.)
-terrain:
-common - 
-uncommon - cracked wall
-rare - jungle?!?
-
-FANCY:
-like a normal level, maybe with bigger rooms. lots of statues.
-(altars instead of fire pits. healing pools uncommon instead of rare? pools of water. poppy rooms (fills center of room). teleportals rare. flammable carpets? torches, lit rooms, all that stuff.)
-terrain:
-common - statue, lit room, carpet
-uncommon - healing pool, altar, pool of water, poppies
-rare - teleportal
-
-MINE:
-incomplete normal level, with dead end corridors and cavelike rooms.
-terrain:
-common - fire pit (placed randomly, not evenly), gravel
-uncommon - rubble, vents, water, cracked wall, blast fungus, brush
-rare - glowing fungus, barrel of oil,tombstone
-
-
-FORTRESS:
-like a normal level symmetric over the X axis, and with a central hallway.
-terrain:
-common - gravel
-uncommon - fire pit (even?), water pool, barrel of oil, lit room, statues
-rare - healing pool
-
-CAVE:
-made with cave generator, not rooms & corridors. no doors.
-terrain:
-common - stalagmite(?), brush, glowing fungus
-uncommon - rubble, vents, water, ice(?), gravel, blast fungus(?)
-rare - fire geyser, healing pool, tombstone
-	-fire geysers could appear in clusters, with very few safe zones. a bit like brimstone.
-
-FOG CAVE:
-a more rounded cave, possibly with even more stalagmites & glowing fungus.
-terrain:
-common - stalagmite, glowing fungus, fog vent
-uncommon - rubble, pool of water, ice
-rare - healing pool, jungle(?!?)
-
-GARDEN:
-big normal rooms (often tall or long instead of big in both dimensions), often filled with brush(of the same color, eh?), poppies, or any other plants I come up with, or pools of water. Maybe some water on the outer part of some rooms too. lots of statues but no pillars or fire pits.
-terrain:
-common - statue, brush, poppies, water, lit rooms 
-uncommon - healing pool, gravel
-rare - 
-
-GRAVEYARD:
-perhaps a fence terrain type that slows movement through it. rectangular and vaguely rectangular shapes with tombstones, many without grave dirt. lots of pillars (or big headstones).
-terrain:
-common - cracked wall(?), brush, tombstone, statue
-uncommon - gravel
-rare - pool of water, blast fungus
 
 
 
@@ -699,86 +136,10 @@ rare - pool of water, blast fungus
 # remember to use some colored walls in here somewhere #
 #                                                      #
 
-rarities?
-
-normal slime hive fancy mine fortress cave fog garden jungle rocky graveyard
-
-common: normal, mine, cave
-uncommon: slime, hive, fancy, fortress, fog, garden, jungle, rocky, graveyard
-OR
-uncommon: slime, hive, fog, garden, rocky
-rare: fancy, fortress, jungle, graveyard
 
 !!!
 
 schism changed in forays, update the other.
-
-leveltype-specific monsters that can only appear in the proper "biome"
-	-they get added to the list of possibilities, so a level type
-	 isn't required to have any.
-
-don't increase in power, but rather in number.
-
-normal(none) slime(slugmen) hive(ants or hive dogs) fancy(none?) mine(kobolds) fortress(new armor-wearing race - alasi) cave(none) fog(phantoms) garden(none?) jungle(something awesome!) rocky(good question) graveyard(skeletons, or undead in general)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-if you're facing a (blank), you can use an (item) to easily beat it:
-
-scroll of time actually isn't bad against mech knights
-
-detect magic makes duelists (in darkness) easier, but nothing is really invisible right now.
-
-sunlight destroys vampires, shadows, and (possibly future) vampire spawns/thralls/converts or other shadow creatures.
-
-darkness should destroy luminous avengers
-
-repair should effectively remove the threat of some monster(s) - possibly the demon and the infested mass, for example.
-
-calling would answer a theoretical monster that can't leave the wall.
-
-trap clearing might set off a trap-layer's backpack...kind of nethackish though.
-
-freezing would destroy slime creatures (should it hurt slugs?)
-
-flames would destroy ice creatures (should it hurt frostlings or cryoliches?) and fog creatures (what about cloud elementals?)
-
-detonation (and other explosions) could destroy skeletons instantly, or not.
-
-breaching might kill wall monsters or something.
-
-shielding should answer weak on-hit effects, i think? no paralysis, poison, or whatever, if you didn't take damage from the attack.
-
-teleportal should answer medium-bound creatures.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -787,20 +148,14 @@ teleportal should answer medium-bound creatures.
 include a goal at the start	-	"None of the other scouts returned." etc
 
 
-orc assassin needs an AI enhancement: when moving toward the player, if there is a spot that the player can't see (but it's at the same distance as the spot you would have stepped to), step there to stay out of sight.
-
-
-
-
--for the next version: item descriptions, slime and fog levels, leveltype-specific monsters, circular, diamond, and L-shaped rooms
-
-
-
 
 animations should support the concept of a 'viewer' - cells outside viewer's FOV don't animate.
 
 Select() needs a rewrite, and to be moved out of Actor.
 	-what part needed a rewrite?
+
+
+fix Parabola: Redraw(), and everything else, shouldn't draw in the last screen position.
 
 
 animation utility method: when called on a list of positions, it checks whether the player can see all of those. Depending on the option you set, it'll either replace the ones you can't see with nothing, or with (-1,-1), which means it'll still take time but won't show anything.
@@ -824,15 +179,8 @@ equipment screen colors "[a]" entirely in cyan. consider changing.
 -update version number
 -make 'trailer' vid
 -remember to remove the hallucination & fire test videos from screencast
+-email LPers and article author too
 
-
-
-"You are burned. You are unburnt." <--being attacked by burning enemy while Tough - this should no longer apply.
-
-extend the "monster notices" sounds so that you can hear them even if you can't see them.
-	-this would make a good candidate for generalization: printing a message if the player can see an object OR if that object is within a certain distance. perhaps a distance that implies that the message is a sound, not a visual.
-
-stack trace printed to file on fatal exception?
 
 check every new class member and make sure it gets cleared between games if needed.
 

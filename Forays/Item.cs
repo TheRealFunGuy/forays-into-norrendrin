@@ -151,6 +151,14 @@ namespace Forays{
 			}
 			return i;
 		}
+		public bool Is(params ConsumableType[] types){
+			foreach(ConsumableType ct in types){
+				if(type == ct){
+					return true;
+				}
+			}
+			return false;
+		}
 		public string SingularName(){ return SingularName(false); }
 		public string SingularName(bool include_a_or_an){
 			string result;
@@ -727,7 +735,7 @@ namespace Forays{
 				B.Add("You rise into the air. ");
 				int duration = R.Roll(2,20) + 20;
 				user.RefreshDuration(AttrType.LIGHT_SENSITIVE,duration*100);
-				user.RefreshDuration(AttrType.FLYING,duration*100); //todo: i'm pretty sure this can break with other sources of flying. test with flying leap.
+				user.RefreshDuration(AttrType.FLYING,duration*100);
 				user.RefreshDuration(AttrType.LIFE_DRAIN_HIT,duration*100,"You are no longer vampiric. ");
 				break;
 			}
@@ -771,6 +779,7 @@ namespace Forays{
 				Q.Add(new Event(user,duration*100,AttrType.BONUS_DEFENSE,10));
 				user.attrs[AttrType.IMMOBILE]++;
 				Q.Add(new Event(user,duration*100,AttrType.IMMOBILE,"You are no longer rooted to the ground. "));
+				Help.TutorialTip(TutorialTopic.Roots);
 				break;
 			}
 			case ConsumableType.VIGOR:
@@ -787,6 +796,7 @@ namespace Forays{
 			{
 				B.Add("A hush falls around you. ");
 				user.RefreshDuration(AttrType.SILENCED,(R.Roll(2,20)+20)*100,"You are no longer silenced. ");
+				Help.TutorialTip(TutorialTopic.Silenced);
 				break;
 			}
 			case ConsumableType.CLOAKING:
@@ -1212,6 +1222,9 @@ namespace Forays{
 								ac.attrs[AttrType.FROZEN] = 35;
 								ac.attrs[AttrType.SLIMED] = 0;
 								ac.attrs[AttrType.OIL_COVERED] = 0;
+								if(ac == player){
+									Help.TutorialTip(TutorialTopic.Frozen);
+								}
 							}
 						}
 					}
@@ -1638,8 +1651,10 @@ namespace Forays{
 					if(!t.passable && prev != null){
 						target_tile = prev;
 					}
-					target_tile.features.Add(FeatureType.TELEPORTAL);
-					Q.Add(new Event(target_tile,0,EventType.TELEPORTAL,100));
+					target_tile.AddFeature(FeatureType.TELEPORTAL);
+					if(target_tile.Is(FeatureType.TELEPORTAL)){
+						Q.Add(new Event(target_tile,0,EventType.TELEPORTAL,100));
+					}
 					t.MakeNoise(2);
 					if(trigger_trap && t.IsTrap()){
 						t.TriggerTrap();
@@ -1694,6 +1709,9 @@ namespace Forays{
 								if(tile.actor().TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,R.Roll(2,6),user,"an orb of pain")){
 									B.Add(tile.actor().You("become") + " vulnerable. ",tile.actor());
 									tile.actor().RefreshDuration(AttrType.VULNERABLE,(R.Roll(2,6)+6)*100,tile.actor().YouFeel() + " less vulnerable. ",tile.actor());
+									if(tile.actor() == player){
+										Help.TutorialTip(TutorialTopic.Vulnerable);
+									}
 								}
 							}
 							if(tile.DistanceFrom(t) % 2 == 0){
@@ -1705,7 +1723,8 @@ namespace Forays{
 							cells.Add(tile.p);
 						}
 					}
-					Screen.AnimateMapCells(cells,symbols,80); //todo: I need that "reduce to visible" method for these animations.
+					player.AnimateVisibleMapCells(cells,symbols,80);
+					//Screen.AnimateMapCells(cells,symbols,80);
 					t.MakeNoise(2);
 					if(trigger_trap && t.IsTrap()){
 						t.TriggerTrap();
@@ -1853,7 +1872,7 @@ namespace Forays{
 		}
 		public string Description(){
 			if(!revealed_by_light){
-				return "You can't see what this " + NameOfItemType(type) + " is yet.";
+				return "You can't see what type of " + NameOfItemType(type) + " this is.";
 			}
 			else{
 				if(!identified[type]){
@@ -2057,26 +2076,30 @@ namespace Forays{
 		}
 		public static Color StatusColor(EquipmentStatus status){
 			switch(status){
-			case EquipmentStatus.HEAVY:
-				return Color.DarkBlue;
-			case EquipmentStatus.STUCK:
-				return Color.DarkGray;
-			case EquipmentStatus.DAMAGED:
-				return Color.DarkMagenta;
-			case EquipmentStatus.DULLED:
-				return Color.DarkCyan;
-			case EquipmentStatus.INFESTED:
-				return Color.DarkGreen;
-			case EquipmentStatus.NEGATED:
-				return Color.White;
+			case EquipmentStatus.POISONED: //weapon-only statuses
+				return Color.Green;
+			case EquipmentStatus.MERCIFUL:
+				return Color.Yellow;
 			case EquipmentStatus.POSSESSED:
 				return Color.Red;
-			case EquipmentStatus.RUSTED:
-				return Color.DarkRed;
-			case EquipmentStatus.WEAK_POINT:
+			case EquipmentStatus.DULLED:
+				return Color.DarkGray;
+			case EquipmentStatus.HEAVY: //statuses that might apply to both
+				return Color.DarkYellow;
+			case EquipmentStatus.STUCK:
+				return Color.Magenta;
+			case EquipmentStatus.NEGATED:
+				return Color.White;
+			case EquipmentStatus.WEAK_POINT: //armor-only statuses
 				return Color.Blue;
 			case EquipmentStatus.WORN_OUT:
-				return Color.DarkYellow;
+				return Color.Yellow;
+			case EquipmentStatus.DAMAGED:
+				return Color.Red;
+			case EquipmentStatus.INFESTED:
+				return Color.DarkGreen;
+			case EquipmentStatus.RUSTED:
+				return Color.DarkRed;
 			default:
 				return Color.RandomDark;
 			}
@@ -2113,10 +2136,13 @@ namespace Forays{
 		}
 		public colorstring EquipmentScreenName(){
 			colorstring result = new colorstring(StatsName());
-			result.strings[0] = new cstr(result.strings[0].s + " ",result.strings[0].color);
+			result.strings[0] = new cstr(NameWithEnchantment().Substring(0,1).ToUpper() + NameWithEnchantment().Substring(1) + " ",result.strings[0].color);
 			for(int i=0;i<(int)EquipmentStatus.NUM_STATUS;++i){
 				if(status[(EquipmentStatus)i]){
 					result.strings.Add(new cstr("*",StatusColor((EquipmentStatus)i)));
+					if(result.Length() >= 25){
+						break;
+					}
 				}
 			}
 			return result;
@@ -2127,7 +2153,8 @@ namespace Forays{
 				return new string[]{"Sword -- A basic weapon, the sword delivers powerful",
 									"     critical hits that remove half of a foe's maximum health."};
 			case WeaponType.MACE:
-				return new string[]{"Mace -- Capable of punching through armor. Critical hits",
+			  //return new string[]{"Mace -- Capable of punching through armor. Critical hits",
+				return new string[]{"Mace -- The mace won't be stopped by armor. Critical hits",
 									"              will knock the foe back two spaces."};
 			case WeaponType.DAGGER:
 				return new string[]{"Dagger -- In darkness, the dagger always hits and is",
@@ -2143,19 +2170,49 @@ namespace Forays{
 			}
 		}
 		public string DescriptionOfEnchantment(){
-			switch(enchantment){ //todo
+			switch(enchantment){
 			case EnchantmentType.ECHOES:
-				return "echoes";
+				return "  Successful hits will also attack anything behind the target.";
 			case EnchantmentType.CHILLING:
-				return "todo";
+				return "   Deals 1 extra cold damage. This damage doubles on each hit.";
 			case EnchantmentType.PRECISION:
-				return "todo";
+				return "     This weapon is twice as likely to score critical hits.";
 			case EnchantmentType.DISRUPTION:
-				return "todo";
+				return "Nonliving foes will lose 20% of their maximum health on each hit.";
 			case EnchantmentType.VICTORY:
-				return "todo";
+				return "     Defeating an enemy with this weapon will restore 5 HP.";
 			}
 			return "";
+		}
+		public static string StatusDescription(EquipmentStatus status){
+			switch(status){
+			case EquipmentStatus.POISONED: //weapon-only statuses
+				return "   Poisoned -- Attacks with this weapon will poison the target.";
+			case EquipmentStatus.MERCIFUL:
+				return " Merciful -- Unable to take the last bit of health from an enemy.";
+			case EquipmentStatus.POSSESSED:
+				return " Possessed -- This weapon will sometimes attack the wrong target.";
+			case EquipmentStatus.DULLED:
+				return "     Dulled -- This weapon deals minimum damage on each hit.";
+			case EquipmentStatus.HEAVY: //statuses that might apply to both
+				return "   Heavy -- Attacking with this weapon often causes exhaustion.";
+			case EquipmentStatus.STUCK:
+				return "             Stuck -- This item can't be unequipped.";
+			case EquipmentStatus.NEGATED:
+				return "   Negated -- The enchantment on this item has been suppressed.";
+			case EquipmentStatus.WEAK_POINT: //armor-only statuses
+				return "Weak point -- Enemies are twice as likely to score critical hits.";
+			case EquipmentStatus.WORN_OUT:
+				return "   Worn out -- Any further wear on this armor might damage it.";
+			case EquipmentStatus.DAMAGED:
+				return "          Damaged -- This armor provides no protection.";
+			case EquipmentStatus.INFESTED:
+				return "          Infested -- Insects constantly bite the wearer.";
+			case EquipmentStatus.RUSTED:
+				return "                          Rusted";
+			default:
+				return "No status";
+			}
 		}
 	}
 	public class Armor{
@@ -2276,8 +2333,8 @@ namespace Forays{
 				return new string[]{"Chainmail -- +6 Defense, -1 Stealth. Chainmail provides",
 									"            good protection but hampers stealth slightly."};
 			case ArmorType.FULL_PLATE:
-				return new string[]{"Full plate -- +10 Defense, -3 Stealth. Plate armor is noisy",
-									"       and shiny, providing great defense at the cost of stealth."};
+				return new string[]{"Full plate -- +10 Defense, -3 Stealth. Plate armor is",
+									" noisy and shiny, providing great defense at the cost of stealth."};
 			default:
 				return new string[]{"no armor",""};
 			}
@@ -2316,9 +2373,23 @@ namespace Forays{
 			case MagicTrinketType.PENDANT_OF_LIFE: //note that these are now 2 lines, not 3
 				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but only works once."};
 			case MagicTrinketType.CLOAK_OF_SAFETY:
-				return new string[]{"Cloak of disappearance -- When your health falls,","gives you a chance to escape to safety."};
+				return new string[]{"Cloak of safety -- Lets you escape to safety","if your health falls too low. Works only once."};
+			case MagicTrinketType.BELT_OF_WARDING:
+				return new string[]{"Belt of warding -- If you would take more than 15","damage at once, this item reduces the amount to 15."};
+			case MagicTrinketType.BRACERS_OF_ARROW_DEFLECTION:
+				return new string[]{"Bracers of arrow deflection -- Blocks every arrow","fired at you."};
+			case MagicTrinketType.CIRCLET_OF_THE_THIRD_EYE:
+				return new string[]{"Circlet of the third eye -- Grants a vision of","your surroundings when you rest."};
+			case MagicTrinketType.LENS_OF_SCRYING:
+				return new string[]{"Lens of scrying -- Identifies a random unknown","item from your pack when you descend to a new depth."};
+			case MagicTrinketType.RING_OF_KEEN_SIGHT:
+				return new string[]{"Ring of keen sight -- Doubles your chance to spot","traps and increases your bow accuracy by 15%."};
+			case MagicTrinketType.RING_OF_THE_LETHARGIC_FLAME:
+				return new string[]{"Ring of the lethargic flame -- While you're on","fire, you'll only burn for 1 damage each turn."};
+			case MagicTrinketType.BOOTS_OF_GRIPPING:
+				return new string[]{"Boots of gripping -- Lets you walk across slippery","surfaces without losing traction."};
 			default:
-				return new string[]{"no item","here"}; //todo
+				return new string[]{"no item","here"};
 			}
 		}
 	}

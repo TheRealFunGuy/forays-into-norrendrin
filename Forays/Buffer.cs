@@ -20,8 +20,6 @@ namespace Forays{
 		public static Actor player{get;set;}
 		public Buffer(Game g){
 			max_length=Global.COLS; //because the message window runs along the top of the map
-			//str = "";
-			//str2 = "";
 			str.Add("");
 			overflow = "";
 			log=new string[20];
@@ -32,14 +30,6 @@ namespace Forays{
 			M = g.M;
 			player = g.player;
 		}
-		//
-		// todo: fix this, somehow:
-		/*You hit the banshee. The banshee claws you. The runic
-transcendent casts mercurial sphere. The banshee is destroyed.
-The sphere bounces between the skulking killer, the banshee, the r
-		 */
-		//
-		//
 		public void Add(string s,params PhysicalObject[] objs){ //if there's at least one object, the player must be able to
 			bool add = false;
 			if(objs != null && objs.Length > 0){ //see at least one of them. if not, no message is added. 
@@ -59,6 +49,11 @@ The sphere bounces between the skulking killer, the banshee, the r
 					c[0] = Char.ToUpper(s[0]);
 					s = new string(c);
 				}
+				AddToStr(s);
+			}
+		}
+		private void AddToStr(string s){
+			if(s.Length > 0){
 				int idx = str.Count - 1;
 				str[idx] = str[idx] + s;
 				while(str[idx].Length > max_length){
@@ -70,18 +65,20 @@ The sphere bounces between the skulking killer, the banshee, the r
 						if(str[idx].Substring(i,1)==" "){
 							if(str.Count == 3){
 								overflow = str[idx].Substring(i+1);
+								str[idx] = str[idx].Substring(0,i+1);
 							}
 							else{
-								str.Add(str[idx].Substring(i+1)); //todo - this breaks very long lines again.
+								str.Add(str[idx].Substring(i+1));
+								str[idx] = str[idx].Substring(0,i+1);
+								idx++;
 							}
-							str[idx] = str[idx].Substring(0,i+1);
 							break;
 						}
 					}
 					if(overflow != ""){
 						Screen.ResetColors();
 						Print(false);
-						idx = 0;
+						idx = str.Count - 1;
 					}
 				}
 			}
@@ -125,49 +122,31 @@ The sphere bounces between the skulking killer, the banshee, the r
 		public void DisplayNow(){ //displays whatever is in the buffer. used before animations.
 			Console.CursorVisible = false;
 			Screen.ResetColors();
-			/*int idx = 3-str.Count;
-			foreach(string s in str){
-				//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,idx);
-				//Console.Write(s.PadRight(Global.COLS));
-				Screen.WriteMapString(idx-3,0,s.PadToMapSize());
-				++idx;
-			}*/
-			if(Global.Option(OptionType.HIDE_OLD_MESSAGES)){
-				for(int i=0;i<3;++i){
-					if(i < str.Count){
-						Screen.WriteMapString(i-3,0,str[i].PadToMapSize());
-					}
-					else{
-						Screen.WriteMapString(i-3,0,"".PadToMapSize());
-					}
-				}
+			int lines = str.Count;
+			if(str.Last() == ""){
+				--lines;
 			}
-			else{
-				int lines = str.Count;
-				if(str.Last() == ""){
-					--lines;
+			for(int i=0;i<3;++i){
+				bool old_message = true;
+				if(3-i <= lines){
+					old_message = false;
 				}
-				for(int i=0;i<3;++i){
-					bool old_message = true;
-					if(3-i <= lines){
-						old_message = false;
-					}
-					if(old_message){
-						Screen.WriteMapString(i-3,0,PreviousMessage(3-(i+lines)).PadToMapSize(),Color.DarkGray);
-						Screen.ForegroundColor = ConsoleColor.Gray;
-					}
-					else{
-						Screen.WriteMapString(i-3,0,str[(i+lines)-3].PadToMapSize());
-					}
+				if(old_message){
+					Screen.WriteMapString(i-3,0,PreviousMessage(3-(i+lines)).PadToMapSize(),Color.DarkGray);
+					Screen.ForegroundColor = ConsoleColor.Gray;
+				}
+				else{
+					Screen.WriteMapString(i-3,0,str[(i+lines)-3].PadToMapSize());
 				}
 			}
 		}
 		public void Print(bool special_message){
 			Console.CursorVisible = false;
-			//if(str.Last() != ""){
 			foreach(string s in str){
 				if(s != "You regenerate. " && s != "You rest... " && s != ""){
-					player.Interrupt();
+					if(!player.HasAttr(AttrType.RESTING)){
+						player.Interrupt();
+					}
 				}
 			}
 			bool repeated_message = false;
@@ -199,68 +178,33 @@ The sphere bounces between the skulking killer, the banshee, the r
 					}
 				}
 			}
-/*			for(int i=0;i<3;++i){
-				//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
-				//Console.Write("".PadRight(Global.COLS));
-				Screen.WriteMapString(i-3,0,"".PadToMapSize());
-			}*/
-			if(Global.Option(OptionType.HIDE_OLD_MESSAGES)){
-				for(int i=0;i<3;++i){
-					if(i <= str.Count-1){
-						//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
-						//Console.Write(str[i]);
-						Screen.WriteMapString(i-3,0,str[i].PadToMapSize());
-					}
-					else{
-						Screen.WriteMapString(i-3,0,"".PadToMapSize());
-					}
-				}
+			int lines = str.Count;
+			if(str.Last() == ""){
+				--lines;
 			}
-			else{
-				int lines = str.Count;
-				if(str.Last() == ""){
-					--lines;
+			for(int i=0;i<3;++i){
+				bool old_message = true;
+				if(3-i <= lines){
+					old_message = false;
 				}
-				for(int i=0;i<3;++i){
-					//Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
-/*					if(i >= 3-lines && str[(i+lines)-3] != ""){
-						Console.Write(str[(i+lines)-3]);
-					}
-					else{
-						Screen.ForegroundColor = ConsoleColor.DarkGray;
-						Console.Write(PreviousMessage(3-(i+lines)));
-						Screen.ForegroundColor = ConsoleColor.Gray;
-					}*/
-					bool old_message = true;
-					if(3-i <= lines){
-						old_message = false;
-					}
-					if(old_message){
-						//Screen.ForegroundColor = ConsoleColor.DarkGray;
-						//Console.Write(PreviousMessage(3-i));
-						Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize(),Color.DarkGray);
-						Screen.ForegroundColor = ConsoleColor.Gray;
-					}
-					else{
-						if(repeated_message){
-							int pos = PreviousMessage(3-i).LastIndexOf(" (x");
-							if(pos != -1){
-								//Console.Write(PreviousMessage(3-i).Substring(0,pos));
-								//Screen.ForegroundColor = ConsoleColor.DarkGray;
-								//Console.Write(PreviousMessage(3-i).Substring(pos));
-								Screen.WriteMapString(i-3,0,PreviousMessage(3-i).Substring(0,pos));
-								Screen.WriteMapString(i-3,pos,PreviousMessage(3-i).Substring(pos).PadToMapSize(),Color.DarkGray);
-								Screen.ForegroundColor = ConsoleColor.Gray;
-							}
-							else{
-								//Console.Write(PreviousMessage(3-i));
-								Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize());
-							}
+				if(old_message){
+					Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize(),Color.DarkGray);
+					Screen.ForegroundColor = ConsoleColor.Gray;
+				}
+				else{
+					if(repeated_message){
+						int pos = PreviousMessage(3-i).LastIndexOf(" (x");
+						if(pos != -1){
+							Screen.WriteMapString(i-3,0,PreviousMessage(3-i).Substring(0,pos));
+							Screen.WriteMapString(i-3,pos,PreviousMessage(3-i).Substring(pos).PadToMapSize(),Color.DarkGray);
+							Screen.ForegroundColor = ConsoleColor.Gray;
 						}
 						else{
-							//Console.Write(PreviousMessage(3-i));
 							Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize());
 						}
+					}
+					else{
+						Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize());
 					}
 				}
 			}
@@ -270,30 +214,17 @@ The sphere bounces between the skulking killer, the banshee, the r
 				if(cursor_row > 2){
 					cursor_row = 2; //hack - attempts a quick fix for the [more] appearing at the player's row
 				}
-				if(Screen.MapChar(0,0).c == '-'){ //hack
-					M.RedrawWithStrings();
-				}
-				else{
-					M.Draw();
-				}
-				//Console.SetCursorPosition(cursor_col,cursor_row);
-				//Screen.ForegroundColor = ConsoleColor.Yellow;
-				//Console.Write("[more]");
+				M.Draw();
 				Screen.WriteString(cursor_row,cursor_col,"[more]",Color.Yellow);
 				Screen.ForegroundColor = ConsoleColor.Gray;
 				Console.CursorVisible = true;
 				Console.ReadKey(true);
 			}
 			str.Clear();
-			str.Add(overflow);
+			str.Add("");
+			string temp = overflow;
 			overflow = "";
-/*			}
-			else{
-				for(int i=0;i<3;++i){
-					Console.SetCursorPosition(Global.MAP_OFFSET_COLS,i);
-					Console.Write("".PadRight(Global.COLS));
-				}
-			}*/
+			AddToStr(temp);
 		}
 		public void PrintAll(){
 			Screen.ResetColors();

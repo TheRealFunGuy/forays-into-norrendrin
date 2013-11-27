@@ -12,7 +12,7 @@ using System.Threading;
 using Utilities;
 namespace Forays{
 	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
-	public struct colorchar{ //todo: engine code version should be char,color
+	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
 		public char c;
@@ -37,7 +37,7 @@ namespace Forays{
 			c = c_;
 		}
 	}
-	public struct cstr{ //todo: engine code version should be string,color
+	public struct cstr{
 		public Color color;
 		public Color bgcolor;
 		public string s;
