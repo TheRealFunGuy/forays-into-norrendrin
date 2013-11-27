@@ -431,7 +431,7 @@ namespace Forays{
 				target = null;
 				return; //don't destroy the event, just remove the reference to the ghost.
 			}
-			if(target==target_ && (type==type_ || type_==EventType.ANY_EVENT)){ //todo: wtf? doesn't this break on attribute events?
+			if(target==target_ && (type==type_ || type_==EventType.ANY_EVENT)){
 				target = null;
 				if(msg_objs != null){
 					msg_objs.Clear();
@@ -524,11 +524,6 @@ namespace Forays{
 								B.Add("You wipe off your weapon. ");
 							}
 							temp.attrs[AttrType.KILLSTREAK] = 0;
-						}
-					}
-					if(attr==AttrType.STUNNED && msg.Contains("disoriented") && !temp.HasAttr(AttrType.BURROWING)){ //todo - this doesn't solve the problem
-						if(!player.CanSee(target)){
-							msg = "";
 						}
 					}
 					if(attr==AttrType.COOLDOWN_1 && temp.type == ActorType.BERSERKER){
@@ -981,7 +976,8 @@ namespace Forays{
 					foreach(Tile t in target.TilesWithinDistance(2)){
 						t.RemoveFeature(FeatureType.FOG);
 					}
-					target.UpdateRadius(target.light_radius,2);
+					int old_radius = target.light_radius;
+					target.UpdateRadius(old_radius,2,true);
 					B.Add(target.the_name + " spouts flames! ",target);
 					if(target.actor() != null){
 						target.actor().ApplyBurning();
@@ -997,7 +993,7 @@ namespace Forays{
 							}
 						}
 					}
-					target.UpdateRadius(2,target.light_radius);
+					target.UpdateRadius(2,old_radius,true);
 					if(value > 0){
 						Q.Add(new Event(target,100,EventType.FIRE_GEYSER_ERUPTION,value - 1));
 					}
@@ -1010,7 +1006,7 @@ namespace Forays{
 						current.AddFeature(FeatureType.FOG);
 						List<Tile> new_area = new List<Tile>{current};
 						Q.RemoveTilesFromEventAreas(new_area,EventType.FOG);
-						Q.Add(new Event(new_area,600,EventType.FOG,25)); //todo why does this make a new event for each, anyway?
+						Q.Add(new Event(new_area,600,EventType.FOG,25));
 					}
 					else{
 						for(int tries=0;tries<50;++tries){
@@ -1018,6 +1014,10 @@ namespace Forays{
 							foreach(Tile t in current.TilesAtDistance(1)){ //perhaps the rework could involve refreshing the duration of nearby tiles - if enough are refreshed, then no new tiles need to be added
 								if(t.passable){
 									open.Add(t);
+									if(!t.Is(FeatureType.FOG)){
+										open.Add(t); //3x as likely if it can expand there
+										open.Add(t);
+									}
 								}
 							}
 							if(open.Count > 0){
@@ -1714,7 +1714,7 @@ namespace Forays{
 										e2.area.Remove(t);
 										if(e2.area.Count == 0){
 											t2.RemoveFeature(FeatureType.STABLE_TELEPORTAL);
-											t2.AddFeature(FeatureType.INACTIVE_TELEPORTAL);
+											//t2.AddFeature(FeatureType.INACTIVE_TELEPORTAL);
 											e2.dead = true;
 										}
 									}
@@ -1845,7 +1845,7 @@ namespace Forays{
 						if(t.type == TileType.POPPY_FIELD){
 							new_area.Add(t);
 							Actor a = t.actor();
-							if(a != null && !a.HasAttr(AttrType.NONLIVING)){ //flying?
+							if(a != null && !a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE)){ //flying?
 								if(a.attrs[AttrType.POPPY_COUNTER] < 4){
 									a.GainAttrRefreshDuration(AttrType.POPPY_COUNTER,200);
 									if(a == player && a.attrs[AttrType.POPPY_COUNTER] == 1){
@@ -1858,6 +1858,7 @@ namespace Forays{
 								if(a.attrs[AttrType.POPPY_COUNTER] >= 4){
 									if(a == player && !a.HasAttr(AttrType.MAGICAL_DROWSINESS)){
 										B.Add("The poppies make you drowsy. ");
+										Help.TutorialTip(TutorialTopic.Drowsiness);
 									}
 									a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100,a.YouFeel() + " less drowsy. ",a);
 								}

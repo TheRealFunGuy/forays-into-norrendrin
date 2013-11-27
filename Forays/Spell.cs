@@ -9,7 +9,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 namespace Forays{
 	public static class Spell{
-		public static int Level(SpellType spell){
+		public static int Tier(SpellType spell){
 			switch(spell){
 			case SpellType.RADIANCE:
 			case SpellType.FORCE_PALM:

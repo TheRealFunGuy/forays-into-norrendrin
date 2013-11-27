@@ -29,8 +29,8 @@ namespace Forays{
 							B.Add("The blast fungus starts to smolder in the light. ",t);
 							t.Toggle(null);
 							if(t.inv == null){ //should always be true
-								t.GetItem(Item.Create(ConsumableType.BLAST_FUNGUS,t.row,t.col));
-								t.inv.quantity = 3;
+								Item.Create(ConsumableType.BLAST_FUNGUS,t.row,t.col);
+								t.inv.other_data = 3;
 								t.inv.revealed_by_light = true;
 							}
 							Q.Add(new Event(t.inv,100,EventType.BLAST_FUNGUS));
@@ -40,14 +40,33 @@ namespace Forays{
 			}
 		}
 		private bool internal_wiz_lite;
-		public bool wiz_dark{get;set;}
+		public bool wiz_dark{get{ return internal_wiz_dark; }
+			set{
+				internal_wiz_dark = value;
+				if(value == false){
+					foreach(Tile t in AllTiles()){
+						if(t.Is(TileType.BLAST_FUNGUS) && t.light_value > 0){
+							B.Add("The blast fungus starts to smolder in the light. ",t);
+							t.Toggle(null);
+							if(t.inv == null){ //should always be true
+								Item.Create(ConsumableType.BLAST_FUNGUS,t.row,t.col);
+								t.inv.other_data = 3;
+								t.inv.revealed_by_light = true;
+							}
+							Q.Add(new Event(t.inv,100,EventType.BLAST_FUNGUS));
+						}
+					}
+				}
+			}
+		}
+		private bool internal_wiz_dark;
 		private Dict<ActorType,int> generated_this_level = null; //used for rejecting monsters if too many already exist on the current level
 		private PosArray<int> monster_density = null;
 		private bool[,] danger_sensed{get;set;}
 		private static List<pos> allpositions = new List<pos>();
 		public PosArray<int> safetymap;
-		public int[,] row_displacement = null; //todo: are these displacement arrays used for anything?
-		public int[,] col_displacement = null;
+		//public int[,] row_displacement = null;
+		//public int[,] col_displacement = null;
 		public colorchar[,] last_seen = new colorchar[ROWS,COLS];
 
 		public static Color darkcolor = Color.DarkCyan;
@@ -92,6 +111,9 @@ namespace Forays{
 		}
 		public List<Tile> AllTiles(){ //possible speed issues? is there anywhere that I should be using 'alltiles' directly?
 			List<Tile> result = new List<Tile>(); //should i have one method that allows modification and one that doesn't?
+			if(tile[0,0] == null){ //if one is null, they are all null.
+				return result;
+			}
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					result.Add(tile[i,j]);
@@ -231,7 +253,8 @@ namespace Forays{
 				}
 			};
 			PosArray<int> a = GetDijkstraMap(Global.ROWS,Global.COLS,
-			                                 (s,t)=>tile[s,t].Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.STATUE), 
+			                                 (s,t)=>!tile[s,t].passable && !tile[s,t].IsDoorType(false),
+			                                 //(s,t)=>tile[s,t].Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.STATUE), 
 			                                 get_cost,sourcelist);
 			for(int i=0;i<Global.ROWS;++i){
 				for(int j=0;j<Global.COLS;++j){
@@ -724,7 +747,7 @@ namespace Forays{
 						if(actor[r,c] == player && !tile[r,c].IsLit()){
 							bool hidden_in_corner = false;
 							if(player.HasFeat(FeatType.CORNER_CLIMB) && !player.tile().IsLit()){
-								if(SchismExtensionMethods.Extensions.ConsecutiveAdjacent(player.p,x=>tile[x].Is(TileType.WALL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.STATUE,TileType.STONE_SLAB)) >= 5){
+								if(SchismExtensionMethods.Extensions.ConsecutiveAdjacent(player.p,x=>tile[x].Is(TileType.WALL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.DOOR_O,TileType.HIDDEN_DOOR,TileType.STATUE,TileType.STONE_SLAB,TileType.WAX_WALL)) >= 5){
 									hidden_in_corner = true;
 								}
 							}
@@ -771,152 +794,6 @@ namespace Forays{
 			}*/
 			return ch;
 		}
-/*		public colorchar VisibleColorChar(int r,int c){
-			colorchar ch = Screen.BlankChar();
-			if(player.CanSee(r,c)){
-				tile[r,c].seen = true;
-				if(tile[r,c].IsLit() || player.HasAttr(AttrType.SHADOWSIGHT)){
-					if(tile[r,c].IsTrapOrVent() || tile[r,c].IsShrine() || tile[r,c].Is(TileType.RUINED_SHRINE,TileType.STAIRS)){
-						if(tile[r,c].name != "floor"){ //don't mark traps that aren't visible yet
-							tile[r,c].revealed_by_light = true;
-						}
-					}
-					if(tile[r,c].inv != null){
-						tile[r,c].inv.revealed_by_light = true;
-					}
-				}
-				if(actor[r,c] != null && player.CanSee(actor[r,c])){
-					actor[r,c].attrs[AttrType.DANGER_SENSED] = 1;
-					ch.c = actor[r,c].symbol;
-					ch.color = actor[r,c].color;
-					if(actor[r,c] == player && player.HasFeat(FeatType.DANGER_SENSE)
-					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
-					&& !wiz_lite){
-						ch.color = Color.Red;
-					}
-					else{
-						if(actor[r,c] == player && !tile[r,c].IsLit()){
-							bool hidden_in_corner = false;
-							if(player.HasFeat(FeatType.CORNER_CLIMB) && !player.tile().IsLit()){
-								if(SchismExtensionMethods.Extensions.ConsecutiveAdjacent(player.p,x=>tile[x].Is(TileType.WALL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.STATUE,TileType.STONE_SLAB)) >= 5){
-									hidden_in_corner = true;
-								}
-							}
-							if(player.HasAttr(AttrType.SHADOW_CLOAK) || hidden_in_corner){
-								ch.color = Color.DarkBlue;
-							}
-							else{
-								ch.color = darkcolor;
-							}
-						}
-					}
-				}
-				else{
-					if(tile[r,c].inv != null){
-						ch.c = tile[r,c].inv.symbol;
-						ch.color = tile[r,c].inv.color;
-						if(!tile[r,c].inv.revealed_by_light && !tile[r,c].IsLit()){
-							ch.color = darkcolor;
-						}
-					}
-					else{
-						if(tile[r,c].features.Count > 0){
-							ch.c = tile[r,c].FeatureSymbol();
-							ch.color = tile[r,c].FeatureColor();
-						}
-						else{
-							ch.c = tile[r,c].symbol;
-							ch.color = tile[r,c].color;
-							if(ch.c == '#' && ch.color == Color.RandomGlowingFungus && !wiz_dark){
-								bool fungus_found = false;
-								foreach(Tile t in tile[r,c].NonOpaqueNeighborsBetween(player.row,player.col)){
-									if(t.type == TileType.GLOWING_FUNGUS){
-										fungus_found = true;
-									}
-								}
-								if(!fungus_found){
-									ch.color = Color.Gray;
-								}
-							}
-							if(!tile[r,c].revealed_by_light && !tile[r,c].IsLit()){
-								ch.color = darkcolor;
-							}
-							if(player.HasFeat(FeatType.DANGER_SENSE) && danger_sensed != null
-							   && danger_sensed[r,c] && player.LightRadius() == 0
-							   && !wiz_lite && !tile[r,c].IsKnownTrap() && !tile[r,c].IsShrine()){
-								ch.color = Color.Red;
-							}
-						}
-					}
-				}
-			}
-			else{
-				if(actor[r,c] != null && player.CanSee(actor[r,c])){
-					ch.c = actor[r,c].symbol;
-					ch.color = actor[r,c].color;
-				}
-				else{
-					if(tile[r,c].seen){
-						if(tile[r,c].inv != null){
-							ch.c = tile[r,c].inv.symbol;
-							if(tile[r,c].inv.revealed_by_light){
-								ch.color = tile[r,c].inv.color;
-							}
-							else{
-								ch.color = unseencolor;
-							}
-						}
-						else{
-							List<FeatureType> list = new List<FeatureType>{FeatureType.TELEPORTAL,FeatureType.INACTIVE_TELEPORTAL,FeatureType.STABLE_TELEPORTAL};
-							bool feature = false;
-							foreach(FeatureType ft in list){ //some features stay visible when out of sight
-								if(tile[r,c].Is(ft)){
-									feature = true;
-									ch.c = Tile.Feature(ft).symbol;
-									ch.color = Tile.Feature(ft).color;
-									break;
-								}
-							}
-							if(!feature){
-								ch.c = tile[r,c].symbol;
-								if(tile[r,c].revealed_by_light){
-									ch.color = tile[r,c].color;
-								}
-								else{
-									ch.color = unseencolor;
-								}
-								/*if((ch.c=='.' && ch.color == Color.White) || (ch.c=='#' && ch.color == Color.Gray)){
-												ch.color = Color.DarkGray;
-								}
-							}
-						}
-					}
-					else{
-						ch.c = ' ';
-						ch.color = Color.Black;
-					}
-				}
-				if(ch.color != Color.Black){
-					ch.color = unseencolor; //todo: this is done badly, for testing. instead, move it up and comment out the other color changes.
-				}
-			}
-			/*if(ch.c == '+' && ch.color != Color.DarkYellow){ //here are more examples of code page switching to get new symbols
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {241})[0];
-			}
-			if(ch.c == '2'){
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {20})[0];
-			}
-			if(ch.c == '@'){
-				ch.c = Encoding.GetEncoding(850).GetChars(new byte[] {248})[0];
-			}
-			if(ch.c == ',' && ch.color == Color.Red){
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {15})[0];
-			}
-			if(ch.c == '8'){
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {236})[0];
-			}
-			return ch;
-		}*/
 		public void RemoveTargets(Actor a){ //cleanup of references to dead monsters
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -1956,7 +1833,7 @@ namespace Forays{
 					d.RemoveDeadEndCorridors();
 					d.MarkInterestingLocations();
 					d.RemoveUnconnectedAreas();
-					if(d.NumberOfFloors() < 300){
+					if(d.NumberOfFloors() < 340){
 						d.Clear();
 					}
 					else{
@@ -2007,6 +1884,7 @@ namespace Forays{
 				Fire.AddBurningObject(player);
 			}
 			Actor.tiebreakers = new List<Actor>{player};
+			Actor.interrupted_path = new pos(-1,-1);
 			PosArray<CellType> map = GenerateMap(level_types[current_level-1]);
 			List<pos> interesting_tiles = new List<pos>();
 			for(int i=0;i<ROWS;++i){
@@ -2257,6 +2135,7 @@ namespace Forays{
 			List<Tile> hidden = new List<Tile>();
 			Event grave_dirt_event = null;
 			Event poppy_event = null;
+			Tile stairs = null;
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					//Screen.WriteMapChar(i,j,map[i,j]);
@@ -2267,8 +2146,14 @@ namespace Forays{
 						break;
 					case CellType.Door:
 						if(R.OneIn(150)){
-							Tile.Create(TileType.STONE_SLAB,i,j);
-							Q.Add(new Event(tile[i,j],new List<Tile>{tile[i,j]},100,EventType.STONE_SLAB));
+							if(R.CoinFlip()){
+								Tile.Create(TileType.STONE_SLAB,i,j);
+								Q.Add(new Event(tile[i,j],new List<Tile>{tile[i,j]},100,EventType.STONE_SLAB));
+							}
+							else{
+								Tile.Create(TileType.HIDDEN_DOOR,i,j);
+								hidden.Add(tile[i,j]);
+							}
 						}
 						else{
 							Tile.Create(TileType.DOOR_C,i,j);
@@ -2277,12 +2162,14 @@ namespace Forays{
 					case CellType.Stairs:
 						if(current_level < 20){
 							Tile.Create(TileType.STAIRS,i,j);
+							stairs = tile[i,j];
 						}
 						else{
 							if(current_level == 20){
 								Tile.Create(TileType.STAIRS,i,j);
 								tile[i,j].color = Color.Red;
 								tile[i,j].SetName("scorched stairway");
+								stairs = tile[i,j];
 							}
 							else{
 								Tile.Create(TileType.FLOOR,i,j);
@@ -2447,7 +2334,7 @@ namespace Forays{
 					t.UpdateRadius(0,t.light_radius);
 				}
 			}
-			int num_items = R.Roll(4);
+			int num_items = R.Roll(3);
 			for(int i=num_items;i>0;--i){
 				SpawnItem();
 			}
@@ -2507,22 +2394,21 @@ namespace Forays{
 										while(!done){
 											thralltype = MobType();
 											switch(thralltype){
-											case ActorType.ZOMBIE:
 											case ActorType.ROBED_ZEALOT:
-											case ActorType.BANSHEE:
-											case ActorType.WARG:
 											case ActorType.DERANGED_ASCETIC:
-											case ActorType.NOXIOUS_WORM:
 											case ActorType.BERSERKER:
 											case ActorType.TROLL:
-											case ActorType.VAMPIRE:
 											case ActorType.CRUSADING_KNIGHT:
-											case ActorType.INFESTED_MASS_TODO_NAME: //todo update list
+											case ActorType.SKITTERMOSS:
 											case ActorType.OGRE:
 											case ActorType.SHADOWVEIL_DUELIST:
 											case ActorType.STONE_GOLEM:
 											case ActorType.LUMINOUS_AVENGER:
-											case ActorType.CORPSETOWER_BEHEMOTH:
+											case ActorType.WILD_BOAR:
+											case ActorType.ALASI_SOLDIER:
+											case ActorType.SAVAGE_HULK:
+											case ActorType.CORROSIVE_OOZE:
+											case ActorType.ALASI_SENTINEL:
 												done = true;
 												break;
 											}
@@ -2560,10 +2446,16 @@ namespace Forays{
 					}
 				}
 			}
+			int minimum_distance_from_stairs = 0;
+			PosArray<int> distance_from_stairs = null;
+			if(stairs != null){
+				distance_from_stairs = tile.GetDijkstraMap(x=>tile[x].BlocksConnectivityOfMap(),new List<pos>{stairs.p});
+				minimum_distance_from_stairs = distance_from_stairs[distance_from_stairs.PositionsWhere(x=>distance_from_stairs[x].IsValidDijkstraValue()).WhereGreatest(x=>distance_from_stairs[x]).Random()] / 2;
+			}
 			bool[,] good_location = new bool[ROWS,COLS];
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
-					if(tile[i,j].type == TileType.FLOOR){
+					if(tile[i,j].Is(TileType.FLOOR) && !tile[i,j].Is(FeatureType.WEB) && (stairs == null || distance_from_stairs[i,j] >= minimum_distance_from_stairs)){
 						good_location[i,j] = true;
 					}
 					else{
@@ -2653,7 +2545,7 @@ namespace Forays{
 					}
 				}
 			}
-			if(R.CoinFlip()){
+			if(R.CoinFlip()){ //todo: copied and pasted below
 				bool done = false;
 				for(int tries=0;!done && tries<500;++tries){
 					int rr = R.Roll(ROWS-4) + 1;
@@ -2826,6 +2718,7 @@ namespace Forays{
 									hidden.Add(t);
 								}
 								tile[rr,rc].TileInDirection(dirs[0].RotateDir(true,4)).TransformTo(TileType.CHEST);
+								tile[rr,rc].TileInDirection(dirs[0].RotateDir(true,4)).color = Color.Yellow;
 							}
 							else{
 								foreach(Tile t in tile[rr,rc].TilesAtDistance(1)){
@@ -2838,12 +2731,206 @@ namespace Forays{
 									hidden.Add(t);
 								}
 								tile[rr,rc].TransformTo(TileType.CHEST);
+								tile[rr,rc].color = Color.Yellow;
 							}
 							done = true;
 						}
 					}
 				}
 			}
+			/*if(R.CoinFlip()){
+				bool done = false;
+				for(int tries=0;!done && tries<500;++tries){
+					int rr = R.Roll(ROWS-4) + 1;
+					int rc = R.Roll(COLS-4) + 1;
+					bool good = true;
+					foreach(Tile t in tile[rr,rc].TilesWithinDistance(2)){
+						if(t.type != TileType.WALL){
+							good = false;
+							break;
+						}
+					}
+					if(good){
+						List<int> dirs = new List<int>();
+						bool long_corridor = false;
+						int connections = 0;
+						for(int i=2;i<=8;i+=2){
+							Tile t = tile[rr,rc].TileInDirection(i).TileInDirection(i);
+							bool good_dir = true;
+							int distance = -1;
+							while(good_dir && t != null && t.type == TileType.WALL){
+								if(t.TileInDirection(i.RotateDir(false,2)).type != TileType.WALL){
+									good_dir = false;
+								}
+								if(t.TileInDirection(i.RotateDir(true,2)).type != TileType.WALL){
+									good_dir = false;
+								}
+								t = t.TileInDirection(i);
+								if(t != null && t.type == TileType.STATUE){
+									good_dir = false;
+								}
+								++distance;
+							}
+							if(good_dir && t != null){
+								dirs.Add(i);
+								++connections;
+								if(distance >= 4){
+									long_corridor = true;
+								}
+							}
+						}
+						if(dirs.Count > 0){
+							List<TileType> possible_traps = new List<TileType>();
+							int trap_roll = R.Roll(7);
+							if(trap_roll == 1 || trap_roll == 4 || trap_roll == 5 || trap_roll == 7){
+								possible_traps.Add(TileType.GRENADE_TRAP);
+							}
+							if(trap_roll == 2 || trap_roll == 4 || trap_roll == 6 || trap_roll == 7){
+								possible_traps.Add(TileType.POISON_GAS_TRAP);
+							}
+							if(trap_roll == 3 || trap_roll == 5 || trap_roll == 6 || trap_roll == 7){
+								possible_traps.Add(TileType.PHANTOM_TRAP);
+							}
+							bool stone_slabs = false; //(instead of hidden doors)
+							if(R.OneIn(4)){
+								stone_slabs = true;
+							}
+							foreach(int i in dirs){
+								Tile t = tile[rr,rc].TileInDirection(i);
+								int distance = -2; //distance of the corridor between traps and secret door
+								while(t.type == TileType.WALL){
+									++distance;
+									t = t.TileInDirection(i);
+								}
+								if(long_corridor && distance < 4){
+									continue;
+								}
+								t = tile[rr,rc].TileInDirection(i);
+								while(t.type == TileType.WALL){
+									if(distance >= 4){
+										TileType tt = TileType.FLOOR;
+										if(R.Roll(3) >= 2){
+											tt = possible_traps.Random();
+											hidden.Add(t);
+										}
+										t.TransformTo(tt);
+										t.name = "floor";
+										t.the_name = "the floor";
+										t.a_name = "a floor";
+										t.symbol = '.';
+										t.color = Color.White;
+										if(t.DistanceFrom(tile[rr,rc]) < distance+2){
+											Tile neighbor = t.TileInDirection(i.RotateDir(false,2));
+											if(neighbor.TileInDirection(i.RotateDir(false,1)).type == TileType.WALL
+											   && neighbor.TileInDirection(i.RotateDir(false,2)).type == TileType.WALL
+											   && neighbor.TileInDirection(i.RotateDir(false,3)).type == TileType.WALL){
+												tt = TileType.FLOOR;
+												if(R.Roll(3) >= 2){
+													tt = possible_traps.Random();
+												}
+												neighbor.TransformTo(tt);
+												if(possible_traps.Contains(tt)){
+													neighbor.name = "floor";
+													neighbor.the_name = "the floor";
+													neighbor.a_name = "a floor";
+													neighbor.symbol = '.';
+													neighbor.color = Color.White;
+													hidden.Add(neighbor);
+												}
+											}
+											neighbor = t.TileInDirection(i.RotateDir(true,2));
+											if(neighbor.TileInDirection(i.RotateDir(true,1)).type == TileType.WALL
+											   && neighbor.TileInDirection(i.RotateDir(true,2)).type == TileType.WALL
+											   && neighbor.TileInDirection(i.RotateDir(true,3)).type == TileType.WALL){
+												tt = TileType.FLOOR;
+												if(R.Roll(3) >= 2){
+													tt = possible_traps.Random();
+												}
+												neighbor.TransformTo(tt);
+												if(possible_traps.Contains(tt)){
+													neighbor.name = "floor";
+													neighbor.the_name = "the floor";
+													neighbor.a_name = "a floor";
+													neighbor.symbol = '.';
+													neighbor.color = Color.White;
+													hidden.Add(neighbor);
+												}
+											}
+										}
+									}
+									else{
+										TileType tt = TileType.FLOOR;
+										if(R.CoinFlip()){
+											tt = Tile.RandomTrap();
+											hidden.Add(t);
+										}
+										t.TransformTo(tt);
+										if(tt != TileType.FLOOR){
+											t.name = "floor";
+											t.the_name = "the floor";
+											t.a_name = "a floor";
+											t.symbol = '.';
+											t.color = Color.White;
+										}
+									}
+									t = t.TileInDirection(i);
+								}
+								t = t.TileInDirection(i.RotateDir(true,4));
+								if(stone_slabs){
+									t.TransformTo(TileType.STONE_SLAB);
+									Q.Add(new Event(t,new List<Tile>{t.TileInDirection(i.RotateDir(true,4))},100,EventType.STONE_SLAB));
+								}
+								else{
+									t.TransformTo(TileType.HIDDEN_DOOR);
+									hidden.AddUnique(t);
+								}
+								t = t.TileInDirection(i.RotateDir(true,4));
+								if(R.CoinFlip()){
+									if(t.IsTrap()){
+										t.type = TileType.ALARM_TRAP;
+									}
+									else{
+										t.TransformTo(TileType.ALARM_TRAP);
+										t.name = "floor";
+										t.the_name = "the floor";
+										t.a_name = "a floor";
+										t.symbol = '.';
+										t.color = Color.White;
+										hidden.AddUnique(t);
+									}
+								}
+							}
+							if(long_corridor && connections == 1){
+								foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){
+									t.TransformTo(possible_traps.Random());
+									t.name = "floor";
+									t.the_name = "the floor";
+									t.a_name = "a floor";
+									t.symbol = '.';
+									t.color = Color.White;
+									hidden.Add(t);
+								}
+								tile[rr,rc].TileInDirection(dirs[0].RotateDir(true,4)).TransformTo(TileType.CHEST);
+								tile[rr,rc].TileInDirection(dirs[0].RotateDir(true,4)).color = Color.Yellow;
+							}
+							else{
+								foreach(Tile t in tile[rr,rc].TilesAtDistance(1)){
+									t.TransformTo(Tile.RandomTrap());
+									t.name = "floor";
+									t.the_name = "the floor";
+									t.a_name = "a floor";
+									t.symbol = '.';
+									t.color = Color.White;
+									hidden.Add(t);
+								}
+								tile[rr,rc].TransformTo(TileType.CHEST);
+								tile[rr,rc].color = Color.Yellow;
+							}
+							done = true;
+						}
+					}
+				}
+			}*/
 			foreach(Tile t in AllTiles()){
 				if(t.type != TileType.WALL){
 					foreach(Tile neighbor in t.TilesAtDistance(1)){
@@ -3238,8 +3325,8 @@ namespace Forays{
 					25,6,8,15,10,5,5,30,2};
 				break;
 			case LevelType.Hive:
-				rarity = new int[]{30,100,100,50,
-					50,100,8,10,50,100,100,25,25};
+				rarity = new int[]{30,15,100,50,
+					50,100,8,10,10,100,100,25,25};
 				break;
 			case LevelType.Fortress:
 				rarity = new int[]{30,100,100,100,
@@ -3434,18 +3521,56 @@ namespace Forays{
 					}
 					break;
 				case DungeonFeature.VINES:
-					for(int i=0;i<50;++i){
+					for(int i=0;i<500;++i){
 						int rr = R.Roll(ROWS-2);
 						int rc = R.Roll(COLS-2);
 						pos p = new pos(rr,rc);
-						if(map[p].IsRoomEdgeType() && p.HasAdjacentWhere(x=>map[x].IsWall())){
-							List<pos> vine = map.GetFloodFillPositions(p,false,x=>map[x].IsRoomEdgeType() && !R.OneIn(6));
-							foreach(pos p2 in vine){
-								if(R.OneIn(15)){
-									map[p2] = CellType.PoisonBulb;
+						if(map[p].IsRoomType() && p.HasAdjacentWhere(x=>map[x].IsWall())){
+							PosArray<bool> vine = map.GetFloodFillArray(p,false,x=>map[x].IsRoomType() && x.HasAdjacentWhere(y=>map[y].IsWall()) && !R.OneIn(6));
+							rr = R.Roll(ROWS-2);
+							rc = R.Roll(COLS-2);
+							pos p2 = new pos(rr,rc);
+							PosArray<bool> new_vine = new PosArray<bool>(ROWS,COLS);
+							int max = Math.Max(ROWS,COLS);
+							for(int dist=0;dist<max;++dist){
+								List<pos> positions = p2.PositionsAtDistance(dist,false);
+								if(positions.Count > 0){
+									foreach(pos possible_vine in positions){
+										if(possible_vine.BoundsCheck(new_vine,false) && vine[possible_vine] && possible_vine.PositionsAtDistance(1).Where(x=>new_vine[x]).Count < 3){
+											new_vine[possible_vine] = true;
+										}
+									}
 								}
 								else{
-									map[p2] = CellType.Vine;
+									break;
+								}
+							}
+							List<pos> added = new List<pos>();
+							for(int s=1;s<ROWS-1;++s){
+								for(int t=1;t<COLS-1;++t){
+									if(new_vine[s,t]){
+										pos neighbor = new pos(s,t);
+										foreach(int dir in U.FourDirections){
+											if(R.OneIn(6) && map[neighbor.PosInDir(dir)].IsFloor()){
+												added.AddUnique(neighbor.PosInDir(dir));
+											}
+										}
+									}
+								}
+							}
+							foreach(pos neighbor in added){
+								vine[neighbor] = true;
+							}
+							for(int s=1;s<ROWS-1;++s){
+								for(int t=1;t<COLS-1;++t){
+									if(new_vine[s,t]){
+										if(R.OneIn(20)){
+											map[s,t] = CellType.PoisonBulb;
+										}
+										else{
+											map[s,t] = CellType.Vine;
+										}
+									}
 								}
 							}
 							break;
@@ -3484,6 +3609,7 @@ namespace Forays{
 			case LevelType.Standard:
 				messages.Add("You enter a complex of ancient rooms and hallways. ");
 				messages.Add("Well-worn corridors suggest that these rooms are frequently used. ");
+				messages.Add("You find another network of hallways and rooms. ");
 				break;
 			case LevelType.Cave:
 				messages.Add("You enter a large natural cave. ");
@@ -3496,17 +3622,20 @@ namespace Forays{
 				messages.Add("This section of the dungeon has partially collapsed. ");
 				break;*/
 			case LevelType.Hive:
-				messages.Add("You enter an area made up of small chambers. Some of the walls are covered in a waxy substance. ");
+				messages.Add("You enter an area made up of small chambers. The walls here seem to be made of wax. ");
 				messages.Add("As you enter the small chambers here, you hear a faint buzzing. It sounds like insects. ");
+				messages.Add("You enter a network of dark and cramped chambers, made entirely of wax. ");
 				break;
 			case LevelType.Mine:
 				messages.Add("You enter a system of mining tunnels. ");
-				messages.Add("Mining tools are scattered on the ground of this level. ");
+				messages.Add("Mining tools are scattered on the ground here. ");
 				messages.Add("You notice half-finished tunnels and mining equipment here. ");
+				messages.Add("These tunnels are strewn with mining implements. ");
 				break;
 			case LevelType.Fortress:
 				messages.Add("You pass through a broken gate and enter the remnants of a fortress. ");
-				messages.Add("This level looks like it was intended to be a stronghold. ");
+				messages.Add("This area looks like it was intended to be a stronghold. ");
+				messages.Add("The remains of a fallen fortress appear before you. ");
 				break;
 			/*case LevelType.Extravagant:
 				messages.Add("This area is decorated with fine tapestries, marble statues, and other luxuries. ");

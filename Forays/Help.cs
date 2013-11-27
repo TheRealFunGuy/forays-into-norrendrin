@@ -13,7 +13,7 @@ using System.Threading;
 using Utilities;
 namespace Forays{
 	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced,Tips};
-	public enum TutorialTopic{Movement,Attacking,Torch,Resistance,Fire,Recovery,RangedAttacks,Feats,Armor,HealingPool,Consumables};
+	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,IdentifiedConsumables,UnidentifiedConsumables,ShinyPlateArmor,HeavyPlateArmor,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
 	public static class Help{
 		public static Dict<TutorialTopic,bool> displayed = new Dict<TutorialTopic,bool>();
 		public static void DisplayHelp(){ DisplayHelp(HelpTopic.Overview); }
@@ -256,6 +256,327 @@ namespace Forays{
 		}
 		public static string[] TutorialText(TutorialTopic topic){
 			switch(topic){
+			case TutorialTopic.Acidified:
+				return new string[]{
+					"Acid",
+					"",
+					"Acid can damage your metal equipment.",
+					"",
+					"Acidic attacks will wear out your metal armor",
+					"first, and then damage it. (Damaged armor gives",
+					"no protection.)",
+					"",
+					"Some monsters are acidic enough that attacking",
+					"them will dull your metal weapons, too. (A dulled",
+					"weapon deals minimum damage.)"};
+			case TutorialTopic.Afraid:
+				return new string[]{
+					"Terrified",
+					"",
+					"While frightened, you're unable to attack the",
+					"source of your terror, and unable to move into",
+					"any space next to it."};
+			case TutorialTopic.BlastFungus:
+				return new string[]{
+					"Blast fungus",
+					"",
+					"Any light will ignite the fuse of a blast fungus.",
+					"After a few turns, it'll explode.",
+					"",
+					"Until lit, it is rooted firmly to the ground by",
+					"its fuse. After being lit, it can be picked up",
+					"and thrown - quickly!"};
+			case TutorialTopic.CrackedWall:
+				return new string[]{
+					"Cracked walls",
+					"",
+					"These damaged walls will break if something is",
+					"knocked through them, or when hit with an",
+					"explosive force.",
+					"",
+					"(Small enemies and items won't",
+					"be knocked through.)"};
+			case TutorialTopic.Damaged:
+				return new string[]{
+					"Damaged",
+					"",
+					"When your armor is damaged, it provides no",
+					"protection, and enemies will score critical",
+					"hits twice as often. Any negatives (such as",
+					"stealth penalties) still apply.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Drowsiness:
+				return new string[]{
+					"Drowsiness",
+					"",
+					"Being drowsy causes you to fall asleep",
+					"when you're not in combat (attacking or",
+					"being attacked).",
+					"",
+					"While you're asleep, you can't see or",
+					"defend against attacks."};
+			case TutorialTopic.Dulled:
+				return new string[]{
+					"Dulled",
+					"",
+					"A dull weapon deals minimum damage. (Since",
+					"all your melee weapons deal 2d6 damage",
+					"normally, they deal 2 damage while dull.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Fire:
+				return new string[]{
+					"Fire",
+					"",
+					"A common hazard, fire will spread to nearby",
+					"flammable dungeon features and items.",
+					"Burning objects will generate enough heat",
+					"to sear those nearby, so even standing near",
+					"a roaring fire is dangerous.",
+					"",
+					"If you catch fire, you'll take damage for several",
+					"turns before you stop burning. Water and slime",
+					"will extinguish a fire immediately, as will the",
+					"thick vapors of a poison gas cloud."};
+			case TutorialTopic.Frozen:
+				return new string[]{
+					"Frozen",
+					"",
+					"While you're encased in ice, you don't take damage",
+					"(except poison) and you can't take any actions.",
+					"",
+					"If you attempt to move or take an action, you'll",
+					"try to break free. Fire damage will melt the ice",
+					"instantly."};
+			case TutorialTopic.Grabbed:
+				return new string[]{
+					"Grabbed",
+					"",
+					"When an enemy grabs you, you can't step away",
+					"from it. You can still move away by other",
+					"means, and you can maneuver around that enemy",
+					"as long as you stay adjacent to it.",
+					"",
+					"If you're covered in a slippery substance,",
+					"you'll escape from grabs effortlessly."};
+			case TutorialTopic.Heavy:
+				return new string[]{
+					"Heavy",
+					"",
+					"A heavy weapon has a 50% chance of increasing",
+					"your exhaustion with each attack.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Infested:
+				return new string[]{
+					"Infested",
+					"",
+					"While your armor is infested, wearing it will",
+					"subject you to dozens of bites, constantly",
+					"damaging you.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Merciful:
+				return new string[]{
+					"Merciful",
+					"",
+					"A merciful weapon will reduce an enemy to 1 HP",
+					"but no further.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Negated:
+				return new string[]{
+					"Negated",
+					"",
+					"A negated weapon has its enchantment suppressed.",
+					"That enchantment won't do anything until",
+					"the weapon is no longer negated.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Oiled:
+				return new string[]{
+					"Covered in oil",
+					"",
+					"Being covered in oil has several effects. It's",
+					"very easy to catch fire - any fire damage will",
+					"instantly ignite you.",
+					"",
+					"You can't be grabbed or stuck in webs while",
+					"covered in a slippery substance.",
+					"",
+					"However, you have a chance to slip and drop any",
+					"consumable item that you try to use."};
+			case TutorialTopic.ShinyPlateArmor:
+				return new string[]{
+					"Shiny plate armor",
+					"",
+					"Your plate armor is polished and shiny.",
+					"As a result, standing in the light gives",
+					"away your position as though you were",
+					"holding a torch."};
+			case TutorialTopic.HeavyPlateArmor:
+				return new string[]{
+					"Heavy plate armor",
+					"",
+					"Plate armor provides excellent protection, but",
+					"its weight will add to your exhaustion each time",
+					"it blocks an attack."};
+			case TutorialTopic.Possessed:
+				return new string[]{
+					"Possessed",
+					"",
+					"A possessed weapon will sometimes choose its own",
+					"target. Half of your attacks will be redirected",
+					"to a random target within range, including your",
+					"original target and yourself.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Roots:
+				return new string[]{
+					"Roots",
+					"",
+					"While you're rooted to the ground, you are",
+					"entirely immobile. Walking, teleportation,",
+					"knockback, and similar effects will fail."};
+			case TutorialTopic.Shrines:
+				return new string[]{
+					"Shrines",
+					"",
+					"Shrines will provide a permanent boost to",
+					"one of your 5 skills (Combat, Defense,",
+					"Magic, Spirit, Stealth) when you activate",
+					"them by pressing [g].",
+					"",
+					"Some shrines appear in pairs. When you activate",
+					"one, the other will also be depleted."};
+			case TutorialTopic.Silenced:
+				return new string[]{
+					"Silenced",
+					"",
+					"While silenced, you can't read scrolls or",
+					"cast spells, and any sounds originating",
+					"from your location are suppressed."};
+			case TutorialTopic.Slimed:
+				return new string[]{
+					"Slimed",
+					"",
+					"Being covered in slime has several effects. You",
+					"can't be set on fire while covered in slime",
+					"(although you take fire damage as normal). Cold",
+					"damage causes the slime to harden and fall off.",
+					"",
+					"You can't be grabbed or stuck in webs while",
+					"covered in a slippery substance.",
+					"",
+					"However, you have a chance to slip and drop any",
+					"consumable item that you try to use."};
+			case TutorialTopic.Stoneform:
+				return new string[]{
+					"Stoneform",
+					"",
+					"Stoneform transformation has several effects:",
+					"",
+					"Your rocky skin makes it impossible for you",
+					"to catch fire.",
+					"",
+					"You become immune to effects that work only",
+					"on living creatures. This includes life drain",
+					"and toxins of all types.",
+					"",
+					"However, this also renders you immune to the",
+					"effects of all potions. (Any active potion",
+					"effects will end.)"};
+			case TutorialTopic.StoneSlab:
+				return new string[]{
+					"Stone slabs",
+					"",
+					"These barriers will open when light",
+					"shines upon them."};
+			case TutorialTopic.Stuck:
+				return new string[]{
+					"Stuck",
+					"",
+					"A weapon (or armor) affected by this curse is",
+					"impossible to drop or remove. You won't be able",
+					"to switch to other weapons (or armors).",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Stunned:
+				return new string[]{
+					"Stunned",
+					"",
+					"While stunned, you can walk normally, but any",
+					"other action might fail, causing you to stagger",
+					"in a random direction."};
+			case TutorialTopic.SwitchingEquipment:
+				return new string[]{
+					"Switching equipment",
+					"",
+					"You have several different weapons and armors",
+					"available to you at all times. Each has its own",
+					"strengths and weaknesses, so pick the best for",
+					"each situation.",
+					"",
+					"You can switch to another weapon or armor by",
+					"pressing [e] to access the equipment screen."};
+			case TutorialTopic.UnidentifiedConsumables:
+				return new string[]{
+					"Trying consumable items",
+					"",
+					"It's important to try the items that you find",
+					"in the dungeon. Without learning what they do,",
+					"you won't know which items can help you in an",
+					"emergency."};
+			case TutorialTopic.Vampirism:
+				return new string[]{
+					"Vampirism",
+					"",
+					"While vampiric, you float in the air,",
+					"avoiding traps and other terrain hazards.",
+					"You also drain life from living foes on",
+					"successful attacks.",
+					"",
+					"However, exposure to light will leave you",
+					"vulnerable. (Taking damage while vulnerable",
+					"removes vulnerability and deals 3d6 damage.)",};
+			case TutorialTopic.Vulnerable:
+				return new string[]{
+					"Vulnerable",
+					"",
+					"While you're vulnerable, taking any damage",
+					"will activate its effect. You'll take 3d6",
+					"extra damage, after which you'll no longer",
+					"be vulnerable."};
+			case TutorialTopic.WeakPoint:
+				return new string[]{
+					"Weak point",
+					"",
+					"Wearing armor that has a weak point makes it",
+					"twice as likely that enemies will score critical",
+					"hits on you.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
+			case TutorialTopic.WornOut:
+				return new string[]{
+					"Worn out",
+					"",
+					"If your armor is worn out, its condition isn't",
+					"yet bad enough to grant any penalties. However,",
+					"further wear can cause it to become damaged",
+					"enough to provide no protection at all.",
+					"",
+					"Like all equipment damage, this effect will end",
+					"when you [r]est to repair your equipment."};
 			case TutorialTopic.Movement:
 				return new string[]{
 					"Moving around",
@@ -275,7 +596,7 @@ namespace Forays{
 					"Attacking enemies",
 					"",
 					"To make a melee attack, simply try to",
-					"move toward an adjacent monster."};
+					"move directly into an adjacent monster."};
 			case TutorialTopic.Torch:
 				return new string[]{
 					"Using your torch",
@@ -292,18 +613,6 @@ namespace Forays{
 					"spotting hidden things), but you'll be able",
 					"to sneak around without automatically",
 					"alerting monsters."};
-			case TutorialTopic.Resistance:
-				return new string[]{
-					"Resisted!",
-					"",
-					"Some monsters take half damage from certain",
-					"attack types. If a monster resists one of your",
-					"attacks, you can switch to a different",
-					"weapon by pressing [e] to access the",
-					"equipment screen.",
-					"",
-					"For example, skeletons resist several types of",
-					"damage, but are fully vulnerable to maces."};
 			case TutorialTopic.RangedAttacks:
 				return new string[]{
 					"Ranged attacks",
@@ -320,55 +629,36 @@ namespace Forays{
 					"Feats are special abilities",
 					"you can learn at shrines.",
 					"",
-					"You need to put ALL of the required",
-					"points into a feat before you can",
-					"use it."};
-			case TutorialTopic.Armor:
-				return new string[]{
-					"Armor",
+					"You learn a feat when one of your skills",
+					"increases to 1, and again when it reaches 6.",
 					"",
-					"Armor helps you to avoid taking damage from",
-					"attacks, but heavy armor also interferes with",
-					"both stealth and magic spells.",
-					"",
-					"If you don't need stealth or magic, wear",
-					"full plate for the best protection."};
-			case TutorialTopic.Fire:
-				return new string[]{
-					"You're on fire!",
-					"",
-					"You'll take damage each turn",
-					"until you put it out.",
-					"",
-					"Stand still by pressing [.] and",
-					"you'll try to put out the fire."};
+					"(The feat starts working immediately",
+					"upon choosing it.)"};
 			case TutorialTopic.Recovery:
 				return new string[]{
 					"Recovering health",
 					"",
-					"Take advantage of your natural recovery. Your",
-					"health will slowly return until your HP reaches",
-					"a multiple of 10 (so if your health is 74/100,",
-					"it'll go back up to 80/100, and then stop).",
+					"Once per dungeon level, you can rest",
+					"to restore your health, mana, and exhaustion,",
+					"in addition to repairing all damage done to",
+					"your weapons and armor.",
 					"",
-					"If that isn't enough, you can restore more HP by",
-					"resting. Press [r], and if you're undisturbed for",
-					"10 turns, you'll regain half of your missing HP",
-					"(and restore your magic reserves, if applicable).",
+					"Press [r], and if you remain undisturbed for",
+					"10 turns, you'll successfully recover.",
 					"",
-					"You can rest only once per dungeon level, but your",
-					"natural recovery always works."};
-			case TutorialTopic.HealingPool:
+					"For minor wounds, [a]pply the bandages that are in",
+					"your pack. You'll gradually recover 10 HP."};
+			case TutorialTopic.PoolOfRestoration:
 				return new string[]{
-					"Healing pools",
+					"Pools of restoration",
 					"",
-					"Perhaps a relative of wishing wells, healing",
+					"Perhaps a relative of wishing wells, these",
 					"pools are a rare feature of the dungeon that",
-					"can fully restore your health.",
+					"can fully restore your health and mana.",
 					"",
-					"To activate a healing pool, drop in an item",
-					"by pressing [d]."};
-			case TutorialTopic.Consumables:
+					"To activate a pool of restoration, drop in",
+					"an item by pressing [d]."};
+			case TutorialTopic.IdentifiedConsumables:
 				return new string[]{
 					"Using consumable items",
 					"",

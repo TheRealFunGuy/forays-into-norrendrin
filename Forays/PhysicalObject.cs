@@ -172,7 +172,7 @@ namespace Forays{
 				}
 			}
 			foreach(Actor a in actors){
-				if(a != player){ //todo: let the player hear sounds with a message?
+				if(a != player){ //let the player hear sounds with a message?
 					if(!a.CanSee(player) && a.target_location == null && !a.HasAttr(AttrType.AMNESIA_STUN)){ //if they already have an idea of where the player is/was, they won't bother
 						if(volume > 2 || !a.HasAttr(AttrType.IGNORES_QUIET_SOUNDS)){ //(and amnesia stun makes them ignore all sounds)
 							a.FindPath(this);
@@ -249,10 +249,10 @@ namespace Forays{
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked through " + tilename + ". ",a,t);
 						}
-						knockback_strength -= 2; //todo: is this what I want to do here?
+						//knockback_strength -= 2; //removing the distance modification for now
 						t.Toggle(null);
 						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
-						a.Move(t.row,t.col); //todo: test this code
+						a.Move(t.row,t.col);
 					}
 					else{
 						if(player.CanSee(a.tile())){
@@ -446,6 +446,9 @@ namespace Forays{
 									i.Use(null,new List<Tile>{t});
 								}
 							}
+							if(t.Is(FeatureType.WEB)){
+								t.RemoveFeature(FeatureType.WEB);
+							}
 							if(t.Is(TileType.CRACKED_WALL)){
 								affected_walls.AddUnique(t);
 							}
@@ -492,6 +495,12 @@ namespace Forays{
 									t.inv = null;
 									i.Use(null,new List<Tile>{t});
 								}
+							}
+							if(t.Is(FeatureType.BONES)){
+								t.RemoveFeature(FeatureType.BONES);
+							}
+							if(t.Is(FeatureType.WEB)){
+								t.RemoveFeature(FeatureType.WEB);
 							}
 							if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.RUBBLE)){
 								affected_walls.Add(t);
@@ -2464,7 +2473,7 @@ compare this number to 1/2:  if less than 1/2, major.
 			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
 			for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
 				foreach(Actor a in ActorsAtDistance(i)){
-					if(player.CanSee(a) && player.HasLOS(a)){ //todo make sure this works
+					if(player.CanSee(a)){
 						if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOS(a))){
 							interesting_targets.Add(a);
 						}
@@ -2538,19 +2547,6 @@ compare this number to 1/2:  if less than 1/2, major.
 				else{
 					r = player.target.row;
 					c = player.target.col;
-					if(Global.Option(OptionType.LAST_TARGET)){ //probably remove this option todo
-						List<Tile> bestline = null;
-						if(extend_line){
-							bestline = GetBestExtendedLineOfEffect(player.target).ToFirstSolidTile();
-							if(bestline.Count > max_distance+1){
-								bestline.RemoveRange(max_distance+1,bestline.Count - max_distance - 1);
-							}
-						}
-						else{
-							bestline = GetBestLineOfEffect(player.target).ToFirstSolidTile();
-						}
-						return bestline;
-					}
 				}
 			}
 			bool first_iteration = true;
@@ -2589,7 +2585,7 @@ compare this number to 1/2:  if less than 1/2, major.
 									}
 								}
 								else{
-									contents += items[0] + " and " + items[1]; //todo: this might be able to use the ConcatenateWithCommas extension method
+									contents += items[0] + " and " + items[1];
 								}
 							}
 							else{
@@ -2633,14 +2629,19 @@ compare this number to 1/2:  if less than 1/2, major.
 							}
 							else{
 								if(M.tile[r,c].seen){
-									colorchar tilech = new colorchar(M.tile[r,c].symbol,M.tile[r,c].color);
-									colorchar screench = Screen.MapChar(r,c);
-									if(M.tile[r,c].inv != null && (tilech.c != screench.c || tilech.color != screench.color)){ //hacky, but it seems to work (when a monster drops an item you haven't seen yet)
-										if(M.tile[r,c].inv.quantity > 1){
-											B.DisplayNow("You can no longer see these " + M.tile[r,c].inv.Name(true) + ". "); //todo: double check this hack. it might not work.
+									if(M.tile[r,c].inv != null){
+										char itemch = M.tile[r,c].inv.symbol;
+										char screench = Screen.MapChar(r,c).c;
+										if(itemch == screench){ //hacky, but it seems to work (when a monster drops an item you haven't seen yet)
+											if(M.tile[r,c].inv.quantity > 1){
+												B.DisplayNow("You can no longer see these " + M.tile[r,c].inv.Name(true) + ". ");
+											}
+											else{
+												B.DisplayNow("You can no longer see this " + M.tile[r,c].inv.Name(true) + ". ");
+											}
 										}
 										else{
-											B.DisplayNow("You can no longer see this " + M.tile[r,c].inv.Name(true) + ". ");
+											B.DisplayNow("You can no longer see this " + M.tile[r,c].Name(true) + ". ");
 										}
 									}
 									else{
@@ -2985,6 +2986,14 @@ compare this number to 1/2:  if less than 1/2, major.
 						result = null;
 					}
 					done = true;
+					break;
+				case 'X':
+					if(lookmode && this == player && B.YesOrNoPrompt("Travel to this location?")){
+						player.path = player.GetPath(r,c);
+						if(player.path.Count > 0){
+							done = true;
+						}
+					}
 					break;
 				default:
 					break;

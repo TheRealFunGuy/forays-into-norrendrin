@@ -1,11 +1,9 @@
 Options:
 Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):
-last_target autopickup top_row_movement hide_old_messages hide_commands never_display_tips always_reset_tips
-f last_target
+no_wall_sliding autopickup top_row_movement never_display_tips always_reset_tips
+f no_wall_sliding
 f autopickup
 f top_row_movement
-f hide_old_messages
-f hide_commands
 f never_display_tips
 f always_reset_tips
 -- Tracking which tutorial tips have been displayed:
