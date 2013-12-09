@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2012  Derrick Creamer
+/*Copyright (c) 2011-2013  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -130,6 +130,8 @@ namespace Forays{
 			Prototype(TileType.POISON_BULB).revealed_by_light = true;
 			Define(TileType.WAX_WALL,"wax wall",'#',Color.DarkYellow,false,true,null);
 			Prototype(TileType.WAX_WALL).revealed_by_light = true;
+			Define(TileType.DEMONIC_IDOL,"demonic idol",'2',Color.Red,false,false,null);
+			Prototype(TileType.DEMONIC_IDOL).revealed_by_light = true;
 
 			Define(FeatureType.GRENADE,"grenade",',',Color.Red);
 			Define(FeatureType.TROLL_CORPSE,"troll corpse",'%',Color.DarkGreen);
@@ -985,11 +987,24 @@ namespace Forays{
 			}
 			case TileType.POISON_GAS_TRAP:
 			{
+				bool spores = false;
+				if(M.current_level >= 5 && R.PercentChance((M.current_level - 4) * 3)){
+					spores = true; //3% at level 5...33% at level 15...48% at level 20.
+				}
 				int num = R.Roll(5) + 7;
-				List<Tile> new_area = AddGaseousFeature(FeatureType.POISON_GAS,num);
-				if(new_area.Count > 0){
-					B.Add("Poisonous gas fills the area! ",this);
-					Q.Add(new Event(new_area,300,EventType.POISON_GAS));
+				if(spores){
+					List<Tile> new_area = AddGaseousFeature(FeatureType.SPORES,num);
+					if(new_area.Count > 0){
+						B.Add("A cloud of spores fills the area! ",this);
+						Q.Add(new Event(new_area,600,EventType.SPORES));
+					}
+				}
+				else{
+					List<Tile> new_area = AddGaseousFeature(FeatureType.POISON_GAS,num);
+					if(new_area.Count > 0){
+						B.Add("Poisonous gas fills the area! ",this);
+						Q.Add(new Event(new_area,300,EventType.POISON_GAS));
+					}
 				}
 				Toggle(actor());
 				break;
@@ -1162,9 +1177,6 @@ namespace Forays{
 			default:
 				return false;
 			}
-		}
-		public bool IsTrapOrVent(){
-			return IsTrap() || type == TileType.FIRE_GEYSER || type == TileType.FOG_VENT || type == TileType.POISON_GAS_VENT;
 		}
 		public bool IsKnownTrap(){
 			if(IsTrap() && name != "floor"){
@@ -1528,7 +1540,7 @@ namespace Forays{
 					Toggle(null);
 				}
 				if(IsTrap()){
-					TriggerTrap(); //?
+					TriggerTrap();
 				}
 				if(Is(TileType.RUBBLE)){
 					Toggle(null);
@@ -1569,9 +1581,9 @@ namespace Forays{
 								color = Color.DarkGray;
 							}
 						}
-						if(actor() != null && actor().IsBurning()){
-							actor().RefreshDuration(AttrType.BURNING,0);
-						}
+					}
+					if(actor() != null && actor().IsBurning()){
+						actor().RefreshDuration(AttrType.BURNING,0);
 					}
 					features.Add(FeatureType.POISON_GAS);
 					break;

@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2012  Derrick Creamer
+/*Copyright (c) 2011-2013  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -28,7 +28,7 @@ namespace Forays{
 				return 3;
 			case SpellType.PASSAGE:
 			case SpellType.AMNESIA:
-			case SpellType.PLACEHOLDER:
+			case SpellType.STONE_SPIKES:
 			case SpellType.SHADOWSIGHT:
 				return 4;
 			case SpellType.BLIZZARD:
@@ -80,8 +80,8 @@ namespace Forays{
 				return "Collapse";
 			case SpellType.TELEKINESIS:
 				return "Telekinesis";
-			case SpellType.PLACEHOLDER:
-				return "Placeholder";
+			case SpellType.STONE_SPIKES:
+				return "Stone spikes";
 			default:
 				return "unknown spell";
 			}
@@ -97,7 +97,6 @@ namespace Forays{
 			case SpellType.SCORCH:
 			case SpellType.MERCURIAL_SPHERE:
 			case SpellType.RADIANCE:
-			case SpellType.PLACEHOLDER:
 				return true;
 			}
 			return false;
@@ -142,8 +141,8 @@ namespace Forays{
 				return new colorstring("Throw your target forcefully         ",Color.Gray);
 			case SpellType.COLLAPSE:
 				return new colorstring("Radius 1, breaks walls & drops rubble",Color.Gray);
-			case SpellType.PLACEHOLDER:
-				return new colorstring("Unknown spell                        ",Color.Gray);
+			case SpellType.STONE_SPIKES:
+				return new colorstring("Radius 2, 4d6 and creates stalagmites",Color.Gray);
 			default:
 				return new colorstring("  Unknown.                           ",Color.Gray);
 			}
@@ -164,8 +163,6 @@ namespace Forays{
 				return new colorstring("5d6",Color.Yellow," damage, inflicts vulnerability   ",Color.Gray);
 			case SpellType.BLIZZARD:
 				return new colorstring("Radius 5 burst, ",Color.Gray,"6d6",Color.Yellow," and slows enemies",Color.Gray);
-			//case SpellType.PLACEHOLDER:
-			//	return new colorstring("5d6",Color.Yellow," damage, can damage metal armor   ",Color.Gray);
 			default:
 				return Description(spell);
 			}

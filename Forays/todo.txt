@@ -1,36 +1,5 @@
 
-ahh, autoexplore pathing IS broken - it's trying to reach the nearest ones even if it goes over traps.
-	-can't figure out why, though.
-
-
-
-...and what about the endgame?
-
-
-
-okay, spell disruption will become silence, and the ascetic can extend his vow of silence to others. (MakeNoise will check nearby actors for silence auras, as will scroll reading and casting)
-
-
-
-
-do I add doors before altering rooms in standard levels? that can lead to doors in the middle of corridors when cross rooms are involved.
-
-
-subterranean colossus is go
- - has 1d3 rocks to throw: 5d6 damage and stun
- - should path through smashable terrain
- - when staggering blindly, should crash through walls
-
-
-
-add active feat tip.
-
-
-things to do now:
-
-
-
-bump up difficulty with more damage to equipment, more danger, more puzzle enemies.
+vision benefits of america: 1 800 432 4966
 
  1: goblin bat wolf moth dweller bramble frostling
  2: swordsman dreamwarrior cobra kobold sporepod forasect poltergeist
@@ -40,156 +9,64 @@ bump up difficulty with more damage to equipment, more danger, more puzzle enemi
  6: ascetic duelist warg scout crawler mechknight transcendent
  7: battlemage soldier skittermoss golem mude flametongue entrancer
  8: ogre grenadier pixie cknight bloodwitch hulk marblehorror
- 9: ooze pyren titan sentinel worm lasher vampire
+ 9: ooze pyren lasher sentinel worm titan vampire
 10: warmage necro webstrider assassin avenger behemoth warmachine
 
 
 
-crypt levels seem to be disconnected more often than most 
--if anything is disconnected right now, the bug is in RemoveUnconnected() itself.
-
-for the unconnected level thing, it might not be alterrooms after all. I got one that called RemoveUnconnected, then RemoveDeadEnds, then MarkInteresting, and it still happened, so the problem is in one of those two, or in removeunconnected itself.
-
-
--cracked walls as a feature or something
-
-
-
-
-
-if a monster is functional, don't mess with it right now, unless it's ridiculous to the point of brokenness.
-
-(hulk(check damage on hit vs. on slam),
-
-
-kobold(poison ticks for Q5),
-
-machine of war (it does basically what it should),
-
-
-
-
-
-player placement must check for webs and other hazards
-
-don't print 'unburnt' messages for toads on fire. can toads be on fire?
-
-
--update list of traps for secret rooms
--change endgame
-
-
-vision benefits of america: 1 800 432 4966
-
 
 
 -broke save/load, of course
--add reminder to use shift if player presses '.' on stairs
--low chance to find a chest in a sliding wall trap?
--add a lot more combat info to monster description boxes: speed, damage, "Melee effect:" or "On hit:", "Critical effect:", "Abilities:".
--now that there's so much room, add target health to sidebar. (but "corpsetower behemoth" doesn't fit! maybe use its symbol?)
--you see a goblin (damaged, unaware) <--add awareness, based on turns_visible or whatever, to lookmode.
--make sure NEVER_MOVE prevents all movement for everything.
-	-passage, teleporting, teleportal, blink, ...
--tutorial tips for stoneform, vampirism, probably roots, etc.
--flush input after more animations, especially passage. -- and bola!
--change "high pitched ringing" blah blah to "you hear an alarm" or "you hear an alarm from above the foo"
--BUG! an ascetic caught fire from a quickfire trap. after it had gone out (???) he was hasted. clearly there's an extra Q1() somewhere.
--perhaps all those LOS checks should actually be CanSee checks at the tile?
-	-so you don't see messages for things happening far away in the dark.
--(looking at the code...) blizzard seems to go through walls and use raw name strings.
--noxious worms currently flee from poison gas
--check spirit duration reductions for everything
--spirit should be 8% per level, not 5.
--add new minions to entrancer list
--likewise, check for cool new phantoms (and symbol updates for old ones)
--make sure blast fungi can't appear in the player's LOS or in lit tiles
--monsters should always wander after losing track of the player
--update copyright notices
--kobolds aren't quite done yet - Q5() doesn't work right with poison and fire etc.
--casters with no mana should act like their spells are disrupted (unless they can get more)
--consider brogue-style "traps don't block corridors" rule
--monsters seem to EITHER continue down corridors OR continue down paths after seeing the player (if the player ducks out of LOS). THEN they go to the target_location.
--let cloud e. and any other erratically moving monster also do so while wandering.
--perhaps a bigger penalty than -1 for each fork in the road when corridor-seeking?
--what if dim vision just automatically returned false for cansee checks at range 2+?
--w5 probably shouldn't go forever because that makes you consume another keystroke. go back to ~20 turns.
--IMMOBILE doesn't prevent teleportals yet. also check other forms of teleport.
--check all instances of someTile.Add(FeatureType.SomeFeature); replace with AddFeature.
--bug: "The grenade explodes! A noxious worm bursts through the wall! [more" <--the cursor was of course on the next row down, and the 'e' remained on the screen.
--make terrain descriptions appear in lookmode
--there's a double redraw somewhere triggered just by walking. try it with brush + fire.
--make grabs interact with frozen - frozen probably breaks & prevents grabs.
--remind player about resting in every equipment damage tutorial tip
--make sure fog/darkness/invis doesn't make you miss guys if you're detecting them
--make sure burning enemies *advance* out of fire when possible, toward the player.
--minor visual bug with passage when triggering a trap
--allow game to be started with no options.txt, then create a default.
--allow capital letters for descriptions in inventory screens.
+
+rework collapse
+
+okay. maybe i shouldn't allow the conflict between collapse and stone spikes?
+
+collapse is good for going through walls; stone spikes is good for blocking LOS?
+
+maybe this:
+
+the target tile and adjacent floors become gravel.
+walls adjacent to the target become either rubble or cracked walls.
 
 
 
+update help files 
+	-update collapse again
 
+fix autopickup
 
+fix runmode stopping
 
-#                                                      #
-# remember to use some colored walls in here somewhere #
-#                                                      #
+"you feel comfortable in your %ARMOR again" when exhaustion drops.
 
+message for every new monster! -whoops
 
-!!!
+fix ghost - perhaps by removing its seek and idle
 
-schism changed in forays, update the other.
-
-
-
+make darkness kill avengers, make cold devastate slugs, ditto freezing
 
 
 include a goal at the start	-	"None of the other scouts returned." etc
 
+check every new class member and make sure it gets cleared between games if needed.
 
 
-animations should support the concept of a 'viewer' - cells outside viewer's FOV don't animate.
-
-Select() needs a rewrite, and to be moved out of Actor.
-	-what part needed a rewrite?
+check highscore, option, name files. verify correct version on other help files.
 
 
-fix Parabola: Redraw(), and everything else, shouldn't draw in the last screen position.
-
-
-animation utility method: when called on a list of positions, it checks whether the player can see all of those. Depending on the option you set, it'll either replace the ones you can't see with nothing, or with (-1,-1), which means it'll still take time but won't show anything.
-
-new rejection criteria for schism!
-1. must have a nonwall within X spaces from both left and right.
-2. min/max number of rooms
-plus, a corridor loop remover.
-
--also for schism: given a floor space, try to generate a room & a corridor that connects to that space. this could be used to add rooms to cave corridors, and also to add secret rooms or spaces for chests or statues in normal caves.
-
-option to put stat window on right.
-
-
-allow looking around the map after death?
-
-equipment screen colors "[a]" entirely in cyan. consider changing.
-
-"you fade away in the darkness" should also appear when you put your torch away while shadow cloaked.
-
--update version number
 -make 'trailer' vid
 -remember to remove the hallucination & fire test videos from screencast
 -email LPers and article author too
 
 
-check every new class member and make sure it gets cleared between games if needed.
 
 update roguebasin entry: remove coffeebreak designation.
 
 -write cave corridor & twisty cave article for RB. also possibly dijkstra maps part 2 with screenshots.
 
 bugs: 
-this bug PROBABLY exists, even if I haven't noticed it yet: If you move to a new level and end up in the same spot, the map will lose track of you until you move because the position is cleared last.
+If you move to a new level and end up in the same spot, the map will lose track of you until you move because the position is cleared last.
 
 here's that really weird one where I got killed the turn I used a rune of time:
 "Time stops for a moment. (grayed out)
@@ -199,18 +76,6 @@ die. [more]"
 
 visual bug for lightning bolt: when targeting past the target to hit it at an angle (when it's in a doorway, say), the bolt seems to go through walls.
 
-minor: passage shows a WHITE floor under the player, not the correct color.
-	-fixed?
-
-using lunge on an aware goblin archer a knight's move away. the archer appears normal, when it should have a green background from the targeting.
-	-i believe this is another form of the other background color bug.
-	-linux or win?
-	-does not happen every time. this one might be a pain to track down.
-	-fixed?
-
-again on linux - bits of the previous map still appear. no idea why. does not happen often. (once so far!)
-	-not reproduced yet
-
 "The skeleton looks less disoriented. " - no skeleton in sight.
 	-reviewed code. should never happen, but it did.
 		-theory: it died and the message was still printed. rework removal from msg_obj list.
@@ -218,9 +83,4 @@ again on linux - bits of the previous map still appear. no idea why. does not ha
 		-above theory is probably wrong: happened with a goblin that was alive
 			-yeah, this still happens. maybe the bug is in the 'forget about dead things' code in event.
 
-"You fire an arrow. The arrow hits the cultist. The cultist [more]
-dies."
-	-note that the [more] takes up exactly as much space as "dies. " - what gives?
-	-should be fixed!
-	-but maybe not, see the grenade/noxious worm bug above.
 

@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2012  Derrick Creamer
+/*Copyright (c) 2011-2013  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -13,7 +13,7 @@ using System.Threading;
 using Utilities;
 namespace Forays{
 	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced,Tips};
-	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,IdentifiedConsumables,UnidentifiedConsumables,ShinyPlateArmor,HeavyPlateArmor,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
+	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,ActiveFeats,IdentifiedConsumables,UnidentifiedConsumables,ShinyPlateArmor,HeavyPlateArmor,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
 	public static class Help{
 		public static Dict<TutorialTopic,bool> displayed = new Dict<TutorialTopic,bool>();
 		public static void DisplayHelp(){ DisplayHelp(HelpTopic.Overview); }
@@ -634,6 +634,16 @@ namespace Forays{
 					"",
 					"(The feat starts working immediately",
 					"upon choosing it.)"};
+			case TutorialTopic.ActiveFeats:
+				return new string[]{
+					"Active feats",
+					"",
+					"You've learned an active feat that you can",
+					"activate at any time.",
+					"",
+					"To use an active feat, open the character",
+					"screen with [c], then press the key shown",
+					"next to that feat."};
 			case TutorialTopic.Recovery:
 				return new string[]{
 					"Recovering health",
