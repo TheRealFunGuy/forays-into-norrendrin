@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2012  Derrick Creamer
+/*Copyright (c) 2011-2013  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -976,8 +976,8 @@ namespace Forays{
 					foreach(Tile t in target.TilesWithinDistance(2)){
 						t.RemoveFeature(FeatureType.FOG);
 					}
-					int old_radius = target.light_radius;
-					target.UpdateRadius(old_radius,2,true);
+					//int old_radius = target.light_radius;
+					//target.UpdateRadius(old_radius,2,true);
 					B.Add(target.the_name + " spouts flames! ",target);
 					if(target.actor() != null){
 						target.actor().ApplyBurning();
@@ -993,7 +993,7 @@ namespace Forays{
 							}
 						}
 					}
-					target.UpdateRadius(2,old_radius,true);
+					//target.UpdateRadius(2,old_radius,true);
 					if(value > 0){
 						Q.Add(new Event(target,100,EventType.FIRE_GEYSER_ERUPTION,value - 1));
 					}
@@ -1435,6 +1435,46 @@ namespace Forays{
 					}
 					break;
 				}
+				case EventType.FINAL_LEVEL_SPAWN_CULTISTS:
+				{
+					int num_cultists = M.AllActors().Where(x=>x.Is(ActorType.FINAL_LEVEL_CULTIST)).Count;
+					if(num_cultists < 5){
+						Actor a = M.SpawnMob(ActorType.CULTIST);
+						if(a != null){
+							List<Actor> group = null;
+							if(a.group != null){
+								group = new List<Actor>(a.group);
+								a.group.Clear();
+							}
+							else{
+								group = new List<Actor>{a};
+							}
+							List<int> valid_circles = new List<int>();
+							for(int i=0;i<5;++i){
+								if(M.FinalLevelSummoningCircle(i).PositionsWithinDistance(2).Any(x=>M.tile[x].Is(TileType.DEMONIC_IDOL))){
+									valid_circles.Add(i);
+								}
+							}
+							foreach(Actor a2 in group){
+								int i = valid_circles.RemoveLast();
+								pos circle = M.FinalLevelSummoningCircle(i);
+								a2.FindPath(circle.row,circle.col);
+								a2.attrs[AttrType.COOLDOWN_2] = i;
+								a2.type = ActorType.FINAL_LEVEL_CULTIST;
+								a2.group = null;
+								if(!R.OneIn(20)){
+									a2.attrs[AttrType.NO_ITEM] = 1;
+								}
+							}
+						}
+					}
+					Q.Add(new Event(R.Between(5,8)*100,EventType.FINAL_LEVEL_SPAWN_CULTISTS));
+					break;
+				}
+				case EventType.FINAL_LEVEL_REIGNITE:
+				{
+					break;
+				}
 				case EventType.BOSS_SIGN:
 				{
 					string s = "";
@@ -1658,7 +1698,7 @@ namespace Forays{
 						}
 						Actor a = t.actor();
 						Tile dest = null;
-						if(a != null && !a.HasAttr(AttrType.JUST_TELEPORTED)){
+						if(a != null && !a.HasAttr(AttrType.JUST_TELEPORTED,AttrType.IMMOBILE)){
 							if(area != null){
 								dest = area.Random();
 							}
@@ -1691,7 +1731,7 @@ namespace Forays{
 							}
 						}
 						else{
-							if(a != null){
+							if(a != null && a.HasAttr(AttrType.JUST_TELEPORTED)){
 								a.RefreshDuration(AttrType.JUST_TELEPORTED,101);
 							}
 						}
@@ -1933,11 +1973,17 @@ namespace Forays{
 					foreach(Tile t in chance_to_die_out){
 						if(!t.Is(TileType.BARREL)){
 							bool more_flammable_terrain = false;
+							bool final_level_demonic_idol_present = false;
 							foreach(Tile neighbor in t.TilesAtDistance(1)){
 								if(neighbor.IsCurrentlyFlammable()){
 									more_flammable_terrain = true;
-									break;
 								}
+								if(neighbor.Is(TileType.DEMONIC_IDOL)){
+									final_level_demonic_idol_present = true;
+								}
+							}
+							if(final_level_demonic_idol_present){
+								continue; //this fire never goes out
 							}
 							int chance = 5;
 							if(more_flammable_terrain){

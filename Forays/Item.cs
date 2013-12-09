@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2012  Derrick Creamer
+/*Copyright (c) 2011-2013  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -489,21 +489,20 @@ namespace Forays{
 			case ConsumableType.VAMPIRISM:
 			case ConsumableType.BRUTISH_STRENGTH:
 			case ConsumableType.ROOTS:
+			case ConsumableType.REGENERATION:
+			case ConsumableType.SILENCE:
+			case ConsumableType.TRAP_CLEARING:
 			case ConsumableType.BREACHING:
 			case ConsumableType.SHIELDING:
 				return 3;
-			case ConsumableType.HEALING:
-			case ConsumableType.REGENERATION:
-			case ConsumableType.STONEFORM:
-			case ConsumableType.SILENCE:
-			case ConsumableType.MAGIC_MAP:
+			case ConsumableType.VIGOR:
+			case ConsumableType.TIME:
 			case ConsumableType.REPAIR:
-			case ConsumableType.TRAP_CLEARING:
-			case ConsumableType.FLAMES:
+			case ConsumableType.CALLING:
 			case ConsumableType.DETONATION:
 			case ConsumableType.TELEPORTAL:
 			case ConsumableType.PAIN:
-				return 2; //todo: check rarities again
+				return 2;
 			case ConsumableType.BANDAGES:
 			case ConsumableType.FLINT_AND_STEEL:
 			case ConsumableType.BLAST_FUNGUS:
@@ -711,7 +710,7 @@ namespace Forays{
 							}
 							else{
 								if(e.attr == AttrType.BONUS_DEFENSE && e.value == 10){
-									e.dead = true; //this would break if there were other timed effects that gave 5 defense
+									e.dead = true; //this would break if there were other timed effects that gave the same amount of defense
 									user.attrs[AttrType.BONUS_DEFENSE] -= 10;
 								}
 								else{
@@ -723,6 +722,9 @@ namespace Forays{
 							}
 						}
 					}
+				}
+				if(user.HasAttr(AttrType.BURNING)){
+					user.RefreshDuration(AttrType.BURNING,0);
 				}
 				user.attrs[AttrType.IMMUNE_BURNING]++;
 				Q.Add(new Event(user,duration*100,AttrType.IMMUNE_BURNING));
@@ -811,7 +813,7 @@ namespace Forays{
 			case ConsumableType.BLINKING:
 			{
 				List<Tile> tiles = user.TilesWithinDistance(8).Where(x => x.passable && x.actor() == null && user.ApproximateEuclideanDistanceFromX10(x) >= 45);
-				if(tiles.Count > 0){
+				if(tiles.Count > 0 && !user.HasAttr(AttrType.IMMOBILE)){
 					Tile t = tiles.Random();
 					B.Add(user.You("step") + " through a rip in reality. ",M.tile[user.p],t);
 					user.AnimateStorm(2,3,4,'*',Color.DarkMagenta);
@@ -827,6 +829,11 @@ namespace Forays{
 			}
 			case ConsumableType.PASSAGE:
 			{
+				if(user.HasAttr(AttrType.IMMOBILE)){
+					B.Add("Nothing happens. ");
+					IDed = false;
+					break;
+				}
 				List<int> valid_dirs = new List<int>();
 				foreach(int dir in U.FourDirections){
 					Tile t = user.TileInDirection(dir);
@@ -958,12 +965,12 @@ namespace Forays{
 						if(t.type != TileType.WALL){
 							t.revealed_by_light = true;
 						}
-						if(t.IsTrapOrVent() || t.Is(TileType.HIDDEN_DOOR)){
+						if(t.IsTrap() || t.Is(TileType.HIDDEN_DOOR)){
 							if(hiddencheck != null){
 								hiddencheck.area.Remove(t);
 							}
 						}
-						if(t.IsTrapOrVent()){
+						if(t.IsTrap()){
 							t.name = Tile.Prototype(t.type).name;
 							t.a_name = Tile.Prototype(t.type).a_name;
 							t.the_name = Tile.Prototype(t.type).the_name;
@@ -2383,7 +2390,7 @@ namespace Forays{
 			case MagicTrinketType.LENS_OF_SCRYING:
 				return new string[]{"Lens of scrying -- Identifies a random unknown","item from your pack when you descend to a new depth."};
 			case MagicTrinketType.RING_OF_KEEN_SIGHT:
-				return new string[]{"Ring of keen sight -- Doubles your chance to spot","traps and increases your bow accuracy by 15%."};
+				return new string[]{"Ring of keen sight -- Doubles your chance to","find traps."};
 			case MagicTrinketType.RING_OF_THE_LETHARGIC_FLAME:
 				return new string[]{"Ring of the lethargic flame -- While you're on","fire, you'll only burn for 1 damage each turn."};
 			case MagicTrinketType.BOOTS_OF_GRIPPING:

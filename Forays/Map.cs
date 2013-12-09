@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2012  Derrick Creamer
+/*Copyright (c) 2011-2013  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -68,6 +68,9 @@ namespace Forays{
 		//public int[,] row_displacement = null;
 		//public int[,] col_displacement = null;
 		public colorchar[,] last_seen = new colorchar[ROWS,COLS];
+		public int[] final_level_cultist_count = null;
+		public int final_level_demon_count = 0;
+		public int final_level_clock = 0;
 
 		public static Color darkcolor = Color.DarkCyan;
 		public static Color unseencolor = Color.DarkBlue;
@@ -837,7 +840,46 @@ namespace Forays{
 					}
 					level = levels.Random();
 				}
-				if(monster_depth == 1){ //level 1 monsters are all equal in rarity
+				if(level == 1){ //level 1 monsters are all equal in rarity
+					result = (ActorType)(level*7 + R.Between(-4,2));
+				}
+				else{
+					int roll = R.Roll(100);
+					if(roll <= 3){ //3% rare
+						result = (ActorType)(level*7 + 2);
+					}
+					else{
+						if(roll <= 22){ //19% uncommon (9.5% each)
+							result = (ActorType)(level*7 + R.Between(0,1));
+						}
+						else{ //78% common (19.5% each)
+							result = (ActorType)(level*7 + R.Between(-4,-1));
+						}
+					}
+				}
+				if(generated_this_level[result] == 0){
+					good_result = true;
+				}
+				else{
+					if(R.OneIn(generated_this_level[result]+1)){ // 1 in 2 for the 2nd, 1 in 3 for the 3rd, and so on
+						good_result = true;
+					}
+				}
+			}
+			generated_this_level[result]++;
+			return result;
+		}
+		public ActorType ShallowMobType(){
+			ActorType result = ActorType.RAT;
+			bool good_result = false;
+			while(!good_result){
+				int monster_depth = (current_level+1) / 2; //1-10, not 1-20
+				List<int> levels = new List<int>();
+				for(int i=1;i<monster_depth-2;++i){
+					levels.Add(i);
+				}
+				int level = levels.Random();
+				if(level == 1){ //level 1 monsters are all equal in rarity
 					result = (ActorType)(level*7 + R.Between(-4,2));
 				}
 				else{
@@ -980,6 +1022,14 @@ namespace Forays{
 			if(Actor.Prototype(type).HasAttr(AttrType.LARGE_GROUP)){
 				number = R.Roll(2)+4;
 			}
+			if(current_level == 21 && type == ActorType.CULTIST){
+				number = 0;
+				for(int i=0;i<5;++i){
+					if(FinalLevelSummoningCircle(i).PositionsWithinDistance(2).Any(x=>tile[x].Is(TileType.DEMONIC_IDOL))){
+						number++;
+					}
+				}
+			}
 			List<Tile> group_tiles = new List<Tile>();
 			List<Actor> group = null;
 			if(number > 1){
@@ -997,8 +1047,18 @@ namespace Forays{
 								break;
 							}
 						}
-						if(monster_density[rr,rc] > 2){
-							good = false;
+						if(current_level == 21){
+							foreach(Tile t in tile[rr,rc].TilesWithinDistance(2)){
+								if(tile[rr,rc].HasLOE(t) && player.CanSee(t)){
+									good = false;
+									break;
+								}
+							}
+						}
+						else{
+							if(monster_density[rr,rc] > 2){
+								good = false;
+							}
 						}
 						if(good && tile[rr,rc].passable && actor[rr,rc] == null){
 							result = Actor.Create(type,rr,rc,true,false);
@@ -2446,6 +2506,113 @@ namespace Forays{
 					}
 				}
 			}
+			for(int i=current_level/7;i>0;--i){ //yes, this is all copied and pasted for a one-line change. i'll try to fix it later.
+				if(R.CoinFlip()){ //generate some shallow monsters
+					ActorType type = ShallowMobType();
+					if(type == ActorType.POLTERGEIST){
+						if(!poltergeist_spawned){
+							SpawnMob(type);
+							poltergeist_spawned = true;
+						}
+						else{
+							++i; //try again..
+						}
+					}
+					else{
+						if(type == ActorType.MIMIC){
+							if(!mimic_spawned){
+								SpawnMob(type);
+								mimic_spawned = true;
+							}
+							else{
+								++i;
+							}
+						}
+						else{
+							if(type == ActorType.MARBLE_HORROR){
+								Tile statue = AllTiles().Where(t=>t.type == TileType.STATUE).Random();
+								if(!marble_horror_spawned && statue != null){
+									SpawnMob(type);
+									marble_horror_spawned = true;
+								}
+								else{
+									++i;
+								}
+							}
+							else{
+								if(type == ActorType.ENTRANCER){
+									if(i >= 2){ //need 2 slots here
+										Actor entrancer = SpawnMob(type);
+										entrancer.attrs[AttrType.WANDERING]++;
+										List<Tile> tiles = new List<Tile>();
+										int dist = 1;
+										while(tiles.Count == 0 && dist < 100){
+											foreach(Tile t in entrancer.TilesAtDistance(dist)){
+												if(t.passable && !t.IsTrap() && t.actor() == null){
+													tiles.Add(t);
+												}
+											}
+											++dist;
+										}
+										if(tiles.Count > 0){
+											ActorType thralltype = ActorType.RAT;
+											bool done = false;
+											while(!done){
+												thralltype = MobType();
+												switch(thralltype){
+												case ActorType.ROBED_ZEALOT:
+												case ActorType.DERANGED_ASCETIC:
+												case ActorType.BERSERKER:
+												case ActorType.TROLL:
+												case ActorType.CRUSADING_KNIGHT:
+												case ActorType.SKITTERMOSS:
+												case ActorType.OGRE:
+												case ActorType.SHADOWVEIL_DUELIST:
+												case ActorType.STONE_GOLEM:
+												case ActorType.LUMINOUS_AVENGER:
+												case ActorType.WILD_BOAR:
+												case ActorType.ALASI_SOLDIER:
+												case ActorType.SAVAGE_HULK:
+												case ActorType.CORROSIVE_OOZE:
+												case ActorType.ALASI_SENTINEL:
+													done = true;
+													break;
+												}
+											}
+											Tile t = tiles.Random();
+											Actor thrall = Actor.Create(thralltype,t.row,t.col,true,true);
+											if(entrancer.group == null){
+												entrancer.group = new List<Actor>{entrancer};
+											}
+											entrancer.group.Add(thrall);
+											thrall.group = entrancer.group;
+											--i;
+										}
+									}
+									else{
+										++i;
+									}
+								}
+								else{
+									Actor a = SpawnMob(type);
+									if(type == ActorType.WARG){
+										if(a.group != null){
+											foreach(Actor a2 in a.group){
+												a2.attrs[AttrType.WANDERING]++;
+											}
+										}
+									}
+									else{
+										if(a.AlwaysWanders() || (R.CoinFlip() && a.CanWanderAtLevelGen())){
+											a.attrs[AttrType.WANDERING]++;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 			int minimum_distance_from_stairs = 0;
 			PosArray<int> distance_from_stairs = null;
 			if(stairs != null){
@@ -2587,16 +2754,29 @@ namespace Forays{
 							}
 						}
 						if(dirs.Count > 0){
+							List<TileType> all_possible_traps = new List<TileType>{TileType.GRENADE_TRAP,TileType.POISON_GAS_TRAP,TileType.PHANTOM_TRAP,TileType.FIRE_TRAP,TileType.SHOCK_TRAP,TileType.SCALDING_OIL_TRAP};
 							List<TileType> possible_traps = new List<TileType>();
 							int trap_roll = R.Roll(7);
-							if(trap_roll == 1 || trap_roll == 4 || trap_roll == 5 || trap_roll == 7){
-								possible_traps.Add(TileType.GRENADE_TRAP);
+							int num_types = 0;
+							if(trap_roll == 1){
+								num_types = 1;
 							}
-							if(trap_roll == 2 || trap_roll == 4 || trap_roll == 6 || trap_roll == 7){
-								possible_traps.Add(TileType.POISON_GAS_TRAP);
+							else{
+								if(trap_roll <= 4){
+									num_types = 2;
+								}
+								else{
+									num_types = 3;
+								}
 							}
-							if(trap_roll == 3 || trap_roll == 5 || trap_roll == 6 || trap_roll == 7){
-								possible_traps.Add(TileType.PHANTOM_TRAP);
+							for(int i=0;i<num_types;++i){
+								TileType tt = all_possible_traps.Random();
+								if(possible_traps.Contains(tt)){
+									--i;
+								}
+								else{
+									possible_traps.Add(tt);
+								}
 							}
 							bool stone_slabs = false; //(instead of hidden doors)
 							if(R.OneIn(4)){
@@ -2983,29 +3163,95 @@ namespace Forays{
 				B.Add(LevelMessage());
 			}
 		}
-		public void GenerateBossLevel(bool boss_already_on_level){ //todo: this is out of date and needs to be removed anyway
+		private string[] FinalLevelLayout(){
+			return new string[]{
+				"##################################################################",
+				"##################....######..........######....##################",
+				"###############......##****##........##****##......###############",
+				"############..+......+*2**2*+........+*2**2*+......+..############",
+				"#########.....+......+**&&**+........+**&&**+......+.....#########",
+				"########......##+++++#**&&**#++++++++#**&&**#+++++##......########",
+				"#######.......##.....+*2**2*+........+*2**2*+.....##.......#######",
+				"######........+......##****##........##****##......+........######",
+				"######........+......##+++##..........##+++##......+........######",
+				"#####...#++#++##.....+....+.....XX.....+....+.....##++#++#...#####",
+				"#####+++#..+...##....+....+.....XX.....+....+....##...+..#+++#####",
+				"#####......+....###++#+#..+............+..#+#++###....+......#####",
+				"#####......+.....##****##+##..........##+##****##.....+......#####",
+				"######.....+.....+*2**2*+..##........##..+*2**2*+.....+.....######",
+				"######.....+.....+**&&**+...###++++###...+**&&**+.....+.....######",
+				"#######....+..#++#**&&**+....##****##....+**&&**#++#..+....#######",
+				"########...#++#..+*2**2*+....+*2**2*+....+*2**2*+..#++#...########",
+				"#########..+.....##****##++++#**&&**#++++##****##.....+..#########",
+				"############......#+#++#.....+**&&**+.....#++#+#......############",
+				"###############.....+........+*2**2*+........+.....###############",
+				"##################..+........##****##........+..##################",
+				"##################################################################"
+			};
+		}
+		public pos FinalLevelSummoningCircle(int num){
+			int extra_row = R.Between(0,1);
+			int extra_col = R.Between(0,1);
+			switch(num){
+			case 0:
+				return new pos(4+extra_row,24+extra_col);
+			case 1:
+				return new pos(4+extra_row,40+extra_col);
+			case 2:
+				return new pos(14+extra_row,20+extra_col);
+			case 3:
+				return new pos(14+extra_row,44+extra_col);
+			case 4:
+			default:
+				return new pos(17+extra_row,32+extra_col);
+			}
+		}
+		public void IncrementClock(){
+			final_level_clock++;
+			int multiplier = 50;
+			string[] messages = new string[]{"The dungeon trembles slightly. You feel that something bad is about to happen. ",
+				"The shaking increases. ",
+				"Dust falls from the ceiling as the dungeon shakes more violently. ",
+				"A demonic howling begins. ",
+				"A chorus of demonic voices heralds the coming of Kersai. ",
+				"A sense of urgency fills you. ",
+				"A sense of doom fills you. ",
+				"You hear booming laughter as the air turns to fire. Kersai is coming. ",
+				"Walls crack and crumble around you. The air turns to pain. Kersai is coming. ",
+				"Kersai bursts through the wall. Oh yeah! "};
+			if(final_level_clock == 1){
+				B.Add(messages[0]);
+				B.PrintAll();
+				return;
+			}
+			for(int i=1;i<=9;++i){
+				if(final_level_clock == i * multiplier){
+					B.Add(messages[i]);
+					B.PrintAll();
+					switch(i){
+					case 7:
+						foreach(Actor a in AllActors()){
+							a.ApplyBurning();
+						}
+						break;
+					case 8:
+						foreach(Actor a in AllActors()){
+							a.curhp = 1;
+						}
+						break;
+					case 9:
+						player.Kill();
+						player.curhp = 0;
+						break;
+					}
+				}
+			}
+		}
+		public void GenerateFinalLevel(){
+			final_level_cultist_count = new int[5];
+			final_level_demon_count = 0;
+			final_level_clock = 0;
 			current_level = 21;
-			B.Add("A strange magic yanks you out of the dungeon! ");
-			B.Print(true);
-			B.Add("Congratulations; you've survived! ");
-			B.Print(true);
-			Global.BOSS_KILLED = true;
-			Global.GAME_OVER = true;
-			Global.KILLED_BY = "nothing, yet";
-			return;
-			int boss_hp = -1;
-			foreach(Event e in Q.list){
-				if(e.type == EventType.BOSS_ARRIVE){
-					boss_hp = e.value;
-					break;
-				}
-			}
-			foreach(Actor a in AllActors()){
-				if(a.type == ActorType.FIRE_DRAKE){
-					boss_hp = a.curhp;
-					break;
-				}
-			}
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					if(actor[i,j] != null){
@@ -3027,76 +3273,96 @@ namespace Forays{
 			}
 			wiz_lite = false;
 			wiz_dark = false;
-			LinkedList<Event> newlist = new LinkedList<Event>();
-			for(LinkedListNode<Event> current = Q.list.First;current!=null;current = current.Next){
-				if(current.Value.target == Event.player || current.Value.type == EventType.CEILING_COLLAPSE || current.Value.type == EventType.FLOOR_COLLAPSE){
-					if(current.Value.type == EventType.FLOOR_COLLAPSE){ //todo: this can be redone if these events are going away
-						current.Value.target = null;
-					}
-					newlist.AddLast(current.Value); //todo: and also this should keep fire events if the player is on fire, but clear everything else.
-				}
+			generated_this_level = new Dict<ActorType, int>();
+			monster_density = new PosArray<int>(ROWS,COLS);
+			Q.ResetForNewLevel();
+			last_seen = new colorchar[ROWS,COLS];
+			Fire.fire_event = null;
+			Fire.burning_objects.Clear();
+			if(player.IsBurning()){
+				Fire.AddBurningObject(player);
 			}
-			Q.list = newlist; //same as Q.ResetForNewLevel, but it keeps collapse events.
 			Actor.tiebreakers = new List<Actor>{player};
-			DungeonGen.StandardDungeon dungeon = new DungeonGen.StandardDungeon();
-			char[,] map = dungeon.GenerateCave();
-			int num_traps = R.Roll(1,3);
-			for(int i=0;i<num_traps;++i){
-				int tries = 0;
-				for(bool done=false;!done && tries < 100;++tries){
-					int rr = R.Roll(ROWS-2);
-					int rc = R.Roll(COLS-2);
-					if(map[rr,rc] == '.'){
-						map[rr,rc] = '^';
-						done = true;
+			Actor.interrupted_path = new pos(-1,-1);
+			string[] final_map = FinalLevelLayout();
+			PosArray<CellType> map = new PosArray<CellType>(ROWS,COLS);
+			PosArray<bool> doors = new PosArray<bool>(ROWS,COLS);
+			List<List<pos>> door_sets = new List<List<pos>>();
+			for(int i=0;i<ROWS;++i){
+				string s = final_map[i];
+				for(int j=0;j<COLS;++j){
+					switch(s[j]){
+					case '#':
+						map[i,j] = CellType.Wall;
+						break;
+					case '.':
+						map[i,j] = CellType.RoomInterior;
+						break;
+					case '2':
+						map[i,j] = CellType.RoomFeature1;
+						break;
+					case '&':
+						map[i,j] = CellType.RoomFeature2;
+						break;
+					case '*':
+						map[i,j] = CellType.RoomFeature3;
+						break;
+					case 'X':
+						map[i,j] = CellType.RoomFeature4;
+						break;
+					case '+':
+						map[i,j] = CellType.Wall;
+						if(!doors[i,j]){
+							doors[i,j] = true;
+							pos p = new pos(i,j);
+							List<pos> door_set = new List<pos>{p};
+							foreach(int dir in new int[]{2,6}){
+								p = new pos(i,j);
+								while(true){
+									p = p.PosInDir(dir);
+									if(p.BoundsCheck(tile) && final_map[p.row][p.col] == '+'){
+										doors[p] = true;
+										door_set.Add(p);
+									}
+									else{
+										break;
+									}
+								}
+							}
+							door_sets.Add(door_set);
+						}
+						break;
 					}
 				}
 			}
-			List<Tile> hidden = new List<Tile>();
+			Dungeon d = new Dungeon(ROWS,COLS);
+			d.map = map;
+			while(!d.IsFullyConnected() && door_sets.Count > 0){
+				List<pos> door_set = door_sets.RemoveRandom();
+				d.map[door_set.Random()] = CellType.RoomInterior;
+			}
+			List<Tile> flames = new List<Tile>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					switch(map[i,j]){
-					case '#':
+					case CellType.Wall:
 						Tile.Create(TileType.WALL,i,j);
 						break;
-					case '.':
-					case '$':
+					case CellType.RoomFeature1:
+						Tile.Create(TileType.DEMONIC_IDOL,i,j);
+						break;
+					case CellType.RoomFeature2:
 						Tile.Create(TileType.FLOOR,i,j);
+						flames.Add(tile[i,j]);
 						break;
-					case ':':
-						Tile.Create(TileType.RUBBLE,i,j);
+					case CellType.RoomFeature3:
+						Tile.Create(TileType.FLOOR,i,j);
+						tile[i,j].color = Color.RandomDoom;
 						break;
-					case 'P':
-						Tile.Create(TileType.POOL_OF_RESTORATION,i,j);
-						break;
-					case '~':
+					case CellType.RoomFeature4:
 						Tile.Create(TileType.FIRE_GEYSER,i,j);
+						tile[i,j].SetName("fire rift");
 						break;
-					case '^':
-					{
-						TileType type = TileType.FIRE_GEYSER;
-						Tile.Create(type,i,j);
-						tile[i,j].name = "floor";
-						tile[i,j].the_name = "the floor";
-						tile[i,j].a_name = "a floor";
-						tile[i,j].symbol = '.';
-						tile[i,j].color = Color.White;
-						hidden.Add(tile[i,j]);
-						int frequency = R.Roll(21) + 4; //5-25
-						int variance = R.Roll(10) - 1; //0-9
-						int variance_amount = (frequency * variance) / 10;
-						int number_of_values = variance_amount*2 + 1;
-						int minimum_value = frequency - variance_amount;
-						if(minimum_value < 5){
-							int diff = 5 - minimum_value;
-							number_of_values -= diff;
-							minimum_value = 5;
-						}
-						int delay = ((minimum_value - 1) + R.Roll(number_of_values)) * 100;
-						Q.Add(new Event(tile[i,j],delay + 200,EventType.FIRE_GEYSER,(frequency*10)+variance)); //notice the hacky way the value is stored
-						Q.Add(new Event(tile[i,j],delay,EventType.FIRE_GEYSER_ERUPTION,2));
-						break;
-					}
 					default:
 						Tile.Create(TileType.FLOOR,i,j);
 						break;
@@ -3110,37 +3376,17 @@ namespace Forays{
 					t.UpdateRadius(0,t.light_radius);
 				}
 			}
-			List<Tile> goodtiles = AllTiles().Where(t=>t.type == TileType.FLOOR && !t.IsAdjacentTo(TileType.FIRE_GEYSER));
-			if(goodtiles.Count > 0){
-				Tile t = goodtiles.Random();
-				int light = player.light_radius;
-				int fire = player.attrs[AttrType.BURNING];
-				player.light_radius = 0;
-				player.attrs[AttrType.BURNING] = 0;
-				player.Move(t.row,t.col);
-				player.UpdateRadius(0,Math.Max(light,fire),true);
-				player.light_radius = light;
-				player.attrs[AttrType.BURNING] = fire;
+			foreach(Tile t in flames){
+				t.AddFeature(FeatureType.FIRE);
 			}
-			else{
-				for(bool done=false;!done;){
-					int rr = R.Roll(ROWS-2);
-					int rc = R.Roll(COLS-2);
-					bool good = true;
-					foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){
-						if(t.IsTrap()){
-							good = false;
-						}
-					}
-					if(good && tile[rr,rc].passable && actor[rr,rc] == null){
-						int light = player.light_radius;
-						player.light_radius = 0;
-						player.Move(rr,rc);
-						player.UpdateRadius(0,light,true);
-						done = true;
-					}
-				}
-			}
+			int light = player.light_radius;
+			int fire = player.attrs[AttrType.BURNING];
+			player.light_radius = 0;
+			player.attrs[AttrType.BURNING] = 0;
+			player.Move(6,7);
+			player.UpdateRadius(0,Math.Max(light,fire),true);
+			player.light_radius = light;
+			player.attrs[AttrType.BURNING] = fire;
 			foreach(Tile t in AllTiles()){
 				if(t.type != TileType.WALL){
 					foreach(Tile neighbor in t.TilesAtDistance(1)){
@@ -3148,23 +3394,26 @@ namespace Forays{
 					}
 				}
 			}
-			if(hidden.Count > 0){
-				Event e = new Event(hidden,100,EventType.CHECK_FOR_HIDDEN);
-				e.tiebreaker = 0;
-				Q.Add(e);
-			}
-			if(boss_already_on_level){
-				Tile tile = AllTiles().Where(t=>t.passable && !t.Is(TileType.CHASM) && t.actor() == null).Random();
-				Actor a = Actor.Create(ActorType.FIRE_DRAKE,tile.row,tile.col,true,false);
-				if(boss_hp > 0){
-					a.curhp = boss_hp;
+			for(int i=0;i<3;++i){
+				Actor a = SpawnMob(ActorType.CULTIST);
+				List<Actor> group = new List<Actor>(a.group);
+				a.group.Clear();
+				if(a != null && group != null){
+					int ii = 0;
+					foreach(Actor a2 in group){
+						++ii;
+						pos circle = FinalLevelSummoningCircle(ii);
+						a2.FindPath(circle.row,circle.col);
+						a2.attrs[AttrType.COOLDOWN_2] = ii;
+						a2.type = ActorType.FINAL_LEVEL_CULTIST;
+						a2.group = null;
+						if(!R.OneIn(20)){
+							a2.attrs[AttrType.NO_ITEM] = 1;
+						}
+					}
 				}
 			}
-			else{
-				Event e = new Event(null,null,(R.Roll(20)+50)*100,EventType.BOSS_ARRIVE,AttrType.COOLDOWN_1,boss_hp,"");
-				e.tiebreaker = 0;
-				Q.Add(e);
-			}
+			Q.Add(new Event(500,EventType.FINAL_LEVEL_SPAWN_CULTISTS));
 		}
 		private enum FloorType{Brush,Water,Gravel,GlowingFungus,Ice,PoppyField,GraveDirt};
 		public void GenerateFloorTypes(PosArray<CellType> map){
@@ -3637,12 +3886,17 @@ namespace Forays{
 				messages.Add("This area looks like it was intended to be a stronghold. ");
 				messages.Add("The remains of a fallen fortress appear before you. ");
 				break;
+			case LevelType.Crypt:
+				messages.Add("A sudden wind chills you as you enter a huge underground crypt. ");
+				messages.Add("A crypt stretches out in front of you. ");
+				messages.Add("Graves appear all around you as you come to a burial area. ");
+				break;
 			/*case LevelType.Extravagant:
 				messages.Add("This area is decorated with fine tapestries, marble statues, and other luxuries. ");
 				messages.Add("Patterned decorative tiles, fine rugs, and beautifully worked stone greet you upon entering this level. ");
 				break;*/
 			default:
-				messages.Add("TODO: New level types don't have messages yet. ");
+				messages.Add("What is this strange place? ");
 				break;
 			}
 			if(current_level > 1){
@@ -3669,6 +3923,8 @@ namespace Forays{
 					return "As you continue, you notice that the rooms and corridors here seem only partly finished. ";
 				case LevelType.Fortress:
 					return "You pass through an undefended gate. This area was obviously intended to be secure against intruders. ";
+				case LevelType.Crypt:
+					return "A hush falls around you as you enter a large crypt.";
 				}
 				break;
 			case LevelType.Cave:
@@ -3685,6 +3941,8 @@ namespace Forays{
 					return "As you continue, the rough natural edges of the cave are broken up by artificial tunnels. You notice mining tools on the ground. ";
 				case LevelType.Fortress:
 					return "A smashed set of double doors leads you out of the cave. This area seems to have been well-defended, once. ";
+				case LevelType.Crypt:
+					return "It appears this part of the cave has been used as a burial ground for centuries. ";
 				}
 				break;
 			/*case LevelType.Ruined:
@@ -3717,6 +3975,8 @@ namespace Forays{
 					return "Tools on the ground reveal that the rooms here are being made by humanoids rather than insects. ";
 				case LevelType.Fortress:
 					return "A wide hole in the wall leads to a fortress, abandoned by its creators. ";
+				case LevelType.Crypt:
+					return "Leaving the narrow chambers, you encounter an ancient crypt. ";
 				}
 				break;
 			case LevelType.Mine: //messages about veins, ore, crisscrossing networks of tunnels
@@ -3733,6 +3993,8 @@ namespace Forays{
 					return "As you continue, signs of humanoid construction vanish and hive walls appear. ";
 				case LevelType.Fortress:
 					return "You reach a section that is not only complete, but easily defensible. ";
+				case LevelType.Crypt:
+					return "Gravestones appear as you leave the unfinished mines behind you. ";
 				}
 				break;
 			case LevelType.Fortress:
@@ -3746,9 +4008,25 @@ namespace Forays{
 				case LevelType.Extravagant:
 					return "As you continue, the military focus of your surroundings is replaced by rich luxury. ";*/
 				case LevelType.Hive:
-					return "A wide hole in the wall leads to an area filled with small chambers. You are reminded of an insect hive. ";
+					return "A wide hole in the wall leads to an area filled with small chambers. It reminds you of an insect hive. ";
 				case LevelType.Mine:
 					return "This section might have been part of the fortress, but pickaxes are still scattered in the unfinished rooms. ";
+				case LevelType.Crypt:
+					return "Outside the fortress, you come to a gravesite, passing headstones and the occasional statue. ";
+				}
+				break;
+			case LevelType.Crypt:
+				switch(to){
+				case LevelType.Standard:
+					return "You leave the crypt behind and again encounter rooms used by the living. ";
+				case LevelType.Cave:
+					return "Natural formations appear, replacing the headstones that surrounded you previously. ";
+				case LevelType.Hive:
+					return "The burial ground vanishes as wax walls appear all around you. ";
+				case LevelType.Mine:
+					return "Shovels, picks, dirt, and rubble appear as you continue. Is this an unfinished part of the crypt? ";
+				case LevelType.Fortress:
+					return "The tombstones disappear as you come to a crumbling fortress. ";
 				}
 				break;
 			/*case LevelType.Extravagant:

@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2012  Derrick Creamer
+/*Copyright (c) 2011-2013  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -125,6 +125,11 @@ namespace Forays{
 		public void MakeNoise(int volume){
 			if(actor() != null && actor().HasAttr(AttrType.SILENCED)){
 				return;
+			}
+			foreach(Actor a in ActorsWithinDistance(2)){
+				if(a.HasAttr(AttrType.SILENCE_AURA) && a.HasLOE(this)){
+					return;
+				}
 			}
 			List<Actor> actors = new List<Actor>();
 			int minrow = Math.Max(1,row-volume);
@@ -2474,7 +2479,7 @@ compare this number to 1/2:  if less than 1/2, major.
 			for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
 				foreach(Actor a in ActorsAtDistance(i)){
 					if(player.CanSee(a)){
-						if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOS(a))){
+						if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOE(a))){
 							interesting_targets.Add(a);
 						}
 					}
@@ -2484,7 +2489,7 @@ compare this number to 1/2:  if less than 1/2, major.
 				for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
 					foreach(Tile t in TilesAtDistance(i)){
 						if(t.Is(TileType.STAIRS,TileType.CHEST,TileType.FIREPIT,TileType.FIRE_GEYSER,TileType.FOG_VENT,TileType.POISON_GAS_VENT,
-						        TileType.POOL_OF_RESTORATION,TileType.BLAST_FUNGUS,TileType.BARREL,TileType.STANDING_TORCH,TileType.POISON_BULB)
+						        TileType.POOL_OF_RESTORATION,TileType.BLAST_FUNGUS,TileType.BARREL,TileType.STANDING_TORCH,TileType.POISON_BULB,TileType.DEMONIC_IDOL)
 						|| t.Is(FeatureType.GRENADE,FeatureType.FIRE,FeatureType.TROLL_CORPSE,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.BONES,
 						        FeatureType.INACTIVE_TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.TELEPORTAL,FeatureType.POISON_GAS,
 						        FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.SPORES,FeatureType.WEB)
@@ -2533,7 +2538,7 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 			else{
-				if(player.target == null || !player.CanSee(player.target)
+				if(player.target == null || !player.CanSee(player.target) || !player.HasLOE(player.target)
 				|| (max_distance > 0 && player.DistanceFrom(player.target) > max_distance)){
 					if(!start_at_interesting_target || interesting_targets.Count == 0){
 						r = row;
