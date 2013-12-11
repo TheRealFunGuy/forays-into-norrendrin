@@ -14,38 +14,15 @@ vision benefits of america: 1 800 432 4966
 
 
 
+fix 'i'nv line - remove "press key for info" part.
 
+fix endgame intro text - at LEAST fix "moving forward".
 
--broke save/load, of course
+stop creating boss_arrive events, hah.
 
-rework collapse
+hide blink animation for warmages
 
-okay. maybe i shouldn't allow the conflict between collapse and stone spikes?
-
-collapse is good for going through walls; stone spikes is good for blocking LOS?
-
-maybe this:
-
-the target tile and adjacent floors become gravel.
-walls adjacent to the target become either rubble or cracked walls.
-
-
-
-update help files 
-	-update collapse again
-
-fix autopickup
-
-fix runmode stopping
-
-"you feel comfortable in your %ARMOR again" when exhaustion drops.
-
-message for every new monster! -whoops
-
-fix ghost - perhaps by removing its seek and idle
-
-make darkness kill avengers, make cold devastate slugs, ditto freezing
-
+fix the messages for kersai coming, seriously.
 
 include a goal at the start	-	"None of the other scouts returned." etc
 
@@ -56,7 +33,7 @@ check highscore, option, name files. verify correct version on other help files.
 
 
 -make 'trailer' vid
--remember to remove the hallucination & fire test videos from screencast
+-remember to remove the hallucination & fire test videos  from screencast
 -email LPers and article author too
 
 

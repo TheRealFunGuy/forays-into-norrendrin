@@ -583,7 +583,7 @@ namespace Forays{
 				}
 				case EventType.RELATIVELY_SAFE:
 				{
-					if(M.AllActors().Count == 1 && !Q.Contains(EventType.POLTERGEIST) && !Q.Contains(EventType.BOSS_ARRIVE)
+					if(M.AllActors().Count == 1 && !Q.Contains(EventType.POLTERGEIST)
 					&& !Q.Contains(EventType.REGENERATING_FROM_DEATH) && !Q.Contains(EventType.MIMIC) && !Q.Contains(EventType.MARBLE_HORROR)){
 						B.Add("The dungeon is still and silent. ");
 						B.PrintAll();
@@ -1471,11 +1471,7 @@ namespace Forays{
 					Q.Add(new Event(R.Between(5,8)*100,EventType.FINAL_LEVEL_SPAWN_CULTISTS));
 					break;
 				}
-				case EventType.FINAL_LEVEL_REIGNITE:
-				{
-					break;
-				}
-				case EventType.BOSS_SIGN:
+				/*case EventType.BOSS_SIGN:
 				{
 					string s = "";
 					switch(R.Roll(8)){
@@ -1671,7 +1667,7 @@ namespace Forays{
 					}
 					Q.Add(new Event((R.Roll(20)+20)*100,EventType.CEILING_COLLAPSE));
 					break;
-				}
+				}*/
 				case EventType.NORMAL_LIGHTING:
 				{
 					if(M.wiz_lite){

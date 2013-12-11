@@ -1056,7 +1056,7 @@ namespace Forays{
 							}
 						}
 						else{
-							if(monster_density[rr,rc] > 2){
+							if(current_level < 21 && monster_density[rr,rc] > 2){
 								good = false;
 							}
 						}
@@ -1075,18 +1075,20 @@ namespace Forays{
 					for(int j=0;j<1999;++j){
 						if(group_tiles.Count == 0){ //no space left!
 							if(group.Count > 0){
-								foreach(pos p in group[0].PositionsWithinDistance(4)){
-									if(group[0].DistanceFrom(p) <= 2){
-										monster_density[p] += 3;
-									}
-									else{
-										monster_density[p]++;
+								if(current_level < 21){
+									foreach(pos p in group[0].PositionsWithinDistance(4)){
+										if(group[0].DistanceFrom(p) <= 2){
+											monster_density[p] += 3;
+										}
+										else{
+											monster_density[p]++;
+										}
 									}
 								}
 								return group[0];
 							}
 							else{
-								if(result != null){
+								if(result != null && current_level < 21){
 									foreach(pos p in result.PositionsWithinDistance(4)){
 										if(result.DistanceFrom(p) <= 2){
 											monster_density[p] += 3;
@@ -1122,18 +1124,20 @@ namespace Forays{
 			}
 			//return type;
 			if(number > 1){
-				foreach(pos p in group[0].PositionsWithinDistance(4)){
-					if(group[0].DistanceFrom(p) <= 2){
-						monster_density[p] += 3;
-					}
-					else{
-						monster_density[p]++;
+				if(current_level < 21){
+					foreach(pos p in group[0].PositionsWithinDistance(4)){
+						if(group[0].DistanceFrom(p) <= 2){
+							monster_density[p] += 3;
+						}
+						else{
+							monster_density[p]++;
+						}
 					}
 				}
 				return group[0];
 			}
 			else{
-				if(result != null){
+				if(result != null && current_level < 21){
 					foreach(pos p in result.PositionsWithinDistance(4)){
 						if(result.DistanceFrom(p) <= 2){
 							monster_density[p] += 3;
@@ -2712,6 +2716,7 @@ namespace Forays{
 					}
 				}
 			}
+			actor[player.row,player.col] = player; //this line fixes a bug that occurs when the player ends up in the same position on a new level
 			if(R.CoinFlip()){ //todo: copied and pasted below
 				bool done = false;
 				for(int tries=0;!done && tries<500;++tries){
@@ -3146,18 +3151,13 @@ namespace Forays{
 				e.tiebreaker = 0;
 				Q.Add(e);
 			}
-			if(current_level == 20){
-				Event e = new Event(1066,EventType.BOSS_SIGN);
-				e.tiebreaker = 0;
-				Q.Add(e);
-			}
 			{
 				Event e = new Event(10000,EventType.RELATIVELY_SAFE);
 				e.tiebreaker = 0;
 				Q.Add(e);
 			}
 			if(current_level == 1){
-				B.Add("Welcome, " + Actor.player_name + "! ");
+				B.Add("In the mountain pass where travelers vanish, a stone staircase leads downward... Welcome, " + Actor.player_name + "! ");
 			}
 			else{
 				B.Add(LevelMessage());
@@ -3210,15 +3210,15 @@ namespace Forays{
 			final_level_clock++;
 			int multiplier = 50;
 			string[] messages = new string[]{"The dungeon trembles slightly. You feel that something bad is about to happen. ",
-				"The shaking increases. ",
-				"Dust falls from the ceiling as the dungeon shakes more violently. ",
+				"The shaking increases, and you hear a rumbling sound from the center of this area. ",
+				"Dust falls from the ceiling as the dungeon shakes violently. ",
 				"A demonic howling begins. ",
 				"A chorus of demonic voices heralds the coming of Kersai. ",
 				"A sense of urgency fills you. ",
 				"A sense of doom fills you. ",
 				"You hear booming laughter as the air turns to fire. Kersai is coming. ",
 				"Walls crack and crumble around you. The air turns to pain. Kersai is coming. ",
-				"Kersai bursts through the wall. Oh yeah! "};
+				"A crescendo from the demonic chorus announces the arrival of the Demon King. Your flesh turns to ash as Kersai enters this world. "};
 			if(final_level_clock == 1){
 				B.Add(messages[0]);
 				B.PrintAll();
@@ -3235,8 +3235,18 @@ namespace Forays{
 						}
 						break;
 					case 8:
+						foreach(Tile t in AllTiles()){
+							if(t.Is(TileType.WALL,TileType.CRACKED_WALL) && !t.solid_rock && t.p.BoundsCheck(tile,false) && R.OneIn(4)){
+								t.TurnToFloor();
+								foreach(Tile neighbor in t.TilesAtDistance(1)){
+									t.solid_rock = false;
+								}
+							}
+						}
 						foreach(Actor a in AllActors()){
-							a.curhp = 1;
+							if(!a.Is(ActorType.DEMON_LORD,ActorType.BEAST_DEMON,ActorType.FROST_DEMON,ActorType.MINOR_DEMON)){
+								a.curhp = 1;
+							}
 						}
 						break;
 					case 9:

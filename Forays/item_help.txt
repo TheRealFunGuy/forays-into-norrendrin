@@ -1,17 +1,104 @@
 Potions:
 
-Cloaking        - Grants invisibility while in darkness.
+Potion of healing - This invaluable elixir will instantly
+  restore you to full health.
+
+Potion of regeneration - The potent healing magic in this
+  potion will steadily grant you health for 100 turns.
+
+Potion of stoneform - This potion will change you temporarily
+  to unliving stone. You'll no longer be able to catch fire,
+  and no toxin or potion will affect you.
+
+Potion of vampirism - Consuming this potion will grant many of
+  the powers of a true vampire. You'll fly and drain life from
+  living enemies, but light will leave you vulnerable.
+
+Potion of brutish strength - Drinking this potion grants the
+  strength of a juggernaut. For a short time you'll be able to
+  smash through various dungeon features. Additionally, you'll
+  still move after making an attack, which will deal maximum
+  damage and knock foes back 5 spaces.
+
+Potion of roots - Drinking this potion will cause thick roots
+  to grow from you, holding you tightly to the ground and
+  providing defense against attacks.
+
+Potion of vigor - This potion will relieve your exhaustion and
+  temporarily double your movement speed.
+
+Potion of silence - This potion will cause your actions to
+  become entirely soundless. You'll attract less attention, but
+  you'll be unable to speak words of magic.
+
+Potion of cloaking - This potion will cause you to fade to
+  invisibility while in the shadows.
+
 
 
 Scrolls:
 
-Magic map       - Shows the layout of the current level.
+Scroll of blinking - This scroll will teleport you a short
+  distance randomly.
+
+Scroll of passage - This scroll will move you to the other side
+  of an adjacent wall (but not diagonally).
+
+Scroll of time - Reading this scroll will halt the flow of time
+  for a single turn, allowing you to take an extra action.
+
+Scroll of detect monsters - This scroll reveals the location of
+  foes on the current dungeon level for a while.
+
+Scroll of magic map - This scroll will show you the layout of
+  the current level, including secret doors and traps.
+
+Scroll of sunlight - This scroll fills the level with sunlight,
+  illuminating every corner of the dungeon.
+
+Scroll of darkness - This scroll covers the dungeon in a
+  blanket of darkness that suppresses all light.
+
+Scroll of repair - This scroll's power will strip negative
+  effects from your weapons & armor, and will remove any slime
+  or oil covering you.
+
+Scroll of calling - This scroll's magic will find the nearest
+  foe and transport it next to you. Immobile creatures are
+  immune to this effect.
+
+Scroll of trap clearing - This scroll will cause all traps
+  within 12 spaces to be triggered simultaneously.
+
+Scroll of enchantment - This potent scroll will impart a
+  permanent magical effect on the weapon you're holding.
+
 
 
 Orbs:
 
-Fog             - Fills a small area with fog, blocking sight
-                  and making attacks miss more often.
+Orb of freezing - Breaking this orb will encase nearby entities
+  in ice.
 
-Other:
+Orb of flames - Leaping flames will pour from this orb when it
+  shatters.
+
+Orb of fog - Thick fog will expand from this orb when it
+  breaks, blocking sight and reducing accuracy.
+
+Orb of detonation - On impact, this orb will explode violently,
+  inflicting great damage on its surroundings.
+
+Orb of breaching - This orb will temporarily lower nearby
+  walls, which will slowly return to their original state.
+
+Orb of shielding - This orb will create a zone of protection,
+  shielding entities within for several turns.
+
+Orb of teleportal - Releasing this orb's energy will create an
+  unstable rift. Creatures stepping into the rift will be
+  transported elsewhere in the dungeon.
+
+Orb of pain - Anything caught in this orb's area of effect will
+  become vulnerable to extra damage.
 

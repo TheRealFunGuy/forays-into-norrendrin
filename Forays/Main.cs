@@ -28,7 +28,7 @@ namespace Forays{
 	public enum DamageType{NORMAL,FIRE,COLD,ELECTRIC,POISON,MAGIC,NONE};
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
 	public enum CriticalEffect{STUN,ONE_TURN_STUN,MAX_DAMAGE,PERCENT_DAMAGE,WEAK_POINT,WORN_OUT,REDUCE_ACCURACY,DRAIN_LIFE,GRAB,CHILL,FREEZE,INFLICT_VULNERABILITY,TRIP,KNOCKBACK,STRONG_KNOCKBACK,IGNITE,DIM_VISION,SWAP_POSITIONS,SLIME,MAKE_NOISE,BLIND,SLOW,POISON,PARALYZE,ONE_TURN_PARALYZE,STALAGMITES,FLING,PULL,SILENCE,INFEST,DISRUPTION,VICTORY,ACID,NO_CRIT};
-	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,REASSEMBLING,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,FOG,POISON_GAS_VENT,POISON_GAS,STONE_SLAB,MARBLE_HORROR,FIRE,BOSS_SIGN,BOSS_ARRIVE,FLOOR_COLLAPSE,CEILING_COLLAPSE,NORMAL_LIGHTING,TELEPORTAL,BREACH,GRAVE_DIRT,POPPIES,TOMBSTONE_GHOST,SHIELDING,PIXIE_DUST,SPORES,BURROWING,FINAL_LEVEL_SPAWN_CULTISTS,FINAL_LEVEL_REIGNITE};
+	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,REASSEMBLING,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,FOG,POISON_GAS_VENT,POISON_GAS,STONE_SLAB,MARBLE_HORROR,FIRE,NORMAL_LIGHTING,TELEPORTAL,BREACH,GRAVE_DIRT,POPPIES,TOMBSTONE_GHOST,SHIELDING,PIXIE_DUST,SPORES,BURROWING,FINAL_LEVEL_SPAWN_CULTISTS};
 	public enum OptionType{NO_WALL_SLIDING,AUTOPICKUP,TOP_ROW_MOVEMENT,NEVER_DISPLAY_TIPS,ALWAYS_RESET_TIPS};
 	public class Game{
 		public Map M;
@@ -120,9 +120,9 @@ namespace Forays{
 					Global.SAVING = false;
 					Global.LoadOptions();
 					Game game = new Game();
+					Actor.attack[ActorType.PLAYER] = new List<AttackInfo>{new AttackInfo(100,2,CriticalEffect.NO_CRIT,"& hit *","& miss *")};
 					if(!saved_game){
 						game.player = new Actor(ActorType.PLAYER,"you",'@',Color.White,100,100,0,0,AttrType.HUMANOID_INTELLIGENCE);
-						Actor.attack[ActorType.PLAYER] = new List<AttackInfo>{new AttackInfo(100,2,CriticalEffect.NO_CRIT,"& hit *","& miss *")};
 						game.player.inv = new List<Item>();
 						Actor.feats_in_order = new List<FeatType>();
 						Actor.spells_in_order = new List<SpellType>();
@@ -148,6 +148,8 @@ namespace Forays{
 					Event.B = game.B;
 					Event.M = game.M;
 					Event.player = game.player;
+					Fire.fire_event = null;
+					Fire.burning_objects = new List<PhysicalObject>();
 					if(!saved_game){
 						Actor.player_name = "";
 						if(File.Exists("name.txt")){
@@ -297,7 +299,21 @@ namespace Forays{
 						}
 						game.M.wiz_lite = b.ReadBoolean();
 						game.M.wiz_dark = b.ReadBoolean();
-						//skipping danger_sensed
+						for(int i=0;i<Global.ROWS;++i){
+							for(int j=0;j<Global.COLS;++j){
+								game.M.last_seen[i,j].c = b.ReadChar();
+								game.M.last_seen[i,j].color = (Color)b.ReadInt32();
+								game.M.last_seen[i,j].bgcolor = (Color)b.ReadInt32();
+							}
+						}
+						if(game.M.current_level == 21){
+							game.M.final_level_cultist_count = new int[5];
+							for(int i=0;i<5;++i){
+								game.M.final_level_cultist_count[i] = b.ReadInt32();
+							}
+							game.M.final_level_demon_count = b.ReadInt32();
+							game.M.final_level_clock = b.ReadInt32();
+						}
 						Actor.feats_in_order = new List<FeatType>();
 						Actor.spells_in_order = new List<SpellType>();
 						int num_featlist = b.ReadInt32();
@@ -333,6 +349,8 @@ namespace Forays{
 							}
 							a.maxhp = b.ReadInt32();
 							a.curhp = b.ReadInt32();
+							a.maxmp = b.ReadInt32();
+							a.curmp = b.ReadInt32();
 							a.speed = b.ReadInt32();
 							a.light_radius = b.ReadInt32();
 							int target_ID = b.ReadInt32();
@@ -352,9 +370,13 @@ namespace Forays{
 								item.a_name = b.ReadString();
 								item.symbol = b.ReadChar();
 								item.color = (Color)b.ReadInt32();
+								item.light_radius = b.ReadInt32();
 								item.type = (ConsumableType)b.ReadInt32();
 								item.quantity = b.ReadInt32();
+								item.other_data = b.ReadInt32();
 								item.ignored = b.ReadBoolean();
+								item.do_not_stack = b.ReadBoolean();
+								item.revealed_by_light = b.ReadBoolean();
 								a.inv.Add(item);
 							}
 							int num_attrs = b.ReadInt32();
@@ -382,7 +404,9 @@ namespace Forays{
 							a.recover_time = b.ReadInt32();
 							int path_count = b.ReadInt32();
 							for(int j=0;j<path_count;++j){
-								a.path.Add(new pos(b.ReadInt32(),b.ReadInt32()));
+								int path_row = b.ReadInt32();
+								int path_col = b.ReadInt32();
+								a.path.Add(new pos(path_row,path_col));
 							}
 							int location_ID = b.ReadInt32();
 							if(id.ContainsKey(location_ID)){
@@ -396,15 +420,33 @@ namespace Forays{
 							a.player_visibility_duration = b.ReadInt32();
 							int num_weapons = b.ReadInt32();
 							for(int j=0;j<num_weapons;++j){
-								//a.weapons.AddLast((WeaponType)b.ReadInt32());
+								Weapon w = new Weapon(WeaponType.NO_WEAPON);
+								w.type = (WeaponType)b.ReadInt32();
+								w.enchantment = (EnchantmentType)b.ReadInt32();
+								int num_statuses = b.ReadInt32();
+								for(int k=0;k<num_statuses;++k){
+									EquipmentStatus st = (EquipmentStatus)b.ReadInt32();
+									bool has_st = b.ReadBoolean();
+									w.status[st] = has_st;
+								}
+								a.weapons.AddLast(w);
 							}
 							int num_armors = b.ReadInt32();
 							for(int j=0;j<num_armors;++j){
-								//a.armors.AddLast((ArmorType)b.ReadInt32());
+								Armor ar = new Armor(ArmorType.NO_ARMOR);
+								ar.type = (ArmorType)b.ReadInt32();
+								ar.enchantment = (EnchantmentType)b.ReadInt32();
+								int num_statuses = b.ReadInt32();
+								for(int k=0;k<num_statuses;++k){
+									EquipmentStatus st = (EquipmentStatus)b.ReadInt32();
+									bool has_st = b.ReadBoolean();
+									ar.status[st] = has_st;
+								}
+								a.armors.AddLast(ar);
 							}
 							int num_magic_trinkets = b.ReadInt32();
 							for(int j=0;j<num_magic_trinkets;++j){
-								//a.magic_trinkets.AddLast((MagicTrinketType)b.ReadInt32());
+								a.magic_trinkets.Add((MagicTrinketType)b.ReadInt32());
 							}
 						}
 						int num_groups = b.ReadInt32();
@@ -431,12 +473,15 @@ namespace Forays{
 							t.a_name = b.ReadString();
 							t.symbol = b.ReadChar();
 							t.color = (Color)b.ReadInt32();
+							t.light_radius = b.ReadInt32();
 							t.type = (TileType)b.ReadInt32();
 							t.passable = b.ReadBoolean();
-							t.opaque = b.ReadBoolean();
+							t.LoadInternalOpacity(b.ReadBoolean());
 							t.seen = b.ReadBoolean();
+							t.revealed_by_light = b.ReadBoolean();
 							t.solid_rock = b.ReadBoolean();
 							t.light_value = b.ReadInt32();
+							t.direction_exited = b.ReadInt32();
 							if(b.ReadBoolean()){ //indicates a toggles_into value
 								t.toggles_into = (TileType)b.ReadInt32();
 							}
@@ -450,9 +495,13 @@ namespace Forays{
 								t.inv.a_name = b.ReadString();
 								t.inv.symbol = b.ReadChar();
 								t.inv.color = (Color)b.ReadInt32();
+								t.inv.light_radius = b.ReadInt32();
 								t.inv.type = (ConsumableType)b.ReadInt32();
 								t.inv.quantity = b.ReadInt32();
+								t.inv.other_data = b.ReadInt32();
 								t.inv.ignored = b.ReadBoolean();
+								t.inv.do_not_stack = b.ReadBoolean();
+								t.inv.revealed_by_light = b.ReadBoolean();
 							}
 							else{
 								t.inv = null;
@@ -536,8 +585,47 @@ namespace Forays{
 							e.dead = b.ReadBoolean();
 							e.tiebreaker = b.ReadInt32();
 							game.Q.Add(e);
+							if(e.type == EventType.FIRE && !e.dead){
+								Fire.fire_event = e;
+							}
 						}
 						game.Q.turn = game_turn;
+						int num_footsteps = b.ReadInt32();
+						for(int i=0;i<num_footsteps;++i){
+							int step_row = b.ReadInt32();
+							int step_col = b.ReadInt32();
+							Actor.footsteps.Add(new pos(step_row,step_col));
+						}
+						int num_prev_footsteps = b.ReadInt32();
+						for(int i=0;i<num_prev_footsteps;++i){
+							int step_row = b.ReadInt32();
+							int step_col = b.ReadInt32();
+							Actor.previous_footsteps.Add(new pos(step_row,step_col));
+						}
+						Actor.interrupted_path.row = b.ReadInt32();
+						Actor.interrupted_path.col = b.ReadInt32();
+						int num_unIDed = b.ReadInt32();
+						for(int i=0;i<num_unIDed;++i){
+							ConsumableType ct = (ConsumableType)b.ReadInt32();
+							string s = b.ReadString();
+							Item.unIDed_name[ct] = s;
+						}
+						int num_IDed = b.ReadInt32();
+						for(int i=0;i<num_IDed;++i){
+							ConsumableType ct = (ConsumableType)b.ReadInt32();
+							bool IDed = b.ReadBoolean();
+							Item.identified[ct] = IDed;
+						}
+						int num_burning = b.ReadInt32();
+						for(int i=0;i<num_burning;++i){
+							int obj_ID = b.ReadInt32();
+							if(id.ContainsKey(obj_ID)){
+								Fire.burning_objects.Add(id[obj_ID]);
+							}
+							else{
+								throw new Exception("Error: some actors/tiles weren't loaded(7). ");
+							}
+						}
 						string[] messages = new string[20];
 						for(int i=0;i<20;++i){
 							messages[i] = b.ReadString();
@@ -546,6 +634,7 @@ namespace Forays{
 						b.Close();
 						file.Close();
 						File.Delete("forays.sav");
+						game.M.UpdateSafetyMap(game.player);
 					}
 					try{
 						while(!Global.GAME_OVER){ game.Q.Pop(); }

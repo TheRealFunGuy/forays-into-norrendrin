@@ -22,39 +22,98 @@ Stealth - Measures your ability to avoid notice.
 
 Combat feats:
 
-Quick draw - Instantly swap between weapons. 
-             Fire arrows without needing to explicitly switch
-             to your bow first.
+Quick draw - Switch from a melee weapon to another weapon
+             instantly. (You can fire arrows without first
+             switching to your bow. However, putting your bow
+             away still takes time.)
+
+Whirlwind style - When you take a step, you automatically
+                  attack every enemy still adjacent to you.
+
+Lunge - Leap from one space away and attack your target with
+        perfect accuracy. The intervening space must be
+        unoccupied.
+
+Drive back - Enemies must yield ground in order to avoid your
+             attacks. (If your target has nowhere to run, your
+             attacks will automatically hit.)
+
 
 
 Defense feats:
 
-Tumble - Move up to 2 spaces while avoiding arrows. You'll dodge
-         the first arrow fired at you before your next turn. 
+Armor mastery - When your armor blocks an enemy's attack,
+                you're twice as likely to score a critical hit
+                on it next turn. The exhaustion total at which
+                armor becomes too heavy is increased by 25%.
+
+Cunning dodge - Relying on mobility and tricks, you can
+                entirely avoid the first attack of each foe
+                you face.
+
+Deflect attack - When an enemy attacks you, you might deflect
+                 the attack to another enemy (one that is
+                 adjacent to both you and your attacker).
+
+Tumble - Move up to two spaces while avoiding arrows. Takes two
+         turns to perform.
+
 
 
 Magic feats:
 
-Master's edge - The first damaging spell in your spell list will
-                deal 1d6 extra magic damage.
+Master's edge - The first offensive spell you've learned will
+                deal 1d6 extra damage. (Affects the first spell
+                in the list that deals damage directly.)
+
+Arcane interference - When you cast a spell, nearby enemies
+                      lose their ability to cast that spell.
+
+Chain casting - The mana cost of your spells is reduced by one
+                if you cast a spell last turn. (This doesn't
+                ever reduce mana costs to zero.)
+
+Force of will - Exhaustion will never make you fail an attempt
+                at casting. (Casting without mana still
+                increases your exhaustion.)
 
 
 
 Spirit feats:
 
-Conviction - Each turn you're engaged in combat, you gain bonus
-             Spirit, and bonus Combat skill equal to half that.
+Conviction - Each turn you're engaged in combat (attacking or
+             being attacked) you gain 1 bonus Spirit, and
+             bonus Combat skill equal to half that.
 
-Feel no pain - When your health drops under 20%, you briefly
-               enter a state of invulnerability where you take
-               no damage (but other effects still happen).
+Enduring soul - Your health recovers over time. You'll regain
+                one HP every five turns until your total health
+                is a multiple of 10.
+
+Feel no pain - When your health becomes very low (less than
+               20%), you briefly enter a state of
+               invulnerability. (For about 5 turns, you'll be
+               immune to damage, but not other effects.)
 
 Boiling blood - Taking damage briefly increases your movement
-                speed. (Up to five stacks. At 5 stacks, your
-                speed is doubled.
+                speed. (This effect can stack up to 5 times.
+                At 5 stacks, your speed is doubled.)
+
 
 
 Stealth feats:
 
-Neck snap - Perform a stealth kill on a medium humanoid. (Living
-            enemies of approximately human size.)
+Neck snap - Automatically perform a stealth kill when attacking
+            an unaware medium humanoid. (Living enemies of
+            approximately human size.)
+
+Disarm trap - Alter a trap so that you can walk past it safely
+              (but enemies still trigger it). You can use this
+              feat again to disable it entirely.
+
+Corner climb - If you're in a corner (and in the dark), enemies
+               can't see you unless they're adjacent to you.
+
+Danger sense - Once you've seen or detected an enemy, you can
+               sense where it's safe and where that enemy might
+               detect you. Your torch must be extinguished
+               while you're sneaking.

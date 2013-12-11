@@ -237,6 +237,12 @@ namespace Forays{
 			}
 			return t;
 		}
+		public bool SaveInternalOpacity(){ //annoying - this is the only value I need to do this for, right now, so I'll hack it in and move on.
+			return internal_opaque;
+		}
+		public void LoadInternalOpacity(bool value){
+			internal_opaque = value;
+		}
 		public static TileType RandomTrap(){
 			int i = R.Roll(13) + 7;
 			return (TileType)i;
@@ -940,12 +946,7 @@ namespace Forays{
 						if(player.CanSee(this)){
 							B.Add("The air suddenly freezes, encasing " + actor().TheName(true) + " in ice. ");
 						}
-						actor().attrs[AttrType.FROZEN] = 35;
-						actor().attrs[AttrType.SLIMED] = 0;
-						actor().attrs[AttrType.OIL_COVERED] = 0;
-						if(actor() == player){
-							Help.TutorialTip(TutorialTopic.Frozen);
-						}
+						actor().ApplyFreezing();
 					}
 					else{
 						if(player.CanSee(this)){

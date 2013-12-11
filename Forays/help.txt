@@ -17,7 +17,7 @@ torch with 't'. ('t' will also bring it back out again.)
 
 
 Press tab to look at your surroundings. (Pressing escape or
- space will exit most menus and selections.)
+space will exit most menus and selections.)
 
 
 If you've learned a spell, you can cast it by pressing 'z'. 
@@ -42,9 +42,9 @@ list can be accessed directly in-game by pressing '-'.)
 
 Command list:
 
-tab : look around                              z : cast a spell 
-r : rest to recover health and mana            c : use a feat
-t : turn your torch on/off                     s : fire an arrow
+tab : look around                             z : cast a spell 
+r : rest to recover health and mana           c : use a feat
+t : turn your torch on/off                    s : fire an arrow
 e : view and change equipment
 
 i : view your inventory
@@ -53,14 +53,13 @@ g : pick up an item                        d : drop an item
 
 > : take stairs to next level              o : operate terrain
 w : walk automatically in a direction      x : explore
+m : view map for the current level         X : travel
 
 c : view character information (and activate feats)
 p : view previous messages
 
-= : change options
-q : quit
-? : view the help screen
-- : view this command list
+q : quit                             = : change options
+? : view the help screen             - : view this command list
 
 
 (You can also switch weapons with 1-5 on the top row of the
