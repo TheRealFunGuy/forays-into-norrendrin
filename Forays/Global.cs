@@ -27,7 +27,6 @@ namespace Forays{
 		public static bool QUITTING = false;
 		public static bool SAVING = false;
 		public static string KILLED_BY = "debugged to death";
-		public static List<string> quickstartinfo = null;
 		public static Dictionary<OptionType,bool> Options = new Dictionary<OptionType, bool>();
 		public static bool Option(OptionType option){
 			bool result = false;
@@ -310,7 +309,20 @@ namespace Forays{
 			}
 			b.Write(M.wiz_lite);
 			b.Write(M.wiz_dark);
-			//skipping danger_sensed
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					b.Write(M.last_seen[i,j].c);
+					b.Write((int)M.last_seen[i,j].color);
+					b.Write((int)M.last_seen[i,j].bgcolor);
+				}
+			}
+			if(M.current_level == 21){
+				for(int i=0;i<5;++i){
+					b.Write(M.final_level_cultist_count[i]);
+				}
+				b.Write(M.final_level_demon_count);
+				b.Write(M.final_level_clock);
+			}
 			b.Write(Actor.feats_in_order.Count);
 			foreach(FeatType ft in Actor.feats_in_order){
 				b.Write((int)ft);
@@ -333,6 +345,8 @@ namespace Forays{
 				b.Write((int)a.type);
 				b.Write(a.maxhp);
 				b.Write(a.curhp);
+				b.Write(a.maxmp);
+				b.Write(a.curmp);
 				b.Write(a.speed);
 				b.Write(a.light_radius);
 				b.Write(GetID(a.target));
@@ -343,9 +357,13 @@ namespace Forays{
 					b.Write(i.a_name);
 					b.Write(i.symbol);
 					b.Write((int)i.color);
+					b.Write(i.light_radius);
 					b.Write((int)i.type);
 					b.Write(i.quantity);
+					b.Write(i.other_data);
 					b.Write(i.ignored);
+					b.Write(i.do_not_stack);
+					b.Write(i.revealed_by_light);
 				}
 				b.Write(a.attrs.d.Count);
 				foreach(AttrType at in a.attrs.d.Keys){
@@ -381,13 +399,25 @@ namespace Forays{
 					groups.AddUnique(a.group);
 				}
 				b.Write(a.weapons.Count);
-				/*foreach(WeaponType w in a.weapons){
-					b.Write((int)w);
+				foreach(Weapon w in a.weapons){
+					b.Write((int)w.type);
+					b.Write((int)w.enchantment);
+					b.Write(w.status.d.Count);
+					foreach(EquipmentStatus st in w.status.d.Keys){
+						b.Write((int)st);
+						b.Write(w.status[st]);
+					}
 				}
 				b.Write(a.armors.Count);
-				foreach(ArmorType ar in a.armors){
-					b.Write((int)ar);
-				}*/
+				foreach(Armor ar in a.armors){
+					b.Write((int)ar.type);
+					b.Write((int)ar.enchantment);
+					b.Write(ar.status.d.Count);
+					foreach(EquipmentStatus st in ar.status.d.Keys){
+						b.Write((int)st);
+						b.Write(ar.status[st]);
+					}
+				}
 				b.Write(a.magic_trinkets.Count);
 				foreach(MagicTrinketType m in a.magic_trinkets){
 					b.Write((int)m);
@@ -410,12 +440,15 @@ namespace Forays{
 				b.Write(t.a_name);
 				b.Write(t.symbol);
 				b.Write((int)t.color);
+				b.Write(t.light_radius);
 				b.Write((int)t.type);
 				b.Write(t.passable);
-				b.Write(t.opaque);
+				b.Write(t.SaveInternalOpacity());
 				b.Write(t.seen);
+				b.Write(t.revealed_by_light);
 				b.Write(t.solid_rock);
 				b.Write(t.light_value);
+				b.Write(t.direction_exited);
 				if(t.toggles_into.HasValue){
 					b.Write(true);
 					b.Write((int)t.toggles_into.Value);
@@ -430,9 +463,13 @@ namespace Forays{
 					b.Write(t.inv.a_name);
 					b.Write(t.inv.symbol);
 					b.Write((int)t.inv.color);
+					b.Write(t.inv.light_radius);
 					b.Write((int)t.inv.type);
 					b.Write(t.inv.quantity);
+					b.Write(t.inv.other_data);
 					b.Write(t.inv.ignored);
+					b.Write(t.inv.do_not_stack);
+					b.Write(t.inv.revealed_by_light);
 				}
 				else{
 					b.Write(false);
@@ -476,6 +513,32 @@ namespace Forays{
 				b.Write(e.time_created);
 				b.Write(e.dead);
 				b.Write(e.tiebreaker);
+			}
+			b.Write(Actor.footsteps.Count);
+			foreach(pos p in Actor.footsteps){
+				b.Write(p.row);
+				b.Write(p.col);
+			}
+			b.Write(Actor.previous_footsteps.Count);
+			foreach(pos p in Actor.previous_footsteps){
+				b.Write(p.row);
+				b.Write(p.col);
+			}
+			b.Write(Actor.interrupted_path.row);
+			b.Write(Actor.interrupted_path.col);
+			b.Write(Item.unIDed_name.Count);
+			foreach(ConsumableType ct in Item.unIDed_name.Keys){
+				b.Write((int)ct);
+				b.Write(Item.unIDed_name[ct]);
+			}
+			b.Write(Item.identified.d.Count);
+			foreach(ConsumableType ct in Item.identified.d.Keys){
+				b.Write((int)ct);
+				b.Write(Item.identified[ct]);
+			}
+			b.Write(Fire.burning_objects.Count);
+			foreach(PhysicalObject o in Fire.burning_objects){
+				b.Write(GetID(o));
 			}
 			for(int i=0;i<20;++i){
 				b.Write(B.Printed(i));

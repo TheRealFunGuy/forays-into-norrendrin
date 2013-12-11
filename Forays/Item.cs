@@ -788,8 +788,8 @@ namespace Forays{
 			{
 				B.Add("You start moving with extraordinary speed. ");
 				if(user.exhaustion > 0){
-					user.exhaustion = 0;
 					B.Add("Your fatigue disappears. ");
+					user.RemoveExhaustion();
 				}
 				user.RefreshDuration(AttrType.VIGOR,(R.Roll(2,10) + 10)*100,"Your extraordinary speed fades. ");
 				break;
@@ -1224,15 +1224,7 @@ namespace Forays{
 						t2.ApplyEffect(DamageType.COLD);
 						Actor ac = t2.actor();
 						if(ac != null){
-							if(!ac.IsBurning()){
-								B.Add(ac.YouAre() + " encased in ice. ",ac);
-								ac.attrs[AttrType.FROZEN] = 35;
-								ac.attrs[AttrType.SLIMED] = 0;
-								ac.attrs[AttrType.OIL_COVERED] = 0;
-								if(ac == player){
-									Help.TutorialTip(TutorialTopic.Frozen);
-								}
-							}
+							ac.ApplyFreezing();
 						}
 					}
 					t.MakeNoise(2);
