@@ -379,6 +379,9 @@ namespace Forays{
 						if(t.inv != null && t.inv.type == ConsumableType.DETONATION){ //this will cause a new knockback effect and end the current one
 							interrupted = true;
 						}
+						if(t.type == TileType.FLING_TRAP){ //otherwise you'd teleport around, continuing to slide from your previous position.
+							interrupted = true;
+						}
 						if(t.Is(FeatureType.WEB) && !a.HasAttr(AttrType.SMALL)){
 							t.RemoveFeature(FeatureType.WEB);
 						}
@@ -407,7 +410,9 @@ namespace Forays{
 					cells.Add(nearby.p);
 				}
 			}
-			Screen.AnimateMapCells(cells,new colorchar('*',Color.RandomExplosion));
+			if(cells.Count > 0){
+				Screen.AnimateMapCells(cells,new colorchar('*',Color.RandomExplosion));
+			}
 			int inner_radius = (radius - 1) / 2;
 			List<Tile> affected_walls = new List<Tile>();
 			for(int dist=radius;dist>=0;--dist){
@@ -416,7 +421,7 @@ namespace Forays{
 						if(HasLOE(t)){
 							Actor a = t.actor();
 							if(a != null){
-								a.attrs[AttrType.TURN_INTO_CORPSE] = 1;
+								a.attrs[AttrType.TURN_INTO_CORPSE]++;
 								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
 								if(a.HasAttr(AttrType.SMALL)){
 									if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
@@ -468,7 +473,7 @@ namespace Forays{
 						if(HasLOE(t)){
 							Actor a = t.actor();
 							if(a != null){
-								a.attrs[AttrType.TURN_INTO_CORPSE] = 1;
+								a.attrs[AttrType.TURN_INTO_CORPSE]++;
 								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
 								if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
 									KnockObjectBack(a,1);
@@ -2479,7 +2484,8 @@ compare this number to 1/2:  if less than 1/2, major.
 			for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
 				foreach(Actor a in ActorsAtDistance(i)){
 					if(player.CanSee(a)){
-						if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOE(a))){
+						//if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOE(a))){
+						if(lookmode || player.GetBestLineOfEffect(a).All(x=>x.passable || !x.seen)){
 							interesting_targets.Add(a);
 						}
 					}
@@ -2627,6 +2633,45 @@ compare this number to 1/2:  if less than 1/2, major.
 					else{
 						if(player.CanSee(M.tile[r,c])){
 							B.DisplayNow(contents + ". ");
+							if(!Help.displayed[TutorialTopic.Traps] && M.tile[r,c].IsKnownTrap()){
+								Help.TutorialTip(TutorialTopic.Traps);
+							}
+							else{
+								if(!Help.displayed[TutorialTopic.NotRevealedByLight] && ((M.tile[r,c].IsShrine() || M.tile[r,c].IsKnownTrap()) && !M.tile[r,c].revealed_by_light) || (M.tile[r,c].inv != null && !M.tile[r,c].inv.revealed_by_light)){
+									Help.TutorialTip(TutorialTopic.NotRevealedByLight);
+								}
+								else{
+									if(!Help.displayed[TutorialTopic.Fire] && M.tile[r,c].Is(FeatureType.FIRE)){
+										Help.TutorialTip(TutorialTopic.Fire);
+									}
+									else{
+										switch(M.tile[r,c].type){
+										case TileType.BLAST_FUNGUS:
+											Help.TutorialTip(TutorialTopic.BlastFungus,true);
+											break;
+										case TileType.CRACKED_WALL:
+											Help.TutorialTip(TutorialTopic.CrackedWall,true);
+											break;
+										case TileType.FIREPIT:
+											Help.TutorialTip(TutorialTopic.FirePit,true);
+											break;
+										case TileType.POOL_OF_RESTORATION:
+											Help.TutorialTip(TutorialTopic.PoolOfRestoration,true);
+											break;
+										case TileType.STONE_SLAB:
+											Help.TutorialTip(TutorialTopic.StoneSlab,true);
+											break;
+										case TileType.COMBAT_SHRINE:
+										case TileType.DEFENSE_SHRINE:
+										case TileType.MAGIC_SHRINE:
+										case TileType.SPIRIT_SHRINE:
+										case TileType.STEALTH_SHRINE:
+											Help.TutorialTip(TutorialTopic.Shrines,true);
+											break;
+										}
+									}
+								}
+							}
 						}
 						else{
 							if(M.actor[r,c] != null && player.CanSee(M.actor[r,c])){

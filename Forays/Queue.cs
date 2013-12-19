@@ -896,7 +896,7 @@ namespace Forays{
 								}
 							}
 						}
-						if(t != null){
+						if(t != null && t.seen){
 							Screen.AnimateMapCell(t.row,t.col,new colorchar(i.other_data.ToString()[0],Color.Red),100);
 						}
 						Q.Add(new Event(i,100,EventType.BLAST_FUNGUS));

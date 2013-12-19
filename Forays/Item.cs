@@ -22,7 +22,7 @@ namespace Forays{
 		public static Dictionary<ConsumableType,string> unIDed_name = new Dictionary<ConsumableType,string>();
 		public static Dict<ConsumableType,bool> identified = new Dict<ConsumableType, bool>();
 
-		private static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
+		public static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
 		public static Item Prototype(ConsumableType type){ return proto[type]; }
 		static Item(){
 			Define(ConsumableType.HEALING,"potion~ of healing",'!',Color.White);
@@ -54,10 +54,13 @@ namespace Forays{
 			Define(ConsumableType.TELEPORTAL,"orb~ of teleportal",'*',Color.White);
 			Define(ConsumableType.PAIN,"orb~ of pain",'*',Color.White);
 			Define(ConsumableType.BANDAGES,"roll~ of bandages",'{',Color.White);
+			proto[ConsumableType.BANDAGES].revealed_by_light = true;
 			Define(ConsumableType.FLINT_AND_STEEL,"flint & steel~",'}',Color.Red);
 			proto[ConsumableType.FLINT_AND_STEEL].a_name = "flint & steel~";
+			proto[ConsumableType.FLINT_AND_STEEL].revealed_by_light = true;
 			Define(ConsumableType.BLAST_FUNGUS,"blast fungus",'"',Color.Red);
 			proto[ConsumableType.BLAST_FUNGUS].do_not_stack = true;
+			proto[ConsumableType.BLAST_FUNGUS].revealed_by_light = true;
 		}
 		private static void Define(ConsumableType type_,string name_,char symbol_,Color color_){
 			proto[type_] = new Item(type_,name_,symbol_,color_);
@@ -1117,8 +1120,8 @@ namespace Forays{
 			{
 				List<Tile> traps = new List<Tile>();
 				{
-					List<Tile>[] traparray = new List<Tile>[4];
-					for(int i=0;i<4;++i){
+					List<Tile>[] traparray = new List<Tile>[5];
+					for(int i=0;i<5;++i){
 						traparray[i] = new List<Tile>();
 					}
 					for(int i=0;i<=12;++i){
@@ -1130,6 +1133,7 @@ namespace Forays{
 							case TileType.BLINDING_TRAP:
 							case TileType.SHOCK_TRAP:
 							case TileType.FIRE_TRAP:
+							case TileType.SCALDING_OIL_TRAP:
 								traparray[0].Add(t);
 								break;
 							case TileType.POISON_GAS_TRAP:
@@ -1144,10 +1148,14 @@ namespace Forays{
 							case TileType.DARKNESS_TRAP:
 								traparray[3].Add(t);
 								break;
+							case TileType.FLING_TRAP:
+							case TileType.STONE_RAIN_TRAP:
+								traparray[4].Add(t);
+								break;
 							}
 						}
 					}
-					for(int i=0;i<4;++i){
+					for(int i=0;i<5;++i){
 						foreach(Tile t in traparray[i]){
 							traps.Add(t);
 						}
@@ -2159,8 +2167,10 @@ namespace Forays{
 				return new string[]{"Dagger -- In darkness, the dagger always hits and is",
 									"     twice as likely to score a critical hit, stunning the foe."};
 			case WeaponType.STAFF:
-				return new string[]{"Staff -- Attacking an enemy that just moved will swap",
-									"           places. Critical hits will trip the foe."};
+				return new string[]{"Staff -- Always hits against a foe that just moved, in",
+									"  addition to swapping places. Critical hits will trip the foe."};
+				//return new string[]{"Staff -- Attacking an enemy that just moved will swap",
+				//					"           places. Critical hits will trip the foe."};
 			case WeaponType.BOW:
 				return new string[]{"Bow -- A ranged weapon, less accurate than melee.",
 									"        Critical hits will immobilize the target briefly."};
@@ -2227,6 +2237,9 @@ namespace Forays{
 			enchantment = enchantment_;
 		}
 		public int Protection(){
+			if(status[EquipmentStatus.DAMAGED]){
+				return 0;
+			}
 			switch(type){
 			case ArmorType.LEATHER:
 				return 2;

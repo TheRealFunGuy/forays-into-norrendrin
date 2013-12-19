@@ -14,7 +14,7 @@ using SchismDungeonGenerator;
 using Utilities;
 using SchismExtensionMethods;
 namespace Forays{
-	public enum LevelType{Standard,Cave,Hive,Mine,Fortress,Slime,Garden,Crypt};
+	public enum LevelType{Standard,Cave,Hive,Mine,Fortress,Slime,Garden,Crypt}; //rename slime --> sewer
 	public class Map{
 		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
@@ -139,7 +139,7 @@ namespace Forays{
 		public LevelType ChooseNextLevelType(LevelType current){
 			List<LevelType> types = new List<LevelType>();
 			foreach(LevelType l in Enum.GetValues(typeof(LevelType))){
-				if(l != current && l != LevelType.Garden && l != LevelType.Slime){ //todo: re-enable these
+				if(l != current && l != LevelType.Slime){ //todo: re-enable these
 					types.Add(l);
 				}
 			}
@@ -200,7 +200,7 @@ namespace Forays{
 		}
 		public void GenerateLevelTypes(){
 			level_types = new List<LevelType>();
-			LevelType current = LevelType.Standard;
+			LevelType current = LevelType.Garden;
 			while(level_types.Count < 20){
 				int num = R.Roll(2,2) - 1;
 				for(int i=0;i<num;++i){
@@ -711,6 +711,10 @@ namespace Forays{
 							foreach(Tile t in tile[r,c].NonOpaqueNeighborsBetween(player.row,player.col)){
 								if(t.type == TileType.GLOWING_FUNGUS){
 									fungus_found = true;
+								}
+								if(t.light_value > 0){ //they don't color walls that are lit by another light source
+									fungus_found = false;
+									break;
 								}
 							}
 							if(!fungus_found){
@@ -1531,105 +1535,177 @@ namespace Forays{
 				}
 			case LevelType.Garden:
 				d.RoomHeightMin = 4;
-				d.RoomHeightMax = 4;
+				d.RoomHeightMax = 10;
 				d.RoomWidthMin = 4;
-				d.RoomWidthMax = 4;
-				d.RoomExtraHeight = 8;
-				d.RoomExtraWidth = 8;
-				if(R.CoinFlip()){
-					d.RoomExtraHeightChance = 100;
-				}
-				else{
-					d.RoomExtraWidthChance = 100;
-				}
+				d.RoomWidthMax = 10;
 				while(true){
-					int pointrows = 2;
-					int pointcols = 4;
-					List<pos> points = new List<pos>();
-					for(int i=1;i<=pointrows;++i){
-						for(int j=1;j<=pointcols;++j){
-							points.Add(new pos((ROWS*i)/(pointrows+1),(COLS*j)/(pointcols+1)));
+					d.CreateBasicMap();
+					d.ConnectDiagonals();
+					d.RemoveUnconnectedAreas();
+					d.RemoveDeadEndCorridors();
+					var dijkstra = d.map.GetDijkstraMap(x=>false,x=>d[x].IsPassable());
+					List<pos> possible_room_centers = d.map.PositionsWhere(x=>dijkstra[x] == 3 && x.row > 1 && x.row < ROWS-2 && x.col > 1 && x.col < COLS-2);
+					int rooms = 0;
+					while(rooms < 6 && possible_room_centers.Count > 0){
+						pos p = possible_room_centers.RemoveRandom();
+						List<int> valid_dirs = new List<int>();
+						foreach(int dir in U.FourDirections){
+							pos p2 = p.PosInDir(dir).PosInDir(dir).PosInDir(dir);
+							if(p2.BoundsCheck(d.map) && d[p2].IsPassable() && d[p2] != CellType.RoomCorner){
+								valid_dirs.Add(dir);
+							}
+						}
+						if(valid_dirs.Count > 0){
+							foreach(pos neighbor in p.PositionsWithinDistance(1)){
+								d[neighbor] = CellType.RoomInterior;
+							}
+							possible_room_centers.RemoveWhere(x=>p.DistanceFrom(x) <= 3);
+							foreach(int dir in valid_dirs){
+								d[p.PosInDir(dir).PosInDir(dir)] = CellType.CorridorIntersection;
+							}
+							++rooms;
 						}
 					}
-					foreach(pos p in points){
-						d[p] = CellType.InterestingLocation;
+					CellType water_type = CellType.ShallowWater;
+					if(R.OneIn(8)){
+						water_type = CellType.Ice;
 					}
-					foreach(pos p in points){
-						d[p] = CellType.Wall;
-						int tries = 0;
-						for(;tries<100;++tries){
-							if(d.CreateRoom(p.row,p.col)){
-								if(d.RoomExtraWidthChance == 100){
-									d.RoomExtraHeightChance = 100;
-									d.RoomExtraWidthChance = 0;
-								}
-								else{
-									d.RoomExtraHeightChance = 0;
-									d.RoomExtraWidthChance = 100;
-								}
+					d.ForEachRectangularRoom((start_r,start_c,end_r,end_c)=>{
+						int room_height = (end_r - start_r) + 1;
+						int room_width = (end_c - start_c) + 1;
+						if(room_height <= 4 && room_width <= 4){
+							if(room_height == 3 && room_width == 3){
+								return true;
+							}
+							List<pos> water = new List<pos>();
+							if(!new pos(start_r+1,start_c).PositionsAtDistance(1).Any(x=>d[x].IsCorridorType())){
+								water.Add(new pos(start_r+1,start_c));
+								water.Add(new pos(start_r+2,start_c));
+							}
+							if(!new pos(start_r,start_c+1).PositionsAtDistance(1).Any(x=>d[x].IsCorridorType())){
+								water.Add(new pos(start_r,start_c+1));
+								water.Add(new pos(start_r,start_c+2));
+							}
+							if(!new pos(end_r-1,end_c).PositionsAtDistance(1).Any(x=>d[x].IsCorridorType())){
+								water.Add(new pos(end_r-1,end_c));
+								water.Add(new pos(end_r-2,end_c));
+							}
+							if(!new pos(end_r,end_c-1).PositionsAtDistance(1).Any(x=>d[x].IsCorridorType())){
+								water.Add(new pos(end_r,end_c-1));
+								water.Add(new pos(end_r,end_c-2));
+							}
+							foreach(pos p in water){
+								d[p] = water_type;
+							}
+							d[start_r,start_c] = CellType.Statue;
+							d[start_r,end_c] = CellType.Statue;
+							d[end_r,start_c] = CellType.Statue;
+							d[end_r,end_c] = CellType.Statue;
+						}
+						else{
+							CellType center_type = CellType.RoomFeature1;
+							switch(R.Roll(3)){
+							case 1:
+								center_type = water_type;
+								break;
+							case 2:
+								center_type = CellType.Poppies;
+								break;
+							case 3:
+								center_type = CellType.Brush;
 								break;
 							}
-						}
-						if(tries == 100){
-							d[p] = CellType.RoomInterior;
-						}
-					}
-					foreach(pos p in points){
-						if(d[p] == CellType.InterestingLocation){
-							d[p] = CellType.Wall;
-						}
-					}
-					int successes = 0;
-					for(int count=0;count<400;++count){
-						int rr = -1;
-						int rc = -1;
-						int dir = 0;
-						pos p = new pos(-1,-1);
-						for(int i=0;i<9999 && dir == 0;++i){
-							rr = R.Roll(ROWS-4) + 1;
-							rc = R.Roll(COLS-4) + 1;
-							p = new pos(rr,rc);
-							if(d[rr,rc].IsWall()){
-								int total = 0;
-								int lastdir = 0;
-								foreach(int direction in U.FourDirections){
-									if(d[p.PosInDir(direction)].IsFloor()){
-										++total;
-										lastdir = direction;
+							bool statues = R.CoinFlip();
+							CellType statue_type = CellType.Statue;
+							if(room_height <= 8 && room_width <= 8 && R.OneIn(8)){
+								statue_type = CellType.Torch;
+							}
+							CellType edge_type = CellType.ShallowWater;
+							if(center_type != water_type && !R.OneIn(4)){
+								edge_type = CellType.ShallowWater;
+							}
+							else{
+								int vine_chance = 50;
+								if(!statues){
+									vine_chance = 80;
+								}
+								if(R.PercentChance(vine_chance)){
+									edge_type = CellType.Vine;
+								}
+								else{
+									edge_type = CellType.Gravel;
+								}
+								if(R.OneIn(32)){
+									if(R.CoinFlip()){
+										edge_type = CellType.Statue;
+									}
+									else{
+										edge_type = CellType.GlowingFungus;
 									}
 								}
-								if(total == 1){
-									dir = lastdir;
-								}
 							}
-						}
-						if(dir != 0){
-							if(R.PercentChance(20)){
-								if(d.CreateCorridor(rr,rc,dir)){
-									++successes;
+							bool gravel = R.OneIn(16);
+							bool edges = R.CoinFlip();
+							if(room_height < 6 || room_width < 6){
+								edges = false;
+							}
+							if(room_height >= 8 && room_width >= 8){
+								edges = !R.OneIn(4);
+							}
+							if(edges){
+								for(int i=start_r;i<=end_r;++i){
+									for(int j=start_c;j<=end_c;++j){
+										if(i == start_r || i == end_r || j == start_c || j == end_c){ //edges
+											if(statues && (i == start_r || i == end_r) && (j == start_c || j == end_c)){ //corners
+												d[i,j] = statue_type;
+											}
+											else{
+												pos p = new pos(i,j);
+												if(!p.CardinalAdjacentPositions().Any(x=>d[x].IsCorridorType())){
+													d[i,j] = edge_type;
+												}
+											}
+										}
+										else{
+											if(i == start_r+1 || i == end_r-1 || j == start_c+1 || j == end_c-1){ //the path
+												if(gravel){
+													d[i,j] = CellType.Gravel;
+												}
+											}
+											else{
+												d[i,j] = center_type;
+											}
+										}
+									}
 								}
 							}
 							else{
-								if(d.CreateRoom(rr,rc,dir)){
-									++successes;
-									if(d.RoomExtraWidthChance == 100){
-										d.RoomExtraHeightChance = 100;
-										d.RoomExtraWidthChance = 0;
-									}
-									else{
-										d.RoomExtraHeightChance = 0;
-										d.RoomExtraWidthChance = 100;
+								for(int i=start_r;i<=end_r;++i){
+									for(int j=start_c;j<=end_c;++j){
+										if(i == start_r || i == end_r || j == start_c || j == end_c){
+											if(gravel){
+												d[i,j] = CellType.Gravel;
+											}
+										}
+										else{
+											d[i,j] = center_type;
+										}
 									}
 								}
 							}
-							if(successes >= 80){
-								break;
+							if(center_type == water_type && room_height % 2 == 1 && room_width % 2 == 1){
+								statue_type = CellType.Statue;
+								if(room_height <= 7 && room_width <= 7 && R.OneIn(12)){
+									statue_type = CellType.Torch;
+								}
+								d[(start_r+end_r)/2,(start_c+end_c)/2] = statue_type;
 							}
 						}
-					}
+						return true;
+					});
 					d.ConnectDiagonals();
 					d.RemoveUnconnectedAreas();
-					d.AddDoors(25);
+					d.AddDoors(10);
 					d.RemoveDeadEndCorridors();
 					d.MarkInterestingLocations();
 					if(d.NumberOfFloors() < 320 || d.HasLargeUnusedSpaces(300)){
@@ -1966,11 +2042,12 @@ namespace Forays{
 					for(bool done=false;!done;++attempts){
 						int rr = R.Roll(ROWS-4) + 1;
 						int rc = R.Roll(COLS-4) + 1;
-						if(interesting_tiles.Count > 0 && (shrines.Count > 1 || attempts > 1000)){
+						//if(interesting_tiles.Count > 0 && attempts > 1000){
+						if(interesting_tiles.Count > 0){
 							pos p = interesting_tiles.Random();
 							rr = p.row;
 							rc = p.col;
-							map[rr,rc] = CellType.RoomInterior;
+							map[p] = CellType.RoomInterior;
 						}
 						pos temp = new pos(rr,rc);
 						if(shrines.Count > 1){
@@ -2024,19 +2101,30 @@ namespace Forays{
 										map[rr,rc+1] = shrines.RemoveRandom();
 									}
 									CellType center = CellType.Wall;
-									switch(R.Roll(4)){
-									case 1:
-										center = CellType.Pillar;
-										break;
-									case 2:
-										center = CellType.Statue;
-										break;
-									case 3:
-										center = CellType.FirePit;
-										break;
-									case 4:
-										center = CellType.ShallowWater;
-										break;
+									while(center == CellType.Wall){
+										switch(R.Roll(5)){
+										case 1:
+											if(level_types[current_level-1] != LevelType.Hive && level_types[current_level-1] != LevelType.Garden){
+												center = CellType.Pillar;
+											}
+											break;
+										case 2:
+											center = CellType.Statue;
+											break;
+										case 3:
+											if(level_types[current_level-1] != LevelType.Garden){
+												center = CellType.FirePit;
+											}
+											break;
+										case 4:
+											center = CellType.ShallowWater;
+											break;
+										case 5:
+											if(level_types[current_level-1] != LevelType.Hive){
+												center = CellType.Torch;
+											}
+											break;
+										}
 									}
 									map[rr,rc] = center;
 									interesting_tiles.Remove(temp);
@@ -2166,7 +2254,7 @@ namespace Forays{
 					pos p = interesting_tiles.RemoveRandom();
 					rr = p.row;
 					rc = p.col;
-					map[rr,rc] = CellType.RoomInterior;
+					map[p] = CellType.RoomInterior;
 				}
 				if(map[rr,rc].IsFloor()){
 					bool floors = true;
@@ -2182,20 +2270,22 @@ namespace Forays{
 					}
 				}
 			}
+			if(level_types[current_level-1] != LevelType.Garden){
+				GenerateFloorTypes(map);
+				GenerateFeatures(map,interesting_tiles);
+			}
 			int num_traps = R.Roll(2,3);
 			for(int i=0;i<num_traps;++i){
 				int tries = 0;
 				for(bool done=false;!done && tries < 100;++tries){
 					int rr = R.Roll(ROWS-2);
 					int rc = R.Roll(COLS-2);
-					if(map[rr,rc].IsFloor()){
+					if(map[rr,rc].IsFloor() && map[rr,rc] != CellType.ShallowWater){
 						map[rr,rc] = CellType.Trap;
 						done = true;
 					}
 				}
 			}
-			GenerateFloorTypes(map);
-			GenerateFeatures(map,interesting_tiles);
 			List<Tile> hidden = new List<Tile>();
 			Event grave_dirt_event = null;
 			Event poppy_event = null;
@@ -2209,7 +2299,7 @@ namespace Forays{
 						Tile.Create(TileType.WALL,i,j);
 						break;
 					case CellType.Door:
-						if(R.OneIn(150)){
+						if(R.OneIn(120)){
 							if(R.CoinFlip()){
 								Tile.Create(TileType.STONE_SLAB,i,j);
 								Q.Add(new Event(tile[i,j],new List<Tile>{tile[i,j]},100,EventType.STONE_SLAB));
@@ -2254,6 +2344,9 @@ namespace Forays{
 						break;
 					case CellType.BlastFungus:
 						Tile.Create(TileType.BLAST_FUNGUS,i,j);
+						break;
+					case CellType.CrackedWall:
+						Tile.Create(TileType.CRACKED_WALL,i,j);
 						break;
 					case CellType.Chest:
 						Tile.Create(TileType.CHEST,i,j);
@@ -2398,7 +2491,7 @@ namespace Forays{
 					t.UpdateRadius(0,t.light_radius);
 				}
 			}
-			int num_items = R.Roll(3);
+			int num_items = R.Roll(3)-1;
 			for(int i=num_items;i>0;--i){
 				SpawnItem();
 			}
@@ -2759,11 +2852,11 @@ namespace Forays{
 							}
 						}
 						if(dirs.Count > 0){
-							List<TileType> all_possible_traps = new List<TileType>{TileType.GRENADE_TRAP,TileType.POISON_GAS_TRAP,TileType.PHANTOM_TRAP,TileType.FIRE_TRAP,TileType.SHOCK_TRAP,TileType.SCALDING_OIL_TRAP};
+							List<TileType> all_possible_traps = new List<TileType>{TileType.GRENADE_TRAP,TileType.POISON_GAS_TRAP,TileType.PHANTOM_TRAP,TileType.FIRE_TRAP,TileType.SHOCK_TRAP,TileType.SCALDING_OIL_TRAP,TileType.FLING_TRAP,TileType.STONE_RAIN_TRAP};
 							List<TileType> possible_traps = new List<TileType>();
-							int trap_roll = R.Roll(7);
-							int num_types = 0;
-							if(trap_roll == 1){
+							//int trap_roll = R.Roll(7);
+							int num_types = R.Between(2,3);
+							/*if(trap_roll == 1){
 								num_types = 1;
 							}
 							else{
@@ -2773,7 +2866,7 @@ namespace Forays{
 								else{
 									num_types = 3;
 								}
-							}
+							}*/
 							for(int i=0;i<num_types;++i){
 								TileType tt = all_possible_traps.Random();
 								if(possible_traps.Contains(tt)){
@@ -3431,27 +3524,29 @@ namespace Forays{
 			int[] rarity = null;
 			switch(level_types[current_level-1]){
 			case LevelType.Standard:
-				rarity = new int[]{2,2,7,7,8,20,20};
+				rarity = new int[]{2,2,7,7,8,30,20};
 				break;
 			case LevelType.Cave:
-				rarity = new int[]{5,4,3,2,5,20,10};
+				rarity = new int[]{5,4,3,2,5,30,10};
 				break;
 			case LevelType.Mine:
-				rarity = new int[]{20,10,2,4,8,50,10};
+				rarity = new int[]{20,10,2,4,8,100,10};
 				break;
 			case LevelType.Hive:
-				rarity = new int[]{15,10,5,20,20,20,20};
+				rarity = new int[]{15,10,5,20,20,20,100};
 				break;
 			case LevelType.Fortress:
-				rarity = new int[]{20,20,5,10,20,50,15};
+				rarity = new int[]{20,20,5,10,20,100,15};
 				break;
 			case LevelType.Crypt:
-				rarity = new int[]{6,10,5,4,4,20,4};
+				rarity = new int[]{6,10,5,4,4,30,4};
 				break;
 			case LevelType.Garden:
+				rarity = new int[]{0,0,0,0,0,0,0}; //special handling, see GenerateLevel()
+				break;
 			case LevelType.Slime: //todo
 			default:
-				rarity = new int[]{2,2,4,4,6,10,10};
+				rarity = new int[]{2,2,4,4,6,30,10};
 				break;
 			}
 			foreach(FloorType f in Enum.GetValues(typeof(FloorType))){
@@ -3461,7 +3556,7 @@ namespace Forays{
 			while(floortype_pool.Count < 1){
 				floortype_pool.Clear();
 				for(int i=0;i<7;++i){
-					if(R.OneIn(rarity[i])){
+					if(rarity[i] > 0 && R.OneIn(rarity[i])){
 						floortype_pool.Add(floors[i]);
 					}
 				}
@@ -3563,8 +3658,8 @@ namespace Forays{
 			}
 		}
 		private enum DungeonFeature{POOL_OF_RESTORATION,FIRE_GEYSER,BLAST_FUNGUS,POISON_VENT,
-			FOG_VENT,BARREL,WEBS,SLIME,OIL,FIRE_PIT,TORCH,VINES,RUBBLE};
-		public void GenerateFeatures(PosArray<CellType> map,List<pos> interesting_tiles){ //todo: add 'duplicate feature' feature
+			FOG_VENT,BARREL,WEBS,SLIME,OIL,FIRE_PIT,TORCH,VINES,RUBBLE,CRACKED_WALL};
+		public void GenerateFeatures(PosArray<CellType> map,List<pos> interesting_tiles){
 			List<DungeonFeature> features = new List<DungeonFeature>();
 			foreach(DungeonFeature df in Enum.GetValues(typeof(DungeonFeature))){
 				features.Add(df);
@@ -3572,34 +3667,37 @@ namespace Forays{
 			int[] rarity = null;
 			switch(level_types[current_level-1]){
 			case LevelType.Standard:
-				rarity = new int[]{30,40,25,30,
-					25,6,8,15,15,3,3,4,4};
+				rarity = new int[]{30,40,1,30,
+					25,6,8,15,15,3,3,4,4,4};
 				break;
 			case LevelType.Cave:
 				rarity = new int[]{30,15,15,15,
-					15,100,8,10,30,5,25,6,3};
+					15,100,8,10,30,5,25,6,3,4};
 				break;
 			case LevelType.Mine:
 				rarity = new int[]{30,20,10,20,
-					25,6,8,15,10,5,5,30,2};
+					25,6,8,15,10,5,5,30,2,4};
 				break;
 			case LevelType.Hive:
 				rarity = new int[]{30,15,100,50,
-					50,100,8,10,10,100,100,25,25};
+					50,100,4,10,10,100,100,15,25,0};
 				break;
 			case LevelType.Fortress:
 				rarity = new int[]{30,100,100,100,
-					100,2,8,25,8,50,2,100,50};
+					100,2,8,25,8,50,2,100,50,15};
+				break;
+			case LevelType.Garden:
+				rarity = new int[]{20,50,50,0,
+					20,30,20,20,20,20,5,5,8,15};
 				break;
 			case LevelType.Crypt:
 				rarity = new int[]{30,50,50,25,
-					25,30,8,10,15,20,30,5,8};
+					25,30,8,10,15,20,30,5,8,8};
 				break;
-			case LevelType.Garden:
 			case LevelType.Slime: //todo
 			default:
 				rarity = new int[]{30,20,15,12,
-					10,4,8,10,7,3,3,3,4};
+					10,4,8,10,7,3,3,3,4,10};
 				break;
 			}
 			/*int[] rarity = new int[]{30,20,15,12,
@@ -3607,7 +3705,7 @@ namespace Forays{
 			int[] frequency = new int[]{1,1,2,2,3,3,3,
 				4,4,4,4,2,2,5,5,5,6,5,5,8};*/
 			int[] removal_chance = new int[]{95,20,10,60,
-				30,25,70,50,60,35,15,10,10};
+				30,25,70,50,60,35,15,10,10,20};
 			/*List<DungeonFeature> feature_pool = new List<DungeonFeature>();
 			for(int i=0;i<20;++i){
 				for(int j=frequency[i];j>0;--j){
@@ -3617,8 +3715,8 @@ namespace Forays{
 			List<DungeonFeature> feature_pool = new List<DungeonFeature>();
 			while(feature_pool.Count < 3){
 				feature_pool.Clear();
-				for(int i=0;i<13;++i){
-					if(R.OneIn(rarity[i])){
+				for(int i=0;i<14;++i){
+					if(rarity[i] > 0 && R.OneIn(rarity[i])){
 						feature_pool.Add(features[i]);
 					}
 				}
@@ -3634,6 +3732,10 @@ namespace Forays{
 					selected_features.Remove(df);
 				}
 				result.Add(df);
+			}
+			List<pos> thin_walls = null;
+			if(result.Contains(DungeonFeature.CRACKED_WALL)){
+				thin_walls = map.AllPositions().Where(x=>map[x].IsWall() && x.HasOppositePairWhere(true,y=>y.BoundsCheck() && map[y].IsFloor()));
 			}
 			while(result.Count > 0){
 				DungeonFeature df = result.RemoveRandom();
@@ -3715,6 +3817,13 @@ namespace Forays{
 									}
 								}
 								foreach(pos p in added){
+									/*if(df == DungeonFeature.RUBBLE){
+										foreach(pos neighbor in p.CardinalAdjacentPositions()){
+											if(!added.Contains(neighbor) && map[neighbor].IsFloor() && R.OneIn(3)){
+												map[neighbor] = CellType.Gravel;
+											}
+										}
+									}*/
 									map[p] = cell;
 								}
 							}
@@ -3856,6 +3965,13 @@ namespace Forays{
 						}
 					}
 					break;
+				case DungeonFeature.CRACKED_WALL:
+					for(int i=R.Between(2,4);i>0;--i){
+						if(thin_walls.Count > 0){
+							map[thin_walls.RemoveRandom()] = CellType.CrackedWall;
+						}
+					}
+					break;
 				}
 			}
 		}
@@ -3901,6 +4017,11 @@ namespace Forays{
 				messages.Add("A crypt stretches out in front of you. ");
 				messages.Add("Graves appear all around you as you come to a burial area. ");
 				break;
+			case LevelType.Garden:
+				messages.Add("");
+				messages.Add("");
+				messages.Add("");
+				break;
 			/*case LevelType.Extravagant:
 				messages.Add("This area is decorated with fine tapestries, marble statues, and other luxuries. ");
 				messages.Add("Patterned decorative tiles, fine rugs, and beautifully worked stone greet you upon entering this level. ");
@@ -3935,6 +4056,8 @@ namespace Forays{
 					return "You pass through an undefended gate. This area was obviously intended to be secure against intruders. ";
 				case LevelType.Crypt:
 					return "A hush falls around you as you enter a large crypt.";
+				case LevelType.Garden:
+					return "";
 				}
 				break;
 			case LevelType.Cave:
