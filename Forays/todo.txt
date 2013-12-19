@@ -1,49 +1,18 @@
 
-vision benefits of america: 1 800 432 4966
-
- 1: goblin bat wolf moth dweller bramble frostling
- 2: swordsman dreamwarrior cobra kobold sporepod forasect poltergeist
- 3: cultist archer shaman dartfrog skeleton shadow mimic
- 4: spider zombie berserker slug demon banshee hag
- 5: zealot direrat killer boar troll dreamsprite cloude
- 6: ascetic duelist warg scout crawler mechknight transcendent
- 7: battlemage soldier skittermoss golem mude flametongue entrancer
- 8: ogre grenadier pixie cknight bloodwitch hulk marblehorror
- 9: ooze pyren lasher sentinel worm titan vampire
-10: warmage necro webstrider assassin avenger behemoth warmachine
-
-
-
-fix 'i'nv line - remove "press key for info" part.
-
-fix endgame intro text - at LEAST fix "moving forward".
-
-stop creating boss_arrive events, hah.
-
-hide blink animation for warmages
-
-fix the messages for kersai coming, seriously.
-
-include a goal at the start	-	"None of the other scouts returned." etc
-
-check every new class member and make sure it gets cleared between games if needed.
-
-
-check highscore, option, name files. verify correct version on other help files.
-
-
 -make 'trailer' vid
+
 -remember to remove the hallucination & fire test videos  from screencast
+
 -email LPers and article author too
 
 
 
-update roguebasin entry: remove coffeebreak designation.
+
+
 
 -write cave corridor & twisty cave article for RB. also possibly dijkstra maps part 2 with screenshots.
 
 bugs: 
-If you move to a new level and end up in the same spot, the map will lose track of you until you move because the position is cleared last.
 
 here's that really weird one where I got killed the turn I used a rune of time:
 "Time stops for a moment. (grayed out)

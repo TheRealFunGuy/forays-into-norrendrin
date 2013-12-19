@@ -536,6 +536,11 @@ namespace Forays{
 				b.Write((int)ct);
 				b.Write(Item.identified[ct]);
 			}
+			b.Write(Item.proto.Keys.Count);
+			foreach(ConsumableType ct in Item.proto.Keys){
+				b.Write((int)ct);
+				b.Write((int)Item.proto[ct].color);
+			}
 			b.Write(Fire.burning_objects.Count);
 			foreach(PhysicalObject o in Fire.burning_objects){
 				b.Write(GetID(o));

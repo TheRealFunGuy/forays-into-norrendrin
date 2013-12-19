@@ -58,20 +58,23 @@ namespace Forays{
 			Define(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
 			proto[TileType.FIREPIT].light_radius = 1;
 			proto[TileType.FIREPIT].revealed_by_light = true;
-			Define(TileType.STALAGMITE,"stalagmite",'^',Color.White,false,true,TileType.FLOOR);
+			Define(TileType.STALAGMITE,"stalagmite",'1',Color.White,false,true,TileType.FLOOR);
+			proto[TileType.STALAGMITE].revealed_by_light = true;
 			Define(TileType.FIRE_TRAP,"fire trap",'^',Color.RandomFire,true,false,TileType.FLOOR);
 			Define(TileType.LIGHT_TRAP,"sunlight trap",'^',Color.Yellow,true,false,TileType.FLOOR);
 			Define(TileType.TELEPORT_TRAP,"teleport trap",'^',Color.Magenta,true,false,TileType.FLOOR);
 			Define(TileType.SLIDING_WALL_TRAP,"sliding wall trap",'^',Color.DarkCyan,true,false,TileType.FLOOR);
 			Define(TileType.GRENADE_TRAP,"grenade trap",'^',Color.DarkGray,true,false,TileType.FLOOR);
 			Define(TileType.SHOCK_TRAP,"shock trap",'^',Color.RandomLightning,true,false,TileType.FLOOR);
-			Define(TileType.ALARM_TRAP,"alarm trap",'^',Color.White,true,false,TileType.FLOOR);
+			Define(TileType.ALARM_TRAP,"alarm trap",'^',Color.Red,true,false,TileType.FLOOR);
 			Define(TileType.DARKNESS_TRAP,"darkness trap",'^',Color.Blue,true,false,TileType.FLOOR);
 			Define(TileType.POISON_GAS_TRAP,"poison gas trap",'^',Color.Green,true,false,TileType.FLOOR);
 			Define(TileType.BLINDING_TRAP,"blinding trap",'^',Color.DarkMagenta,true,false,TileType.FLOOR);
 			Define(TileType.ICE_TRAP,"ice trap",'^',Color.RandomIce,true,false,TileType.FLOOR);
 			Define(TileType.PHANTOM_TRAP,"phantom trap",'^',Color.Cyan,true,false,TileType.FLOOR);
 			Define(TileType.SCALDING_OIL_TRAP,"scalding oil trap",'^',Color.DarkYellow,true,false,TileType.FLOOR);
+			Define(TileType.FLING_TRAP,"fling trap",'^',Color.DarkRed,true,false,TileType.FLOOR);
+			Define(TileType.STONE_RAIN_TRAP,"stone rain trap",'^',Color.White,true,false,TileType.FLOOR);
 			Define(TileType.HIDDEN_DOOR,"wall",'#',Color.Gray,false,true,TileType.DOOR_C);
 			Define(TileType.RUBBLE,"pile of rubble",':',Color.Gray,false,false,TileType.FLOOR);
 			Define(TileType.COMBAT_SHRINE,"shrine of combat",'_',Color.DarkRed,true,false,TileType.RUINED_SHRINE);
@@ -122,7 +125,7 @@ namespace Forays{
 			Define(TileType.BARREL,"barrel of oil",'0',Color.DarkYellow,false,false,TileType.FLOOR);
 			Prototype(TileType.BARREL).revealed_by_light = true;
 			Define(TileType.STANDING_TORCH,"standing torch",'|',Color.RandomTorch,false,false,TileType.FLOOR);
-			Prototype(TileType.STANDING_TORCH).light_radius = 1;
+			Prototype(TileType.STANDING_TORCH).light_radius = 3;
 			Prototype(TileType.STANDING_TORCH).revealed_by_light = true;
 			Define(TileType.VINE,"vine",';',Color.DarkGreen,true,false,null);
 			Prototype(TileType.VINE).revealed_by_light = true;
@@ -244,7 +247,7 @@ namespace Forays{
 			internal_opaque = value;
 		}
 		public static TileType RandomTrap(){
-			int i = R.Roll(13) + 7;
+			int i = R.Roll(15) + 7;
 			return (TileType)i;
 		}
 		public string Name(bool consider_low_light){
@@ -688,6 +691,9 @@ namespace Forays{
 					}
 				}
 			}
+			if(actor() == player){
+				Help.TutorialTip(TutorialTopic.Traps);
+			}
 			switch(type){
 			case TileType.GRENADE_TRAP:
 			{
@@ -823,8 +829,8 @@ namespace Forays{
 				break;
 			case TileType.SHOCK_TRAP:
 			{
-				int old_radius = light_radius;
-				UpdateRadius(old_radius,3,true);
+				//int old_radius = light_radius; //This was a cool effect, but caused bugs when the tile's radius changed mid-trigger.
+				//UpdateRadius(old_radius,3,true); //I'll restore it when I figure out how...
 				if(actor_here){
 					if(player.CanSee(actor())){
 						B.Add("Electricity zaps " + actor().the_name + ". ",this);
@@ -840,8 +846,8 @@ namespace Forays{
 				else{
 					B.Add("Arcs of electricity appear and sizzle briefly. ",this); //apply electricity, once wands have been added
 				}
-				M.Draw();
-				UpdateRadius(3,old_radius,true);
+				//M.Draw();
+				//UpdateRadius(3,old_radius,true);
 				Toggle(actor());
 				break;
 			}
@@ -1046,6 +1052,63 @@ namespace Forays{
 				Toggle(actor());
 				break;
 			}
+			case TileType.FLING_TRAP:
+			{
+				List<int> valid_dirs = new List<int>();
+				foreach(int dir in U.EightDirections){
+					bool good = true;
+					Tile current = this;
+					for(int i=0;i<2;++i){
+						current = current.TileInDirection(dir);
+						if(current == null || (!current.passable && !current.Is(TileType.BARREL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.POISON_BULB,TileType.STANDING_TORCH))){
+							good = false;
+							break;
+						}
+					}
+					if(good){
+						valid_dirs.Add(dir);
+					}
+				}
+				Toggle(actor());
+				if(actor_here){
+					int dir = -1;
+					if(valid_dirs.Count > 0){
+						dir = valid_dirs.Random();
+					}
+					else{
+						dir = Global.RandomDirection();
+					}
+					Actor a = actor();
+					B.Add("The floor suddenly tilts up under " + a.TheName(true) + "! ",this);
+					a.attrs[AttrType.TURN_INTO_CORPSE]++;
+					KnockObjectBack(actor(),GetBestExtendedLineOfEffect(TileInDirection(dir)),5);
+					a.CorpseCleanup();
+				}
+				else{
+					B.Add("Nothing happens. ",this);
+				}
+				break;
+			}
+			case TileType.STONE_RAIN_TRAP:
+				B.Add("Stones fall from the ceiling! ",this);
+				if(actor_here){
+					Actor a = actor();
+					B.Add(a.YouVisibleAre() + " hit! ",this);
+					a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(3,6),null,"falling stones");
+				}
+				Toggle(actor());
+				foreach(Tile neighbor in TilesWithinDistance(1).Randomize()){
+					if(R.PercentChance(40)){
+						if(neighbor.IsTrap()){
+							B.Add("A bouncing stone triggers a trap. ",neighbor);
+						}
+						neighbor.ApplyEffect(DamageType.NORMAL); //break items and set off traps
+						if(neighbor.Is(TileType.FLOOR)){
+							neighbor.Toggle(null,TileType.GRAVEL);
+						}
+					}
+				}
+				break;
 			default:
 				break;
 			}
@@ -1174,6 +1237,8 @@ namespace Forays{
 			case TileType.PHANTOM_TRAP:
 			case TileType.POISON_GAS_TRAP:
 			case TileType.SCALDING_OIL_TRAP:
+			case TileType.FLING_TRAP:
+			case TileType.STONE_RAIN_TRAP:
 				return true;
 			default:
 				return false;

@@ -13,7 +13,7 @@ using System.Threading;
 using Utilities;
 namespace Forays{
 	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced,Tips};
-	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,ActiveFeats,IdentifiedConsumables,UnidentifiedConsumables,ShinyPlateArmor,HeavyPlateArmor,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
+	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,ActiveFeats,IdentifiedConsumables,UnidentifiedConsumables,SpellFailure,ShinyPlateArmor,HeavyPlateArmor,NotRevealedByLight,Traps,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,FirePit,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
 	public static class Help{
 		public static Dict<TutorialTopic,bool> displayed = new Dict<TutorialTopic,bool>();
 		public static void DisplayHelp(){ DisplayHelp(HelpTopic.Overview); }
@@ -185,11 +185,11 @@ namespace Forays{
 			switch(h){
 			case HelpTopic.Overview:
 				path = "help.txt";
-				num_lines = 41;
+				num_lines = 46;
 				break;
 			case HelpTopic.Commands:
 				path = "help.txt";
-				startline = 42;
+				startline = 47;
 				num_lines = 26;
 				break;
 			case HelpTopic.Items:
@@ -197,7 +197,7 @@ namespace Forays{
 				break;
 			case HelpTopic.Skills:
 				path = "feat_help.txt";
-				num_lines = 19;
+				num_lines = 20;
 				break;
 			case HelpTopic.Feats:
 				path = "feat_help.txt";
@@ -341,6 +341,16 @@ namespace Forays{
 					"turns before you stop burning. Water and slime",
 					"will extinguish a fire immediately, as will the",
 					"thick vapors of a poison gas cloud."};
+			case TutorialTopic.FirePit:
+				return new string[]{
+					"Fire pits",
+					"",
+					"Fire pits are stone circles containing glowing",
+					"embers. They're safe to walk over, but if",
+					"anything flammable is dropped or knocked in, it",
+					"will catch fire.",
+					"",
+					"(This includes scrolls, oil, and you.)"};
 			case TutorialTopic.Frozen:
 				return new string[]{
 					"Frozen",
@@ -400,6 +410,18 @@ namespace Forays{
 					"",
 					"Like all equipment damage, this effect will end",
 					"when you [r]est to repair your equipment."};
+			case TutorialTopic.NotRevealedByLight:
+				return new string[]{
+					"Darkness, items, and dungeon features",
+					"",
+					"In darkness, you can't identify the exact",
+					"type of items or certain dungeon features",
+					"until you're standing on top of them.",
+					"For instance, you'll be able to tell it's",
+					"a trap, but not what kind of trap it is.",
+					"",
+					"(Once you've seen something in the light,",
+					"you'll remember what it is.)"};
 			case TutorialTopic.Oiled:
 				return new string[]{
 					"Covered in oil",
@@ -471,13 +493,29 @@ namespace Forays{
 					"Being covered in slime has several effects. You",
 					"can't be set on fire while covered in slime",
 					"(although you take fire damage as normal). Cold",
-					"damage causes the slime to harden and fall off.",
+					"causes the slime to harden and fall off.",
 					"",
 					"You can't be grabbed or stuck in webs while",
 					"covered in a slippery substance.",
 					"",
 					"However, you have a chance to slip and drop any",
 					"consumable item that you try to use."};
+			case TutorialTopic.SpellFailure:
+				return new string[]{
+					"Spell failure",
+					"",
+					"If you're exhausted enough, your spells can",
+					"fail when you try to cast them. Your turn will",
+					"be used up, but you won't lose any mana.",
+					"",
+					"At 10% exhaustion, tier 5 spells are affected.",
+					"",
+					"Every additional 10% affects another tier, up",
+					"to tier 1 at 50%.",
+					"",
+					"If your exhaustion has reached that threshold,",
+					"the spell will have a chance of failure equal",
+					"to your exhaustion.",};
 			case TutorialTopic.Stoneform:
 				return new string[]{
 					"Stoneform",
@@ -528,6 +566,19 @@ namespace Forays{
 					"",
 					"You can switch to another weapon or armor by",
 					"pressing [e] to access the equipment screen."};
+			case TutorialTopic.Traps:
+				return new string[]{
+					"Traps",
+					"",
+					"These dangerous mechanisms are triggered when",
+					"something steps or lands on them. They have a",
+					"variety of effects - you'll be able to",
+					"identify the type of a trap if you examine it",
+					"in the light.",
+					"",
+					"Once a trap has been triggered, it won't",
+					"trigger again. You can [f]ling items onto",
+					"traps to set them off from a safe distance."};
 			case TutorialTopic.UnidentifiedConsumables:
 				return new string[]{
 					"Trying consumable items",
@@ -698,7 +749,8 @@ namespace Forays{
 		private static int FrameWidth(int previous_height,int previous_width){
 			return previous_width - (previous_width * 2 / previous_height); //2 lines are removed, so the width loses 2/height to keep similar dimensions
 		}
-		public static void TutorialTip(TutorialTopic topic){
+		public static void TutorialTip(TutorialTopic topic){ TutorialTip(topic,false); }
+		public static void TutorialTip(TutorialTopic topic,bool no_displaynow_call){
 			if(Global.Option(OptionType.NEVER_DISPLAY_TIPS) || displayed[topic]){
 				return;
 			}
@@ -753,7 +805,7 @@ namespace Forays{
 				++y;
 			}
 			Actor.player.DisplayStats(false);
-			if(topic != TutorialTopic.Feats){ //hacky exception - don't get rid of the line that's already there.
+			if(!no_displaynow_call){
 				Actor.B.DisplayNow();
 			}
 			Console.CursorVisible = false;
