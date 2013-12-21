@@ -111,6 +111,7 @@ namespace Forays{
 			Define(TileType.POPPY_FIELD,"poppy field",'"',Color.Red,true,false,TileType.FLOOR);
 			proto[TileType.POPPY_FIELD].revealed_by_light = true;
 			Define(TileType.GRAVEL,"gravel",',',Color.DarkGray,true,false,null);
+			proto[TileType.GRAVEL].a_name = "gravel";
 			proto[TileType.GRAVEL].revealed_by_light = true;
 			Define(TileType.JUNGLE,"thick jungle",'&',Color.DarkGreen,true,true,null); //unused
 			Define(TileType.BLAST_FUNGUS,"blast fungus",'"',Color.DarkRed,true,false,TileType.FLOOR);

@@ -1896,7 +1896,7 @@ namespace Forays{
 										B.Add("The poppies make you drowsy. ");
 										Help.TutorialTip(TutorialTopic.Drowsiness);
 									}
-									a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100,a.YouFeel() + " less drowsy. ",a);
+									a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,a.DurationOfMagicalEffect((R.Roll(3)+4)) * 100,a.YouFeel() + " less drowsy. ",a);
 								}
 							}
 						}
