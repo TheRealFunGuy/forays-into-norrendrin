@@ -489,19 +489,20 @@ namespace Forays{
 			switch(type){
 			case ConsumableType.ENCHANTMENT:
 				return 7;
-			case ConsumableType.VAMPIRISM:
-			case ConsumableType.BRUTISH_STRENGTH:
-			case ConsumableType.ROOTS:
 			case ConsumableType.REGENERATION:
 			case ConsumableType.SILENCE:
+			case ConsumableType.CALLING:
 			case ConsumableType.TRAP_CLEARING:
 			case ConsumableType.BREACHING:
 			case ConsumableType.SHIELDING:
 				return 3;
-			case ConsumableType.VIGOR:
+			case ConsumableType.ROOTS:
+			case ConsumableType.VAMPIRISM:
 			case ConsumableType.TIME:
 			case ConsumableType.REPAIR:
-			case ConsumableType.CALLING:
+			case ConsumableType.SUNLIGHT:
+			case ConsumableType.DARKNESS:
+			case ConsumableType.FOG:
 			case ConsumableType.DETONATION:
 			case ConsumableType.TELEPORTAL:
 			case ConsumableType.PAIN:
@@ -670,7 +671,7 @@ namespace Forays{
 			{
 				B.Add("You transform into a being of animated stone. ");
 				int duration = R.Roll(2,20) + 20;
-				List<AttrType> attributes = new List<AttrType>{AttrType.REGENERATING,AttrType.BRUTISH_STRENGTH,AttrType.VIGOR,AttrType.SILENCED,AttrType.SHADOW_CLOAK};
+				List<AttrType> attributes = new List<AttrType>{AttrType.REGENERATING,AttrType.BRUTISH_STRENGTH,AttrType.VIGOR,AttrType.SILENCED,AttrType.SHADOW_CLOAK,AttrType.BLIND};
 				foreach(AttrType at in attributes){
 					if(user.HasAttr(at)){
 						user.attrs[at] = 0;
@@ -690,6 +691,9 @@ namespace Forays{
 							break;
 						case AttrType.SHADOW_CLOAK:
 							B.Add("You are no longer cloaked. ");
+							break;
+						case AttrType.BLIND:
+							B.Add("You are no longer blind. ");
 							break;
 						}
 					}
@@ -1715,7 +1719,7 @@ namespace Forays{
 							if(tile.actor() != null){
 								if(tile.actor().TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,R.Roll(2,6),user,"an orb of pain")){
 									B.Add(tile.actor().You("become") + " vulnerable. ",tile.actor());
-									tile.actor().RefreshDuration(AttrType.VULNERABLE,(R.Roll(2,6)+6)*100,tile.actor().YouFeel() + " less vulnerable. ",tile.actor());
+									tile.actor().RefreshDuration(AttrType.VULNERABLE,tile.actor().DurationOfMagicalEffect(R.Roll(2,6)+6) * 100,tile.actor().YouFeel() + " less vulnerable. ",tile.actor());
 									if(tile.actor() == player){
 										Help.TutorialTip(TutorialTopic.Vulnerable);
 									}

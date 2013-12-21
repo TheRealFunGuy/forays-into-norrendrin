@@ -200,7 +200,7 @@ namespace Forays{
 		}
 		public void GenerateLevelTypes(){
 			level_types = new List<LevelType>();
-			LevelType current = LevelType.Garden;
+			LevelType current = LevelType.Standard;
 			while(level_types.Count < 20){
 				int num = R.Roll(2,2) - 1;
 				for(int i=0;i<num;++i){
@@ -2213,10 +2213,7 @@ namespace Forays{
 					}
 				}
 			}
-			int num_chests = R.Roll(2);
-			if(R.OneIn(50)){
-				num_chests = 3;
-			}
+			int num_chests = R.Between(0,1);
 			if(level_types[current_level-1] == LevelType.Crypt){
 				num_chests -= map.PositionsWhere(x=>map[x] == CellType.Chest).Count;
 			}
@@ -2594,7 +2591,7 @@ namespace Forays{
 									}
 								}
 								else{
-									if(a.AlwaysWanders() || (R.CoinFlip() && a.CanWanderAtLevelGen())){
+									if(a.AlwaysWanders() || (R.PercentChance(40) && a.CanWanderAtLevelGen())){
 										a.attrs[AttrType.WANDERING]++;
 									}
 								}
@@ -2700,7 +2697,7 @@ namespace Forays{
 										}
 									}
 									else{
-										if(a.AlwaysWanders() || (R.CoinFlip() && a.CanWanderAtLevelGen())){
+										if(a.AlwaysWanders() || (R.PercentChance(40) && a.CanWanderAtLevelGen())){
 											a.attrs[AttrType.WANDERING]++;
 										}
 									}
@@ -4018,9 +4015,10 @@ namespace Forays{
 				messages.Add("Graves appear all around you as you come to a burial area. ");
 				break;
 			case LevelType.Garden:
-				messages.Add("");
-				messages.Add("");
-				messages.Add("");
+				messages.Add("The smell of flowers fills the air here. ");
+				messages.Add("Neat rows of plants and small pools of water decorate the rooms here. ");
+				messages.Add("You enter a cultivated area. Tiny insects occasionally fly past you. ");
+				messages.Add("Curiously, this area seems to be a well-maintained garden. ");
 				break;
 			/*case LevelType.Extravagant:
 				messages.Add("This area is decorated with fine tapestries, marble statues, and other luxuries. ");
@@ -4055,9 +4053,9 @@ namespace Forays{
 				case LevelType.Fortress:
 					return "You pass through an undefended gate. This area was obviously intended to be secure against intruders. ";
 				case LevelType.Crypt:
-					return "A hush falls around you as you enter a large crypt.";
+					return "A hush falls around you as you enter a large crypt. ";
 				case LevelType.Garden:
-					return "";
+					return "Flowers and statues appear in well-kept rooms as you continue. ";
 				}
 				break;
 			case LevelType.Cave:
@@ -4076,6 +4074,8 @@ namespace Forays{
 					return "A smashed set of double doors leads you out of the cave. This area seems to have been well-defended, once. ";
 				case LevelType.Crypt:
 					return "It appears this part of the cave has been used as a burial ground for centuries. ";
+				case LevelType.Garden:
+					return "Statues decorate the cave's exit. You follow them to a garden full of flowering plants. ";
 				}
 				break;
 			/*case LevelType.Ruined:
@@ -4110,6 +4110,8 @@ namespace Forays{
 					return "A wide hole in the wall leads to a fortress, abandoned by its creators. ";
 				case LevelType.Crypt:
 					return "Leaving the narrow chambers, you encounter an ancient crypt. ";
+				case LevelType.Garden:
+					return "Leaving the hive, you find well-kept paths through rooms full of plant life. ";
 				}
 				break;
 			case LevelType.Mine: //messages about veins, ore, crisscrossing networks of tunnels
@@ -4128,6 +4130,8 @@ namespace Forays{
 					return "You reach a section that is not only complete, but easily defensible. ";
 				case LevelType.Crypt:
 					return "Gravestones appear as you leave the unfinished mines behind you. ";
+				case LevelType.Garden:
+					return "You leave the narrow mines to find rooms carefully arranged with rows of flowering plants. ";
 				}
 				break;
 			case LevelType.Fortress:
@@ -4146,6 +4150,8 @@ namespace Forays{
 					return "This section might have been part of the fortress, but pickaxes are still scattered in the unfinished rooms. ";
 				case LevelType.Crypt:
 					return "Outside the fortress, you come to a gravesite, passing headstones and the occasional statue. ";
+				case LevelType.Garden:
+					return "Beyond the protection of the fortress you find a garden full of well-maintained statues. ";
 				}
 				break;
 			case LevelType.Crypt:
@@ -4160,6 +4166,24 @@ namespace Forays{
 					return "Shovels, picks, dirt, and rubble appear as you continue. Is this an unfinished part of the crypt? ";
 				case LevelType.Fortress:
 					return "The tombstones disappear as you come to a crumbling fortress. ";
+				case LevelType.Garden:
+					return "Life is suddenly all around you once more as you enter a cultivated garden. ";
+				}
+				break;
+			case LevelType.Garden:
+				switch(to){
+				case LevelType.Standard:
+					return "The harmony of the gardens vanishes as the rooms around you become more commonplace. ";
+				case LevelType.Cave:
+					return "The gardens end abruptly as you enter a natural cave. ";
+				case LevelType.Hive:
+					return "Insects have conquered this part of the garden, turning it into a giant hive. ";
+				case LevelType.Mine:
+					return "You leave the orderly gardens behind and enter a twisted network of mining tunnels. ";
+				case LevelType.Fortress:
+					return "Leaving the gardens through a broken door, you find a fortress in poor condition. ";
+				case LevelType.Crypt:
+					return "Stale air and decay replaces the scent of flowers. ";
 				}
 				break;
 			/*case LevelType.Extravagant:

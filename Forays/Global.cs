@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using Utilities;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.8.0 ";
+		public const string VERSION = "version 0.8.1 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;

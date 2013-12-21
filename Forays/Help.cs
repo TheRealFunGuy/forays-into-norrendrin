@@ -13,7 +13,7 @@ using System.Threading;
 using Utilities;
 namespace Forays{
 	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced,Tips};
-	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,ActiveFeats,IdentifiedConsumables,UnidentifiedConsumables,SpellFailure,ShinyPlateArmor,HeavyPlateArmor,NotRevealedByLight,Traps,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,FirePit,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
+	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,ActiveFeats,FindingConsumables,IdentifiedConsumables,UnidentifiedConsumables,SpellFailure,ShinyPlateArmor,HeavyPlateArmor,CriticalHits,NotRevealedByLight,Traps,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,FirePit,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
 	public static class Help{
 		public static Dict<TutorialTopic,bool> displayed = new Dict<TutorialTopic,bool>();
 		public static void DisplayHelp(){ DisplayHelp(HelpTopic.Overview); }
@@ -296,6 +296,18 @@ namespace Forays{
 					"",
 					"(Small enemies and items won't",
 					"be knocked through.)"};
+			case TutorialTopic.CriticalHits:
+				return new string[]{
+					"Critical hits",
+					"",
+					"Some attacks are nastier than others. Each",
+					"attack has a 1 in 8 chance of being a",
+					"critical hit.",
+					"",
+					"A critical hit might deal more damage or",
+					"inflict a status condition. Different",
+					"monsters (and each of your weapons) have",
+					"different critical effects, so be prepared!"};
 			case TutorialTopic.Damaged:
 				return new string[]{
 					"Damaged",
@@ -327,6 +339,17 @@ namespace Forays{
 					"",
 					"Like all equipment damage, this effect will end",
 					"when you [r]est to repair your equipment."};
+			case TutorialTopic.FindingConsumables:
+				return new string[]{
+					"Consumable items",
+					"",
+					"This is an unidentified item. It's probably",
+					"useful, but you won't know exactly what it",
+					"does until you try it.",
+					"",
+					"You can press [\\] to see the list of item",
+					"types. This can help you figure out what",
+					"an unknown item could be."};
 			case TutorialTopic.Fire:
 				return new string[]{
 					"Fire",
