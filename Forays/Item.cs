@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -872,12 +872,15 @@ namespace Forays{
 					}
 					List<Tile> tiles = new List<Tile>();
 					List<colorchar> memlist = new List<colorchar>();
-					Console.CursorVisible = false;
+					Screen.CursorVisible = false;
 					Tile last_wall = null;
 					while(!t.passable){
 						tiles.Add(t);
 						memlist.Add(Screen.MapChar(t.row,t.col));
 						Screen.WriteMapChar(t.row,t.col,ch);
+						if(Screen.GLMode){
+							Game.gl.Update();
+						}
 						Thread.Sleep(35);
 						last_wall = t;
 						t = t.TileInDirection(dir);
@@ -891,6 +894,9 @@ namespace Forays{
 						int idx = 0;
 						foreach(Tile tile in tiles){
 							Screen.WriteMapChar(tile.row,tile.col,memlist[idx++]);
+							if(Screen.GLMode){
+								Game.gl.Update();
+							}
 							Thread.Sleep(35);
 						}
 						B.Add(user.You("travel") + " through the passage. ",user,t);
@@ -918,6 +924,9 @@ namespace Forays{
 							int idx = 0;
 							foreach(Tile tile in tiles){
 								Screen.WriteMapChar(tile.row,tile.col,memlist[idx++]);
+								if(Screen.GLMode){
+									Game.gl.Update();
+								}
 								Thread.Sleep(35);
 							}
 							B.Add(user.You("travel") + " through the passage. ",user,destination);
@@ -1017,6 +1026,9 @@ namespace Forays{
 								Tile t2 = last_tiles.RemoveRandom();
 								Screen.WriteMapChar(t2.row,t2.col,M.last_seen[t2.row,t2.col]);
 								//Screen.WriteMapChar(t2.row,t2.col,M.VisibleColorChar(t2.row,t2.col));
+							}
+							if(Screen.GLMode){
+								Game.gl.Update();
 							}
 							Thread.Sleep(20);
 						}
@@ -1518,6 +1530,9 @@ namespace Forays{
 							Screen.WriteMapChar(t2.row,t2.col,t2.symbol,Color.RandomBreached);
 							if(t.DistanceFrom(t2) > max_dist){
 								max_dist = t.DistanceFrom(t2);
+								if(Screen.GLMode){
+									Game.gl.Update();
+								}
 								Thread.Sleep(50);
 							}
 						}
@@ -2397,7 +2412,7 @@ namespace Forays{
 			case MagicTrinketType.CIRCLET_OF_THE_THIRD_EYE:
 				return new string[]{"Circlet of the third eye -- Grants a vision of","your surroundings when you rest."};
 			case MagicTrinketType.LENS_OF_SCRYING:
-				return new string[]{"Lens of scrying -- Identifies a random unknown","item from your pack when you descend to a new depth."};
+				return new string[]{"Lens of scrying -- Identifies a random unknown item","from your pack when you descend to a new depth."};
 			case MagicTrinketType.RING_OF_KEEN_SIGHT:
 				return new string[]{"Ring of keen sight -- Doubles your chance to","find traps."};
 			case MagicTrinketType.RING_OF_THE_LETHARGIC_FLAME:

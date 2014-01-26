@@ -1,13 +1,4 @@
 
--make 'trailer' vid
-
--remember to remove the hallucination & fire test videos  from screencast
-
--email LPers and article author too
-
-
-
-
 
 
 -write cave corridor & twisty cave article for RB. also possibly dijkstra maps part 2 with screenshots.

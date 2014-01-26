@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -9,10 +9,12 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
+using OpenTK.Input;
 using Utilities;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.8.1 ";
+		public const string VERSION = "version 0.8.X ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -27,6 +29,10 @@ namespace Forays{
 		public static bool QUITTING = false;
 		public static bool SAVING = false;
 		public static string KILLED_BY = "debugged to death";
+
+		public static bool KeyPressed = false;
+		public static ConsoleKeyInfo LastKey;
+
 		public static Dictionary<OptionType,bool> Options = new Dictionary<OptionType, bool>();
 		public static bool Option(OptionType option){
 			bool result = false;
@@ -40,26 +46,268 @@ namespace Forays{
 			}
 			return result;
 		}
+		public static bool KeyIsAvailable(){
+			if(Screen.GLMode){
+				return KeyPressed;
+			}
+			return Console.KeyAvailable;
+		}
 		public static void FlushInput(){
-			while(Console.KeyAvailable){
-				Console.ReadKey(true);
+			while(Global.KeyIsAvailable()){
+				Global.ReadKey();
+			}
+		}
+		public static ConsoleKey GetConsoleKey(Key key){
+			if(key >= Key.A && key <= Key.Z){
+				return (ConsoleKey)(key - (Key.A - (int)ConsoleKey.A));
+			}
+			if(key >= Key.Number0 && key <= Key.Number9){
+				return (ConsoleKey)(key - (Key.Number0 - (int)ConsoleKey.D0));
+			}
+			if(key >= Key.Keypad0 && key <= Key.Keypad9){
+				return (ConsoleKey)(key - (Key.Keypad9 - (int)ConsoleKey.NumPad9));
+			}
+			switch(key){
+			case Key.BackSpace:
+				return ConsoleKey.Backspace;
+			case Key.Tab:
+				return ConsoleKey.Tab;
+			case Key.Enter:
+			case Key.KeypadEnter:
+				return ConsoleKey.Enter;
+			case Key.Escape:
+				return ConsoleKey.Escape;
+			case Key.Space:
+				return ConsoleKey.Spacebar;
+			case Key.Delete:
+				return ConsoleKey.Delete;
+			case Key.Up:
+				return ConsoleKey.UpArrow;
+			case Key.Down:
+				return ConsoleKey.DownArrow;
+			case Key.Left:
+				return ConsoleKey.LeftArrow;
+			case Key.Right:
+				return ConsoleKey.RightArrow;
+			case Key.Comma:
+				return ConsoleKey.OemComma;
+			case Key.Period:
+				return ConsoleKey.OemPeriod;
+			case Key.Minus:
+				return ConsoleKey.OemMinus;
+			case Key.Plus:
+				return ConsoleKey.OemPlus;
+			case Key.Tilde:
+				return ConsoleKey.Oem3;
+			case Key.BracketLeft:
+				return ConsoleKey.Oem4;
+			case Key.BracketRight:
+				return ConsoleKey.Oem6;
+			case Key.BackSlash:
+				return ConsoleKey.Oem5;
+			case Key.Semicolon:
+				return ConsoleKey.Oem1;
+			case Key.Quote:
+				return ConsoleKey.Oem7;
+			case Key.Slash:
+				return ConsoleKey.Oem2;
+			case Key.Home:
+				return ConsoleKey.Home;
+			case Key.End:
+				return ConsoleKey.End;
+			case Key.PageUp:
+				return ConsoleKey.PageUp;
+			case Key.PageDown:
+				return ConsoleKey.PageDown;
+			case Key.Clear:
+				return ConsoleKey.Clear;
+			case Key.Insert:
+				return ConsoleKey.Insert;
+			case Key.F1:
+				return ConsoleKey.F1;
+			case Key.F2:
+				return ConsoleKey.F2;
+			case Key.F3:
+				return ConsoleKey.F3;
+			case Key.F4:
+				return ConsoleKey.F4;
+			default:
+				return ConsoleKey.NoName; //i don't know if this is an appropriate default - so far so good
+			}
+			//(for the record, the numpad symbols are Add/Divide/Multiply/Subtract, the decimal/delete depends on numlock, and 0/insert and 5/clear do too.)
+		}
+		public static char GetChar(ConsoleKey k,bool shift){ //this could be hardcoded if it turns out to be slow, but since it only happens once per keypress, it should be okay.
+			if(k >= ConsoleKey.A && k <= ConsoleKey.Z){
+				if(shift){
+					return k.ToString()[0];
+				}
+				else{
+					return k.ToString().ToLower()[0];
+				}
+			}
+			if(k >= ConsoleKey.D0 && k <= ConsoleKey.D9){
+				if(shift){
+					switch(k){
+					case ConsoleKey.D1:
+						return '!';
+					case ConsoleKey.D2:
+						return '@';
+					case ConsoleKey.D3:
+						return '#';
+					case ConsoleKey.D4:
+						return '$';
+					case ConsoleKey.D5:
+						return '%';
+					case ConsoleKey.D6:
+						return '^';
+					case ConsoleKey.D7:
+						return '&';
+					case ConsoleKey.D8:
+						return '*';
+					case ConsoleKey.D9:
+						return '(';
+					case ConsoleKey.D0:
+					default:
+						return ')';
+					}
+				}
+				else{
+					return k.ToString()[1];
+				}
+			}
+			if(k >= ConsoleKey.NumPad0 && k <= ConsoleKey.NumPad9){
+				return k.ToString()[6];
+			}
+			switch(k){
+			case ConsoleKey.Tab:
+				return (char)9;
+			case ConsoleKey.Enter:
+				return (char)13;
+			case ConsoleKey.Escape:
+				return (char)27;
+			case ConsoleKey.Spacebar:
+				return ' ';
+			case ConsoleKey.OemComma:
+				if(shift){
+					return '<';
+				}
+				else{
+					return ',';
+				}
+			case ConsoleKey.OemPeriod:
+				if(shift){
+					return '>';
+				}
+				else{
+					return '.';
+				}
+			case ConsoleKey.OemMinus:
+				if(shift){
+					return '_';
+				}
+				else{
+					return '-';
+				}
+			case ConsoleKey.OemPlus:
+				if(shift){
+					return '+';
+				}
+				else{
+					return '=';
+				}
+			case ConsoleKey.Oem3:
+				if(shift){
+					return '~';
+				}
+				else{
+					return '`';
+				}
+			case ConsoleKey.Oem4:
+				if(shift){
+					return '{';
+				}
+				else{
+					return '[';
+				}
+			case ConsoleKey.Oem6:
+				if(shift){
+					return '}';
+				}
+				else{
+					return ']';
+				}
+			case ConsoleKey.Oem5:
+				if(shift){
+					return '|';
+				}
+				else{
+					return '\\';
+				}
+			case ConsoleKey.Oem1:
+				if(shift){
+					return ':';
+				}
+				else{
+					return ';';
+				}
+			case ConsoleKey.Oem7:
+				if(shift){
+					return '"';
+				}
+				else{
+					return '\'';
+				}
+			case ConsoleKey.Oem2:
+				if(shift){
+					return '?';
+				}
+				else{
+					return '/';
+				}
+			default:
+				return (char)0;
+			}
+		}
+		public static ConsoleKeyInfo ReadKey(){
+			if(!Screen.GLMode){
+				return Console.ReadKey(true);
+			}
+			while(true){
+				Game.gl.Update();
+				if(Screen.CursorVisible){
+					TimeSpan time = GLGame.Timer.Elapsed;
+					if(time.Seconds >= 1){
+						Screen.UpdateCursor(true);
+						GLGame.Timer.Reset();
+						GLGame.Timer.Start();
+					}
+					else{
+						if(time.Milliseconds >= 500){
+							Screen.UpdateCursor(false);
+						}
+					}
+				}
+				if(KeyPressed){
+					KeyPressed = false;
+					return LastKey;
+				}
 			}
 		}
 		public static int EnterInt(){ return EnterInt(4); }
 		public static int EnterInt(int max_length){
 			string s = "";
 			ConsoleKeyInfo command;
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			bool done = false;
-			int pos = Console.CursorLeft;
-			Screen.WriteString(Console.CursorTop,pos,"".PadRight(max_length));
+			int pos = Screen.CursorLeft;
+			Screen.WriteString(Screen.CursorTop,pos,"".PadRight(max_length));
 			while(!done){
-				Console.SetCursorPosition(pos,Console.CursorTop);
-				command = Console.ReadKey(true);
+				Screen.SetCursorPosition(pos,Screen.CursorTop);
+				command = Global.ReadKey();
 				if(command.KeyChar >= '0' && command.KeyChar <= '9'){
 					if(s.Length < max_length){
 						s = s + command.KeyChar;
-						Screen.WriteChar(Console.CursorTop,pos,command.KeyChar);
+						Screen.WriteChar(Screen.CursorTop,pos,command.KeyChar);
 						++pos;
 					}
 				}
@@ -67,8 +315,8 @@ namespace Forays{
 					if(command.Key == ConsoleKey.Backspace && s.Length > 0){
 						s = s.Substring(0,s.Length-1);
 						--pos;
-						Screen.WriteChar(Console.CursorTop,pos,' ');
-						Console.SetCursorPosition(pos,Console.CursorTop);
+						Screen.WriteChar(Screen.CursorTop,pos,' ');
+						Screen.SetCursorPosition(pos,Screen.CursorTop);
 					}
 					else{
 						if(command.Key == ConsoleKey.Escape){
@@ -91,17 +339,17 @@ namespace Forays{
 		public static string EnterString(int max_length){
 			string s = "";
 			ConsoleKeyInfo command;
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			bool done = false;
-			int cursor = Console.CursorLeft;
-			Screen.WriteString(Console.CursorTop,cursor,"".PadRight(max_length));
+			int cursor = Screen.CursorLeft;
+			Screen.WriteString(Screen.CursorTop,cursor,"".PadRight(max_length));
 			while(!done){
-				Console.SetCursorPosition(cursor,Console.CursorTop);
-				command = Console.ReadKey(true);
+				Screen.SetCursorPosition(cursor,Screen.CursorTop);
+				command = Global.ReadKey();
 				if((command.KeyChar >= '!' && command.KeyChar <= '~') || command.KeyChar == ' '){
 					if(s.Length < max_length){
 						s = s + command.KeyChar;
-						Screen.WriteChar(Console.CursorTop,cursor,command.KeyChar);
+						Screen.WriteChar(Screen.CursorTop,cursor,command.KeyChar);
 						++cursor;
 					}
 				}
@@ -109,8 +357,8 @@ namespace Forays{
 					if(command.Key == ConsoleKey.Backspace && s.Length > 0){
 						s = s.Substring(0,s.Length-1);
 						--cursor;
-						Screen.WriteChar(Console.CursorTop,cursor,' ');
-						Console.SetCursorPosition(cursor,Console.CursorTop);
+						Screen.WriteChar(Screen.CursorTop,cursor,' ');
+						Screen.SetCursorPosition(cursor,Screen.CursorTop);
 					}
 					else{
 						if(command.Key == ConsoleKey.Escape){
@@ -552,37 +800,16 @@ namespace Forays{
 			file.Close();
 		}
 		public static void Quit(){
-			if(LINUX){
+			if(LINUX && !Screen.GLMode){
 				Screen.Blank();
 				Screen.ResetColors();
-				Console.SetCursorPosition(0,0);
-				Console.CursorVisible = true;
+				Screen.SetCursorPosition(0,0);
+				Screen.CursorVisible = true;
 			}
 			Environment.Exit(0);
 		}
 	}
 	public static class Extensions{
-		/*public static int NumberOfConsecutiveAdjacentPositionsWhere(this pos p,U.BooleanPositionDelegate condition){
-			int max_count = 0;
-			int count = 0;
-			for(int times=0;times<2;++times){
-				for(int i=0;i<8;++i){
-					if(condition(p.PosInDir(8.RotateDir(true,i)))){
-						++count;
-					}
-					else{
-						if(count > max_count){
-							max_count = count;
-						}
-						count = 0;
-					}
-				}
-				if(count == 8){
-					return 8;
-				}
-			}
-			return max_count;
-		}*/
 		public static T Last<T>(this List<T> l){ //note that this doesn't work the way I wanted it to - 
 			if(l.Count == 0){ // you can't assign to list.Last()
 				return default(T);
@@ -742,6 +969,18 @@ namespace Forays{
 				}
 			}
 			return result;
+		}
+		public static void StopAtBlockingTerrain(this List<pos> path){
+			int i = 0;
+			foreach(pos p in path){
+				if(!Actor.M.tile[p].passable && !Actor.M.tile[p].IsDoorType(false)){
+					break;
+				}
+				++i;
+			}
+			if(i < path.Count){
+				path.RemoveRange(i,path.Count - i);
+			}
 		}
 	}
 }

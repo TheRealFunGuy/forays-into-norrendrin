@@ -32,6 +32,11 @@ Try switching to your bow and firing some arrows('e' to switch,
 and three different armors. 
 
 
+Remember that you don't need to kill every enemy you encounter.
+Some enemies - mostly humanoids - can carry consumable items,
+though.
+
+
 When you find stairs, you can walk down them with '>'. (It's a
 one-way trip, so don't leave anything behind!)
 

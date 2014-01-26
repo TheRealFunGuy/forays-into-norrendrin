@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -88,7 +88,7 @@ namespace Forays{
 			if(display_stats){
 				player.DisplayStats();
 			}
-			Console.CursorVisible = false;
+			Screen.CursorVisible = false;
 			List<string> strings = new List<string>();
 			if(s.Length > max_length){
 				for(int i=max_length-1;i>=0;--i){
@@ -117,10 +117,10 @@ namespace Forays{
 					Screen.WriteMapString(i-3,0,strings[(i+strings.Count)-3].PadToMapSize());
 				}
 			}
-			Console.SetCursorPosition(Global.MAP_OFFSET_COLS + s.Length,2);
+			Screen.SetCursorPosition(Global.MAP_OFFSET_COLS + s.Length,2);
 		}
 		public void DisplayNow(){ //displays whatever is in the buffer. used before animations.
-			Console.CursorVisible = false;
+			Screen.CursorVisible = false;
 			Screen.ResetColors();
 			int lines = str.Count;
 			if(str.Last() == ""){
@@ -133,7 +133,7 @@ namespace Forays{
 				}
 				if(old_message){
 					Screen.WriteMapString(i-3,0,PreviousMessage(3-(i+lines)).PadToMapSize(),Color.DarkGray);
-					Screen.ForegroundColor = ConsoleColor.Gray;
+					//Screen.ForegroundColor = ConsoleColor.Gray;
 				}
 				else{
 					Screen.WriteMapString(i-3,0,str[(i+lines)-3].PadToMapSize());
@@ -141,7 +141,7 @@ namespace Forays{
 			}
 		}
 		public void Print(bool special_message){
-			Console.CursorVisible = false;
+			Screen.CursorVisible = false;
 			foreach(string s in str){
 				if(s != "You regenerate. " && s != "You rest... " && s != ""){
 					if(!player.HasAttr(AttrType.RESTING)){
@@ -189,7 +189,7 @@ namespace Forays{
 				}
 				if(old_message){
 					Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize(),Color.DarkGray);
-					Screen.ForegroundColor = ConsoleColor.Gray;
+					//Screen.ForegroundColor = ConsoleColor.Gray;
 				}
 				else{
 					if(repeated_message){
@@ -197,7 +197,7 @@ namespace Forays{
 						if(pos != -1){
 							Screen.WriteMapString(i-3,0,PreviousMessage(3-i).Substring(0,pos));
 							Screen.WriteMapString(i-3,pos,PreviousMessage(3-i).Substring(pos).PadToMapSize(),Color.DarkGray);
-							Screen.ForegroundColor = ConsoleColor.Gray;
+							//Screen.ForegroundColor = ConsoleColor.Gray;
 						}
 						else{
 							Screen.WriteMapString(i-3,0,PreviousMessage(3-i).PadToMapSize());
@@ -210,15 +210,16 @@ namespace Forays{
 			}
 			if(overflow != "" || special_message == true){
 				int cursor_col = str.Last().Length + Global.MAP_OFFSET_COLS;
-				int cursor_row = Console.CursorTop;
+				int cursor_row = Screen.CursorTop;
 				if(cursor_row > 2){
 					cursor_row = 2; //hack - attempts a quick fix for the [more] appearing at the player's row
 				}
 				M.Draw();
 				Screen.WriteString(cursor_row,cursor_col,"[more]",Color.Yellow);
-				Screen.ForegroundColor = ConsoleColor.Gray;
-				Console.CursorVisible = true;
-				Console.ReadKey(true);
+				Screen.SetCursorPosition(cursor_col+6,cursor_row);
+				//Screen.ForegroundColor = ConsoleColor.Gray;
+				Screen.CursorVisible = true;
+				Global.ReadKey();
 			}
 			str.Clear();
 			str.Add("");
@@ -280,18 +281,24 @@ namespace Forays{
 		public bool YesOrNoPrompt(string s){ return YesOrNoPrompt(s,true); }
 		public bool YesOrNoPrompt(string s,bool easy_cancel){
 			player.Interrupt();
+			MouseUI.PushButtonMap(MouseMode.YesNoPrompt);
+			MouseUI.CreateButton(ConsoleKey.Y,false,2,Global.MAP_OFFSET_COLS + s.Length + 1,1,2);
+			MouseUI.CreateButton(ConsoleKey.N,false,2,Global.MAP_OFFSET_COLS + s.Length + 4,1,2);
 			DisplayNow(s + " (y/n): ");
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			while(true){
-				switch(Console.ReadKey(true).KeyChar){
+				switch(Global.ReadKey().KeyChar){
 				case 'y':
 				case 'Y':
+					MouseUI.PopButtonMap();
 					return true;
 				case 'n':
 				case 'N':
+					MouseUI.PopButtonMap();
 					return false;
 				default:
 					if(easy_cancel){
+						MouseUI.PopButtonMap();
 						return false;
 					}
 					break;

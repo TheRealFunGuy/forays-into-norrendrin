@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -18,14 +18,18 @@ namespace Forays{
 		public static Dict<TutorialTopic,bool> displayed = new Dict<TutorialTopic,bool>();
 		public static void DisplayHelp(){ DisplayHelp(HelpTopic.Overview); }
 		public static void DisplayHelp(HelpTopic h){
-			Console.CursorVisible = false;
+			MouseUI.PushButtonMap(MouseMode.ScrollableMenu);
+			Screen.CursorVisible = false;
 			Screen.Blank();
 			int num_topics = Enum.GetValues(typeof(HelpTopic)).Length;
 			Screen.WriteString(5,4,"Topics:",Color.Yellow);
 			for(int i=0;i<num_topics+1;++i){
 				Screen.WriteString(i+7,0,"[ ]");
 				Screen.WriteChar(i+7,1,(char)(i+'a'),Color.Cyan);
+				MouseUI.CreateStatsButton((ConsoleKey)(ConsoleKey.A + i),false,7+i,1);
 			}
+			MouseUI.CreateButton(ConsoleKey.OemMinus,false,0,Global.MAP_OFFSET_COLS+3,1,Global.COLS-2);
+			MouseUI.CreateButton(ConsoleKey.OemPlus,false,23,Global.MAP_OFFSET_COLS+3,1,Global.COLS-2);
 			Screen.WriteString(num_topics+7,4,"Quit");
 			Screen.WriteString(0,16,"".PadRight(61,'-'));
 			Screen.WriteString(23,16,"".PadRight(61,'-'));
@@ -66,13 +70,13 @@ namespace Forays{
 						Screen.WriteString(i,16,text[i+startline-1].PadRight(64));
 					}
 				}
-				command = Console.ReadKey(true);
+				command = Global.ReadKey();
 				ConsoleKey ck = command.Key;
-				if(ck == ConsoleKey.Backspace || ck == ConsoleKey.PageUp){
+				if(ck == ConsoleKey.Backspace || ck == ConsoleKey.PageUp || ck == ConsoleKey.NumPad9){
 					ch = (char)8;
 				}
 				else{
-					if(ck == ConsoleKey.PageDown){
+					if(ck == ConsoleKey.PageDown || ck == ConsoleKey.NumPad3){
 						ch = ' ';
 					}
 					else{
@@ -177,6 +181,7 @@ namespace Forays{
 				}
 			}
 			Screen.Blank();
+			MouseUI.PopButtonMap();
 		}
 		public static List<string> HelpText(HelpTopic h){
 			string path = "";
@@ -821,6 +826,9 @@ namespace Forays{
 				int y_offset = i + 1;
 				int x_offset = (boxwidth - frames[i][0].Length()) / 2;
 				Screen.WriteList(y+y_offset,x+x_offset,frames[i]);
+				if(Screen.GLMode){
+					Game.gl.Update();
+				}
 				Thread.Sleep(20);
 			}
 			foreach(colorstring s in box){
@@ -831,10 +839,13 @@ namespace Forays{
 			if(!no_displaynow_call){
 				Actor.B.DisplayNow();
 			}
-			Console.CursorVisible = false;
+			Screen.CursorVisible = false;
+			if(Screen.GLMode){
+				Game.gl.Update();
+			}
 			Thread.Sleep(500);
 			Global.FlushInput();
-			/*	switch(Console.ReadKey(true).KeyChar){
+			/*	switch(Global.ReadKey().KeyChar){
 				case 'q':
 					box_edge_color = NextColor(box_edge_color);
 					break;
@@ -852,7 +863,7 @@ namespace Forays{
 					break;
 				}
 			}*/
-			if(Console.ReadKey(true).KeyChar == '='){
+			if(Global.ReadKey().KeyChar == '='){
 				Global.Options[OptionType.NEVER_DISPLAY_TIPS] = true;
 			}
 			Screen.WriteArray((Global.SCREEN_H - boxheight) / 2,x,memory);
@@ -860,7 +871,7 @@ namespace Forays{
 				Actor.player.DisplayStats(true);
 			}
 			displayed[topic] = true;
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 		}
 	}
 }

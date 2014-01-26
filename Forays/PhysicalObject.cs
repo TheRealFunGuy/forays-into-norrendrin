@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -83,7 +83,7 @@ namespace Forays{
 			}
 		}
 		public void Cursor(){
-			Console.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);
+			Screen.SetCursorPosition(col+Global.MAP_OFFSET_COLS,row+Global.MAP_OFFSET_ROWS);
 		}
 		public void UpdateRadius(int from,int to){ UpdateRadius(from,to,false); }
 		public void UpdateRadius(int from,int to,bool change){
@@ -1024,8 +1024,13 @@ compare this number to 1/2:  if less than 1/2, major.
 			List<Actor> result = new List<Actor>();
 			for(int i=row-dist;i<=row+dist;++i){
 				for(int j=col-dist;j<=col+dist;++j){
-					if(DistanceFrom(i,j) == dist && M.BoundsCheck(i,j) && M.actor[i,j] != null){
-						result.Add(M.actor[i,j]);
+					if(DistanceFrom(i,j) == dist){
+						if(M.BoundsCheck(i,j) && M.actor[i,j] != null){
+							result.Add(M.actor[i,j]);
+						}
+					}
+					else{
+						j = col+dist-1;
 					}
 				}
 			}
@@ -1049,8 +1054,13 @@ compare this number to 1/2:  if less than 1/2, major.
 			List<Tile> result = new List<Tile>();
 			for(int i=row-dist;i<=row+dist;++i){
 				for(int j=col-dist;j<=col+dist;++j){
-					if(DistanceFrom(i,j) == dist && M.BoundsCheck(i,j)){
-						result.Add(M.tile[i,j]);
+					if(DistanceFrom(i,j) == dist){
+						if(M.BoundsCheck(i,j)){
+							result.Add(M.tile[i,j]);
+						}
+					}
+					else{
+						j = col+dist-1;
 					}
 				}
 			}
@@ -1074,8 +1084,13 @@ compare this number to 1/2:  if less than 1/2, major.
 			List<pos> result = new List<pos>();
 			for(int i=row-dist;i<=row+dist;++i){
 				for(int j=col-dist;j<=col+dist;++j){
-					if(DistanceFrom(i,j) == dist && M.BoundsCheck(i,j)){
-						result.Add(new pos(i,j));
+					if(DistanceFrom(i,j) == dist){
+						if(M.BoundsCheck(i,j)){
+							result.Add(new pos(i,j));
+						}
+					}
+					else{
+						j = col+dist-1;
 					}
 				}
 			}
@@ -2466,6 +2481,7 @@ compare this number to 1/2:  if less than 1/2, major.
 		public List<Tile> GetTargetTile(int max_distance,int radius,bool no_line,bool start_at_interesting_target){ return GetTarget(false,max_distance,radius,no_line,false,start_at_interesting_target,""); }
 		public List<Tile> GetTargetLine(int max_distance){ return GetTarget(false,max_distance,0,false,true,true,""); }
 		public List<Tile> GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool start_at_interesting_target,string always_displayed){
+			MouseUI.PushButtonMap(MouseMode.Targeting);
 			List<Tile> result = null;
 			ConsoleKeyInfo command;
 			int r,c;
@@ -2715,7 +2731,7 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 				if(!lookmode){
 					bool blocked=false;
-					Console.CursorVisible = false;
+					Screen.CursorVisible = false;
 					if(!no_line){
 						if(extend_line){
 							line = GetBestExtendedLineOfEffect(r,c);
@@ -2828,7 +2844,7 @@ compare this number to 1/2:  if less than 1/2, major.
 								description_on_right = true;
 								max_length = 29;
 							}
-							List<colorstring> desc = Actor.MonsterDescriptionBox(M.actor[r,c].type,max_length);
+							List<colorstring> desc = Actor.MonsterDescriptionBox(M.actor[r,c],false,max_length);
 							if(description_on_right){
 								int start_c = COLS - desc[0].Length();
 								description_shown_last_time = true;
@@ -2862,7 +2878,7 @@ compare this number to 1/2:  if less than 1/2, major.
 									description_on_right = true;
 									max_length = 29;
 								}
-								List<colorstring> desc = Actor.ItemDescriptionBox(M.tile[r,c].inv,true,max_length);
+								List<colorstring> desc = Actor.ItemDescriptionBox(M.tile[r,c].inv,true,false,max_length);
 								if(description_on_right){
 									int start_c = COLS - desc[0].Length();
 									description_shown_last_time = true;
@@ -2902,8 +2918,8 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 				first_iteration = false;
 				M.tile[r,c].Cursor();
-				Console.CursorVisible = true;
-				command = Console.ReadKey(true);
+				Screen.CursorVisible = true;
+				command = Global.ReadKey();
 				char ch = Actor.ConvertInput(command);
 				ch = Actor.ConvertVIKeys(ch);
 				int move_value = 1;
@@ -3046,6 +3062,10 @@ compare this number to 1/2:  if less than 1/2, major.
 					}
 					break;
 				default:
+					if(command.Key == ConsoleKey.F1){
+						r = MouseUI.LastRow - Global.MAP_OFFSET_ROWS;
+						c = MouseUI.LastCol - Global.MAP_OFFSET_COLS;
+					}
 					break;
 				}
 				if(r < minrow){
@@ -3065,7 +3085,7 @@ compare this number to 1/2:  if less than 1/2, major.
 					description_shown_last_time = false;
 				}
 				if(done){
-					Console.CursorVisible = false;
+					Screen.CursorVisible = false;
 					foreach(Tile t in line){
 						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 					}
@@ -3076,9 +3096,10 @@ compare this number to 1/2:  if less than 1/2, major.
 							}
 						}
 					}
-					Console.CursorVisible = true;
+					Screen.CursorVisible = true;
 				}
 			}
+			MouseUI.PopButtonMap();
 			return result;
 		}
 	}

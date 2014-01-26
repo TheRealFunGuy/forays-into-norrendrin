@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -120,7 +120,7 @@ namespace Forays{
 			Prototype(TileType.GLOWING_FUNGUS).revealed_by_light = true;
 			Define(TileType.TOMBSTONE,"tombstone",'+',Color.Gray,true,false,null);
 			proto[TileType.TOMBSTONE].revealed_by_light = true;
-			Define(TileType.GRAVE_DIRT,"grave dirt",'\'',Color.DarkYellow,true,false,null);
+			Define(TileType.GRAVE_DIRT,"grave dirt",'`',Color.DarkYellow,true,false,null);
 			proto[TileType.GRAVE_DIRT].a_name = "grave dirt";
 			proto[TileType.GRAVE_DIRT].revealed_by_light = true;
 			Define(TileType.BARREL,"barrel of oil",'0',Color.DarkYellow,false,false,TileType.FLOOR);
