@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -146,7 +146,7 @@ namespace Forays{
 			return types.Random();
 		}
 		public IEnumerable<Tile> ReachableTilesByDistance(int origin_row,int origin_col,bool return_reachable_walls,params TileType[] tiles_considered_passable){
-			int[,] values = new int[ROWS,COLS];
+			int[,] values = new int[ROWS,COLS]; //todo: note that this method never returns the map borders. it'd need to check bounds if i wanted that.
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					bool passable = tile[i,j].passable;
@@ -197,6 +197,73 @@ namespace Forays{
 				}
 				++val;
 			}
+		}
+		public IEnumerable<Tile> TilesByDistance(int origin_row,int origin_col,bool cardinal_directions_first,bool deterministic_results){
+			Tile t = tile[origin_row,origin_col];
+			int current_distance = 0;
+			List<Tile> current_list = null;
+			while(true){
+				current_list = t.TilesAtDistance(current_distance);
+				if(current_list.Count == 0){
+					break;
+				}
+				while(current_list.Count > 0){
+					if(cardinal_directions_first){
+						List<Tile> closest = current_list.WhereLeast(x=>t.ApproximateEuclideanDistanceFromX10(x));
+						foreach(Tile t2 in closest){
+							current_list.Remove(t2);
+						}
+						while(closest.Count > 0){
+							if(deterministic_results){
+								yield return closest.RemoveLast();
+							}
+							else{
+								yield return closest.RemoveRandom();
+							}
+						}
+					}
+					else{
+						if(deterministic_results){
+							yield return current_list.RemoveLast();
+						}
+						else{
+							yield return current_list.RemoveRandom();
+						}
+					}
+				}
+				++current_distance;
+			}
+			/*int[,] values = new int[ROWS,COLS];
+			values[origin_row,origin_col] = 1;
+			int val = 1;
+			bool done = false; //todo: yeah, really. this isn't so hard to change, and this might actually be *barely* noticeable.
+			while(!done){
+				done = true;
+				while(just_added.Count > 0){
+					if(deterministic_results){
+						yield return just_added.RemoveLast();
+					}
+					else{
+						yield return just_added.RemoveRandom();
+					}
+				}
+				for(int i=minrow;i<=maxrow;++i){
+					for(int j=mincol;j<=maxcol;++j){
+						if(values[i,j] == val){
+							for(int s=i-1;s<=i+1;++s){
+								for(int t=j-1;t<=j+1;++t){
+									if(BoundsCheck(s,t) && values[s,t] == 0){
+										values[s,t] = val + 1;
+										done = false;
+										just_added.Add(tile[s,t]);
+									}
+								}
+							}
+						}
+					}
+				}
+				++val;
+			}*/
 		}
 		public void GenerateLevelTypes(){
 			level_types = new List<LevelType>();
@@ -420,7 +487,8 @@ namespace Forays{
 				RedrawWithStrings(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely)
 			}
 			else{
-				Console.CursorVisible = false;
+				MouseUI.mouselook_objects = new PhysicalObject[ROWS,COLS];
+				Screen.CursorVisible = false;
 				if(player.HasAttr(AttrType.BURNING)){
 					Screen.DrawMapBorder(new colorchar(Color.RandomFire,'&'));
 					for(int i=1;i<ROWS-1;++i){
@@ -578,9 +646,13 @@ namespace Forays{
 				}
 				Screen.ResetColors();
 			}
+			if(Screen.GLMode){
+				Game.gl.Update();
+			}
 		}
 		public void RedrawWithStrings(){
-			Console.CursorVisible = false;
+			MouseUI.mouselook_objects = new PhysicalObject[ROWS,COLS];
+			Screen.CursorVisible = false;
 			cstr s;
 			s.s = "";
 			s.bgcolor = Color.Black;
@@ -696,6 +768,7 @@ namespace Forays{
 						ch.color = darkcolor;
 					}
 					last_seen[r,c] = ch;
+					MouseUI.mouselook_objects[r,c] = tile[r,c].inv;
 				}
 				else{
 					if(tile[r,c].features.Count > 0){
@@ -745,6 +818,9 @@ namespace Forays{
 					actor[r,c].attrs[AttrType.DANGER_SENSED] = 1;
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
+					if(actor[r,c] != player){
+						MouseUI.mouselook_objects[r,c] = actor[r,c];
+					}
 					if(actor[r,c] == player && player.HasFeat(FeatType.DANGER_SENSE)
 					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
 					&& !wiz_lite){
@@ -772,6 +848,9 @@ namespace Forays{
 				if(actor[r,c] != null && player.CanSee(actor[r,c])){
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
+					if(actor[r,c] != player){
+						MouseUI.mouselook_objects[r,c] = actor[r,c];
+					}
 				}
 				else{
 					if(tile[r,c].seen){
@@ -1880,7 +1959,7 @@ namespace Forays{
 							}
 						}
 						d2.RemoveUnconnectedAreas();
-						//ParabolaConsoleLib.Screen.Initialize(25,80); InteractiveGenerator ig = new InteractiveGenerator(ROWS,COLS); ig.d = d2; ig.DrawMap(); Console.ReadKey(true);
+						//ParabolaConsoleLib.Screen.Initialize(25,80); InteractiveGenerator ig = new InteractiveGenerator(ROWS,COLS); ig.d = d2; ig.DrawMap(); Global.ReadKey();
 						List<pos> room_one_walls = new List<pos>();
 						List<pos> room_two_walls = new List<pos>();
 						for(int i=0;i<ROWS;++i){
@@ -1960,7 +2039,7 @@ namespace Forays{
 							}
 						}
 					}
-					//ParabolaConsoleLib.Screen.Initialize(25,80); InteractiveGenerator ig = new InteractiveGenerator(ROWS,COLS); ig.d = d; ig.DrawMap(); Console.ReadKey(true);
+					//ParabolaConsoleLib.Screen.Initialize(25,80); InteractiveGenerator ig = new InteractiveGenerator(ROWS,COLS); ig.d = d; ig.DrawMap(); Global.ReadKey();
 					//d.CaveWidenRooms(100,20);
 					//d.MakeCavesMoreRectangular(4);
 					//d.SharpenCorners(); //todo: need "add cross room" and "add almost rectangular room" in schism.
@@ -2044,7 +2123,7 @@ namespace Forays{
 						int rc = R.Roll(COLS-4) + 1;
 						//if(interesting_tiles.Count > 0 && attempts > 1000){
 						if(interesting_tiles.Count > 0){
-							pos p = interesting_tiles.Random();
+							pos p = interesting_tiles.RemoveRandom();
 							rr = p.row;
 							rc = p.col;
 							map[p] = CellType.RoomInterior;
@@ -2481,7 +2560,7 @@ namespace Forays{
 					tile[i,j].solid_rock = true;
 				}
 			}
-			//Console.ReadKey(true);
+			//Global.ReadKey();
 			player.ResetForNewLevel();
 			foreach(Tile t in AllTiles()){
 				if(t.light_radius > 0){

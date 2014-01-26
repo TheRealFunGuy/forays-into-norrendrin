@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -9,6 +9,10 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Drawing;
+using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
 using Utilities;
 namespace Forays{
 	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
@@ -71,6 +75,16 @@ namespace Forays{
 			}
 			return total;
 		}
+		public colorchar this[int index]{
+			get{
+				int cstr_idx = 0;
+				while(index >= strings[cstr_idx].s.Length){
+					index -= strings[cstr_idx].s.Length;
+					++cstr_idx;
+				}
+				return new colorchar(strings[cstr_idx].s[index],strings[cstr_idx].color,strings[cstr_idx].bgcolor);
+			}
+		}
 		public colorstring(string s1,Color c1){
 			strings.Add(new cstr(s1,c1));
 		}
@@ -127,6 +141,79 @@ namespace Forays{
 		private static bool terminal_bold = false; //for linux terminals
 		private static readonly string bold_on = (char)27 + "[1m"; //VT100 codes, sweet
 		private static readonly string bold_off = (char)27 + "[m";
+		public static bool GLMode = true;
+		private static bool cursor_visible = true; //these 3 values are only used in GL mode - in console mode, the Console values are used directly.
+		private static int cursor_top = 0;
+		private static int cursor_left = 0;
+		public static bool CursorVisible{
+			get{
+				if(GLMode){
+					return cursor_visible;
+				}
+				return Console.CursorVisible;
+			}
+			set{
+				if(GLMode){
+					if(cursor_visible != value){
+						cursor_visible = value;
+						UpdateCursor(value);
+					}
+				}
+				else{
+					Console.CursorVisible = value;
+				}
+			}
+		}
+		public static int CursorTop{
+			get{
+				if(GLMode){
+					return cursor_top;
+				}
+				return Console.CursorTop;
+			}
+			set{
+				if(GLMode){
+					if(cursor_top != value){
+						cursor_top = value;
+						UpdateCursor(cursor_visible);
+					}
+				}
+				else{
+					Console.CursorTop = value;
+				}
+			}
+		}
+		public static int CursorLeft{
+			get{
+				if(GLMode){
+					return cursor_left;
+				}
+				return Console.CursorLeft;
+			}
+			set{
+				if(GLMode){
+					if(cursor_left != value){
+						cursor_left = value;
+						UpdateCursor(cursor_visible);
+					}
+				}
+				else{
+					Console.CursorLeft = value;
+				}
+			}
+		}
+		public static void SetCursorPosition(int left,int top){
+			if(GLMode){
+				if(cursor_left != left || cursor_top != top){
+					cursor_left = left;
+					cursor_top = top;
+					UpdateCursor(cursor_visible);
+				}
+			}
+			else{
+				Console.SetCursorPosition(left,top);
+			}
+		}
 		public static ConsoleColor ForegroundColor{
 			get{
 				if(Global.LINUX && terminal_bold){
@@ -176,8 +263,10 @@ namespace Forays{
 					memory[i,j].bgcolor = Color.Black;
 				}
 			}
-			BackgroundColor = Console.BackgroundColor;
-			ForegroundColor = Console.ForegroundColor;
+			if(!GLMode){
+				BackgroundColor = Console.BackgroundColor;
+				ForegroundColor = Console.ForegroundColor;
+			}
 		}
 		public static colorchar BlankChar(){ return new colorchar(Color.Black,' '); }
 		public static colorchar[,] GetCurrentScreen(){
@@ -220,16 +309,112 @@ namespace Forays{
 			return false;
 		}
 		public static void Blank(){
-			Console.CursorVisible = false;
+			CursorVisible = false;
 			for(int i=0;i<Global.SCREEN_H;++i){
-				Console.SetCursorPosition(0,i);
-				Console.Write("".PadRight(Global.SCREEN_W));
+				WriteString(i,0,"".PadRight(Global.SCREEN_W));
 				for(int j=0;j<Global.SCREEN_W;++j){
 					memory[i,j].c = ' ';
 					memory[i,j].color = Color.Black;
 					memory[i,j].bgcolor = Color.Black;
 				}
 			}
+		}
+		public static void UpdateGLBuffer(int start_row,int start_col,int end_row,int end_col){
+			int num_positions = ((end_col + end_row*Global.SCREEN_W) - (start_col + start_row*Global.SCREEN_W)) + 1;
+			List<float> values = new List<float>(48 * num_positions);
+			int row = start_row;
+			int col = start_col;
+			while(true){
+				Color4 color = GLGame.ConvertColor(memory[row,col].color);
+				Color4 bgcolor = GLGame.ConvertColor(memory[row,col].bgcolor);
+				float tex_start = GLGame.tile_unit * (int)memory[row,col].c;
+				float tex_end = tex_start + GLGame.tile_unit_padded;
+				int flipped_row = (Global.SCREEN_H-1) - row;
+				float fi = GLGame.screen_multiplier_h * (((float)flipped_row / GLGame.half_height) - 1.0f);
+				float fj = GLGame.screen_multiplier_w * (((float)col / GLGame.half_width) - 1.0f);
+				float fi_plus1 = GLGame.screen_multiplier_h * (((float)(flipped_row+1) / GLGame.half_height) - 1.0f);
+				float fj_plus1 = GLGame.screen_multiplier_w * (((float)(col+1) / GLGame.half_width) - 1.0f);
+				values.AddRange(new float[]{
+					fj,fi,tex_start,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
+					fj,fi_plus1,tex_start,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
+					fj_plus1,fi_plus1,tex_end,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
+					fj_plus1,fi,tex_end,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A});
+				if(col == end_col && row == end_row){
+					break;
+				}
+				col++;
+				if(col == Global.SCREEN_W){
+					row++;
+					col = 0;
+				}
+			}
+			int idx = (start_col + start_row*Global.SCREEN_W) * 48;
+			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48*num_positions),values.ToArray());
+		}
+		public static void UpdateGLBuffer(int row,int col){
+			Color4 color = GLGame.ConvertColor(memory[row,col].color);
+			Color4 bgcolor = GLGame.ConvertColor(memory[row,col].bgcolor);
+			float tex_start = GLGame.tile_unit * (int)memory[row,col].c;
+			float tex_end = tex_start + GLGame.tile_unit_padded; //need 8/9 of it to account for the padding
+			int flipped_row = (Global.SCREEN_H-1) - row;
+				float fi = GLGame.screen_multiplier_h * (((float)flipped_row / GLGame.half_height) - 1.0f);
+				float fj = GLGame.screen_multiplier_w * (((float)col / GLGame.half_width) - 1.0f);
+				float fi_plus1 = GLGame.screen_multiplier_h * (((float)(flipped_row+1) / GLGame.half_height) - 1.0f);
+				float fj_plus1 = GLGame.screen_multiplier_w * (((float)(col+1) / GLGame.half_width) - 1.0f);
+			float[] values = new float[]{
+				fj,fi,tex_start,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
+				fj,fi_plus1,tex_start,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
+				fj_plus1,fi_plus1,tex_end,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
+				fj_plus1,fi,tex_end,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A};
+			int idx = (col + row*Global.SCREEN_W) * 48;
+			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48),values);
+		}
+		public static void UpdateCursor(bool make_visible){
+			Color4 color = GLGame.ConvertColor(Color.Gray);
+			int idx = Global.SCREEN_H * Global.SCREEN_W * 48;
+			if(make_visible){
+				int flipped_row = (Global.SCREEN_H-1) - cursor_top;
+				float fi = GLGame.screen_multiplier_h * (((float)flipped_row / GLGame.half_height) - 1.0f);
+				float fj = GLGame.screen_multiplier_w * (((float)cursor_left / GLGame.half_width) - 1.0f);
+				float fi_plus1 = GLGame.screen_multiplier_h * (((-0.875f + (float)(flipped_row+1)) / GLGame.half_height) - 1.0f);
+				float fj_plus1 = GLGame.screen_multiplier_w * (((float)(cursor_left+1) / GLGame.half_width) - 1.0f);
+				float[] cursor_values = new float[]{fj,fi,GLGame.tile_unit*8,1,color.R,color.G,color.B,color.A,0,0,0,0,  fj,fi_plus1,GLGame.tile_unit*8,0.8f,color.R,color.G,color.B,color.A,0,0,0,0,  fj_plus1,fi_plus1,GLGame.tile_unit*8.5f,0.8f,color.R,color.G,color.B,color.A,0,0,0,0,  fj_plus1,fi,GLGame.tile_unit*8.5f,1,color.R,color.G,color.B,color.A,0,0,0,0};
+				GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48),cursor_values);
+			}
+			else{
+				float[] cursor_values = new float[]{2,2,GLGame.tile_unit*8,1,color.R,color.G,color.B,color.A,0,0,0,0,  2,2,GLGame.tile_unit*8,0,color.R,color.G,color.B,color.A,0,0,0,0,  2,2,GLGame.tile_unit*8.5f,0.75f,color.R,color.G,color.B,color.A,0,0,0,0,  2,2,GLGame.tile_unit*8.5f,1,color.R,color.G,color.B,color.A,0,0,0,0};
+				GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48),cursor_values);
+			}
+		}
+		public static void UpdateGLBuffer(int start_row,int start_col,colorchar[,] array){
+			int array_h = array.GetLength(0);
+			int array_w = array.GetLength(1);
+			int start_idx = start_col + start_row*Global.SCREEN_W;
+			int end_idx = (start_col + array_w - 1) + (start_row + array_h - 1)*Global.SCREEN_W;
+			int count = (end_idx - start_idx) + 1;
+			char[] chars = new char[count];
+			Color4[] colors = new Color4[count];
+			Color4[] bgcolors = new Color4[count];
+			int array_idx = -1;
+			for(int i=0;i<array_h;++i){
+				for(int j=0;j<array_w;++j){
+					array_idx = j + i*Global.SCREEN_W;
+					colorchar cch = array[i,j];
+					chars[array_idx] = cch.c;
+					colors[array_idx] = GLGame.ConvertColor(cch.color);
+					bgcolors[array_idx] = GLGame.ConvertColor(cch.bgcolor);
+				}
+			}
+			for(int i=0;i<count;++i){
+				if(chars[i] == (char)0){
+					int idx = i + start_idx;
+					colorchar cch = memory[idx / Global.SCREEN_W,idx % Global.SCREEN_W];
+					chars[i] = cch.c;
+					colors[i] = GLGame.ConvertColor(cch.color);
+					bgcolors[i] = GLGame.ConvertColor(cch.bgcolor);
+				}
+			}
+			Game.gl.UpdateVertexArray(start_row,start_col,chars,colors,bgcolors);
 		}
 		public static void WriteChar(int r,int c,char ch){
 			WriteChar(r,c,new colorchar(Color.Gray,ch));
@@ -242,16 +427,21 @@ namespace Forays{
 				ch.color = ResolveColor(ch.color);
 				ch.bgcolor = ResolveColor(ch.bgcolor);
 				memory[r,c] = ch;
-				ConsoleColor co = GetColor(ch.color);
-				if(co != ForegroundColor){
-					ForegroundColor = co;
+				if(GLMode){
+					UpdateGLBuffer(r,c);
 				}
-				co = GetColor(ch.bgcolor);
-				if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
-					BackgroundColor = co;
+				else{
+					ConsoleColor co = GetColor(ch.color);
+					if(co != ForegroundColor){
+						ForegroundColor = co;
+					}
+					co = GetColor(ch.bgcolor);
+					if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
+						BackgroundColor = co;
+					}
+					Console.SetCursorPosition(c,r);
+					Console.Write(ch.c);
 				}
-				Console.SetCursorPosition(c,r);
-				Console.Write(ch.c);
 			}
 		}
 		public static void WriteArray(int r,int c,colorchar[,] array){
@@ -259,8 +449,30 @@ namespace Forays{
 			int w = array.GetLength(1);
 			for(int i=0;i<h;++i){
 				for(int j=0;j<w;++j){
-					WriteChar(i+r,j+c,array[i,j]);
+					//WriteChar(i+r,j+c,array[i,j]);
+					colorchar ch = array[i,j];
+					if(!memory[r+i,c+j].Equals(ch)){
+						ch.color = ResolveColor(ch.color);
+						ch.bgcolor = ResolveColor(ch.bgcolor);
+						memory[r+i,c+j] = ch;
+						array[i,j] = ch;
+						if(!GLMode){
+							ConsoleColor co = GetColor(ch.color);
+							if(co != ForegroundColor){
+								ForegroundColor = co;
+							}
+							co = GetColor(ch.bgcolor);
+							if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
+								BackgroundColor = co;
+							}
+							Console.SetCursorPosition(c,r);
+							Console.Write(ch.c);
+						}
+					}
 				}
+			}
+			if(GLMode){
+				UpdateGLBuffer(r,c,array);
 			}
 		}
 		public static void WriteList(int r,int c,List<colorstring> ls){
@@ -285,33 +497,137 @@ namespace Forays{
 				colorchar cch;
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;
-				ConsoleColor co = GetColor(s.color);
-				if(ForegroundColor != co){
-					ForegroundColor = co;
+				if(!GLMode){
+					ConsoleColor co = GetColor(s.color);
+					if(ForegroundColor != co){
+						ForegroundColor = co;
+					}
+					co = GetColor(s.bgcolor);
+					if(BackgroundColor != co){
+						BackgroundColor = co;
+					}
 				}
-				co = GetColor(s.bgcolor);
-				if(BackgroundColor != co){
-					BackgroundColor = co;
-				}
+				int start_col = -1;
+				int end_col = -1;
 				int i = 0;
 				bool changed = false;
 				foreach(char ch in s.s){
 					cch.c = ch;
 					if(!memory[r,c+i].Equals(cch)){
 						memory[r,c+i] = cch;
+						if(start_col == -1){
+							start_col = c+i;
+						}
+						end_col = c+i;
 						changed = true;
 					}
 					++i;
 				}
 				if(changed){
-					Console.SetCursorPosition(c,r);
-					Console.Write(s.s);
+					if(GLMode){
+						UpdateGLBuffer(r,start_col,r,end_col);
+					}
+					else{
+						Console.SetCursorPosition(c,r);
+						Console.Write(s.s);
+					}
+				}
+				if(MouseUI.AutomaticButtonsFromStrings && GLMode){
+					int idx = 0;
+					int brace = -1;
+					int start = -1;
+					int end = -1;
+					bool last_char_was_separator = false;
+					while(true){
+						if(brace == -1){
+							if(s.s[idx] == '['){
+								brace = 0;
+								start = idx;
+							}
+						}
+						else{
+							if(brace == 0){
+								if(s.s[idx] == ']'){
+									brace = 1;
+									end = idx;
+								}
+							}
+							else{
+								if(s.s[idx] == ' ' || s.s[idx] == '-' || s.s[idx] == ','){
+									if(last_char_was_separator){
+										ConsoleKey key = ConsoleKey.A;
+										bool shifted = false;
+										switch(s.s[start+1]){
+										case 'E':
+											key = ConsoleKey.Enter;
+											break;
+										case 'T':
+											key = ConsoleKey.Tab;
+											break;
+										case 'P': //"Press any key"
+											break;
+										case '?':
+											key = ConsoleKey.Oem2;
+											shifted = true;
+											break;
+										case '=':
+											key = ConsoleKey.OemPlus;
+											break;
+										default: //all others should be lowercase letters
+											key = (ConsoleKey)(ConsoleKey.A + ((int)s.s[start+1] - (int)'a'));
+											break;
+										}
+										MouseUI.CreateButton(key,shifted,r,c+start,1,end-start+1);
+										brace = -1;
+										start = -1;
+										end = -1;
+									}
+									last_char_was_separator = !last_char_was_separator;
+								}
+								else{
+									last_char_was_separator = false;
+									end = idx;
+								}
+							}
+						}
+						++idx;
+						if(idx == s.s.Length){
+							if(brace == 1){
+								ConsoleKey key = ConsoleKey.A;
+								bool shifted = false;
+								switch(s.s[start+1]){
+								case 'E':
+									key = ConsoleKey.Enter;
+									break;
+								case 'T':
+									key = ConsoleKey.Tab;
+									break;
+								case 'P': //"Press any key"
+									break;
+								case '?':
+									key = ConsoleKey.Oem2;
+									shifted = true;
+									break;
+								case '=':
+									key = ConsoleKey.OemPlus;
+									break;
+								default: //all others should be lowercase letters
+									key = (ConsoleKey)(ConsoleKey.A + ((int)s.s[start+1] - (int)'a'));
+									break;
+								}
+								MouseUI.CreateButton(key,shifted,r,c+start,1,end-start+1);
+							}
+							break;
+						}
+					}
 				}
 			}
 		}
 		public static void WriteString(int r,int c,colorstring cs){
 			if(cs.Length() > 0){
 				int pos = c;
+				int start_col = -1;
+				int end_col = -1;
 				foreach(cstr s1 in cs.strings){
 					cstr s = new cstr(s1.s,s1.color,s1.bgcolor);
 					if(s.s.Length + pos > Global.SCREEN_W){
@@ -322,13 +638,15 @@ namespace Forays{
 					colorchar cch;
 					cch.color = s.color;
 					cch.bgcolor = s.bgcolor;
-					ConsoleColor co = GetColor(s.color);
-					if(ForegroundColor != co){
-						ForegroundColor = co;
-					}
-					co = GetColor(s.bgcolor);
-					if(BackgroundColor != co){
-						BackgroundColor = co;
+					if(!GLMode){
+						ConsoleColor co = GetColor(s.color);
+						if(ForegroundColor != co){
+							ForegroundColor = co;
+						}
+						co = GetColor(s.bgcolor);
+						if(BackgroundColor != co){
+							BackgroundColor = co;
+						}
 					}
 					int i = 0;
 					bool changed = false;
@@ -336,24 +654,123 @@ namespace Forays{
 						cch.c = ch;
 						if(!memory[r,pos+i].Equals(cch)){
 							memory[r,pos+i] = cch;
+							if(start_col == -1){
+								start_col = pos+i;
+							}
+							end_col = pos+i;
 							changed = true;
 						}
 						++i;
 					}
-					if(changed){
+					if(changed && !GLMode){
 						Console.SetCursorPosition(pos,r);
 						Console.Write(s.s);
 					}
 					pos += s.s.Length;
 				}
+				if(GLMode && start_col != -1){
+					UpdateGLBuffer(r,start_col,r,end_col);
+				}
+				if(MouseUI.AutomaticButtonsFromStrings && GLMode){
+					int idx = 0;
+					int brace = -1;
+					int start = -1;
+					int end = -1;
+					bool last_char_was_separator = false;
+					while(true){
+						char ch = cs[idx].c;
+						if(brace == -1){
+							if(ch == '['){
+								brace = 0;
+								start = idx;
+							}
+						}
+						else{
+							if(brace == 0){
+								if(ch == ']'){
+									brace = 1;
+									end = idx;
+								}
+							}
+							else{
+								if(ch == ' ' || ch == '-' || ch == ','){
+									if(last_char_was_separator){
+										ConsoleKey key = ConsoleKey.A;
+										bool shifted = false;
+										switch(cs[start+1].c){
+										case 'E':
+											key = ConsoleKey.Enter;
+											break;
+										case 'T':
+											key = ConsoleKey.Tab;
+											break;
+										case 'P': //"Press any key"
+											break;
+										case '?':
+											key = ConsoleKey.Oem2;
+											shifted = true;
+											break;
+										case '=':
+											key = ConsoleKey.OemPlus;
+											break;
+										default: //all others should be lowercase letters
+											key = (ConsoleKey)(ConsoleKey.A + ((int)cs[start+1].c - (int)'a'));
+											break;
+										}
+										MouseUI.CreateButton(key,shifted,r,c+start,1,end-start+1);
+										brace = -1;
+										start = -1;
+										end = -1;
+									}
+									last_char_was_separator = !last_char_was_separator;
+								}
+								else{
+									last_char_was_separator = false;
+									end = idx;
+								}
+							}
+						}
+						++idx;
+						if(idx == cs.Length()){
+							if(brace == 1){
+								ConsoleKey key = ConsoleKey.A;
+								bool shifted = false;
+								switch(cs[start+1].c){
+								case 'E':
+									key = ConsoleKey.Enter;
+									break;
+								case 'T':
+									key = ConsoleKey.Tab;
+									break;
+								case 'P': //"Press any key"
+									break;
+								case '?':
+									key = ConsoleKey.Oem2;
+									shifted = true;
+									break;
+								case '=':
+									key = ConsoleKey.OemPlus;
+									break;
+								default: //all others should be lowercase letters
+									key = (ConsoleKey)(ConsoleKey.A + ((int)cs[start+1].c - (int)'a'));
+									break;
+								}
+								MouseUI.CreateButton(key,shifted,r,c+start,1,end-start+1);
+							}
+							break;
+						}
+					}
+				}
 			}
 		}
 		public static void ResetColors(){
-			if(ForegroundColor != ConsoleColor.Gray){
-				ForegroundColor = ConsoleColor.Gray;
-			}
-			if(BackgroundColor != ConsoleColor.Black){
-				BackgroundColor = ConsoleColor.Black;
+			if(!GLMode){
+				if(ForegroundColor != ConsoleColor.Gray){
+					ForegroundColor = ConsoleColor.Gray;
+				}
+				if(BackgroundColor != ConsoleColor.Black){
+					BackgroundColor = ConsoleColor.Black;
+				}
 			}
 		}
 		public static void WriteMapChar(int r,int c,char ch){
@@ -394,27 +811,68 @@ namespace Forays{
 				colorchar cch;
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;
-				ConsoleColor co = GetColor(s.color);
-				if(ForegroundColor != co){
-					ForegroundColor = co;
+				if(!GLMode){
+					ConsoleColor co = GetColor(s.color);
+					if(ForegroundColor != co){
+						ForegroundColor = co;
+					}
+					co = GetColor(s.bgcolor);
+					if(BackgroundColor != co){
+						BackgroundColor = co;
+					}
 				}
-				co = GetColor(s.bgcolor);
-				if(BackgroundColor != co){
-					BackgroundColor = co;
-				}
+				int start_col = -1;
+				int end_col = -1;
 				int i = 0;
 				bool changed = false;
 				foreach(char ch in s.s){
 					cch.c = ch;
 					if(!memory[r,c+i].Equals(cch)){
 						memory[r,c+i] = cch;
+						if(start_col == -1){
+							start_col = c+i;
+						}
+						end_col = c+i;
 						changed = true;
 					}
 					++i;
 				}
 				if(changed){
-					Console.SetCursorPosition(c,r);
-					Console.Write(s.s);
+					if(GLMode){
+						UpdateGLBuffer(r,start_col,r,end_col);
+					}
+					else{
+						Console.SetCursorPosition(c,r);
+						Console.Write(s.s);
+					}
+				}
+				if(MouseUI.AutomaticButtonsFromStrings && GLMode){
+					int idx = s.s.IndexOf('['); //for now I'm only checking for a single brace here.
+					if(idx != -1 && idx+1 < s.s.Length){
+						ConsoleKey key = ConsoleKey.A;
+						bool shifted = false;
+						switch(s.s[idx+1]){
+						case 'E':
+							key = ConsoleKey.Enter;
+							break;
+						case 'T':
+							key = ConsoleKey.Tab;
+							break;
+						case 'P': //"Press any key"
+							break;
+						case '?':
+							key = ConsoleKey.Oem2;
+							shifted = true;
+							break;
+						case '=':
+							key = ConsoleKey.OemPlus;
+							break;
+						default: //all others should be lowercase letters
+							key = (ConsoleKey)(ConsoleKey.A + ((int)s.s[idx+1] - (int)'a'));
+							break;
+						}
+						MouseUI.CreateMapButton(key,shifted,r,1);
+					}
 				}
 			}
 		}
@@ -422,6 +880,8 @@ namespace Forays{
 			if(cs.Length() > 0){
 				r += Global.MAP_OFFSET_ROWS;
 				c += Global.MAP_OFFSET_COLS;
+				int start_col = -1;
+				int end_col = -1;
 				int cpos = c;
 				foreach(cstr s1 in cs.strings){
 					cstr s = new cstr(s1.s,s1.color,s1.bgcolor);
@@ -433,13 +893,15 @@ namespace Forays{
 					colorchar cch;
 					cch.color = s.color;
 					cch.bgcolor = s.bgcolor;
-					ConsoleColor co = GetColor(s.color);
-					if(ForegroundColor != co){
-						ForegroundColor = co;
-					}
-					co = GetColor(s.bgcolor);
-					if(BackgroundColor != co){
-						BackgroundColor = co;
+					if(!GLMode){
+						ConsoleColor co = GetColor(s.color);
+						if(ForegroundColor != co){
+							ForegroundColor = co;
+						}
+						co = GetColor(s.bgcolor);
+						if(BackgroundColor != co){
+							BackgroundColor = co;
+						}
 					}
 					int i = 0;
 					bool changed = false;
@@ -447,15 +909,57 @@ namespace Forays{
 						cch.c = ch;
 						if(!memory[r,cpos+i].Equals(cch)){
 							memory[r,cpos+i] = cch;
+							if(start_col == -1){
+								start_col = cpos+i;
+							}
+							end_col = cpos+i;
 							changed = true;
 						}
 						++i;
 					}
-					if(changed){
+					if(changed && !GLMode){
 						Console.SetCursorPosition(cpos,r);
 						Console.Write(s.s);
 					}
 					cpos += s.s.Length;
+				}
+				if(GLMode && start_col != -1){
+					UpdateGLBuffer(r,start_col,r,end_col);
+				}
+				if(MouseUI.AutomaticButtonsFromStrings && GLMode){
+					int idx = -1;
+					int len = cs.Length();
+					for(int i=0;i<len;++i){
+						if(cs[i].c == '['){
+							idx = i;
+							break;
+						}
+					}
+					if(idx != -1 && idx+1 < cs.Length()){
+						ConsoleKey key = ConsoleKey.A;
+						bool shifted = false;
+						switch(cs[idx+1].c){
+						case 'E':
+							key = ConsoleKey.Enter;
+							break;
+						case 'T':
+							key = ConsoleKey.Tab;
+							break;
+						case 'P': //"Press any key"
+							break;
+						case '?':
+							key = ConsoleKey.Oem2;
+							shifted = true;
+							break;
+						case '=':
+							key = ConsoleKey.OemPlus;
+							break;
+						default: //all others should be lowercase letters
+							key = (ConsoleKey)(ConsoleKey.A + ((int)cs[idx+1].c - (int)'a'));
+							break;
+						}
+						MouseUI.CreateMapButton(key,shifted,r,1);
+					}
 				}
 				/*if(cpos-Global.MAP_OFFSET_COLS < Global.COLS){
 					WriteString(r,cpos,"".PadRight(Global.COLS-(cpos-Global.MAP_OFFSET_COLS)));
@@ -485,30 +989,75 @@ namespace Forays{
 				s.s = s.s.Substring(0,12 - c);
 			}
 			if(s.s.Length > 0){
-				//++r; //was ++r
+				//++r;
 				s.color = ResolveColor(s.color);
 				s.bgcolor = ResolveColor(s.bgcolor);
 				colorchar cch;
 				cch.color = s.color;
 				cch.bgcolor = s.bgcolor;
-				ConsoleColor co = GetColor(s.color);
-				if(ForegroundColor != co){
-					ForegroundColor = co;
+				if(!GLMode){
+					ConsoleColor co = GetColor(s.color);
+					if(ForegroundColor != co){
+						ForegroundColor = co;
+					}
+					co = GetColor(s.bgcolor);
+					if(BackgroundColor != co){
+						BackgroundColor = co;
+					}
 				}
-				co = GetColor(s.bgcolor);
-				if(BackgroundColor != co){
-					BackgroundColor = co;
-				}
+				int start_col = -1;
+				int end_col = -1;
 				int i = 0;
+				bool changed = false;
 				foreach(char ch in s.s){
 					cch.c = ch;
 					if(!memory[r,c+i].Equals(cch)){
 						memory[r,c+i] = cch;
+						if(start_col == -1){
+							start_col = c+i;
+						}
+						end_col = c+i;
+						changed = true;
 					}
 					++i;
 				}
-				Console.SetCursorPosition(c,r);
-				Console.Write(s.s);
+				if(changed){
+					if(GLMode){
+						UpdateGLBuffer(r,start_col,r,end_col);
+					}
+					else{
+						Console.SetCursorPosition(c,r);
+						Console.Write(s.s);
+					}
+				}
+				if(MouseUI.AutomaticButtonsFromStrings && GLMode){
+					int idx = s.s.IndexOf('['); //for now I'm only checking for a single brace here.
+					if(idx != -1 && idx+1 < s.s.Length){
+						ConsoleKey key = ConsoleKey.A;
+						bool shifted = false;
+						switch(s.s[idx+1]){
+						case 'E':
+							key = ConsoleKey.Enter;
+							break;
+						case 'T':
+							key = ConsoleKey.Tab;
+							break;
+						case 'P': //"Press any key"
+							break;
+						case '?':
+							key = ConsoleKey.Oem2;
+							shifted = true;
+							break;
+						case '=':
+							key = ConsoleKey.OemPlus;
+							break;
+						default: //all others should be lowercase letters
+							key = (ConsoleKey)(ConsoleKey.A + ((int)s.s[idx+1] - (int)'a'));
+							break;
+						}
+						MouseUI.CreateStatsButton(key,shifted,r,1);
+					}
+				}
 			}
 		}
 		public static void MapDrawWithStrings(colorchar[,] array,int row,int col,int height,int width){
@@ -545,10 +1094,13 @@ namespace Forays{
 		public static void AnimateCell(int r,int c,colorchar ch,int duration){
 			colorchar prev = memory[r,c];
 			WriteChar(r,c,ch);
+			if(GLMode){
+				Game.gl.Update();
+			}
 			Thread.Sleep(duration);
 			WriteChar(r,c,prev);
 		}
-		public static void AnimateCellNonBlocking(int r,int c,colorchar ch,int duration){
+		/*public static void AnimateCellNonBlocking(int r,int c,colorchar ch,int duration){
 			colorchar prev = memory[r,c]; //experimental animation for realtime input. seems to work decently so far.
 			WriteChar(r,c,ch);
 			for(int i=0;i<duration;i+=5){
@@ -559,7 +1111,7 @@ namespace Forays{
 				}
 			}
 			WriteChar(r,c,prev);
-		}
+		}*/
 		public static void AnimateMapCell(int r,int c,colorchar ch){ AnimateMapCell(r,c,ch,50); }
 		public static void AnimateMapCell(int r,int c,colorchar ch,int duration){
 			AnimateCell(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch,duration);
@@ -572,6 +1124,9 @@ namespace Forays{
 				prev.Add(MapChar(p.row,p.col));
 				WriteMapChar(p.row,p.col,chars[idx]);
 				++idx;
+			}
+			if(GLMode){
+				Game.gl.Update();
 			}
 			Thread.Sleep(duration);
 			idx = 0;
@@ -589,6 +1144,9 @@ namespace Forays{
 				WriteMapChar(p.row,p.col,ch);
 				++idx;
 			}
+			if(GLMode){
+				Game.gl.Update();
+			}
 			Thread.Sleep(duration);
 			idx = 0;
 			foreach(pos p in cells){
@@ -598,16 +1156,16 @@ namespace Forays{
 		}
 		public static void AnimateProjectile(List<Tile> list,colorchar ch){ AnimateProjectile(list,ch,50); }
 		public static void AnimateProjectile(List<Tile> list,colorchar ch,int duration){
-			Console.CursorVisible = false;
+			CursorVisible = false;
 			list.RemoveAt(0);
 			foreach(Tile t in list){
 				AnimateMapCell(t.row,t.col,ch,duration);
 			}
-			Console.CursorVisible = true;
+			CursorVisible = true;
 		}
 		public static void AnimateBoltProjectile(List<Tile> list,Color color){ AnimateBoltProjectile(list,color,50); }
 		public static void AnimateBoltProjectile(List<Tile> list,Color color,int duration){
-			Console.CursorVisible = false;
+			CursorVisible = false;
 			colorchar ch;
 			ch.color = color;
 			ch.bgcolor = Color.Black;
@@ -634,7 +1192,7 @@ namespace Forays{
 			foreach(Tile t in list){
 				AnimateMapCell(t.row,t.col,ch,duration);
 			}
-			Console.CursorVisible = true;
+			CursorVisible = true;
 		}
 		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch){
 			AnimateExplosion(obj,radius,ch,50,false);
@@ -646,7 +1204,7 @@ namespace Forays{
 			AnimateExplosion(obj,radius,ch,duration,false);
 		}
 		public static void AnimateExplosion(PhysicalObject obj,int radius,colorchar ch,int duration,bool single_frame){
-			Console.CursorVisible = false;
+			CursorVisible = false;
 			colorchar[,] prev = new colorchar[radius*2+1,radius*2+1];
 			for(int i=0;i<=radius*2;++i){
 				for(int j=0;j<=radius*2;++j){
@@ -660,12 +1218,18 @@ namespace Forays{
 					foreach(Tile t in obj.TilesAtDistance(i)){
 						WriteMapChar(t.row,t.col,ch);
 					}
+					if(GLMode){
+						Game.gl.Update();
+					}
 					Thread.Sleep(duration);
 				}
 			}
 			else{
 				foreach(Tile t in obj.TilesWithinDistance(radius)){
 					WriteMapChar(t.row,t.col,ch);
+				}
+				if(GLMode){
+					Game.gl.Update();
 				}
 				Thread.Sleep(duration);
 			}
@@ -676,11 +1240,11 @@ namespace Forays{
 					}
 				}
 			}
-			Console.CursorVisible = true;
+			CursorVisible = true;
 		}
 		public static void AnimateBoltBeam(List<Tile> list,Color color){ AnimateBoltBeam(list,color,50); }
 		public static void AnimateBoltBeam(List<Tile> list,Color color,int duration){
-			Console.CursorVisible = false;
+			CursorVisible = false;
 			colorchar ch;
 			ch.color = color;
 			ch.bgcolor = Color.Black;
@@ -708,29 +1272,35 @@ namespace Forays{
 			foreach(Tile t in list){
 				memlist.Add(MapChar(t.row,t.col));
 				WriteMapChar(t.row,t.col,ch);
+				if(GLMode){
+					Game.gl.Update();
+				}
 				Thread.Sleep(duration);
 			}
 			int i = 0;
 			foreach(Tile t in list){
 				WriteMapChar(t.row,t.col,memlist[i++]);
 			}
-			Console.CursorVisible = true;
+			CursorVisible = true;
 		}
 		public static void AnimateBeam(List<Tile> list,colorchar ch){ AnimateBeam(list,ch,50); }
 		public static void AnimateBeam(List<Tile> list,colorchar ch,int duration){
-			Console.CursorVisible = false;
+			CursorVisible = false;
 			list.RemoveAt(0);
 			List<colorchar> memlist = new List<colorchar>();
 			foreach(Tile t in list){
 				memlist.Add(MapChar(t.row,t.col));
 				WriteMapChar(t.row,t.col,ch);
+				if(GLMode){
+					Game.gl.Update();
+				}
 				Thread.Sleep(duration);
 			}
 			int i = 0;
 			foreach(Tile t in list){
 				WriteMapChar(t.row,t.col,memlist[i++]);
 			}
-			Console.CursorVisible = true;
+			CursorVisible = true;
 		}
 		public static void AnimateStorm(pos origin,int radius,int num_frames,int num_per_frame,char c,Color color){
 			AnimateStorm(origin,radius,num_frames,num_per_frame,new colorchar(c,color));
@@ -1064,6 +1634,215 @@ namespace Forays{
 				}
 			default:
 				return c;
+			}
+		}
+	}
+	public class Button{
+		public ConsoleKey key;
+		public ConsoleModifiers mods;
+		public Rectangle rect;
+		public int row{get{ return rect.Y; } }
+		public int col{get{ return rect.X; } }
+		public int height{get{ return rect.Height; } }
+		public int width{get{ return rect.Width; } }
+		public Button(ConsoleKey key_,bool alt,bool ctrl,bool shift,int row,int col,int height,int width){
+			key = key_;
+			mods = (ConsoleModifiers)0;
+			if(alt){
+				mods |= ConsoleModifiers.Alt;
+			}
+			if(ctrl){
+				mods |= ConsoleModifiers.Control;
+			}
+			if(shift){
+				mods |= ConsoleModifiers.Shift;
+			}
+			rect = new Rectangle(col,row,width,height);
+		}
+	}
+	public enum MouseMode{Map,Menu,ScrollableMenu,NameEntry,Targeting,Directional,YesNoPrompt};
+	public static class MouseUI{
+		public static bool AutomaticButtonsFromStrings = false;
+		public static bool IgnoreMouseMovement = false;
+		public static bool VisiblePath = true;
+		private static List<Button[,]> button_map = new List<Button[,]>();
+		private static List<MouseMode> mouse_mode = new List<MouseMode>();
+		public static Button Highlighted = null;
+		public static PhysicalObject[,] mouselook_objects = new PhysicalObject[Global.ROWS,Global.COLS];
+		public static PhysicalObject mouselook_current_target = null;
+		public static List<pos> mouse_path = null;
+		public static int LastRow = -1;
+		public static int LastCol = -1;
+		public static Button GetButton(int row,int col){
+			if(button_map.Last() == null || row < 0 || col < 0 || row >= Global.SCREEN_H || col >= Global.SCREEN_W){
+				return null;
+			}
+			return button_map.Last()[row,col];
+		}
+		public static MouseMode Mode{
+			get{
+				if(mouse_mode.Count == 0){
+					return MouseMode.Menu;
+				}
+				return mouse_mode[mouse_mode.Count-1];
+			}
+		}
+		public static Button[,] ButtonMap{
+			get{
+				if(button_map.Last() == null){
+					button_map[button_map.Count-1] = new Button[Global.SCREEN_H,Global.SCREEN_W];
+				}
+				return button_map[button_map.Count-1];
+			}
+		}
+		public static void PushButtonMap(){
+			button_map.Add(null);
+			mouse_mode.Add(MouseMode.Menu);
+			RemoveHighlight();
+			RemoveMouseover();
+		}
+		public static void PushButtonMap(MouseMode mode){
+			button_map.Add(null);
+			mouse_mode.Add(mode);
+			RemoveHighlight();
+			RemoveMouseover();
+		}
+		public static void PopButtonMap(){
+			RemoveHighlight();
+			RemoveMouseover();
+			button_map.RemoveLast();
+			mouse_mode.RemoveLast();
+		}
+		public static void CreateButton(ConsoleKey key_,bool shifted,int row,int col,int height,int width){
+			Button[,] buttons = ButtonMap;
+			if(buttons[row,col] == null){ //if there's already a button there, do nothing.
+				Button b = new Button(key_,false,false,shifted,row,col,height,width);
+				for(int i=row;i<row+height;++i){
+					for(int j=col;j<col+width;++j){
+						buttons[i,j] = b;
+					}
+				}
+			}
+		}
+		public static void CreateMapButton(ConsoleKey key_,bool shifted,int row,int height){
+			Button[,] buttons = ButtonMap;
+			//row += Global.MAP_OFFSET_ROWS;
+			int col = Global.MAP_OFFSET_COLS;
+			int width = Global.COLS;
+			if(buttons[row,col] == null){ //if there's already a button there, do nothing.
+				Button b = new Button(key_,false,false,shifted,row,col,height,width);
+				for(int i=row;i<row+height;++i){
+					for(int j=col;j<col+width;++j){
+						buttons[i,j] = b;
+					}
+				}
+			}
+		}
+		public static void CreateStatsButton(ConsoleKey key_,bool shifted,int row,int height){
+			Button[,] buttons = ButtonMap;
+			int width = 12;
+			if(buttons[row,0] == null){ //if there's already a button there, do nothing.
+				Button b = new Button(key_,false,false,shifted,row,0,height,width);
+				for(int i=row;i<row+height;++i){
+					for(int j=0;j<width;++j){
+						buttons[i,j] = b;
+					}
+				}
+			}
+		}
+		public static void RemoveButton(int row,int col){
+			Button b = GetButton(row,col);
+			if(b != null){
+				RemoveButton(b);
+			}
+		}
+		public static void RemoveButton(Button b){
+			Button[,] buttons = button_map[button_map.Count-1];
+			if(buttons == null){
+				return;
+			}
+			int row = b.rect.Y;
+			int col = b.rect.X;
+			int height = b.rect.Height;
+			int width = b.rect.Width;
+			for(int i=row;i<row+height;++i){
+				for(int j=col;j<col+width;++j){
+					buttons[i,j] = null;
+				}
+			}
+		}
+		public static void RemoveHighlight(){
+			if(Highlighted != null){
+				colorchar[,] highlight = new colorchar[Highlighted.height,Highlighted.width];
+				int hh = Highlighted.height;
+				int hw = Highlighted.width;
+				int hr = Highlighted.row;
+				int hc = Highlighted.col;
+				for(int i=0;i<hh;++i){
+					for(int j=0;j<hw;++j){
+						highlight[i,j] = Screen.Char(i+hr,j+hc);
+					}
+				}
+				Screen.UpdateGLBuffer(Highlighted.row,Highlighted.col,highlight);
+				Highlighted = null;
+			}
+		}
+		public static void RemoveMouseover(){
+			if(mouselook_current_target != null){
+				bool description_on_right = false;
+				int max_length = 29;
+				if(mouselook_current_target.col - 6 < max_length){
+					max_length = mouselook_current_target.col - 6;
+				}
+				if(max_length < 20){
+					description_on_right = true;
+					max_length = 29;
+				}
+				List<colorstring> desc_box = null;
+				Actor a = mouselook_current_target as Actor;
+				if(a != null){
+					desc_box = Actor.MonsterDescriptionBox(a,true,max_length);
+				}
+				else{
+					Item i = mouselook_current_target as Item;
+					if(i != null){
+						desc_box = Actor.ItemDescriptionBox(i,true,true,max_length);
+					}
+				}
+				if(desc_box != null){
+					int h = desc_box.Count;
+					int w = desc_box[0].Length();
+					//colorchar[,] array = new colorchar[h,w];
+					if(description_on_right){
+						Screen.UpdateGLBuffer(Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS + Global.COLS - w,Global.MAP_OFFSET_ROWS + h - 1,Global.MAP_OFFSET_COLS + Global.COLS - 1);
+						/*for(int i=0;i<h;++i){
+							for(int j=0;j<w;++j){
+								array[i,j] = Screen.Char(i+Global.MAP_OFFSET_ROWS,j+Global.MAP_OFFSET_COLS + Global.COLS - w);
+							}
+						}
+						Screen.UpdateGLBuffer(Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS + Global.COLS - w,array); */
+					}
+					else{
+						Screen.UpdateGLBuffer(Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS,Global.MAP_OFFSET_ROWS + h - 1,Global.MAP_OFFSET_COLS + w - 1);
+						/*for(int i=0;i<h;++i){
+							for(int j=0;j<w;++j){
+								array[i,j] = Screen.Char(i+Global.MAP_OFFSET_ROWS,j+Global.MAP_OFFSET_COLS);
+							}
+						}
+						Screen.UpdateGLBuffer(Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS,array);*/
+					}
+				}
+				mouselook_current_target = null;
+				Screen.CursorVisible = true;
+			}
+			if(mouse_path != null){
+				foreach(pos p in mouse_path){
+					int i = p.row;
+					int j = p.col;
+					colorchar cch = Screen.MapChar(i,j); //I tried doing this with a single call to UpdateVertexArray. It was slow.
+					Game.gl.UpdateVertexArray(i+Global.MAP_OFFSET_ROWS,j+Global.MAP_OFFSET_COLS,cch.c,GLGame.ConvertColor(cch.color),GLGame.ConvertColor(cch.bgcolor));
+				}
+				mouse_path = null;
 			}
 		}
 	}

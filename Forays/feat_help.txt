@@ -4,7 +4,7 @@ Combat  - Measures your deadliness with blade and bow.
           weapons.
 
 Defense - Measures your ability to avoid physical harm.
-          Each level adds 2% to your chance to avoid attacks.
+          Each level adds 3% to your chance to avoid attacks.
 
 Magic   - Measures your ability to cast spells.
           Each level grants another spell and increases your
@@ -68,6 +68,8 @@ Master's edge - The first offensive spell you've learned will
 
 Arcane interference - When you cast a spell, nearby enemies
                       lose their ability to cast that spell.
+                      If this happens, your spells will be
+                      empowered for several turns.
 
 Chain casting - The mana cost of your spells is reduced by one
                 if you cast a spell last turn. (This doesn't

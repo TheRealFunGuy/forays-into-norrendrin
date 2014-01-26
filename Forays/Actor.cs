@@ -1,4 +1,4 @@
-/*Copyright (c) 2011-2013  Derrick Creamer
+/*Copyright (c) 2011-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -111,8 +111,8 @@ namespace Forays{
 		public static List<Actor> tiebreakers = null; //a list of all actors on this level. used to determine sub-turn order of events
 		public static Dict<ActorType,List<AttackInfo>> attack = new Dict<ActorType,List<AttackInfo>>();
 		public static pos interrupted_path = new pos(-1,-1);
-		//private static char safe_mode_char = ' ';
-		//private static DateTime safe_mode_time = DateTime.Now;
+		public static bool viewing_more_commands = false; //used in DisplayStats to show extra commands
+		
 		private static Dict<ActorType,Actor> proto = new Dict<ActorType, Actor>();
 		public static Actor Prototype(ActorType type){ return proto[type]; }
 		static Actor(){
@@ -1715,6 +1715,7 @@ namespace Forays{
 			if(!skip_input){
 				if(type==ActorType.PLAYER){
 					InputHuman();
+					MouseUI.IgnoreMouseMovement = true;
 				}
 				else{
 					InputAI();
@@ -1901,7 +1902,7 @@ namespace Forays{
 		}
 		public void InputHuman(){
 			if(HasAttr(AttrType.DETECTING_MOVEMENT) && footsteps.Count > 0 && time_of_last_action < Q.turn){
-				Console.CursorVisible = false;
+				Screen.CursorVisible = false;
 				Screen.AnimateMapCells(footsteps,new colorchar('!',Color.Red));
 				previous_footsteps = footsteps;
 				footsteps = new List<pos>();
@@ -1928,7 +1929,7 @@ namespace Forays{
 				B.DisplayNow();
 			}
 			Cursor();
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			if(HasAttr(AttrType.PARALYZED) || HasAttr(AttrType.ASLEEP)){
 				if(HasAttr(AttrType.ASLEEP)){
 					Thread.Sleep(50); //todo: any changes here?
@@ -1937,7 +1938,7 @@ namespace Forays{
 				return;
 			}
 			if(Global.Option(OptionType.AUTOPICKUP) && ((tile().inv != null && !tile().inv.ignored && InventoryCount() < Global.MAX_INVENTORY_SIZE) || tile().type == TileType.CHEST)){
-				bool danger = false;
+				/*bool danger = false;
 				foreach(Tile t in TilesWithinDistance(3)){
 					if(t.Is(TileType.POISON_GAS_VENT)){
 						danger = true;
@@ -1974,8 +1975,8 @@ namespace Forays{
 							}
 						}
 					}
-				}
-				if(!danger){
+				}*/
+				if(!NextStepIsDangerous(tile())){
 					if(StunnedThisTurn()){
 						return;
 					}
@@ -2011,17 +2012,17 @@ namespace Forays{
 				}
 			}
 			if(path.Count > 0){
-				bool monsters_visible = false;
+				/*bool monsters_visible = false;
 				foreach(Actor a in M.AllActors()){
 					if(a != this && CanSee(a) && HasLOS(a.row,a.col)){ //check LOS, prevents detected mobs from stopping you
-						if(!a.Is(ActorType.CARNIVOROUS_BRAMBLE,ActorType.MUD_TENTACLE) || DistanceFrom(a) <= 2){
+						if(!a.Is(ActorType.CARNIVOROUS_BRAMBLE,ActorType.MUD_TENTACLE) || M.tile[path[0]].DistanceFrom(a) <= 1){
 							monsters_visible = true;
 						}
 					}
-				}
-				if(!monsters_visible){
-					if(Console.KeyAvailable){
-						Console.ReadKey(true);
+				}*/
+				if(!NextStepIsDangerous(M.tile[path[0]])){
+					if(Global.KeyIsAvailable()){
+						Global.ReadKey();
 						Interrupt();
 					}
 					else{
@@ -2042,7 +2043,7 @@ namespace Forays{
 			}
 			if(HasAttr(AttrType.RUNNING)){
 				Tile next = TileInDirection(attrs[AttrType.RUNNING]);
-				bool danger = false;
+				/*bool danger = false;
 				foreach(Tile t in next.TilesWithinDistance(3)){
 					if(t.Is(TileType.POISON_GAS_VENT)){
 						danger = true;
@@ -2079,8 +2080,8 @@ namespace Forays{
 							}
 						}
 					}
-				}
-				if(!danger && !Console.KeyAvailable){
+				}*/
+				if(!NextStepIsDangerous(next) && !Global.KeyIsAvailable()){
 					if(attrs[AttrType.RUNNING] == 5){
 						bool recover = false;
 						if(HasFeat(FeatType.ENDURING_SOUL) && curhp % 10 != 0){
@@ -2167,8 +2168,8 @@ namespace Forays{
 					}
 				}
 				else{
-					if(Console.KeyAvailable){
-						Console.ReadKey(true);
+					if(Global.KeyIsAvailable()){
+						Global.ReadKey();
 					}
 					attrs[AttrType.RUNNING] = 0;
 					attrs[AttrType.WAITING] = 0;
@@ -2280,9 +2281,9 @@ namespace Forays{
 							}
 						}
 					}
-					if(monsters_visible || Console.KeyAvailable){
-						if(Console.KeyAvailable){
-							Console.ReadKey(true);
+					if(monsters_visible || Global.KeyIsAvailable()){
+						if(Global.KeyIsAvailable()){
+							Global.ReadKey();
 						}
 						if(monsters_visible){
 							attrs[AttrType.RESTING] = 0;
@@ -2313,18 +2314,19 @@ namespace Forays{
 				Help.TutorialTip(TutorialTopic.Attacking);
 				Cursor();
 			}
-			ConsoleKeyInfo command = Console.ReadKey(true);
+			MouseUI.IgnoreMouseMovement = false;
+			ConsoleKeyInfo command = Global.ReadKey();
 			/*ConsoleKeyInfo command;
 			bool command_entered = false;
 			while(!command_entered){
-				if(Console.KeyAvailable){
-					command = Console.ReadKey(true);
+				if(Global.KeyPressed){
+					command = Global.ReadKey();
 					command_entered = true;
 					break;
 				}
 				Screen.AnimateCellNonBlocking(row+Global.MAP_OFFSET_ROWS,col+Global.MAP_OFFSET_COLS,new colorchar('@',Color.DarkGray),200);
-				if(Console.KeyAvailable){
-					command = Console.ReadKey(true);
+				if(Global.KeyPressed){
+					command = Global.ReadKey();
 					command_entered = true;
 					break;
 				}
@@ -2805,20 +2807,25 @@ namespace Forays{
 								}
 							}
 						}
+						MouseUI.PushButtonMap(MouseMode.YesNoPrompt);
+						MouseUI.CreateButton(ConsoleKey.Y,false,2,Global.MAP_OFFSET_COLS + 22,1,2);
+						MouseUI.CreateButton(ConsoleKey.N,false,2,Global.MAP_OFFSET_COLS + 25,1,2);
 						B.DisplayNow("Travel to the stairs? (y/n): ");
-						Console.CursorVisible = true;
+						Screen.CursorVisible = true;
 						bool done = false;
 						while(!done){
-							command = Console.ReadKey(true);
+							command = Global.ReadKey();
 							switch(command.KeyChar){
 							case 'y':
 							case 'Y':
 							case '>':
 							case (char)13:
 								done = true;
+								MouseUI.PopButtonMap();
 								break;
 							default:
 								Q0();
+								MouseUI.PopButtonMap();
 								return;
 							}
 						}
@@ -2866,7 +2873,7 @@ namespace Forays{
 				if(FrozenThisTurn()){
 					break;
 				}
-				Console.CursorVisible = false;
+				Screen.CursorVisible = false;
 				if(!interrupted_path.BoundsCheck(M.tile)){
 					B.DisplayNow("Move cursor to choose destination, then press Enter. ");
 				}
@@ -3108,19 +3115,21 @@ namespace Forays{
 						sel.description_requested = true;
 					}
 					if(sel.value != -1 && sel.description_requested){
-						Console.CursorVisible = false;
+						MouseUI.PushButtonMap();
+						MouseUI.AutomaticButtonsFromStrings = true;
+						Screen.CursorVisible = false;
 						colorchar[,] screen = Screen.GetCurrentScreen();
 						for(int letter=0;letter<inv.Count;++letter){
 							Screen.WriteMapChar(letter+1,1,(char)(letter+'a'),Color.DarkCyan);
 						}
-						List<colorstring> box = ItemDescriptionBox(inv[sel.value],false,31);
+						List<colorstring> box = ItemDescriptionBox(inv[sel.value],false,false,31);
 						int i = (Global.SCREEN_H - box.Count) / 2;
 						int j = (Global.SCREEN_W - box[0].Length()) / 2;
 						foreach(colorstring cs in box){
 							Screen.WriteString(i,j,cs);
 							++i;
 						}
-						switch(ConvertInput(Console.ReadKey(true))){
+						switch(ConvertInput(Global.ReadKey())){
 						case 'a':
 							ch = 'a';
 							sel.description_requested = false;
@@ -3134,6 +3143,8 @@ namespace Forays{
 							sel.description_requested = false;
 							break;
 						}
+						MouseUI.PopButtonMap();
+						MouseUI.AutomaticButtonsFromStrings = false;
 						if(sel.description_requested){
 							Screen.WriteArray(0,0,screen);
 						}
@@ -3141,16 +3152,10 @@ namespace Forays{
 							M.RedrawWithStrings(); //this will break if the box goes off the map, todo
 							break;
 						}
-						Console.CursorVisible = true;
+						Screen.CursorVisible = true;
 					}
 					else{
 						break;
-						if(sel.value != -1 && !sel.description_requested){
-							break;
-						}
-						else{ //value == -1
-
-						}
 					}
 				}
 				if(sel.value == -1){
@@ -3448,7 +3453,7 @@ namespace Forays{
 						while(num != -1){
 							num = SelectItem("In your pack: ",true);
 							if(num != -1){
-								Console.CursorVisible = false;
+								Screen.CursorVisible = false;
 								colorchar[,] screen = Screen.GetCurrentScreen();
 								for(int letter=0;letter<inv.Count;++letter){
 									Screen.WriteMapChar(letter+1,1,(char)(letter+'a'),Color.DarkCyan);
@@ -3460,7 +3465,7 @@ namespace Forays{
 									Screen.WriteString(i,j,cs);
 									++i;
 								}
-								switch(ConvertInput(Console.ReadKey(true))){
+								switch(ConvertInput(Global.ReadKey())){
 								case 'a':
 									ch = 'a';
 									break;
@@ -3478,7 +3483,7 @@ namespace Forays{
 									M.RedrawWithStrings(); //this will break if the box goes off the map, todo
 									break;
 								}
-								Console.CursorVisible = true;
+								Screen.CursorVisible = true;
 							}
 						}
 						if(num == -1){
@@ -4034,17 +4039,20 @@ namespace Forays{
 				}
 				break;
 			case 'm':
-				Console.CursorVisible = false;
+				MouseUI.PushButtonMap();
+				Screen.CursorVisible = false;
 				Screen.MapDrawWithStrings(M.last_seen,0,0,ROWS,COLS);
 				//B.DisplayNow("Map of level " + M.current_level + ". Press any key to continue. ");
 				B.DisplayNow("Map of dungeon level " + M.current_level + ": ");
-				Console.CursorVisible = true;
-				Console.ReadKey(true);
+				Screen.CursorVisible = true;
+				Global.ReadKey();
+				MouseUI.PopButtonMap();
 				M.RedrawWithStrings();
 				Q0();
 				break;
 			case 'p':
 			{
+				MouseUI.PushButtonMap();
 				Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
 				int i = 1;
 				foreach(string s in B.GetMessages()){
@@ -4053,12 +4061,13 @@ namespace Forays{
 				}
 				Screen.WriteMapString(21,0,"".PadRight(COLS,'-'));
 				B.DisplayNow("Previous messages: ");
-				Console.CursorVisible = true;
-				Console.ReadKey(true);
+				Screen.CursorVisible = true;
+				Global.ReadKey();
 				if(HasAttr(AttrType.DETECTING_MOVEMENT) && previous_footsteps.Count > 0){
 					M.Draw();
 					Screen.AnimateMapCells(previous_footsteps,new colorchar('!',Color.Red),150);
 				}
+				MouseUI.PopButtonMap();
 				Q0();
 				break;
 			}
@@ -4094,6 +4103,7 @@ namespace Forays{
 			}
 			case '\\':
 			{
+				MouseUI.PushButtonMap();
 				List<colorstring> potions = new List<colorstring>();
 				List<colorstring> scrolls = new List<colorstring>();
 				List<colorstring> orbs = new List<colorstring>();
@@ -4155,18 +4165,21 @@ namespace Forays{
 					++line;
 				}
 				B.DisplayNow("Discovered item types: ");
-				Console.CursorVisible = true;
-				Console.ReadKey(true);
+				Screen.CursorVisible = true;
+				Global.ReadKey();
+				MouseUI.PopButtonMap();
 				Q0();
 				break;
 			}
 			case 'O':
 			case '=':
 			{
+				MouseUI.PushButtonMap();
 				for(bool done=false;!done;){
 					List<string> ls = new List<string>();
 					ls.Add("Disable wall sliding".PadRight(58) + (Global.Option(OptionType.NO_WALL_SLIDING)? "yes ":"no ").PadLeft(4));
 					ls.Add("Automatically pick up items (if safe)".PadRight(58) + (Global.Option(OptionType.AUTOPICKUP)? "yes ":"no ").PadLeft(4));
+					ls.Add("Hide the path shown by mouse movement".PadRight(58) + (!MouseUI.VisiblePath? "yes ":"no ").PadLeft(4));
 					ls.Add("Use top-row numbers for movement".PadRight(58) + (Global.Option(OptionType.TOP_ROW_MOVEMENT)? "yes ":"no ").PadLeft(4));
 					ls.Add("Never show tutorial tips".PadRight(58) + (Global.Option(OptionType.NEVER_DISPLAY_TIPS)? "yes ":"no ").PadLeft(4));
 					ls.Add("Reset tutorial tips before each game".PadRight(58) + (Global.Option(OptionType.ALWAYS_RESET_TIPS)? "yes ":"no ").PadLeft(4));
@@ -4174,8 +4187,8 @@ namespace Forays{
 						ls.Add("Attempt to fix display glitches on certain terminals".PadRight(COLS));
 					}*/
 					Select("Options: ",ls,true,false,false);
-					Console.CursorVisible = true;
-					ch = ConvertInput(Console.ReadKey(true));
+					Screen.CursorVisible = true;
+					ch = ConvertInput(Global.ReadKey());
 					switch(ch){
 					case 'a':
 						Global.Options[OptionType.NO_WALL_SLIDING] = !Global.Option(OptionType.NO_WALL_SLIDING);
@@ -4184,15 +4197,18 @@ namespace Forays{
 						Global.Options[OptionType.AUTOPICKUP] = !Global.Option(OptionType.AUTOPICKUP);
 						break;
 					case 'c':
-						Global.Options[OptionType.TOP_ROW_MOVEMENT] = !Global.Option(OptionType.TOP_ROW_MOVEMENT);
+						MouseUI.VisiblePath = !MouseUI.VisiblePath;
 						break;
 					case 'd':
-						Global.Options[OptionType.NEVER_DISPLAY_TIPS] = !Global.Option(OptionType.NEVER_DISPLAY_TIPS);
+						Global.Options[OptionType.TOP_ROW_MOVEMENT] = !Global.Option(OptionType.TOP_ROW_MOVEMENT);
 						break;
 					case 'e':
+						Global.Options[OptionType.NEVER_DISPLAY_TIPS] = !Global.Option(OptionType.NEVER_DISPLAY_TIPS);
+						break;
+					case 'f':
 						Global.Options[OptionType.ALWAYS_RESET_TIPS] = !Global.Option(OptionType.ALWAYS_RESET_TIPS);
 						break;
-					/*case 'f':
+					/*case 'g':
 						if(Global.LINUX){
 							colorchar[,] screen = Screen.GetCurrentScreen();
 							colorchar cch = new colorchar('@',Color.White);
@@ -4215,6 +4231,7 @@ namespace Forays{
 						break;
 					}
 				}
+				MouseUI.PopButtonMap();
 				Q0();
 				break;
 			}
@@ -4227,7 +4244,8 @@ namespace Forays{
 			}
 			case '-':
 			{
-				Console.CursorVisible = false;
+				MouseUI.PushButtonMap();
+				Screen.CursorVisible = false;
 				List<string> commandhelp = Help.HelpText(HelpTopic.Commands);
 				commandhelp.RemoveRange(0,2);
 				Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
@@ -4236,8 +4254,9 @@ namespace Forays{
 				}
 				Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
 				B.DisplayNow("Commands: ");
-				Console.CursorVisible = true;
-				Console.ReadKey(true);
+				Screen.CursorVisible = true;
+				Global.ReadKey();
+				MouseUI.PopButtonMap();
 				Q0();
 				break;
 			}
@@ -4250,7 +4269,9 @@ namespace Forays{
 				ls.Add("Abandon character and quit game");
 				ls.Add("Quit game immediately - don't save anything");
 				ls.Add("Continue playing");
-				Console.CursorVisible = true;
+				bool no_close = GLGame.NoClose;
+				GLGame.NoClose = false;
+				Screen.CursorVisible = true;
 				switch(Select("Quit? ",ls)){
 				case 0:
 					Global.GAME_OVER = true;
@@ -4280,8 +4301,48 @@ namespace Forays{
 				if(!Global.SAVING){
 					Q0();
 				}
+				GLGame.NoClose = no_close;
 				break;
 			}
+			case 'v':
+				if(viewing_more_commands){
+					viewing_more_commands = false;
+					MouseUI.PopButtonMap();
+					MouseUI.PushButtonMap(MouseMode.Map);
+					MouseUI.CreateStatsButton(ConsoleKey.I,false,12,1);
+					MouseUI.CreateStatsButton(ConsoleKey.E,false,13,1);
+					MouseUI.CreateStatsButton(ConsoleKey.C,false,14,1);
+					MouseUI.CreateStatsButton(ConsoleKey.T,false,15,1);
+					MouseUI.CreateStatsButton(ConsoleKey.Tab,false,16,1);
+					MouseUI.CreateStatsButton(ConsoleKey.R,false,17,1);
+					MouseUI.CreateStatsButton(ConsoleKey.A,false,18,1);
+					MouseUI.CreateStatsButton(ConsoleKey.G,false,19,1);
+					MouseUI.CreateStatsButton(ConsoleKey.F,false,20,1);
+					MouseUI.CreateStatsButton(ConsoleKey.S,false,21,1);
+					MouseUI.CreateStatsButton(ConsoleKey.Z,false,22,1);
+					MouseUI.CreateStatsButton(ConsoleKey.X,false,23,1);
+					MouseUI.CreateStatsButton(ConsoleKey.V,false,24,1);
+					MouseUI.CreateStatsButton(ConsoleKey.E,false,7,2);
+					MouseUI.CreateMapButton(ConsoleKey.P,false,0,3);
+				}
+				else{
+					viewing_more_commands = true;
+					MouseUI.PopButtonMap();
+					MouseUI.PushButtonMap(MouseMode.Map);
+					MouseUI.CreateStatsButton(ConsoleKey.O,false,12,1);
+					MouseUI.CreateStatsButton(ConsoleKey.W,false,13,1);
+					MouseUI.CreateStatsButton(ConsoleKey.X,true,14,1);
+					MouseUI.CreateStatsButton(ConsoleKey.OemPeriod,true,15,1);
+					MouseUI.CreateStatsButton(ConsoleKey.M,false,16,1);
+					MouseUI.CreateStatsButton(ConsoleKey.Oem5,false,17,1); //backslash
+					MouseUI.CreateStatsButton(ConsoleKey.OemPlus,false,18,1);
+					MouseUI.CreateStatsButton(ConsoleKey.Q,false,19,1);
+					MouseUI.CreateStatsButton(ConsoleKey.V,false,24,1);
+					MouseUI.CreateStatsButton(ConsoleKey.E,false,7,2);
+					MouseUI.CreateMapButton(ConsoleKey.P,false,0,3);
+				}
+				Q0();
+				break;
 			case '~': //debug mode 
 				if(false){
 					List<string> l = new List<string>();
@@ -4364,7 +4425,7 @@ namespace Forays{
 								}
 							}
 						}
-						Console.ReadKey(true);*/
+						Global.ReadKey();*/
 						for(int i=0;i<ROWS;++i){
 							//Screen.WriteMapString(i,0,Global.GenerateCharacterName().PadToMapSize());
 							Screen.WriteMapString(i,0,Item.RandomItem().ToString().PadToMapSize());
@@ -4390,16 +4451,16 @@ namespace Forays{
 								}
 							}
 						}*/
-						Console.ReadKey(true);
+						Global.ReadKey();
 						Q0();
 						break;
 					}
 					case 3:
 					{
-						/*ConsoleKeyInfo command2 = Console.ReadKey(true);
-						Console.SetCursorPosition(14,14);
+						/*ConsoleKeyInfo command2 = Global.ReadKey();
+						Screen.SetCursorPosition(14,14);
 						Console.Write(command2.Key);
-						Console.ReadKey(true);*/
+						Global.ReadKey();*/
 						/*List<Tile> line = GetTarget(-1,-1);
 						if(line != null){
 							Tile t = line.Last();
@@ -4407,7 +4468,7 @@ namespace Forays{
 								t.AddOpaqueFeature(FeatureType.FOG);
 							}
 						}*/
-						M.SpawnMob(ActorType.SPELLMUDDLE_PIXIE);
+						M.SpawnMob(ActorType.LUMINOUS_AVENGER);
 						/*foreach(Actor a in M.AllActors()){
 							if(a.type == ActorType.WARG){
 								a.attrs[AttrType.WANDERING] = 1;
@@ -4419,7 +4480,7 @@ namespace Forays{
 					}
 					case 4:
 						{
-						Console.CursorVisible = false;
+						Screen.CursorVisible = false;
 						colorchar cch;
 						cch.c = ' ';
 						cch.color = Color.Black;
@@ -4428,7 +4489,7 @@ namespace Forays{
 							t.seen = false;
 							Screen.WriteMapChar(t.row,t.col,cch);
 						}
-						Console.CursorVisible = true;
+						Screen.CursorVisible = true;
 						Q0();
 						break;
 						}
@@ -4625,7 +4686,7 @@ namespace Forays{
 						}
 						Q.Add(new Event(area,100,EventType.POPPIES));*/
 						//tile().Toggle(null,TileType.TOMBSTONE);
-						//Console.ReadKey(true);
+						//Global.ReadKey();
 						List<string> movement = new List<string>{"is immobile","moves quickly","moves slowly"};
 						List<string> ability = new List<string>{"can step back after attacking","moves erratically","flies","can use an aggressive stance","uses a ranged attack","uses a burst attack","lunges","has a poisonous attack","drains life","has a powerful but slow attack","grabs its targets","has a knockback attack","has a slowing attack","has a silencing attack","can steal items","explodes when defeated","stays at range",
 						"sidesteps when it attacks","has a paralyzing attack","has a stunning attack","is stealthy","appears with others of its type","carries a light source","is invisible in darkness","disrupts nearby spells","regenerates","comes back after death","wears armor","has heightened senses","has hard skin that can blunt edged weapons","casts spells","can reduce its target's attack power","can burrow"};
@@ -4745,7 +4806,7 @@ namespace Forays{
 						foreach(Actor a in M.AllActors()){
 							Screen.WriteMapChar(a.row,a.col,new colorchar(a.color,Color.Black,a.symbol));
 						}
-						Console.ReadKey(true);
+						Global.ReadKey();
 						Q0();
 						break;
 					case 11:
@@ -4798,7 +4859,7 @@ namespace Forays{
 								}
 							}
 						}
-						Console.ReadKey(true);
+						Global.ReadKey();
 						for(int i=0;i<ROWS;++i){
 							for(int j=0;j<COLS;++j){
 								pos p = new pos(i,j);
@@ -4811,7 +4872,7 @@ namespace Forays{
 								}
 							}
 						}
-						Console.ReadKey(true);*/
+						Global.ReadKey();*/
 						//
 						//
 						/*level = 10;
@@ -4976,7 +5037,7 @@ namespace Forays{
 							tile().inv = Item.Create(ConsumableType.STONEFORM,row,col);
 							TileInDirection(8).inv = Item.Create(ConsumableType.ENCHANTMENT,-1,-1);
 							B.Add("You feel something roll beneath your feet. ");
-							magic_trinkets.AddUnique(MagicTrinketType.BOOTS_OF_GRIPPING);
+							magic_trinkets.Add(MagicTrinketType.BOOTS_OF_GRIPPING);
 						}
 						Q0();
 						break;
@@ -11866,7 +11927,7 @@ namespace Forays{
 				if(!B.YesOrNoPrompt("Really exhaust yourself to cast this spell?")){
 					return false;
 				}
-				Console.CursorVisible = false;
+				Screen.CursorVisible = false;
 			}
 			Tile t = null;
 			List<Tile> line = null;
@@ -12379,6 +12440,9 @@ namespace Forays{
 							foreach(pos p in frame){
 								Screen.WriteMapChar(p.row,p.col,'*',Color.RandomLightning);
 							}
+							if(Screen.GLMode){
+								Game.gl.Update();
+							}
 							Thread.Sleep(50);
 							frame = frames[i];
 						}
@@ -12485,7 +12549,7 @@ namespace Forays{
 						B.Add(You("cast") + " passage. ",this);
 						colorchar ch = new colorchar(Color.Cyan,'!');
 						if(this == player){
-							Console.CursorVisible = false;
+							Screen.CursorVisible = false;
 							switch(DirectionOf(t)){
 							case 8:
 							case 2:
@@ -12506,7 +12570,7 @@ namespace Forays{
 						}
 						List<Tile> tiles = new List<Tile>();
 						List<colorchar> memlist = new List<colorchar>();
-						Console.CursorVisible = false;
+						Screen.CursorVisible = false;
 						Tile last_wall = null;
 						while(!t.passable){
 							if(t.row == 0 || t.row == ROWS-1 || t.col == 0 || t.col == COLS-1){
@@ -12516,6 +12580,9 @@ namespace Forays{
 								tiles.Add(t);
 								memlist.Add(Screen.MapChar(t.row,t.col));
 								Screen.WriteMapChar(t.row,t.col,ch);
+								if(Screen.GLMode){
+									Game.gl.Update();
+								}
 								Thread.Sleep(35);
 							}
 							last_wall = t;
@@ -12532,6 +12599,9 @@ namespace Forays{
 									int idx = 0;
 									foreach(Tile tile in tiles){
 										Screen.WriteMapChar(tile.row,tile.col,memlist[idx++]);
+										if(Screen.GLMode){
+											Game.gl.Update();
+										}
 										Thread.Sleep(35);
 									}
 								}
@@ -12561,6 +12631,9 @@ namespace Forays{
 										int idx = 0;
 										foreach(Tile tile in tiles){
 											Screen.WriteMapChar(tile.row,tile.col,memlist[idx++]);
+											if(Screen.GLMode){
+												Game.gl.Update();
+											}
 											Thread.Sleep(35);
 										}
 									}
@@ -12576,6 +12649,9 @@ namespace Forays{
 								int idx = 0;
 								foreach(Tile tile in tiles){
 									Screen.WriteMapChar(tile.row,tile.col,memlist[idx++]);
+									if(Screen.GLMode){
+										Game.gl.Update();
+									}
 									Thread.Sleep(35);
 								}
 								B.Add("The passage is blocked. ",this);
@@ -13030,6 +13106,9 @@ namespace Forays{
 												Screen.WriteMapChar(current_row,current_col,mem[current_row,current_col]);
 												current_row = t2.row;
 												current_col = t2.col;
+												if(Screen.GLMode){
+													Game.gl.Update();
+												}
 												Thread.Sleep(20);
 											}
 										}
@@ -13440,6 +13519,47 @@ namespace Forays{
 			}
 			attrs[AttrType.AUTOEXPLORE] = 0;
 		}
+		public bool NextStepIsDangerous(Tile next){
+			bool danger = false;
+			foreach(Tile t in next.TilesWithinDistance(3)){
+				if(t.Is(TileType.POISON_GAS_VENT)){
+					danger = true;
+					break;
+				}
+				if(t.inv != null && t.inv.type == ConsumableType.BLAST_FUNGUS){
+					danger = true;
+					break;
+				}
+				if(t.Is(TileType.FIRE_GEYSER) && next.DistanceFrom(t) <= 2){
+					danger = true;
+					break;
+				}
+				if(t.Is(FeatureType.GRENADE,FeatureType.FIRE) && next.DistanceFrom(t) <= 1){
+					danger = true;
+					break;
+				}
+			}
+			if(next.Is(TileType.POPPY_FIELD,TileType.GRAVE_DIRT) || next.Is(FeatureType.POISON_GAS,FeatureType.SPORES)){
+				danger = true;
+			}
+			if(next.IsKnownTrap() && (HasAttr(AttrType.DESCENDING) || !HasAttr(AttrType.FLYING))){
+				danger = true;
+			}
+			if(HasAttr(AttrType.BURNING,AttrType.POISONED,AttrType.ACIDIFIED)){
+				danger = true;
+			}
+			if(!danger){
+				foreach(Actor a in M.AllActors()){
+					if(a != this && CanSee(a) && HasLOS(a)){
+						if(!a.Is(ActorType.CARNIVOROUS_BRAMBLE,ActorType.MUD_TENTACLE) || next.DistanceFrom(a) <= 1){
+							danger = true;
+							break;
+						}
+					}
+				}
+			}
+			return danger;
+		}
 		public bool CollideWith(Tile t){
 			//B.Add(You("collide") + " with " + t.the_name + ". ",this);
 			if(t.Is(TileType.FIREPIT) && !t.Is(FeatureType.SLIME)){
@@ -13643,7 +13763,7 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static List<colorstring> ItemDescriptionBox(Item item,bool lookmode,int max_string_length){
+		public static List<colorstring> ItemDescriptionBox(Item item,bool lookmode,bool mouselook,int max_string_length){
 			List<string> text = item.Description().GetWordWrappedList(max_string_length);
 			Color box_edge_color = Color.DarkGreen;
 			Color box_corner_color = Color.Green;
@@ -13657,33 +13777,37 @@ namespace Forays{
 					widest = s.Length;
 				}
 			}
-			if(!lookmode && item.Name(true).Length > widest){
+			if((!lookmode || mouselook) && item.Name(true).Length > widest){
 				widest = item.Name(true).Length;
 			}
 			widest += 2; //one space on each side
 			List<colorstring> box = new List<colorstring>();
 			box.Add(new colorstring("+",box_corner_color,"".PadRight(widest,'-'),box_edge_color,"+",box_corner_color));
-			if(!lookmode){
+			if(!lookmode || mouselook){
 				box.Add(new colorstring("|",box_edge_color) + item.Name(true).PadOuter(widest).GetColorString(Color.White) + new colorstring("|",box_edge_color));
 				box.Add(new colorstring("|",box_edge_color,"".PadRight(widest),Color.Gray,"|",box_edge_color));
 			}
 			foreach(string s in text){
 				box.Add(new colorstring("|",box_edge_color) + s.PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
 			}
-			box.Add(new colorstring("|",box_edge_color,"".PadRight(widest),Color.Gray,"|",box_edge_color));
-			if(lookmode){
-				box.Add(new colorstring("|",box_edge_color) + "[=] Hide description".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
-			}
-			else{
-				box.Add(new colorstring("|",box_edge_color) + "[a]pply  [f]ling  [d]rop".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
-				//box.Add(new colorstring("|",box_edge_color) + "[Press any other key to cancel]".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
+			if(!mouselook){
+				box.Add(new colorstring("|",box_edge_color,"".PadRight(widest),Color.Gray,"|",box_edge_color));
+				if(lookmode){
+					box.Add(new colorstring("|",box_edge_color) + "[=] Hide description".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
+				}
+				else{
+					box.Add(new colorstring("|",box_edge_color) + "[a]pply  [f]ling  [d]rop".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
+					//box.Add(new colorstring("|",box_edge_color) + "[Press any other key to cancel]".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
+				}
 			}
 			box.Add(new colorstring("+",box_corner_color,"".PadRight(widest,'-'),box_edge_color,"+",box_corner_color));
 			return box;
 		}
 		public void DisplayStats(){ DisplayStats(false); }
 		public void DisplayStats(bool cyan_letters){
-			Console.CursorVisible = false;
+			bool buttons = MouseUI.AutomaticButtonsFromStrings;
+			MouseUI.AutomaticButtonsFromStrings = false;
+			Screen.CursorVisible = false;
 			Screen.WriteStatsString(2,0,"HP: ");
 			if(curhp < 50){
 				if(curhp < 20){
@@ -13758,32 +13882,26 @@ namespace Forays{
 					}
 				}
 			}
-			string[] commandhints = new string[]{"[i]nventory ","[e]quipment ","[c]haracter ","[t]orch     ",
-				"Look [Tab]  ","[r]est      ","[a]pply item","[g]et item  ","[f]ling item","[s]hoot bow ",
-				"Cast [z]    ","[w]alk      ","E[x]plore   "};
+			string[] commandhints;
 			List<int> blocked_commands = new List<int>();
-			/*if(Actor.spells_in_order.Count == 0){
-					blocked_commands.Add(10);
-				}
-				if(tile().inv == null){
-					blocked_commands.Add(7);
-				}
-				if(inv.Count == 0){
-					blocked_commands.Add(0);
-					blocked_commands.Add(6);
-					blocked_commands.Add(8);
-				}*/
-			if(attrs[AttrType.RESTING] == -1){
-				blocked_commands.Add(5);
+			if(viewing_more_commands){
+				commandhints = new string[]{"[o]perate   ","[w]alk      ","Travel [X]  ","Descend [>] ",
+					"[m]ap       ","Known [\\]   ","Options [=] ","[q]uit      ","            ","            ",
+					"            ","            ","[v]iew more "};
 			}
-			/*foreach(Actor a in ActorsAtDistance(1)){
-					if(CanSee(a)){
-						blocked_commands.Add(9);
-						break;
-					}
-				}*/
-			if(M.wiz_dark || M.wiz_lite){
-				blocked_commands.Add(3);
+			else{
+				commandhints = new string[]{"[i]nventory ","[e]quipment ","[c]haracter ","[t]orch     ",
+					"Look [Tab]  ","[r]est      ","[a]pply item","[g]et item  ","[f]ling item","[s]hoot bow ",
+					"Cast [z]    ","E[x]plore   ","[v]iew more "};
+				/*commandhints = new string[]{"[i]nventory ","[e]quipment ","[c]haracter ","[t]orch     ",
+					"Look [Tab]  ","[r]est      ","[a]pply item","[g]et item  ","[f]ling item","[s]hoot bow ",
+					"Cast [z]    ","[w]alk      ","E[x]plore   "};*/
+				if(attrs[AttrType.RESTING] == -1){
+					blocked_commands.Add(5);
+				}
+				if(M.wiz_dark || M.wiz_lite){
+					blocked_commands.Add(3);
+				}
 			}
 			Color wordcolor = cyan_letters? Color.Gray : Color.DarkGray;
 			Color lettercolor = cyan_letters? Color.Cyan : Color.DarkCyan;
@@ -13796,9 +13914,11 @@ namespace Forays{
 				}
 			}
 			Screen.ResetColors();
+			MouseUI.AutomaticButtonsFromStrings = buttons;
 		}
 		public int DisplayCharacterInfo(){ return DisplayCharacterInfo(true); }
 		public int DisplayCharacterInfo(bool readkey){
+			MouseUI.PushButtonMap();
 			DisplayStats();
 			for(int i=1;i<ROWS-1;++i){
 				Screen.WriteMapString(i,0,"".PadRight(COLS));
@@ -13887,17 +14007,20 @@ namespace Forays{
 					featlist = featlist + Feat.Name(f);
 				}
 			}
+			MouseUI.AutomaticButtonsFromStrings = true;
 			int currentrow = 8;
 			while(featlist.Length > COLS-7){
 				int currentcol = COLS-8;
 				while(featlist[currentcol] != ','){
 					--currentcol;
 				}
+				Screen.WriteString(currentrow + Global.MAP_OFFSET_ROWS,7 + Global.MAP_OFFSET_COLS,featlist.Substring(0,currentcol+1).GetColorString());
 				Screen.WriteMapString(currentrow,7,featlist.Substring(0,currentcol+1).GetColorString());
 				featlist = featlist.Substring(currentcol+2);
 				++currentrow;
 			}
-			Screen.WriteMapString(currentrow,7,featlist.GetColorString());
+			Screen.WriteString(currentrow + Global.MAP_OFFSET_ROWS,7 + Global.MAP_OFFSET_COLS,featlist.GetColorString());
+			MouseUI.AutomaticButtonsFromStrings = false;
 			Screen.WriteMapString(11,0,"Spells: ");
 			Screen.WriteMapString(11,0,new cstr(catcolor,"Spells"));
 			string spelllist = "";
@@ -13977,7 +14100,7 @@ namespace Forays{
 			}
 			Screen.ResetColors();
 			B.DisplayNow("Character information: ");
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			int num_active_feats = 0;
 			foreach(FeatType feat in Enum.GetValues(typeof(FeatType))){
 				if(HasFeat(feat) && Feat.IsActivated(feat)){
@@ -13985,19 +14108,27 @@ namespace Forays{
 				}
 			}
 			if(readkey){
-				return GetSelection("Character information: ",num_active_feats,false,true,false);
-				//Console.ReadKey(true);
+				int result = GetSelection("Character information: ",num_active_feats,false,true,false);
+				MouseUI.PopButtonMap();
+				return result;
+				//Global.ReadKey();
 			}
 			else{
+				MouseUI.PopButtonMap();
 				return -1;
 			}
 		}
 		public int[] DisplayEquipment(){
+			MouseUI.PushButtonMap();
 			WeaponType new_weapon_type = EquippedWeapon.type;
 			ArmorType new_armor_type = EquippedArmor.type;
 			int selected_magic_trinket_idx = -1;
 			if(magic_trinkets.Count > 0){
 				selected_magic_trinket_idx = R.Roll(magic_trinkets.Count)-1;
+				int i = 0;
+				foreach(MagicTrinketType trinket in magic_trinkets){
+					MouseUI.CreateButton((ConsoleKey)(ConsoleKey.I + i),false,i+1+Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS + 32,1,34);
+				}
 			}
 			Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
 			for(int i=1;i<ROWS-1;++i){
@@ -14006,11 +14137,31 @@ namespace Forays{
 			int line = 1;
 			for(WeaponType w = WeaponType.SWORD;w <= WeaponType.BOW;++w){
 				Screen.WriteMapString(line,6,WeaponOfType(w).EquipmentScreenName());
+				ConsoleKey key = (ConsoleKey)(ConsoleKey.A + line-1);
+				if(w == new_weapon_type){
+					key = ConsoleKey.Enter;
+				}
+				if(magic_trinkets.Count >= line){
+					MouseUI.CreateButton(key,false,line+Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS,1,32);
+				}
+				else{
+					MouseUI.CreateMapButton(key,false,line+Global.MAP_OFFSET_ROWS,1);
+				}
 				++line;
 			}
 			line = 8;
 			for(ArmorType a = ArmorType.LEATHER;a <= ArmorType.FULL_PLATE;++a){
 				Screen.WriteMapString(line,6,ArmorOfType(a).EquipmentScreenName());
+				ConsoleKey key = (ConsoleKey)(ConsoleKey.A + line-3);
+				if(a == new_armor_type){
+					key = ConsoleKey.Enter;
+				}
+				if(magic_trinkets.Count >= line){
+					MouseUI.CreateButton(key,false,line+Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS,1,32);
+				}
+				else{
+					MouseUI.CreateMapButton(key,false,line+Global.MAP_OFFSET_ROWS,1);
+				}
 				++line;
 			}
 			line = 1;
@@ -14152,8 +14303,8 @@ namespace Forays{
 				}
 				if(selected_magic_trinket_idx >= 0){
 					string[] magic_item_desc = MagicTrinket.Description(magic_trinkets[selected_magic_trinket_idx]);
-					Screen.WriteMapString(19,15,magic_item_desc[0].PadRight(50));
-					Screen.WriteMapString(20,15,magic_item_desc[1].PadRight(50));
+					Screen.WriteMapString(19,15,magic_item_desc[0].PadRight(51));
+					Screen.WriteMapString(20,15,magic_item_desc[1].PadRight(51));
 				}
 				else{
 					Screen.WriteMapString(19,15,"(none)");
@@ -14164,16 +14315,18 @@ namespace Forays{
 				else{
 					if((new_weapon != EquippedWeapon && EquippedWeapon.status[EquipmentStatus.STUCK]) || (new_armor != EquippedArmor && EquippedArmor.status[EquipmentStatus.STUCK])){
 						Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
+						MouseUI.RemoveButton(Global.MAP_OFFSET_ROWS+ROWS-1,Global.MAP_OFFSET_COLS);
 					}
 					else{
 						Screen.WriteMapString(ROWS-1,0,"[Enter] to confirm-----".PadLeft(43,'-'));
 						Screen.WriteMapString(ROWS-1,21,new cstr(Color.Magenta,"Enter"));
+						MouseUI.CreateMapButton(ConsoleKey.Enter,false,Global.MAP_OFFSET_ROWS+ROWS-1,1);
 					}
 				}
 				Screen.ResetColors();
 				B.DisplayNow("Your equipment: ");
-				Console.CursorVisible = true;
-				command = Console.ReadKey(true);
+				Screen.CursorVisible = true;
+				command = Global.ReadKey();
 				char ch = ConvertInput(command);
 				switch(ch){
 				case 'a':
@@ -14204,8 +14357,11 @@ namespace Forays{
 						ch = 'e';
 						break;
 					}
-					if((int)ch - (int)'a' != (int)(new_weapon_type)){
-						new_weapon_type = (WeaponType)((int)ch - (int)'a');
+					int num = (int)(ch - 'a');
+					if(num != (int)(new_weapon_type)){
+						MouseUI.GetButton((int)(new_weapon_type)+1+Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS).key = (ConsoleKey)(ConsoleKey.A + (int)new_weapon_type);
+						MouseUI.GetButton(num+1+Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS).key = ConsoleKey.Enter;
+						new_weapon_type = (WeaponType)num;
 					}
 					break;
 				}
@@ -14215,6 +14371,7 @@ namespace Forays{
 				case '*':
 				case '(':
 				case ')':
+				{
 					switch(ch){
 					case '*':
 						ch = 'f';
@@ -14226,10 +14383,14 @@ namespace Forays{
 						ch = 'h';
 						break;
 					}
-					if((int)ch - (int)'f' != (int)(new_armor_type)){
-						new_armor_type = (ArmorType)((int)ch - (int)'f');
+					int num = (int)(ch - 'f');
+					if(num != (int)(new_armor_type)){
+						MouseUI.GetButton((int)(new_armor_type)+8+Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS).key = (ConsoleKey)(ConsoleKey.F + (int)new_armor_type);
+						MouseUI.GetButton(num+8+Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS).key = ConsoleKey.Enter;
+						new_armor_type = (ArmorType)num;
 					}
 					break;
+				}
 				case 'i':
 				case 'j':
 				case 'k':
@@ -14260,6 +14421,7 @@ namespace Forays{
 					break;
 				}
 			}
+			MouseUI.PopButtonMap();
 			return new int[]{(int)new_weapon_type,(int)new_armor_type};
 		}
 		public void IncreaseSkill(SkillType skill){
@@ -14273,6 +14435,11 @@ namespace Forays{
 			if(skills[skill] == 1 || skills[skill] == 6){
 				FeatType feat_chosen = FeatType.NO_FEAT;
 				bool done = false;
+				MouseUI.PushButtonMap();
+				for(int i=0;i<4;++i){
+					MouseUI.CreateMapButton((ConsoleKey)(ConsoleKey.A + i),false,Global.MAP_OFFSET_ROWS + 1 + i*5,5);
+				}
+				MouseUI.CreateButton(ConsoleKey.Oem2,true,Global.MAP_OFFSET_ROWS + ROWS-1,45,1,12);
 				while(!done){
 					Screen.ResetColors();
 					Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
@@ -14288,15 +14455,15 @@ namespace Forays{
 						Screen.WriteMapChar(1+i*5,1,(char)(i+97),lettercolor);
 						Screen.WriteMapString(1+i*5,4,Feat.Name(ft).PadRight(30),featcolor);
 						if(Feat.IsActivated(ft)){
-							Screen.WriteMapString(1+i*5,30,"        Active".PadToMapSize());
+							Screen.WriteMapString(1+i*5,30,"        Active".PadToMapSize(),featcolor);
 						}
 						else{
-							Screen.WriteMapString(1+i*5,30,"        Passive".PadToMapSize());
+							Screen.WriteMapString(1+i*5,30,"        Passive".PadToMapSize(),featcolor);
 						}
 						List<string> desc = Feat.Description(ft);
 						for(int j=0;j<4;++j){
 							if(desc.Count > j){
-								Screen.WriteMapString(2+j+i*5,0,"    " + desc[j].PadRight(64));
+								Screen.WriteMapString(2+j+i*5,0,"    " + desc[j].PadRight(64),featcolor);
 							}
 							else{
 								Screen.WriteMapString(2+j+i*5,0,"".PadRight(66));
@@ -14309,21 +14476,23 @@ namespace Forays{
 						Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'d'));
 						Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
 						Screen.WriteMapString(21,48,new cstr(Color.Magenta,"Enter"));
+						MouseUI.CreateButton(ConsoleKey.Enter,false,Global.MAP_OFFSET_ROWS + ROWS-1,60,1,17);
 					}
 					else{
 						Screen.WriteMapString(21,0,"--Type [a-d] to choose a feat---[?] for help----------------------");
 						Screen.WriteMapChar(21,8,new colorchar(Color.Cyan,'a'));
 						Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'d'));
 						Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
+						MouseUI.RemoveButton(Global.MAP_OFFSET_ROWS + ROWS-1,60);
 					}
 					B.DisplayNow("Your " + Skill.Name(skill) + " skill increases to " + skills[skill] + ". Choose a feat: ");
 					if(!Help.displayed[TutorialTopic.Feats]){
 						Help.TutorialTip(TutorialTopic.Feats,true);
 						B.DisplayNow("Your " + Skill.Name(skill) + " skill increases to " + skills[skill] + ". Choose a feat: ");
 					}
-					Console.CursorVisible = true;
-					command = Console.ReadKey(true);
-					Console.CursorVisible = false;
+					Screen.CursorVisible = true;
+					command = Global.ReadKey();
+					Screen.CursorVisible = false;
 					char ch = ConvertInput(command);
 					switch(ch){
 					case 'a':
@@ -14332,12 +14501,22 @@ namespace Forays{
 					case 'd':
 					{
 						FeatType ft = Feat.OfSkill(skill,(int)(ch-97));
+						int i = (int)(ch - 'a');
 						if(feat_chosen == ft){
 							feat_chosen = FeatType.NO_FEAT;
+							MouseUI.RemoveButton(Global.MAP_OFFSET_ROWS + 1 + i*5,60);
+							MouseUI.CreateMapButton((ConsoleKey)(ConsoleKey.A + i),false,Global.MAP_OFFSET_ROWS + 1 + i*5,5);
 						}
 						else{
 							if(!HasFeat(ft)){
+								if(feat_chosen != FeatType.NO_FEAT){
+									int num = (int)feat_chosen % 4;
+									MouseUI.RemoveButton(Global.MAP_OFFSET_ROWS + 1 + num*5,60);
+									MouseUI.CreateMapButton((ConsoleKey)(ConsoleKey.A + num),false,Global.MAP_OFFSET_ROWS + 1 + num*5,5);
+								}
 								feat_chosen = ft;
+								MouseUI.RemoveButton(Global.MAP_OFFSET_ROWS + 1 + i*5,60);
+								MouseUI.CreateMapButton(ConsoleKey.Enter,false,Global.MAP_OFFSET_ROWS + 1 + i*5,5);
 							}
 						}
 						break;
@@ -14361,6 +14540,7 @@ namespace Forays{
 				if(Feat.IsActivated(feat_chosen)){
 					active_feat_learned = true;
 				}
+				MouseUI.PopButtonMap();
 			}
 			else{
 				learned.Add("Your " + Skill.Name(skill) + " skill increases to " + skills[skill] + ". ");
@@ -14536,10 +14716,10 @@ namespace Forays{
 					Screen.WriteMapChar(21,10,new colorchar(Color.Cyan,'e'));
 					Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
 				}
-				Console.SetCursorPosition(37+Global.MAP_OFFSET_COLS,2);
-				Console.CursorVisible = true;
-				command = Console.ReadKey(true);
-				Console.CursorVisible = false;
+				Screen.SetCursorPosition(37+Global.MAP_OFFSET_COLS,2);
+				Screen.CursorVisible = true;
+				command = Global.ReadKey();
+				Screen.CursorVisible = false;
 				char ch = ConvertInput(command);
 				switch(ch){
 				case 'a':
@@ -14634,9 +14814,9 @@ namespace Forays{
 							Screen.WriteMapChar(21,33,new colorchar(Color.Cyan,'?'));
 							Screen.ResetColors();
 							B.DisplayNow("Choose a " + Skill.Name(chosen_skill) + " feat: ");
-							Console.CursorVisible = true;
-							command = Console.ReadKey(true);
-							Console.CursorVisible = false;
+							Screen.CursorVisible = true;
+							command = Global.ReadKey();
+							Screen.CursorVisible = false;
 							ch = ConvertInput(command);
 							switch(ch){
 							case 'a':
@@ -15041,7 +15221,8 @@ namespace Forays{
 				return "Phantoms are beings of illusion, but real enough to do lasting harm. They vanish at the slightest touch.";
 			}
 		}
-		public static List<colorstring> MonsterDescriptionBox(ActorType type,int max_string_length){
+		public static List<colorstring> MonsterDescriptionBox(Actor a,bool mouselook,int max_string_length){
+			ActorType type = a.type;
 			List<string> text = MonsterDescriptionText(type).GetWordWrappedList(max_string_length);
 			Color box_edge_color = Color.Green;
 			Color box_corner_color = Color.Yellow;
@@ -15052,18 +15233,34 @@ namespace Forays{
 					widest = s.Length;
 				}
 			}
+			if(mouselook){
+				if(a.name.Length > widest){
+					widest = a.name.Length;
+				}
+				if(a.WoundStatus().Length > widest){
+					widest = a.WoundStatus().Length;
+				}
+			}
 			widest += 2; //one space on each side
 			List<colorstring> box = new List<colorstring>();
 			box.Add(new colorstring("+",box_corner_color,"".PadRight(widest,'-'),box_edge_color,"+",box_corner_color));
+			if(mouselook){
+				box.Add(new colorstring("|",box_edge_color) + a.name.PadOuter(widest).GetColorString(Color.White) + new colorstring("|",box_edge_color));
+				box.Add(new colorstring("|",box_edge_color) + a.WoundStatus().PadOuter(widest).GetColorString(Color.White) + new colorstring("|",box_edge_color));
+				box.Add(new colorstring("|",box_edge_color,"".PadRight(widest),Color.Gray,"|",box_edge_color));
+			}
 			foreach(string s in text){
 				box.Add(new colorstring("|",box_edge_color) + s.PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
 			}
-			box.Add(new colorstring("|",box_edge_color,"".PadRight(widest),Color.Gray,"|",box_edge_color));
-			box.Add(new colorstring("|",box_edge_color) + "[=] Hide description".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
+			if(!mouselook){
+				box.Add(new colorstring("|",box_edge_color,"".PadRight(widest),Color.Gray,"|",box_edge_color));
+				box.Add(new colorstring("|",box_edge_color) + "[=] Hide description".PadOuter(widest).GetColorString(text_color) + new colorstring("|",box_edge_color));
+			}
 			box.Add(new colorstring("+",box_corner_color,"".PadRight(widest,'-'),box_edge_color,"+",box_corner_color));
 			return box;
 		}
-		public void FindPath(PhysicalObject o){ path = GetPath(o); }
+		public enum UnknownTilePathingPreference{UnknownTilesAreKnown,UnknownTilesAreClosed,UnknownTilesAreOpen};
+		public void FindPath(PhysicalObject o){ path = GetPath(o); } //todo: probably remove most of these overloads. Give the important versions their own names.
 		public void FindPath(PhysicalObject o,int max_distance){ path = GetPath(o,max_distance); }
 		public void FindPath(PhysicalObject o,int max_distance,bool smart_pathing_near_difficult_terrain){ path = GetPath(o,max_distance,smart_pathing_near_difficult_terrain); }
 		public void FindPath(int r,int c){ path = GetPath(r,c); }
@@ -15074,11 +15271,16 @@ namespace Forays{
 		public List<pos> GetPath(PhysicalObject o,int max_distance,bool smart_pathing_near_difficult_terrain){ return GetPath(o.row,o.col,max_distance,smart_pathing_near_difficult_terrain); }
 		public List<pos> GetPath(int r,int c){ return GetPath(r,c,-1,false); }
 		public List<pos> GetPath(int r,int c,int max_distance){ return GetPath(r,c,max_distance,false); }
-		public List<pos> GetPath(int r,int c,int max_distance,bool smart_pathing_near_difficult_terrain){ return GetPath(r,c,max_distance,smart_pathing_near_difficult_terrain,false); }
-		public List<pos> GetPath(int r,int c,int max_distance,bool smart_pathing_near_difficult_terrain,bool known_tiles_only){
+		public List<pos> GetPath(int r,int c,int max_distance,bool smart_pathing_near_difficult_terrain){ return GetPath(r,c,max_distance,smart_pathing_near_difficult_terrain,false,UnknownTilePathingPreference.UnknownTilesAreKnown); } //todo: this defaults to nondeterministic pathing! check to see whether this is a good idea. (generally, the player should use deterministic and monsters shouldn't, right?)
+		public List<pos> GetPath(int r,int c,int max_distance,bool smart_pathing_near_difficult_terrain,bool deterministic_results,UnknownTilePathingPreference unknown_tile_pref){
 			U.BooleanPositionDelegate is_blocked = x=>{
-				if(known_tiles_only && !M.tile[x].seen){
-					return true;
+				if(!M.tile[x].seen){
+					if(unknown_tile_pref == UnknownTilePathingPreference.UnknownTilesAreOpen && x.BoundsCheck(M.tile,false)){
+						return false;
+					}
+					if(unknown_tile_pref == UnknownTilePathingPreference.UnknownTilesAreClosed){
+						return true;
+					}
 				}
 				if(max_distance != -1 && DistanceFrom(x) > max_distance){
 					return true;
@@ -15092,6 +15294,9 @@ namespace Forays{
 				return true;
 			};
 			U.IntegerPositionDelegate get_cost = x=>{
+				if(unknown_tile_pref == UnknownTilePathingPreference.UnknownTilesAreOpen && !M.tile[x].seen){
+					return 20;
+				}
 				if(HasAttr(AttrType.HUMANOID_INTELLIGENCE) && M.tile[x].Is(TileType.DOOR_C)){
 					return 20;
 				}
@@ -15102,28 +15307,33 @@ namespace Forays{
 					if(M.tile[x].IsKnownTrap()){
 						return 20000;
 					}
-					if(M.tile[x].Is(TileType.POPPY_FIELD)){
-						return 40;
+					if(M.tile[x].Is(TileType.TOMBSTONE) && M.tile[x].color == Color.White){
+						return 20000;
 					}
 					if(M.tile[x].Is(FeatureType.WEB)){
+						return 100; //todo! this list of costs appears in other places, too. Either copy it over, or make a method.
+					}
+					if(M.tile[x].Is(TileType.POPPY_FIELD)){
 						return 50;
 					}
 					if(M.tile[x].Is(TileType.ICE,TileType.GRAVE_DIRT) || M.tile[x].Is(FeatureType.SLIME,FeatureType.OIL)){
-						return 13;
-					}
-					if(M.tile[x].Is(TileType.TOMBSTONE) && M.tile[x].color == Color.White){
-						return 11;
+						return 15;
 					}
 				}
 				return 10;
 			};
-			var dijkstra = M.tile.GetDijkstraMap(is_blocked,get_cost,new List<pos>{new pos(r,c)});
+			var dijkstra = M.tile.GetDijkstraMap(is_blocked,get_cost,new List<pos>{new pos(r,c)},this.p);
 			List<pos> new_path = new List<pos>();
 			pos current_position = this.p;
 			while(true){
 				List<pos> valid = current_position.PositionsAtDistance(1).Where(x=>dijkstra[x].IsValidDijkstraValue() && dijkstra[x] < dijkstra[current_position]).WhereLeast(x=>dijkstra[x]).WhereLeast(x=>x.ApproximateEuclideanDistanceFromX10(current_position));
 				if(valid.Count > 0){
-					current_position = valid.Random();
+					if(deterministic_results){
+						current_position = valid.Last();
+					}
+					else{
+						current_position = valid.Random();
+					}
 					new_path.Add(current_position);
 					if(current_position.row == r && current_position.col == c){
 						return new_path;
@@ -15195,7 +15405,6 @@ namespace Forays{
 				return 10;
 			};
 			var dijkstra = M.tile.GetDijkstraMap(is_blocked,is_target,x=>0,get_cost);
-
 			List<pos> new_path = new List<pos>();
 			pos current_position = this.p;
 			while(true){
@@ -15232,12 +15441,18 @@ namespace Forays{
 		public int GetDirection(bool orth,bool allow_self_targeting){ return GetDirection("Which direction? ",orth,allow_self_targeting); }
 		public int GetDirection(string s){ return GetDirection(s,false,false); }
 		public int GetDirection(string s,bool orth,bool allow_self_targeting){
+			MouseUI.PushButtonMap(MouseMode.Directional);
+			foreach(int dir in U.EightDirections){
+				pos neighbor = p.PosInDir(dir);
+				MouseUI.CreateButton((ConsoleKey)(ConsoleKey.NumPad0 + dir),false,Global.MAP_OFFSET_ROWS + neighbor.row,Global.MAP_OFFSET_COLS + neighbor.col,1,1);
+			}
+			MouseUI.CreateButton(ConsoleKey.NumPad5,false,Global.MAP_OFFSET_ROWS + row,Global.MAP_OFFSET_COLS + col,1,1);
 			B.DisplayNow(s);
 			ConsoleKeyInfo command;
 			char ch;
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			while(true){
-				command = Console.ReadKey(true);
+				command = Global.ReadKey();
 				ch = ConvertInput(command);
 				if(command.KeyChar == '.'){
 					ch = '5';
@@ -15247,28 +15462,33 @@ namespace Forays{
 				if(i>=1 && i<=9){
 					if(i != 5){
 						if(!orth || i%2==0){ //in orthogonal mode, return only even dirs
-							Console.CursorVisible = false;
+							Screen.CursorVisible = false;
+							MouseUI.PopButtonMap();
 							return i;
 						}
 					}
 					else{
 						if(allow_self_targeting){
-							Console.CursorVisible = false;
+							Screen.CursorVisible = false;
+							MouseUI.PopButtonMap();
 							return i;
 						}
 					}
 				}
 				if(ch == (char)27){ //escape
-					Console.CursorVisible = false;
+					Screen.CursorVisible = false;
+					MouseUI.PopButtonMap();
 					return -1;
 				}
 				if(ch == ' '){
-					Console.CursorVisible = false;
+					Screen.CursorVisible = false;
+					MouseUI.PopButtonMap();
 					return -1;
 				}
 			}
 		}
 		public void ChoosePathingDestination(){
+			MouseUI.PushButtonMap(MouseMode.Targeting);
 			ConsoleKeyInfo command;
 			int r = row;
 			int c = col;
@@ -15299,7 +15519,7 @@ namespace Forays{
 				}
 			}
 			PosArray<bool> known_reachable = M.tile.GetFloodFillArray(this.p,false,x=>(M.tile[x].passable || M.tile[x].IsDoorType(false)) && M.tile[x].seen);
-			PosArray<int> distance_to_nearest_known_passable = M.tile.GetDijkstraMap(x=>false,y=>M.tile[y].seen && M.tile[y].passable && !M.tile[y].IsKnownTrap() && known_reachable[y]);
+			PosArray<int> distance_to_nearest_known_passable = M.tile.GetDijkstraMap(x=>false,y=>M.tile[y].seen && (M.tile[y].passable || M.tile[y].IsDoorType(false)) && !M.tile[y].IsKnownTrap() && known_reachable[y]);
 			if(r == row && c == col){
 				B.DisplayNow("Move cursor to choose destination, then press Enter. ");
 			}
@@ -15420,14 +15640,14 @@ namespace Forays{
 						}
 					}
 				}
-				Console.CursorVisible = false;
+				Screen.CursorVisible = false;
 				Tile nearest = M.tile[r,c];
 				if(!nearest.seen || nearest.IsKnownTrap() || !nearest.TilesWithinDistance(1).Any(x=>x.passable) || !known_reachable[nearest.p]){
-					nearest = nearest.TilesAtDistance(distance_to_nearest_known_passable[r,c]).Where(x=>x.seen && x.passable && !x.IsKnownTrap() && known_reachable[x.p]).WhereLeast(x=>x.ApproximateEuclideanDistanceFromX10(r,c)).Last();
+					nearest = nearest.TilesAtDistance(distance_to_nearest_known_passable[r,c]).Where(x=>x.seen && (x.passable || x.IsDoorType(false)) && !x.IsKnownTrap() && known_reachable[x.p]).WhereLeast(x=>x.ApproximateEuclideanDistanceFromX10(r,c)).Last();
 				}
 				if(nearest != null){
 					line.Clear();
-					List<pos> temp = GetPath(nearest.row,nearest.col,-1,true,true);
+					List<pos> temp = GetPath(nearest.row,nearest.col,-1,true,true,UnknownTilePathingPreference.UnknownTilesAreClosed);
 					foreach(pos p in temp){ //i should switch 'line' over to using positions anyway
 						line.Add(M.tile[p]);
 					}
@@ -15476,8 +15696,8 @@ namespace Forays{
 				oldline = new List<Tile>(line);
 				first_iteration = false;
 				M.tile[r,c].Cursor();
-				Console.CursorVisible = true;
-				command = Console.ReadKey(true);
+				Screen.CursorVisible = true;
+				command = Global.ReadKey();
 				char ch = ConvertInput(command);
 				ch = ConvertVIKeys(ch);
 				int move_value = 1;
@@ -15613,7 +15833,7 @@ namespace Forays{
 				case (char)13:
 					if(line.Count > 0){
 						if(nearest != null){
-							path = GetPath(nearest.row,nearest.col,-1,true,true);
+							path = GetPath(nearest.row,nearest.col,-1,true,true,UnknownTilePathingPreference.UnknownTilesAreClosed);
 						}
 						else{
 							path = new List<pos>();
@@ -15629,6 +15849,10 @@ namespace Forays{
 					done = true;
 					break;
 				default:
+					if(command.Key == ConsoleKey.F1){
+						r = MouseUI.LastRow - Global.MAP_OFFSET_ROWS;
+						c = MouseUI.LastCol - Global.MAP_OFFSET_COLS;
+					}
 					break;
 				}
 				if(r < minrow){
@@ -15644,11 +15868,12 @@ namespace Forays{
 					c = maxcol;
 				}
 				if(done){
-					Console.CursorVisible = false;
+					Screen.CursorVisible = false;
 					foreach(Tile t in line){
 						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
 					}
-					Console.CursorVisible = true;
+					Screen.CursorVisible = true;
+					MouseUI.PopButtonMap();
 				}
 			}
 		}
@@ -15659,6 +15884,8 @@ namespace Forays{
 		}
 		public ItemSelection SelectItem(string message){ return SelectItem(message,false); }
 		public ItemSelection SelectItem(string message,bool never_redraw_map){
+			MouseUI.PushButtonMap();
+			MouseUI.AutomaticButtonsFromStrings = true;
 			colorstring top_border = "".PadRight(COLS,'-').GetColorString();
 			colorstring bottom_border = ("------Space left: " + (Global.MAX_INVENTORY_SIZE - InventoryCount()).ToString().PadRight(7,'-') + "[?] for help").PadRight(COLS,'-').GetColorString();
 			List<colorstring> strings = InventoryList().GetColorStrings();
@@ -15689,32 +15916,40 @@ namespace Forays{
 				if(no_ask){
 					B.DisplayNow(message);
 					result.value = -1;
+					MouseUI.PopButtonMap();
+					MouseUI.AutomaticButtonsFromStrings = false;
 					return result;
 				}
 				else{
 					result = GetItemSelection(message,strings.Count,no_cancel,easy_cancel,help_key);
 					if(result.value == -2){
+						MouseUI.AutomaticButtonsFromStrings = false;
 						Help.DisplayHelp(help_topic);
+						MouseUI.AutomaticButtonsFromStrings = true;
 					}
 					else{
 						if(!never_redraw_map && result.value != -1 && !result.description_requested){
 							M.RedrawWithStrings();
 						}
+						MouseUI.PopButtonMap();
+						MouseUI.AutomaticButtonsFromStrings = false;
 						return result;
 					}
 				}
 			}
 			result.value = -1;
+			MouseUI.PopButtonMap();
+			MouseUI.AutomaticButtonsFromStrings = false;
 			return result;
 		}
 		public ItemSelection GetItemSelection(string s,int count,bool no_cancel,bool easy_cancel,bool help_key){
 			ItemSelection result = new ItemSelection();
 			B.DisplayNow(s);
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			ConsoleKeyInfo command;
 			char ch;
 			while(true){
-				command = Console.ReadKey(true);
+				command = Global.ReadKey();
 				ch = ConvertInput(command);
 				int i = ch - 'a';
 				if(i >= 0 && i < count){
@@ -15753,6 +15988,10 @@ namespace Forays{
 		public int Select(string message,string top_border,List<string> strings,bool no_ask,bool no_cancel,bool easy_cancel){ return Select(message,top_border,"".PadLeft(COLS,'-'),strings,no_ask,no_cancel,easy_cancel); }
 		public int Select(string message,string top_border,string bottom_border,List<string> strings){ return Select(message,top_border,bottom_border,strings,false,false,true); }
 		public int Select(string message,string top_border,string bottom_border,List<string> strings,bool no_ask,bool no_cancel,bool easy_cancel){
+			if(!no_ask){
+				MouseUI.PushButtonMap();
+			}
+			MouseUI.AutomaticButtonsFromStrings = true;
 			Screen.WriteMapString(0,0,top_border);
 			char letter = 'a';
 			int i=1;
@@ -15769,6 +16008,10 @@ namespace Forays{
 			}
 			if(no_ask){
 				B.DisplayNow(message);
+				if(!no_ask){
+					MouseUI.PopButtonMap();
+				}
+				MouseUI.AutomaticButtonsFromStrings = false;
 				return -1;
 			}
 			else{
@@ -15776,11 +16019,19 @@ namespace Forays{
 				if(result != -1){
 					M.RedrawWithStrings(); //again, todo: why is this here? - i think it's as close as it's gonna get now.
 				}
+				if(!no_ask){
+					MouseUI.PopButtonMap();
+				}
+				MouseUI.AutomaticButtonsFromStrings = false;
 				return result;
 			}
 		} //todo: check how many things actually use the non-colorstring version of Select and consider removing it
 		public int Select(string message,colorstring top_border,colorstring bottom_border,List<colorstring> strings,bool no_ask,bool no_cancel,bool easy_cancel,bool help_key,HelpTopic help_topic){ return Select(message,top_border,bottom_border,strings,no_ask,no_cancel,easy_cancel,false,help_key,help_topic); }
 		public int Select(string message,colorstring top_border,colorstring bottom_border,List<colorstring> strings,bool no_ask,bool no_cancel,bool easy_cancel,bool never_redraw_map,bool help_key,HelpTopic help_topic){
+			if(!no_ask){
+				MouseUI.PushButtonMap();
+			}
+			MouseUI.AutomaticButtonsFromStrings = true;
 			int result = -2;
 			while(result == -2){
 				Screen.WriteMapString(0,0,top_border);
@@ -15801,31 +16052,45 @@ namespace Forays{
 				}
 				if(no_ask){
 					B.DisplayNow(message);
+					if(!no_ask){
+						MouseUI.PopButtonMap();
+					}
+					MouseUI.AutomaticButtonsFromStrings = false;
 					return -1;
 				}
 				else{
 					result = GetSelection(message,strings.Count,no_cancel,easy_cancel,help_key);
 					if(result == -2){
+						MouseUI.AutomaticButtonsFromStrings = false;
 						Help.DisplayHelp(help_topic);
+						MouseUI.AutomaticButtonsFromStrings = true;
 					}
 					else{
 						if(!never_redraw_map && result != -1){
 							M.RedrawWithStrings();
 						}
+						if(!no_ask){
+							MouseUI.PopButtonMap();
+						}
+						MouseUI.AutomaticButtonsFromStrings = false;
 						return result;
 					}
 				}
 			}
+			if(!no_ask){
+				MouseUI.PopButtonMap();
+			}
+			MouseUI.AutomaticButtonsFromStrings = false;
 			return -1;
 		}
 		public int GetSelection(string s,int count,bool no_cancel,bool easy_cancel,bool help_key){
 			//if(count == 0){ return -1; }
 			B.DisplayNow(s);
-			Console.CursorVisible = true;
+			Screen.CursorVisible = true;
 			ConsoleKeyInfo command;
 			char ch;
 			while(true){
-				command = Console.ReadKey(true);
+				command = Global.ReadKey();
 				ch = ConvertInput(command);
 				int i = ch - 'a';
 				if(i >= 0 && i < count){
