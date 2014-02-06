@@ -958,6 +958,16 @@ namespace Forays{
 			}
 			return result;
 		}
+		public static List<T> ToCount<T>(this List<T> line,int count){
+			if(line.Count <= count || count < 0){
+				return new List<T>(line);
+			}
+			List<T> result = new List<T>();
+			for(int i=0;i<count;++i){
+				result.Add(line[i]);
+			}
+			return result;
+		}
 		public static Tile LastBeforeSolidTile(this List<Tile> line){
 			Tile result = null;
 			foreach(Tile t in line){

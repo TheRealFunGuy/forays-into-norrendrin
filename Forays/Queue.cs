@@ -908,9 +908,11 @@ namespace Forays{
 					if(value > 1){
 						int stalagmites = 0; //number removed
 						int number_left = 0;
+						List<Tile> crumbled = new List<Tile>();
 						foreach(Tile tile in area){
 							if(tile.type == TileType.STALAGMITE){
 								if(R.OneIn(value)){
+									crumbled.Add(tile);
 									tile.Toggle(null);
 									++stalagmites;
 								}
@@ -921,10 +923,10 @@ namespace Forays{
 						}
 						if(stalagmites > 0){
 							if(stalagmites > 1){
-								B.Add("The stalagmites crumble. ",area.ToArray());
+								B.Add("The stalagmites crumble. ",crumbled.ToArray());
 							}
 							else{
-								B.Add("The stalagmite crumbles. ",area.ToArray());
+								B.Add("The stalagmite crumbles. ",crumbled.ToArray());
 							}
 						}
 						if(number_left > 0){
@@ -1416,11 +1418,16 @@ namespace Forays{
 					int animation_delay = 75;
 					foreach(Tile tile in area){
 						if(tile.actor() != null){
-							animation_delay = 150;
 							if(tile.actor().attrs[AttrType.ARCANE_SHIELDED] < 10){
 								tile.actor().attrs[AttrType.ARCANE_SHIELDED] = 10;
 							}
-							symbols.Add(new colorchar(tile.actor().symbol,Color.Blue));
+							if(player.CanSee(tile.actor())){
+								animation_delay = 150;
+								symbols.Add(new colorchar(tile.actor().symbol,Color.Blue));
+							}
+							else{
+								symbols.Add(new colorchar('+',Color.Blue));
+							}
 						}
 						else{
 							symbols.Add(new colorchar('+',Color.Blue));
@@ -1877,6 +1884,7 @@ namespace Forays{
 				case EventType.POPPIES:
 				{
 					List<Tile> new_area = new List<Tile>();
+					bool recalculate_distance_map = false;
 					foreach(Tile t in area){
 						if(t.type == TileType.POPPY_FIELD){
 							new_area.Add(t);
@@ -1896,13 +1904,20 @@ namespace Forays{
 										B.Add("The poppies make you drowsy. ");
 										Help.TutorialTip(TutorialTopic.Drowsiness);
 									}
-									a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,a.DurationOfMagicalEffect((R.Roll(3)+4)) * 100,a.YouFeel() + " less drowsy. ",a);
+									a.ApplyStatus(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100);
+									//a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,a.DurationOfMagicalEffect((R.Roll(3)+4)) * 100,a.YouFeel() + " less drowsy. ",a);
 								}
 							}
+						}
+						else{
+							recalculate_distance_map = true;
 						}
 					}
 					if(new_area.Count > 0){
 						Q.Add(new Event(new_area,100,EventType.POPPIES));
+						if(recalculate_distance_map){
+							M.poppy_distance_map = M.tile.GetDijkstraMap(x=>!M.tile[x].Is(TileType.POPPY_FIELD),x=>M.tile[x].passable && !M.tile[x].Is(TileType.POPPY_FIELD));
+						}
 					}
 					break;
 				}
@@ -1917,6 +1932,9 @@ namespace Forays{
 						Q.Add(e);
 						a.attrs[AttrType.BURROWING] = 0;
 						a.Move(t.row,t.col);
+						if(player.CanSee(a)){
+							a.AnimateStorm(1,2,3,'*',Color.Gray);
+						}
 						B.Add(a.the_name + " emerges from the ground. ",a);
 					}
 					else{

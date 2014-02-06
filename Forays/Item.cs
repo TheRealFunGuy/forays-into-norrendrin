@@ -58,7 +58,7 @@ namespace Forays{
 			Define(ConsumableType.FLINT_AND_STEEL,"flint & steel~",'}',Color.Red);
 			proto[ConsumableType.FLINT_AND_STEEL].a_name = "flint & steel~";
 			proto[ConsumableType.FLINT_AND_STEEL].revealed_by_light = true;
-			Define(ConsumableType.BLAST_FUNGUS,"blast fungus",'"',Color.Red);
+			Define(ConsumableType.BLAST_FUNGUS,"blast fungus",'%',Color.Red);
 			proto[ConsumableType.BLAST_FUNGUS].do_not_stack = true;
 			proto[ConsumableType.BLAST_FUNGUS].revealed_by_light = true;
 		}
@@ -671,7 +671,7 @@ namespace Forays{
 			{
 				B.Add("You transform into a being of animated stone. ");
 				int duration = R.Roll(2,20) + 20;
-				List<AttrType> attributes = new List<AttrType>{AttrType.REGENERATING,AttrType.BRUTISH_STRENGTH,AttrType.VIGOR,AttrType.SILENCED,AttrType.SHADOW_CLOAK,AttrType.BLIND};
+				List<AttrType> attributes = new List<AttrType>{AttrType.REGENERATING,AttrType.BRUTISH_STRENGTH,AttrType.VIGOR,AttrType.SILENCE_AURA,AttrType.SHADOW_CLOAK,AttrType.BLIND};
 				foreach(AttrType at in attributes){
 					if(user.HasAttr(at)){
 						user.attrs[at] = 0;
@@ -687,7 +687,7 @@ namespace Forays{
 							B.Add("Your extraordinary speed fades. ");
 							break;
 						case AttrType.SILENCED:
-							B.Add("You are no longer silenced. ");
+							B.Add("You no longer radiate an aura of silence. ");
 							break;
 						case AttrType.SHADOW_CLOAK:
 							B.Add("You are no longer cloaked. ");
@@ -804,7 +804,7 @@ namespace Forays{
 			case ConsumableType.SILENCE:
 			{
 				B.Add("A hush falls around you. ");
-				user.RefreshDuration(AttrType.SILENCED,(R.Roll(2,20)+20)*100,"You are no longer silenced. ");
+				user.RefreshDuration(AttrType.SILENCE_AURA,(R.Roll(2,20)+20)*100,"You no longer radiate an aura of silence. ");
 				Help.TutorialTip(TutorialTopic.Silenced);
 				break;
 			}
@@ -1731,11 +1731,13 @@ namespace Forays{
 					}
 					foreach(Tile tile in t.TilesWithinDistance(5)){
 						if(LOE_tile.HasLOE(tile)){
-							if(tile.actor() != null){
-								if(tile.actor().TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,R.Roll(2,6),user,"an orb of pain")){
-									B.Add(tile.actor().You("become") + " vulnerable. ",tile.actor());
-									tile.actor().RefreshDuration(AttrType.VULNERABLE,tile.actor().DurationOfMagicalEffect(R.Roll(2,6)+6) * 100,tile.actor().YouFeel() + " less vulnerable. ",tile.actor());
-									if(tile.actor() == player){
+							Actor a = tile.actor();
+							if(a != null){
+								if(a.TakeDamage(DamageType.MAGIC,DamageClass.MAGICAL,R.Roll(2,6),user,"an orb of pain")){
+									a.ApplyStatus(AttrType.VULNERABLE,(R.Roll(2,6)+6)*100);
+									/*B.Add(a.You("become") + " vulnerable. ",a);
+									a.RefreshDuration(AttrType.VULNERABLE,a.DurationOfMagicalEffect(R.Roll(2,6)+6) * 100,a.YouFeel() + " less vulnerable. ",a);*/
+									if(a == player){
 										Help.TutorialTip(TutorialTopic.Vulnerable);
 									}
 								}
@@ -1764,7 +1766,7 @@ namespace Forays{
 			case ConsumableType.BLAST_FUNGUS:
 			{
 				if(line == null){
-					line = user.GetTarget(false,12,0,false,false,true,"");
+					line = user.GetTarget(false,12,0,false,false,false,true,"");
 				}
 				revealed_by_light = true;
 				ignored = true;
@@ -2401,8 +2403,8 @@ namespace Forays{
 		}
 		public static string[] Description(MagicTrinketType type){
 			switch(type){
-			case MagicTrinketType.PENDANT_OF_LIFE: //note that these are now 2 lines, not 3
-				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but only works once."};
+			case MagicTrinketType.PENDANT_OF_LIFE:
+				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but crumbles after a few uses."};
 			case MagicTrinketType.CLOAK_OF_SAFETY:
 				return new string[]{"Cloak of safety -- Lets you escape to safety","if your health falls too low. Works only once."};
 			case MagicTrinketType.BELT_OF_WARDING:

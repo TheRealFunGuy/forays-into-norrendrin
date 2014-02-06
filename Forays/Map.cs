@@ -65,6 +65,7 @@ namespace Forays{
 		private bool[,] danger_sensed{get;set;}
 		private static List<pos> allpositions = new List<pos>();
 		public PosArray<int> safetymap;
+		public PosArray<int> poppy_distance_map = null;
 		//public int[,] row_displacement = null;
 		//public int[,] col_displacement = null;
 		public colorchar[,] last_seen = new colorchar[ROWS,COLS];
@@ -790,7 +791,7 @@ namespace Forays{
 									break;
 								}
 							}
-							if(!fungus_found){
+							if(!fungus_found || wiz_lite){
 								ch.color = Color.Gray;
 							}
 						}
@@ -816,6 +817,7 @@ namespace Forays{
 				}
 				if(actor[r,c] != null && player.CanSee(actor[r,c])){
 					actor[r,c].attrs[AttrType.DANGER_SENSED] = 1;
+					actor[r,c].attrs[AttrType.NOTICED] = 1;
 					ch.c = actor[r,c].symbol;
 					ch.color = actor[r,c].color;
 					if(actor[r,c] != player){
@@ -830,7 +832,13 @@ namespace Forays{
 						if(actor[r,c] == player && !tile[r,c].IsLit()){
 							bool hidden_in_corner = false;
 							if(player.HasFeat(FeatType.CORNER_CLIMB) && !player.tile().IsLit()){
-								if(SchismExtensionMethods.Extensions.ConsecutiveAdjacent(player.p,x=>tile[x].Is(TileType.WALL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.DOOR_O,TileType.HIDDEN_DOOR,TileType.STATUE,TileType.STONE_SLAB,TileType.WAX_WALL)) >= 5){
+								List<pos> valid_open_doors = new List<pos>();
+								foreach(int dir in U.DiagonalDirections){
+									if(player.TileInDirection(dir).type == TileType.DOOR_O){
+										valid_open_doors.Add(player.TileInDirection(dir).p);
+									}
+								}
+								if(SchismExtensionMethods.Extensions.ConsecutiveAdjacent(player.p,x=>valid_open_doors.Contains(x) || tile[x].Is(TileType.WALL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.STATUE,TileType.STONE_SLAB,TileType.WAX_WALL)) >= 5){
 									hidden_in_corner = true;
 								}
 							}
@@ -906,7 +914,7 @@ namespace Forays{
 			return null;
 		}
 		public ActorType MobType(){
-			ActorType result = ActorType.RAT;
+			ActorType result = ActorType.SPECIAL;
 			bool good_result = false;
 			while(!good_result){
 				int level = 1;
@@ -923,20 +931,26 @@ namespace Forays{
 					}
 					level = levels.Random();
 				}
-				if(level == 1){ //level 1 monsters are all equal in rarity
-					result = (ActorType)(level*7 + R.Between(-4,2));
+				LevelType lt = level_types[current_level-1];
+				if(R.OneIn(10) && (lt == LevelType.Cave || lt == LevelType.Crypt || lt == LevelType.Hive || lt == LevelType.Mine || lt == LevelType.Slime)){
+					result = ActorType.SPECIAL; //zombies in crypts, kobolds in mines, etc.
 				}
 				else{
-					int roll = R.Roll(100);
-					if(roll <= 3){ //3% rare
-						result = (ActorType)(level*7 + 2);
+					if(level == 1){ //level 1 monsters are all equal in rarity
+						result = (ActorType)(level*7 + R.Between(-4,2));
 					}
 					else{
-						if(roll <= 22){ //19% uncommon (9.5% each)
-							result = (ActorType)(level*7 + R.Between(0,1));
+						int roll = R.Roll(100);
+						if(roll <= 3){ //3% rare
+							result = (ActorType)(level*7 + 2);
 						}
-						else{ //78% common (19.5% each)
-							result = (ActorType)(level*7 + R.Between(-4,-1));
+						else{
+							if(roll <= 22){ //19% uncommon (9.5% each)
+								result = (ActorType)(level*7 + R.Between(0,1));
+							}
+							else{ //78% common (19.5% each)
+								result = (ActorType)(level*7 + R.Between(-4,-1));
+							}
 						}
 					}
 				}
@@ -953,7 +967,7 @@ namespace Forays{
 			return result;
 		}
 		public ActorType ShallowMobType(){
-			ActorType result = ActorType.RAT;
+			ActorType result = ActorType.SPECIAL;
 			bool good_result = false;
 			while(!good_result){
 				int monster_depth = (current_level+1) / 2; //1-10, not 1-20
@@ -1113,12 +1127,48 @@ namespace Forays{
 					}
 				}
 			}
+			if(type == ActorType.SPECIAL){
+				number = 1 + (current_level-3)/3;
+				if(current_level > 5 && R.CoinFlip()){
+					--number;
+				}
+			}
 			List<Tile> group_tiles = new List<Tile>();
 			List<Actor> group = null;
 			if(number > 1){
 				group = new List<Actor>();
 			}
 			for(int i=0;i<number;++i){
+				ActorType final_type = type;
+				if(type == ActorType.SPECIAL){
+					switch(level_types[current_level-1]){
+					case LevelType.Cave:
+						if(R.CoinFlip()){
+							final_type = ActorType.GOBLIN;
+						}
+						else{
+							if(R.CoinFlip()){
+								final_type = ActorType.GOBLIN_ARCHER;
+							}
+							else{
+								final_type = ActorType.GOBLIN_SHAMAN;
+							}
+						}
+						break;
+					case LevelType.Crypt:
+						final_type = ActorType.ZOMBIE;
+						break;
+					case LevelType.Hive:
+						final_type = ActorType.FORASECT;
+						break;
+					case LevelType.Mine:
+						final_type = ActorType.KOBOLD;
+						break;
+					case LevelType.Slime:
+						final_type = ActorType.GIANT_SLUG;
+						break;
+					}
+				}
 				if(i == 0){
 					for(int j=0;j<1999;++j){
 						int rr = R.Roll(ROWS-2);
@@ -1144,7 +1194,7 @@ namespace Forays{
 							}
 						}
 						if(good && tile[rr,rc].passable && actor[rr,rc] == null){
-							result = Actor.Create(type,rr,rc,true,false);
+							result = Actor.Create(final_type,rr,rc,true,false);
 							if(number > 1){
 								group_tiles.Add(tile[rr,rc]);
 								group.Add(result);
@@ -1193,7 +1243,7 @@ namespace Forays{
 						}
 						if(empty_neighbors.Count > 0){
 							t = empty_neighbors.Random();
-							result = Actor.Create(type,t.row,t.col,true,false);
+							result = Actor.Create(final_type,t.row,t.col,true,false);
 							group_tiles.Add(t);
 							group.Add(result);
 							result.group = group;
@@ -2249,7 +2299,7 @@ namespace Forays{
 									continue; //no floors? retry.
 								}
 								bool no_good = false;
-								foreach(pos p in temp.PositionsAtDistance(2)){
+								foreach(pos p in temp.PositionsWithinDistance(2)){
 									CellType ch = map[p.row,p.col];
 									if(ch.Is(CellType.SpecialFeature1,CellType.SpecialFeature2,CellType.SpecialFeature3,CellType.SpecialFeature4,CellType.SpecialFeature5)){
 										no_good = true;
@@ -2622,7 +2672,7 @@ namespace Forays{
 										++dist;
 									}
 									if(tiles.Count > 0){
-										ActorType thralltype = ActorType.RAT;
+										ActorType thralltype = ActorType.SPECIAL;
 										bool done = false;
 										while(!done){
 											thralltype = MobType();
@@ -2728,7 +2778,7 @@ namespace Forays{
 											++dist;
 										}
 										if(tiles.Count > 0){
-											ActorType thralltype = ActorType.RAT;
+											ActorType thralltype = ActorType.SPECIAL;
 											bool done = false;
 											while(!done){
 												thralltype = MobType();
@@ -3315,6 +3365,9 @@ namespace Forays{
 					}
 				}
 			}
+			if(poppy_event != null){
+				poppy_distance_map = tile.GetDijkstraMap(x=>!tile[x].Is(TileType.POPPY_FIELD),x=>tile[x].passable && !tile[x].Is(TileType.POPPY_FIELD));
+			}
 			if(hidden.Count > 0){
 				Event e = new Event(hidden,100,EventType.CHECK_FOR_HIDDEN);
 				e.tiebreaker = 0;
@@ -3743,15 +3796,15 @@ namespace Forays{
 			int[] rarity = null;
 			switch(level_types[current_level-1]){
 			case LevelType.Standard:
-				rarity = new int[]{30,40,1,30,
+				rarity = new int[]{30,40,15,30,
 					25,6,8,15,15,3,3,4,4,4};
 				break;
 			case LevelType.Cave:
-				rarity = new int[]{30,15,15,15,
+				rarity = new int[]{30,15,10,15,
 					15,100,8,10,30,5,25,6,3,4};
 				break;
 			case LevelType.Mine:
-				rarity = new int[]{30,20,10,20,
+				rarity = new int[]{30,20,7,20,
 					25,6,8,15,10,5,5,30,2,4};
 				break;
 			case LevelType.Hive:
@@ -3874,6 +3927,7 @@ namespace Forays{
 							switch(df){
 							case DungeonFeature.WEBS:
 								cell = CellType.Webs;
+								max_radius = 3;
 								break;
 							case DungeonFeature.RUBBLE:
 								cell = CellType.Rubble;
