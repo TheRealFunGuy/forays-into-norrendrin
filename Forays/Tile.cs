@@ -114,7 +114,7 @@ namespace Forays{
 			proto[TileType.GRAVEL].a_name = "gravel";
 			proto[TileType.GRAVEL].revealed_by_light = true;
 			Define(TileType.JUNGLE,"thick jungle",'&',Color.DarkGreen,true,true,null); //unused
-			Define(TileType.BLAST_FUNGUS,"blast fungus",'"',Color.DarkRed,true,false,TileType.FLOOR);
+			Define(TileType.BLAST_FUNGUS,"blast fungus",'%',Color.DarkRed,true,false,TileType.FLOOR);
 			proto[TileType.BLAST_FUNGUS].revealed_by_light = true;
 			Define(TileType.GLOWING_FUNGUS,"glowing fungus",',',Color.RandomGlowingFungus,true,false,null);
 			Prototype(TileType.GLOWING_FUNGUS).revealed_by_light = true;
@@ -783,19 +783,19 @@ namespace Forays{
 					}
 					first.TileInDirection(dir).TurnToFloor();
 					ActorType ac = ActorType.SKELETON;
-					if(M.current_level >= 2 && R.CoinFlip()){
+					if(M.current_level >= 3 && R.CoinFlip()){
 						ac = ActorType.ZOMBIE;
 					}
-					if(M.current_level >= 5 && R.OneIn(10)){
+					if(M.current_level >= 9 && R.OneIn(10)){
 						ac = ActorType.STONE_GOLEM;
 					}
-					if(M.current_level >= 4 && R.PercentChance(1)){
+					if(M.current_level >= 7 && R.PercentChance(1)){
 						ac = ActorType.MECHANICAL_KNIGHT;
 					}
-					if(M.current_level >= 8 && R.PercentChance(1)){
+					if(M.current_level >= 15 && R.PercentChance(1)){
 						ac = ActorType.CORPSETOWER_BEHEMOTH;
 					}
-					if(M.current_level >= 8 && R.PercentChance(1)){
+					if(M.current_level >= 15 && R.PercentChance(1)){
 						ac = ActorType.MACHINE_OF_WAR;
 					}
 					Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col,true,true);
@@ -821,7 +821,7 @@ namespace Forays{
 					B.Add("An unstable energy covers " + actor().TheName(true) + ". ",actor());
 					actor().attrs[AttrType.TELEPORTING] = R.Roll(4);
 					Q.KillEvents(actor(),AttrType.TELEPORTING); //should be replaced by refreshduration eventually. works the same way, though.
-					Q.Add(new Event(actor(),actor().DurationOfMagicalEffect(R.Roll(10)+25)*100,AttrType.TELEPORTING,actor().YouFeel() + " more stable. ",actor()));
+					Q.Add(new Event(actor(),(R.Roll(10)+25)*100,AttrType.TELEPORTING,actor().YouFeel() + " more stable. ",actor()));
 				}
 				else{
 					B.Add("An unstable energy crackles for a moment, then dissipates. ",this);
@@ -837,8 +837,9 @@ namespace Forays{
 						B.Add("Electricity zaps " + actor().the_name + ". ",this);
 					}
 					if(actor().TakeDamage(DamageType.ELECTRIC,DamageClass.PHYSICAL,R.Roll(3,6),null,"a shock trap")){
-						B.Add(actor().YouAre() + " stunned! ",actor());
-						actor().RefreshDuration(AttrType.STUNNED,actor().DurationOfMagicalEffect(R.Roll(6)+7)*100,(actor().YouAre() + " no longer stunned. "),actor());
+						actor().ApplyStatus(AttrType.STUNNED,(R.Roll(6)+7)*100);
+						/*B.Add(actor().YouAre() + " stunned! ",actor());
+						actor().RefreshDuration(AttrType.STUNNED,actor().DurationOfMagicalEffect(R.Roll(6)+7)*100,(actor().YouAre() + " no longer stunned. "),actor());*/
 						if(actor() == player){
 							Help.TutorialTip(TutorialTopic.Stunned);
 						}
@@ -855,7 +856,7 @@ namespace Forays{
 			case TileType.LIGHT_TRAP:
 				if(M.wiz_lite == false){
 					if(actor_here && player.HasLOS(row,col) && !actor().IsHiddenFrom(player)){
-						B.Add("A wave of light washes out from above " + actor().the_name + "! ");
+						B.Add("A wave of light washes out from above " + actor().TheName(true) + "! ");
 					}
 					else{
 						B.Add("A wave of light washes over the area! ");
@@ -875,7 +876,7 @@ namespace Forays{
 			case TileType.DARKNESS_TRAP:
 				if(M.wiz_dark == false){
 					if(actor_here && player.CanSee(actor())){
-						B.Add("A surge of darkness radiates out from above " + actor().the_name + "! ");
+						B.Add("A surge of darkness radiates out from above " + actor().TheName(true) + "! ");
 						if(player.light_radius > 0){
 							B.Add("Your light is extinguished! ");
 						}
@@ -935,8 +936,9 @@ namespace Forays{
 				if(actor_here){
 					B.Add("A dart flies out and strikes " + actor().TheName(true) + ". ",this);
 					if(!actor().HasAttr(AttrType.NONLIVING,AttrType.BLINDSIGHT)){
-						B.Add(actor().YouAre() + " blind! ",actor());
-						actor().RefreshDuration(AttrType.BLIND,(R.Roll(3,6) + 6) * 100,actor().YouAre() + " no longer blinded. ",actor());
+						actor().ApplyStatus(AttrType.BLIND,(R.Roll(2,6)+6)*100);
+						/*B.Add(actor().YouAre() + " blind! ",actor());
+						actor().RefreshDuration(AttrType.BLIND,(R.Roll(3,6) + 6) * 100,actor().YouAre() + " no longer blinded. ",actor());*/
 					}
 					else{
 						B.Add("It doesn't affect " + actor().the_name + ". ",actor());
@@ -1106,6 +1108,8 @@ namespace Forays{
 						neighbor.ApplyEffect(DamageType.NORMAL); //break items and set off traps
 						if(neighbor.Is(TileType.FLOOR)){
 							neighbor.Toggle(null,TileType.GRAVEL);
+							neighbor.RemoveFeature(FeatureType.SLIME);
+							neighbor.RemoveFeature(FeatureType.OIL);
 						}
 					}
 				}
@@ -1594,7 +1598,7 @@ namespace Forays{
 					}
 				}
 				if(type == TileType.CRACKED_WALL){
-					Toggle(null,TileType.FLOOR);
+					Toggle(null,TileType.FLOOR); //todo: gravel?
 					foreach(Tile neighbor in TilesAtDistance(1)){
 						neighbor.solid_rock = false;
 					}
@@ -1610,7 +1614,7 @@ namespace Forays{
 					TriggerTrap();
 				}
 				if(Is(TileType.RUBBLE)){
-					Toggle(null);
+					Toggle(null); //todo: gravel?
 				}
 				break;
 			}

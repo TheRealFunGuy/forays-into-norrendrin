@@ -90,11 +90,11 @@ namespace Forays{
 			switch(spell){
 			case SpellType.BLIZZARD:
 			case SpellType.COLLAPSE:
+			case SpellType.STONE_SPIKES:
 			case SpellType.FORCE_PALM:
 			case SpellType.DOOM:
 			case SpellType.LIGHTNING_BOLT:
 			case SpellType.MAGIC_HAMMER:
-			case SpellType.SCORCH:
 			case SpellType.MERCURIAL_SPHERE:
 			case SpellType.RADIANCE:
 				return true;
@@ -140,7 +140,8 @@ namespace Forays{
 			case SpellType.TELEKINESIS:
 				return new colorstring("Throw your target forcefully         ",Color.Gray);
 			case SpellType.COLLAPSE:
-				return new colorstring("Radius 1, breaks walls & drops rubble",Color.Gray);
+				return new colorstring("4d6, breaks walls & drops rubble",Color.Gray);
+				//return new colorstring("Radius 1, breaks walls & drops rubble",Color.Gray);
 			case SpellType.STONE_SPIKES:
 				return new colorstring("Radius 2, 4d6 and creates stalagmites",Color.Gray);
 			default:
@@ -153,6 +154,10 @@ namespace Forays{
 				return new colorstring("Light source brightens and deals ",Color.Gray,"2d6 ",Color.Yellow);
 			case SpellType.FORCE_PALM:
 				return new colorstring("Deals ",Color.Gray,"2d6",Color.Yellow," damage, knocks target back ",Color.Gray);
+			case SpellType.COLLAPSE:
+				return new colorstring("4d6",Color.Yellow,", breaks walls & drops rubble",Color.Gray);
+			case SpellType.STONE_SPIKES:
+				return new colorstring("Radius 2, ",Color.Gray,"4d6",Color.Yellow," and creates stalagmites",Color.Gray);
 			case SpellType.MERCURIAL_SPHERE:
 				return new colorstring("3d6",Color.Yellow,", bounces to nearby foes 3 times  ",Color.Gray);
 			case SpellType.LIGHTNING_BOLT:

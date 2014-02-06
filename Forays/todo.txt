@@ -1,4 +1,364 @@
 
+done:
+command line switch to start console version as GL.
+I used the wrong form of current_level when spawning monsters in sliding wall traps. as a result, corpsetower behemoths can appear very early.
+frostling freeze needs LOS/cansee check.
+every instance of AI_Step(safe.Random()) in entrancer AI can crash the game with a nullref. check for safe.Count > 0.
+haha, skulking killers can throw bolas through walls.
+entrancer AI could use some fixes - it's still willing to teleport its thrall from a spot that blocks your shot to a spot that doesn't.
+i fixed that infinite loop with a shrine and interesting_location SOMEWHERE - I think i fixed it in the GL version, so make sure this gets changed everywhere.
+shrines probably shouldn't be within 2 tiles of other shrines unless paired - it's probably confusing
+if pendant is now chance-based, make the description match.
+re-enable attempted terminal fix
+i broke telekinesis - can't throw barrels. (also fixed crash bug with extended targeting lines not being used)
+orbs of shielding reveal actors present.
+if chardump has no extension, add .txt?
+offer "known item types" on death?
+don't do the "trying consumables" tip if the player knew several item types but had some unknown ones in the pack - they might have been using them!
+make web clusters bigger
+some ranged attacks shouldn't leave the attacker off-balance, like the alasi scout. (could become an ability and not an attack, but it's cool both ways)
+when a corpse(or anything else) is knocked through a door, it still prints "the foo opens the door"
+light trap (and probably others) use the_name instead of TheName(true)
+maybe the shadow shouldn't be able to damage your armor for some reason? it can be nasty. (perhaps the attack needs at least 2 dice)
+dim vision now almost blinds you in darkness (hmmmm)
+monsters should sidestep traps when not chasing you! if you see them do it (because you're stealthed) then you'll know where the trap is.
+	-not actually walking around it, but "the foo avoids a %trap%."
+monsters will dance around rubble instead of going through it. (big piles of rubble, that is)
+additional attacks to make combo attacks more obvious. (alasi soldier is fine though)
+phase spiders respond to sounds by pathing there. i thought i had fixed that.
+print a message when a weak point activates! just like for armor blocking hits.
+new symbol for blast fungus?
+check melee damage of oozes - they shouldn't be too threatening just with melee damage.
+	-changed back to 3
+enemy arrows previously couldn't score critical hits to pin.
+immunity to fire damage at 5 boiling blood stacks.
+problem with corner climb + doors: the doors must be at a diagonal, otherwise it'll activate at the end of a corridor with an open door in front of you.
+ghosts sometimes choose to step out of range of tombstones and vanish. (might not be fixed)
+fix message "you can't read scrolls while silenced" where auras are concerned.
+burning monsters currently get a message in calculateDimming(), and dimming can sometimes last for the entire level
+you still 'walk straight into' shadow-cloaked monsters after seeing them.
+collapse should break items like the rubble trap does.
+scorch isn't actually a damaging spell. stone spikes is. collapse, too.
+stalagmite hit doesn't work on enough floor types yet.
+amnesiac monsters should lose AMNESIA_STUN upon taking damage
+add '.' wait to the command list
+should !oSilence give you an aura? (so the guy you're fighting doesn't make noise either)
+	-do this, and then tweak caster AI so they flee while silenced & at full health.
+"the ghost notices you" message spam. it's wandering around and I'm far away out of LOS. same as the warmage bug, i think - distance doesn't seem to matter, though. the message stops when you enter LOS.
+you can be oiled and stoneformed at the same time, which leads to constant "you catch fire!" messages if you're near fire.
+-brutish strength knockback should happen instead of drive back, right?
+-make grabs interact with frozen - frozen probably breaks & prevents grabs.
+
+done^
+
+ 1: goblin bat wolf moth dweller bramble frostling
+ 2: swordsman dreamwarrior cobra kobold sporepod forasect poltergeist
+ 3: cultist archer shaman dartfrog skeleton shadow mimic
+ 4: spider zombie berserker slug demon banshee hag
+ 5: zealot direrat killer boar troll dreamsprite cloude
+ 6: ascetic duelist warg scout crawler mechknight transcendent
+ 7: battlemage soldier skittermoss golem mude flametongue entrancer
+ 8: ogre grenadier pixie cknight bloodwitch hulk marblehorror
+ 9: ooze pyren lasher sentinel worm titan vampire
+10: warmage necro webstrider assassin avenger behemoth warmachine
+
+
+
+
+-make sure burning enemies *advance* out of fire when possible, toward the player.
+(improved AI for handling hazardous terrain)
+
+
+
+give mindless to phase spider, or make it teleport away here, too?
+
+
+
+
+adjust poppy AI math: they flee 1 turn too late, it seems.
+
+
+
+
+and, of course, AI could check the danger value of the tile it's about to walk into...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-allow game to be started with no options.txt, then create a default.
+
+
+
+
+crypts + naturally generated tombstones can put them too close together
+
+
+
+
+allow looking around the map after death?
+
+
+
+
+equipment screen colors "[a]" entirely in cyan. consider changing.
+
+
+
+
+
+"you fade away in the darkness" should also appear when you put your torch away while shadow cloaked.
+
+
+
+
+
+bug: "You is no longer pinned." ...haha. Glad I found that one.
+
+
+
+
+
+bug: you become magical_drowsiness
+
+
+
+
+
+
+
+-low chance to find a chest in a sliding wall trap?
+
+
+
+
+-some walls could become dark gray now that i use blue for out of sight, eh?
+
+
+
+
+-add a lot more combat info to monster description boxes: speed, damage, "Melee effect:" or "On hit:", "Critical effect:", "Abilities:".
+
++-------------------------------+
+| The radiance of this empyreal |
+|   being makes your eyes hurt  |
+| after a few seconds. When you |
+|  look again it still has the  |
+|     shape of a human, but     |
+|  occasionally its silhouette  |
+|  seems to have wings, horns,  |
+|         or four legs.         |
+|                               |
+|      [=] Hide description     |
++-------------------------------+
+###.##  ,.V
+.....#   .
+.###.#   .
+## #.#  #.#
+   #.#  #.#
+   #.####.### #
+   #.##.......#
+   #....#######
+   ######
+
+
+
++-------------------------------+
+| The radiance of this empyreal |
+|   being makes your eyes hurt  |
+| after a few seconds. When you |
+|  look again it still has the  |
+|     shape of a human, but     |
+|  occasionally its silhouette  |
+|  seems to have wings, horns,  |
+|         or four legs.         |
+|                               |
+|   Melee attack damage: 3d6    |
+|   Crit effect: Vulnerability  |
+|   Abilities: Halo             |
+|                               |
+|      [=] Hide description     |
++-------------------------------+
+   #.#  #.#
+   #.####.### #
+   #.##.......#
+   #....#######
+   ######
+
+Speed: Normal
+Damage: 4d6
+Critical effect: Stun & max damage
+Abilities: None
+
+
+-now that there's so much room, add target health to sidebar. (but "corpsetower behemoth" doesn't fit! maybe use its symbol?)
+
+
+
+
+-flush input after more animations, especially passage. -- and bola!
+
+
+
+
+-consider brogue-style "traps don't block corridors" rule
+
+
+
+
+-monsters seem to EITHER continue down corridors OR continue down paths after seeing the player (if the player ducks out of LOS). THEN they go to the target_location.
+
+
+
+
+
+
+
+-let cloud e. and any other erratically moving monster also do so while wandering.
+
+
+
+
+-perhaps a bigger penalty than -1 for each fork in the road when corridor-seeking?
+
+
+
+
+-what if dim vision just automatically returned false for cansee checks at range 2+?
+
+
+
+
+-make terrain descriptions appear in lookmode
+
+
+
+
+-minor visual bug with passage when triggering a trap
+
+
+
+
+kobold(poison ticks for Q5),
+
+
+
+
+ahh, autoexplore pathing IS broken - it's trying to reach the nearest ones even if it goes over traps.
+	-can't figure out why, though.
+
+
+
+
+do I add doors before altering rooms in standard levels? that can lead to doors in the middle of corridors when cross rooms are involved.
+
+
+no IMMOBILIZATION of flying enemies with arrows, i think
+	-no, keep this, but make them trigger traps when they get pinned. \o/
+
+
+
+
+
+plus, roots should end flying, but that's probably not needed because it'll outlast it.
+	-no need, but make this trigger traps too.
+
+
+
+hmm - double clicking [w]alk makes you (usually) walk to the left. Might need to disable that if you're outside the map.
+
+
+
+
+
+need to consider visible immobile mobs when pathing - should be expensive! otherwise you get moved into bramble range when you click.
+
+
+
+
+option for confirmation before resting
+
+
+
+
+
+consider reminder for "you can't move!" (x520)
+
+
+
+
+
+
+remember "special thanks to..."
+
+
+
+
+the dungeon should sometimes hand out temporary skill boosts or something. "hey, i've got +5 spirit for some number of turns!"
+
+
+
+
+
+
+whoa, utility.cs is missing from the project.
+
+
+
+
+add duration info to spell help
+
+
+
+
+
+
+tutorial tips to do:
+
+tip for magic trinkets: "you always get the benefits of all your trinkets"
+
+more obvious tips for certain things, like exhaustion casting
+
+spirit tip: no burning, no freezing, no oil or slime or webs or grabs, no potions.
+
+
+design stuff that would put a halt to my productivity if I tackled it now:
+
+so, some monsters will get their own level types...and some monsters should get their own dungeon features. insects in small hives(maybe), and bats in wide caves or chasms(definitely), and probably features for moths and brambles and sporepods and cultists and skeletons and mimics (something that steals an item and drops it somewhere, and also spawns mimic or two that look just like it?) and zombies and slugs and hags...
+
+slippery surfaces + bat movement enemies. evil.
+
+consider making spellmuddle pixies appear in groups!
+
+revisit filenames - consider moving GL/Mouse stuff to its own file, remove DungeonGenerator and Parabola, consider removing Spell, etc.
+
+reminder if you've missed a shrine when taking stairs?
+	-needs a good message
+
+fast monsters burn too fast, and slow monsters burn too slowly. probably needs another
+  "time_of_last_action"-like variable.
+
+make enemies smarter about stepping into fire/poison. which ones, though? not zombies.
+
+bugs that might take a while to track down - do these last:
+
+another lighting bug: I found a 2x3 (buggy) darkened section against a wall. might have been caused by a cultist lighting itself (and updating its radius) despite being slime-covered or something.
+
+
+
 
 
 -write cave corridor & twisty cave article for RB. also possibly dijkstra maps part 2 with screenshots.

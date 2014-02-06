@@ -22,8 +22,8 @@ using Forays;
 namespace Forays{
 	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,FIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,SLIDING_WALL_TRAP,GRENADE_TRAP,SHOCK_TRAP,ALARM_TRAP,DARKNESS_TRAP,POISON_GAS_TRAP,BLINDING_TRAP,ICE_TRAP,PHANTOM_TRAP,SCALDING_OIL_TRAP,FLING_TRAP,STONE_RAIN_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,SPELL_EXCHANGE_SHRINE,RUBBLE,FIRE_GEYSER,STATUE,POOL_OF_RESTORATION,FOG_VENT,POISON_GAS_VENT,STONE_SLAB,CHASM,BREACHED_WALL,WATER,ICE,CRACKED_WALL,BRUSH,POPPY_FIELD,JUNGLE,GRAVEL,BLAST_FUNGUS,GLOWING_FUNGUS,TOMBSTONE,GRAVE_DIRT,BARREL,STANDING_TORCH,VINE,POISON_BULB,WAX_WALL,DEMONIC_IDOL};
 	public enum FeatureType{GRENADE,TROLL_CORPSE,TROLL_BLOODWITCH_CORPSE,FOG,POISON_GAS,SLIME,TELEPORTAL,INACTIVE_TELEPORTAL,STABLE_TELEPORTAL,OIL,FIRE,BONES,WEB,PIXIE_DUST,FORASECT_EGG,SPORES};
-	public enum ActorType{PLAYER,RAT,FIRE_DRAKE,GOBLIN,GIANT_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,SPORE_POD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,GOLDEN_DART_FROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,BERSERKER,GIANT_SLUG,VULGAR_DEMON,BANSHEE,CAVERN_HAG,ROBED_ZEALOT,DIRE_RAT,SKULKING_KILLER,WILD_BOAR,TROLL,DREAM_SPRITE,CLOUD_ELEMENTAL,DERANGED_ASCETIC,SHADOWVEIL_DUELIST,WARG,ALASI_SCOUT,CARRION_CRAWLER,MECHANICAL_KNIGHT,RUNIC_TRANSCENDENT,ALASI_BATTLEMAGE,ALASI_SOLDIER,SKITTERMOSS,STONE_GOLEM,MUD_ELEMENTAL,FLAMETONGUE_TOAD,ENTRANCER,OGRE,ORC_GRENADIER,SPELLMUDDLE_PIXIE,CRUSADING_KNIGHT,TROLL_BLOODWITCH,SAVAGE_HULK,MARBLE_HORROR,CORROSIVE_OOZE,PYREN_ARCHER,LASHER_FUNGUS,ALASI_SENTINEL,NOXIOUS_WORM,SUBTERRANEAN_TITAN,VAMPIRE,ORC_WARMAGE,NECROMANCER,STALKING_WEBSTRIDER,ORC_ASSASSIN,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,DREAM_WARRIOR_CLONE,DREAM_SPRITE_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,GHOST,FINAL_LEVEL_CULTIST,MINOR_DEMON,FROST_DEMON,BEAST_DEMON,DEMON_LORD,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
-	public enum AttrType{STEALTHY,NONLIVING,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,AGGRESSIVE,TERRITORIAL,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,DESCENDING,WANDERING,IMMOBILE,SHADOW_CLOAK,BRUTISH_STRENGTH,VIGOR,FLYING_LEAP,SILENCED,NOTICED,PLAYER_NOTICED,DANGER_SENSED,SHINING,LOW_LIGHT_VISION,REGENERATING,REGENERATES_FROM_DEATH,REASSEMBLES,NO_ITEM,STUNNED,PARALYZED,BLIND,POISONED,FROZEN,CHILLED,SLIMED,OIL_COVERED,BURNING,SLOWED,POPPY_COUNTER,MAGICAL_DROWSINESS,ASLEEP,AGGRAVATING,DETECTING_MONSTERS,DETECTING_MOVEMENT,TELEPORTING,VULNERABLE,SUSCEPTIBLE_TO_CRITS,LIGHT_SENSITIVE,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,POISON_HIT,PARALYSIS_HIT,DIM_VISION_HIT,STALAGMITE_HIT,WORN_OUT_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,ACID_HIT,FIERY_ARROWS,DULLS_BLADES,IMMUNE_BURNING,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ELECTRICITY,RESIST_WEAPONS,IMMUNE_ARROWS,RESIST_NECK_SNAP,COMBO_ATTACK,COOLDOWN_1,COOLDOWN_2,RADIANT_HALO,ARCANE_SHIELDED,SPORE_BURST,CAN_POISON_BLADES,ACIDIFIED,SILENCE_AURA,TERRIFYING,DAMAGE_REDUCTION,MECHANICAL_SHIELD,TURNS_HERE,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,EMPOWERED_SPELLS,BANDAGE_COUNTER,PERMANENT_DAMAGE,SWITCHING_ARMOR,JUST_GRABBED,JUST_TELEPORTED,JUST_FLUNG,JUST_BITTEN,JUST_SEARED,AGGRESSION_MESSAGE_PRINTED,NO_PLATE_ARMOR_NOISE,GRAVEL_MESSAGE_COOLDOWN,LUNGING_AUTO_HIT,TELEKINETICALLY_THROWN,SELF_TK_NO_DAMAGE,BURROWING,ROOTS,DODGED,CHAIN_CAST,IGNORES_QUIET_SOUNDS,ALERTED,SEES_ADJACENT_PLAYER,DIRECTION_OF_PREVIOUS_TILE,FOLLOW_DIRECTION_EXITED,AMNESIA_STUN,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,TURN_INTO_CORPSE,CORPSE,NO_CORPSE_KNOCKBACK,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
+	public enum ActorType{PLAYER,SPECIAL,FIRE_DRAKE,GOBLIN,GIANT_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,SPORE_POD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,GOLDEN_DART_FROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,BERSERKER,GIANT_SLUG,VULGAR_DEMON,BANSHEE,CAVERN_HAG,ROBED_ZEALOT,DIRE_RAT,SKULKING_KILLER,WILD_BOAR,TROLL,DREAM_SPRITE,CLOUD_ELEMENTAL,DERANGED_ASCETIC,SHADOWVEIL_DUELIST,WARG,ALASI_SCOUT,CARRION_CRAWLER,MECHANICAL_KNIGHT,RUNIC_TRANSCENDENT,ALASI_BATTLEMAGE,ALASI_SOLDIER,SKITTERMOSS,STONE_GOLEM,MUD_ELEMENTAL,FLAMETONGUE_TOAD,ENTRANCER,OGRE,ORC_GRENADIER,SPELLMUDDLE_PIXIE,CRUSADING_KNIGHT,TROLL_BLOODWITCH,SAVAGE_HULK,MARBLE_HORROR,CORROSIVE_OOZE,PYREN_ARCHER,LASHER_FUNGUS,ALASI_SENTINEL,NOXIOUS_WORM,SUBTERRANEAN_TITAN,VAMPIRE,ORC_WARMAGE,NECROMANCER,STALKING_WEBSTRIDER,ORC_ASSASSIN,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,DREAM_WARRIOR_CLONE,DREAM_SPRITE_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,GHOST,FINAL_LEVEL_CULTIST,MINOR_DEMON,FROST_DEMON,BEAST_DEMON,DEMON_LORD,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
+	public enum AttrType{STEALTHY,NONLIVING,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,MINDLESS,AGGRESSIVE,TERRITORIAL,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,DESCENDING,WANDERING,IMMOBILE,SHADOW_CLOAK,BRUTISH_STRENGTH,VIGOR,FLYING_LEAP,SILENCED,NOTICED,PLAYER_NOTICED,DANGER_SENSED,SHINING,LOW_LIGHT_VISION,REGENERATING,REGENERATES_FROM_DEATH,REASSEMBLES,NO_ITEM,STUNNED,PARALYZED,BLIND,POISONED,FROZEN,CHILLED,SLIMED,OIL_COVERED,BURNING,SLOWED,POPPY_COUNTER,MAGICAL_DROWSINESS,ASLEEP,AGGRAVATING,DETECTING_MONSTERS,DETECTING_MOVEMENT,TELEPORTING,VULNERABLE,SUSCEPTIBLE_TO_CRITS,LIGHT_SENSITIVE,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,POISON_HIT,PARALYSIS_HIT,DIM_VISION_HIT,STALAGMITE_HIT,WORN_OUT_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,ACID_HIT,FIERY_ARROWS,DULLS_BLADES,IMMUNE_BURNING,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ELECTRICITY,RESIST_WEAPONS,IMMUNE_ARROWS,RESIST_NECK_SNAP,COMBO_ATTACK,COOLDOWN_1,COOLDOWN_2,RADIANT_HALO,ARCANE_SHIELDED,SPORE_BURST,CAN_POISON_BLADES,ACIDIFIED,SILENCE_AURA,TERRIFYING,DAMAGE_REDUCTION,MECHANICAL_SHIELD,TURNS_HERE,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,EMPOWERED_SPELLS,BANDAGE_COUNTER,PERMANENT_DAMAGE,SWITCHING_ARMOR,JUST_GRABBED,JUST_TELEPORTED,JUST_FLUNG,JUST_BITTEN,JUST_SEARED,AGGRESSION_MESSAGE_PRINTED,NO_PLATE_ARMOR_NOISE,GRAVEL_MESSAGE_COOLDOWN,LUNGING_AUTO_HIT,TELEKINETICALLY_THROWN,SELF_TK_NO_DAMAGE,BURROWING,ROOTS,DODGED,CHAIN_CAST,IGNORES_QUIET_SOUNDS,ALERTED,SEES_ADJACENT_PLAYER,DIRECTION_OF_PREVIOUS_TILE,FOLLOW_DIRECTION_EXITED,AMNESIA_STUN,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,TURN_INTO_CORPSE,CORPSE,NO_CORPSE_KNOCKBACK,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
 	public enum SpellType{RADIANCE,FORCE_PALM,DETECT_MOVEMENT,FLYING_LEAP,MERCURIAL_SPHERE,GREASE,BLINK,FREEZE,SCORCH,LIGHTNING_BOLT,MAGIC_HAMMER,PORTAL,PASSAGE,AMNESIA,STONE_SPIKES,SHADOWSIGHT,BLIZZARD,COLLAPSE,DOOM,TELEKINESIS,NUM_SPELLS,NO_SPELL};
 	public enum SkillType{COMBAT,DEFENSE,MAGIC,SPIRIT,STEALTH,NUM_SKILLS,NO_SKILL};
 	public enum FeatType{QUICK_DRAW,WHIRLWIND_STYLE,LUNGE,DRIVE_BACK,ARMOR_MASTERY,CUNNING_DODGE,DEFLECT_ATTACK,TUMBLE,MASTERS_EDGE,ARCANE_INTERFERENCE,CHAIN_CASTING,FORCE_OF_WILL,CONVICTION,ENDURING_SOUL,FEEL_NO_PAIN,BOILING_BLOOD,NECK_SNAP,DISARM_TRAP,CORNER_CLIMB,DANGER_SENSE,NUM_FEATS,NO_FEAT};
@@ -50,6 +50,14 @@ namespace Forays{
 				int os = (int)Environment.OSVersion.Platform;
 				if(os == 4 || os == 6 ||  os == 128){
 					Global.LINUX = true;
+				}
+			}
+			if(args != null && args.Length > 0){
+				if(args[0] == "-c" || args[0] == "--console"){
+					Screen.GLMode = false;
+				}
+				if(args[0] == "-g" || args[0] == "--gl"){
+					Screen.GLMode = true;
 				}
 			}
 			//Screen.GLMode = false;
@@ -689,6 +697,7 @@ namespace Forays{
 						File.Delete("forays.sav");
 						Tile.Feature(FeatureType.TELEPORTAL).color = Item.Prototype(ConsumableType.TELEPORTAL).color;
 						game.M.UpdateSafetyMap(game.player);
+						game.M.poppy_distance_map = game.M.tile.GetDijkstraMap(x=>!game.M.tile[x].Is(TileType.POPPY_FIELD),x=>game.M.tile[x].passable && !game.M.tile[x].Is(TileType.POPPY_FIELD));
 					}
 					GLGame.NoClose = true;
 					MouseUI.PushButtonMap(MouseMode.Map);
@@ -780,205 +789,7 @@ namespace Forays{
 						fileout.Close();
 					}
 					if(!Global.QUITTING && !Global.SAVING){
-						MouseUI.PushButtonMap();
-						game.player.attrs[AttrType.BLIND] = 0; //make sure the player can actually view the map
-						game.player.attrs[AttrType.BURNING] = 0;
-						game.player.attrs[AttrType.FROZEN] = 0; //...without borders
-						//game.M.Draw();
-						colorchar[,] mem = null;
-						game.player.DisplayStats(false);
-						if(Global.KILLED_BY != "giving up" && !Help.displayed[TutorialTopic.UnidentifiedConsumables]){
-							if(game.player.inv.Where(item=>!Item.identified[item.type] && item.Is(ConsumableType.HEALING,ConsumableType.TIME,ConsumableType.TELEPORTAL)).Count > 0){
-								Help.TutorialTip(TutorialTopic.UnidentifiedConsumables);
-								Global.SaveOptions();
-							}
-						}
-						foreach(Item i in game.player.inv){
-							if(i.NameOfItemType() != "other"){
-								if(!Item.identified[i.type]){
-									if(!Item.unIDed_name[i.type].Contains("{tried}")){
-										Item.unIDed_name[i.type] = Item.unIDed_name[i.type] + " {untried}";
-									}
-									Item.identified[i.type] = true;
-								}
-								if(Item.unIDed_name[i.type].Contains("{tried}")){
-									i.SetName(i.name + " {tried}");
-								}
-								else{
-									if(Item.unIDed_name[i.type].Contains("{untried}")){
-										i.SetName(i.name + " {untried}");
-									}
-								}
-							}
-						}
-						List<string> ls = new List<string>();
-						ls.Add("See the map");
-						ls.Add("See last messages");
-						ls.Add("Examine your equipment");
-						ls.Add("Examine your inventory");
-						ls.Add("See character info");
-						ls.Add("Write this information to a file");
-						ls.Add("Done");
-						for(bool done=false;!done;){
-							if(mem != null){
-								Screen.MapDrawWithStrings(mem,0,0,Global.ROWS,Global.COLS);
-							}
-							game.player.Select("Would you like to examine your character! ","".PadRight(Global.COLS),"".PadRight(Global.COLS),ls,true,false,false);
-							int sel = game.player.GetSelection("Would you like to examine your character? ",7,true,false,false);
-							mem = Screen.GetCurrentMap();
-							switch(sel){
-							case 0:
-								MouseUI.PushButtonMap();
-								Dictionary<Actor,colorchar> old_ch = new Dictionary<Actor,colorchar>();
-								List<Actor> drawn = new List<Actor>();
-								foreach(Actor a in game.M.AllActors()){
-									if(game.player.CanSee(a)){
-										old_ch.Add(a,game.M.last_seen[a.row,a.col]);
-										game.M.last_seen[a.row,a.col] = new colorchar(a.symbol,a.color);
-										drawn.Add(a);
-									}
-								}
-								Screen.MapDrawWithStrings(game.M.last_seen,0,0,Global.ROWS,Global.COLS);
-								game.B.DisplayNow("Press any key to continue. ");
-								Screen.CursorVisible = true;
-								Global.ReadKey();
-								MouseUI.PopButtonMap();
-								foreach(Actor a in drawn){
-									game.M.last_seen[a.row,a.col] = old_ch[a];
-								}
-								game.M.RedrawWithStrings();
-								/*foreach(Tile t in game.M.AllTiles()){
-									if(t.type != TileType.FLOOR && !t.IsTrap()){
-										bool good = false;
-										foreach(Tile neighbor in t.TilesAtDistance(1)){
-											if(neighbor.type != TileType.WALL){
-												good = true;
-											}
-										}
-										if(good){
-											t.seen = true;
-										}
-									}
-								}
-								game.B.DisplayNow("Press any key to continue. ");
-								Screen.CursorVisible = true;
-								Screen.WriteMapChar(0,0,'-');
-								game.M.Draw();
-								Global.ReadKey();*/
-								break;
-							case 1:
-							{
-								MouseUI.PushButtonMap();
-								Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
-								int i = 1;
-								foreach(string s in game.B.GetMessages()){
-									Screen.WriteMapString(i,0,s.PadRight(Global.COLS));
-									++i;
-								}
-								Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
-								game.B.DisplayNow("Previous messages: ");
-								Screen.CursorVisible = true;
-								Global.ReadKey();
-								MouseUI.PopButtonMap();
-								break;
-							}
-							case 2:
-								game.player.DisplayEquipment();
-								break;
-							case 3:
-								MouseUI.PushButtonMap();
-								MouseUI.AutomaticButtonsFromStrings = true;
-								for(int i=1;i<8;++i){
-									Screen.WriteMapString(i,0,"".PadRight(Global.COLS));
-								}
-								MouseUI.AutomaticButtonsFromStrings = false;
-								game.player.Select("In your pack: ",game.player.InventoryList(),true,false,false);
-								Global.ReadKey();
-								MouseUI.PopButtonMap();
-								break;
-							case 4:
-								game.player.DisplayCharacterInfo();
-								break;
-							case 5:
-							{
-								game.B.DisplayNow("Enter file name: ");
-								Screen.CursorVisible = true;
-								MouseUI.PushButtonMap();
-								string filename = Global.EnterString(40);
-								MouseUI.PopButtonMap();
-								if(filename == ""){
-									break;
-								}
-								StreamWriter file = new StreamWriter(filename,true);
-								game.player.DisplayCharacterInfo(false);
-								colorchar[,] screen = Screen.GetCurrentScreen();
-								for(int i=2;i<Global.SCREEN_H;++i){
-									for(int j=0;j<Global.SCREEN_W;++j){
-										file.Write(screen[i,j].c);
-									}
-									file.WriteLine();
-								}
-								file.WriteLine();
-								file.WriteLine("Inventory: ");
-								foreach(string s in game.player.InventoryList()){
-									file.WriteLine(s);
-								}
-								file.WriteLine();
-								file.WriteLine();
-								foreach(Tile t in game.M.AllTiles()){
-									if(t.type != TileType.FLOOR && !t.IsTrap()){
-										bool good = false;
-										foreach(Tile neighbor in t.TilesAtDistance(1)){
-											if(neighbor.type != TileType.WALL){
-												good = true;
-											}
-										}
-										if(good){
-											t.seen = true;
-										}
-									}
-								}
-								Screen.WriteMapChar(0,0,'-');
-								game.M.Draw();
-								int col = 0;
-								foreach(colorchar cch in Screen.GetCurrentMap()){
-									file.Write(cch.c);
-									++col;
-									if(col == Global.COLS){
-										file.WriteLine();
-										col = 0;
-									}
-								}
-								file.WriteLine();
-								Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
-								int line = 1;
-								foreach(string s in game.B.GetMessages()){
-									Screen.WriteMapString(line,0,s.PadRight(Global.COLS));
-									++line;
-								}
-								Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
-								file.WriteLine("Last messages: ");
-								col = 0;
-								foreach(colorchar cch in Screen.GetCurrentMap()){
-									file.Write(cch.c);
-									++col;
-									if(col == Global.COLS){
-										file.WriteLine();
-										col = 0;
-									}
-								}
-								file.WriteLine();
-								file.Close();
-								break;
-							}
-							case 6:
-								done = true;
-								break;
-							default:
-								break;
-							}
-						}
-						MouseUI.PopButtonMap();
+						GameOverScreen(game);
 					}
 					break;
 				}
@@ -1135,6 +946,317 @@ namespace Forays{
 					Global.Quit();
 				}
 			}
+		}
+		static void GameOverScreen(Game game){
+			MouseUI.PushButtonMap();
+			game.player.attrs[AttrType.BLIND] = 0; //make sure the player can actually view the map
+			game.player.attrs[AttrType.BURNING] = 0;
+			game.player.attrs[AttrType.FROZEN] = 0; //...without borders
+			//game.M.Draw();
+			colorchar[,] mem = null;
+			game.player.DisplayStats(false);
+			bool showed_IDed_tip = false;
+			if(Global.KILLED_BY != "giving up" && !Help.displayed[TutorialTopic.IdentifiedConsumables]){
+				if(game.player.inv.Where(item=>Item.identified[item.type] && item.Is(ConsumableType.HEALING,ConsumableType.TIME,ConsumableType.TELEPORTAL)).Count > 0){
+					Help.TutorialTip(TutorialTopic.IdentifiedConsumables);
+					Global.SaveOptions();
+					showed_IDed_tip = true;
+				}
+			}
+			if(!showed_IDed_tip && Global.KILLED_BY != "giving up" && !Help.displayed[TutorialTopic.UnidentifiedConsumables]){
+				int known_count = 0;
+				foreach(ConsumableType ct in Item.identified.d.Keys){
+					if(Item.identified[ct] && Item.NameOfItemType(ct) != "other"){
+						++known_count;
+					}
+				}
+				if(known_count < 2 && game.player.inv.Where(item=>!Item.identified[item.type]).Count > 2){
+					Help.TutorialTip(TutorialTopic.UnidentifiedConsumables);
+					Global.SaveOptions();
+				}
+			}
+			Dict<ConsumableType,bool> known_items = new Dict<ConsumableType,bool>();
+			foreach(Item i in game.player.inv){
+				if(i.NameOfItemType() != "other"){
+					if(!Item.identified[i.type]){
+						if(!Item.unIDed_name[i.type].Contains("{tried}")){
+							Item.unIDed_name[i.type] = Item.unIDed_name[i.type] + " {untried}";
+						}
+						Item.identified[i.type] = true;
+					}
+					else{
+						known_items[i.type] = true;
+					}
+					if(Item.unIDed_name[i.type].Contains("{tried}")){
+						i.SetName(i.name + " {tried}");
+					}
+					else{
+						if(Item.unIDed_name[i.type].Contains("{untried}")){
+							i.SetName(i.name + " {untried}");
+						}
+					}
+				}
+			}
+			List<string> ls = new List<string>();
+			ls.Add("See the map");
+			ls.Add("See last messages");
+			ls.Add("Examine your equipment");
+			ls.Add("Examine your inventory");
+			ls.Add("View known item types");
+			ls.Add("See character info");
+			ls.Add("Write this information to a file");
+			ls.Add("Done");
+			for(bool done=false;!done;){
+				if(mem != null){
+					Screen.MapDrawWithStrings(mem,0,0,Global.ROWS,Global.COLS);
+				}
+				game.player.Select("Would you like to examine your character! ","".PadRight(Global.COLS),"".PadRight(Global.COLS),ls,true,false,false);
+				int sel = game.player.GetSelection("Would you like to examine your character? ",ls.Count,true,false,false);
+				mem = Screen.GetCurrentMap();
+				switch(sel){
+				case 0:
+					MouseUI.PushButtonMap();
+					Dictionary<Actor,colorchar> old_ch = new Dictionary<Actor,colorchar>();
+					List<Actor> drawn = new List<Actor>();
+					foreach(Actor a in game.M.AllActors()){
+						if(game.player.CanSee(a)){
+							old_ch.Add(a,game.M.last_seen[a.row,a.col]);
+							game.M.last_seen[a.row,a.col] = new colorchar(a.symbol,a.color);
+							drawn.Add(a);
+						}
+					}
+					Screen.MapDrawWithStrings(game.M.last_seen,0,0,Global.ROWS,Global.COLS);
+					game.B.DisplayNow("Press any key to continue. ");
+					Screen.CursorVisible = true;
+					Global.ReadKey();
+					MouseUI.PopButtonMap();
+					foreach(Actor a in drawn){
+						game.M.last_seen[a.row,a.col] = old_ch[a];
+					}
+					game.M.RedrawWithStrings();
+					/*foreach(Tile t in game.M.AllTiles()){
+						if(t.type != TileType.FLOOR && !t.IsTrap()){
+							bool good = false;
+							foreach(Tile neighbor in t.TilesAtDistance(1)){
+								if(neighbor.type != TileType.WALL){
+									good = true;
+								}
+							}
+							if(good){
+								t.seen = true;
+							}
+						}
+					}
+					game.B.DisplayNow("Press any key to continue. ");
+					Screen.CursorVisible = true;
+					Screen.WriteMapChar(0,0,'-');
+					game.M.Draw();
+					Global.ReadKey();*/
+					break;
+				case 1:
+				{
+					MouseUI.PushButtonMap();
+					Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
+					int i = 1;
+					foreach(string s in game.B.GetMessages()){
+						Screen.WriteMapString(i,0,s.PadRight(Global.COLS));
+						++i;
+					}
+					Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
+					game.B.DisplayNow("Previous messages: ");
+					Screen.CursorVisible = true;
+					Global.ReadKey();
+					MouseUI.PopButtonMap();
+					break;
+				}
+				case 2:
+					game.player.DisplayEquipment();
+					break;
+				case 3:
+					MouseUI.PushButtonMap();
+					MouseUI.AutomaticButtonsFromStrings = true;
+					for(int i=1;i<9;++i){
+						Screen.WriteMapString(i,0,"".PadRight(Global.COLS));
+					}
+					MouseUI.AutomaticButtonsFromStrings = false;
+					game.player.Select("In your pack: ",game.player.InventoryList(),true,false,false);
+					Global.ReadKey();
+					MouseUI.PopButtonMap();
+					break;
+				case 4:
+				{
+					int ROWS = Global.ROWS;
+					int COLS = Global.COLS;
+					MouseUI.PushButtonMap();
+					List<colorstring> potions = new List<colorstring>();
+					List<colorstring> scrolls = new List<colorstring>();
+					List<colorstring> orbs = new List<colorstring>();
+					foreach(ConsumableType ct in Enum.GetValues(typeof(ConsumableType))){
+						string type_name = "    " + ct.ToString()[0] + ct.ToString().Substring(1).ToLower();
+						type_name = type_name.Replace('_',' ');
+						Color ided_color = Color.Cyan;
+						if(Item.NameOfItemType(ct) == "potion"){
+							if(known_items[ct]){
+								potions.Add(new colorstring(type_name,ided_color));
+				            }
+				            else{
+								potions.Add(new colorstring(type_name,Color.DarkGray));
+							}
+						}
+						else{
+							if(Item.NameOfItemType(ct) == "scroll"){
+								if(known_items[ct]){
+									scrolls.Add(new colorstring(type_name,ided_color));
+					            }
+					            else{
+									scrolls.Add(new colorstring(type_name,Color.DarkGray));
+								}
+							}
+							else{
+								if(Item.NameOfItemType(ct) == "orb"){
+									if(known_items[ct]){
+										orbs.Add(new colorstring(type_name,ided_color));
+						            }
+						            else{
+										orbs.Add(new colorstring(type_name,Color.DarkGray));
+									}
+								}
+							}
+						}
+					}
+					Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+					for(int i=1;i<ROWS-1;++i){
+						Screen.WriteMapString(i,0,"".PadToMapSize());
+					}
+					Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
+					Color label_color = Color.Yellow;
+					Screen.WriteMapString(1,0,"  - Potions -",label_color);
+					Screen.WriteMapString(1,33,"  - Scrolls -",label_color);
+					int line = 2;
+					foreach(colorstring s in potions){
+						Screen.WriteMapString(line,0,s);
+						++line;
+					}
+					line = 2;
+					foreach(colorstring s in scrolls){
+						Screen.WriteMapString(line,33,s);
+						++line;
+					}
+					Screen.WriteMapString(12,0,"  - Orbs -",label_color);
+					line = 13;
+					foreach(colorstring s in orbs){
+						Screen.WriteMapString(line,0,s);
+						++line;
+					}
+					game.B.DisplayNow("Discovered item types: ");
+					Screen.CursorVisible = true;
+					Global.ReadKey();
+					MouseUI.PopButtonMap();
+					break;
+				}
+				case 5:
+					game.player.DisplayCharacterInfo();
+					break;
+				case 6:
+				{
+					game.B.DisplayNow("Enter file name: ");
+					Screen.CursorVisible = true;
+					MouseUI.PushButtonMap();
+					string filename = Global.EnterString(40);
+					MouseUI.PopButtonMap();
+					if(filename == ""){
+						break;
+					}
+					if(!filename.Contains(".")){
+						filename = filename + ".txt";
+					}
+					StreamWriter file = new StreamWriter(filename,true);
+					game.player.DisplayCharacterInfo(false);
+					colorchar[,] screen = Screen.GetCurrentScreen();
+					for(int i=2;i<Global.SCREEN_H;++i){
+						for(int j=0;j<Global.SCREEN_W;++j){
+							file.Write(screen[i,j].c);
+						}
+						file.WriteLine();
+					}
+					file.WriteLine();
+					file.WriteLine("Inventory: ");
+					foreach(string s in game.player.InventoryList()){
+						file.WriteLine(s);
+					}
+					if(game.player.InventoryList().Count == 0){
+						file.WriteLine("(nothing)");
+					}
+					file.WriteLine();
+					file.WriteLine("Known items: ");
+					bool known_items_found = false;
+					foreach(ConsumableType ct in known_items.d.Keys){
+						if(known_items[ct] && (Item.NameOfItemType(ct) == "potion" || Item.NameOfItemType(ct) == "scroll" || Item.NameOfItemType(ct) == "orb")){
+							file.WriteLine(Item.Prototype(ct).Name(false));
+							known_items_found = true;
+						}
+					}
+					if(!known_items_found){
+						file.WriteLine("(none)");
+					}
+					else{
+						file.WriteLine();
+					}
+					file.WriteLine();
+					foreach(Tile t in game.M.AllTiles()){
+						if(t.type != TileType.FLOOR && !t.IsTrap()){
+							bool good = false;
+							foreach(Tile neighbor in t.TilesAtDistance(1)){
+								if(neighbor.type != TileType.WALL){
+									good = true;
+								}
+							}
+							if(good){
+								t.seen = true;
+							}
+						}
+					}
+					Screen.WriteMapChar(0,0,'-');
+					game.M.Draw();
+					int col = 0;
+					foreach(colorchar cch in Screen.GetCurrentMap()){
+						file.Write(cch.c);
+						++col;
+						if(col == Global.COLS){
+							file.WriteLine();
+							col = 0;
+						}
+					}
+					file.WriteLine();
+					Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
+					int line = 1;
+					foreach(string s in game.B.GetMessages()){
+						Screen.WriteMapString(line,0,s.PadRight(Global.COLS));
+						++line;
+					}
+					Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
+					file.WriteLine("Last messages: ");
+					col = 0;
+					foreach(colorchar cch in Screen.GetCurrentMap()){
+						file.Write(cch.c);
+						++col;
+						if(col == Global.COLS){
+							file.WriteLine();
+							col = 0;
+						}
+					}
+					file.WriteLine();
+					file.Close();
+					break;
+				}
+				case 7:
+					done = true;
+					break;
+				default:
+					break;
+				}
+			}
+			MouseUI.PopButtonMap();
 		}
 	}
 	public class GLGame : GameWindow{

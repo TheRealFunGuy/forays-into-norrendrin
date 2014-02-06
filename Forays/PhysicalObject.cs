@@ -326,12 +326,12 @@ namespace Forays{
 						string tilename = t.TheName(true);
 						if(t.type == TileType.HIDDEN_DOOR){
 							tilename = "a hidden door";
-							t.Toggle(a);
+							t.Toggle(null);
 						}
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked through " + tilename + ". ",a,t);
 						}
-						t.Toggle(a);
+						t.Toggle(null);
 						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
 						return !a.HasAttr(AttrType.CORPSE);
@@ -2478,13 +2478,14 @@ compare this number to 1/2:  if less than 1/2, major.
 				return result;
 			}
 		}
-		public List<Tile> GetTargetTile(int max_distance,int radius,bool no_line,bool start_at_interesting_target){ return GetTarget(false,max_distance,radius,no_line,false,start_at_interesting_target,""); }
-		public List<Tile> GetTargetLine(int max_distance){ return GetTarget(false,max_distance,0,false,true,true,""); }
-		public List<Tile> GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool start_at_interesting_target,string always_displayed){
+		public List<Tile> GetTargetTile(int max_distance,int radius,bool no_line,bool start_at_interesting_target){ return GetTarget(false,max_distance,radius,no_line,false,false,start_at_interesting_target,""); }
+		public List<Tile> GetTargetLine(int max_distance){ return GetTarget(false,max_distance,0,false,true,false,true,""); }
+		public List<Tile> GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool return_extended_line,bool start_at_interesting_target,string always_displayed){
 			MouseUI.PushButtonMap(MouseMode.Targeting);
 			List<Tile> result = null;
 			ConsoleKeyInfo command;
 			int r,c;
+			int max_line_count = max_distance + 1; //to include the source.
 			int minrow = 0;
 			int maxrow = Global.ROWS-1;
 			int mincol = 0;
@@ -2735,12 +2736,17 @@ compare this number to 1/2:  if less than 1/2, major.
 					if(!no_line){
 						if(extend_line){
 							line = GetBestExtendedLineOfEffect(r,c);
-							if(line.Count > max_distance+1){
+							if(max_distance > 0 && line.Count > max_distance+1){
 								line.RemoveRange(max_distance+1,line.Count - max_distance - 1);
 							}
 						}
 						else{
-							line = GetBestLineOfEffect(r,c);
+							if(return_extended_line){
+								line = GetBestExtendedLineOfEffect(r,c).ToCount(max_line_count);
+							}
+							else{
+								line = GetBestLineOfEffect(r,c);
+							}
 						}
 					}
 					else{
@@ -3047,7 +3053,12 @@ compare this number to 1/2:  if less than 1/2, major.
 					if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c]) && player.HasLOE(M.actor[r,c])){
 						player.target = M.actor[r,c];
 					}
-					result = line.ToFirstSolidTile();
+					if(return_extended_line){
+						result = GetBestExtendedLineOfEffect(r,c);
+					}
+					else{
+						result = line.ToFirstSolidTile();
+					}
 					if(no_line && !player.HasLOS(line[0])){
 						result = null;
 					}
