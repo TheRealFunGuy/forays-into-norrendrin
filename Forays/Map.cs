@@ -2617,7 +2617,7 @@ namespace Forays{
 					t.UpdateRadius(0,t.light_radius);
 				}
 			}
-			int num_items = R.Roll(3)-1;
+			int num_items = R.Between(0,2);
 			for(int i=num_items;i>0;--i){
 				SpawnItem();
 			}
@@ -3365,6 +3365,11 @@ namespace Forays{
 					}
 				}
 			}
+			if(level_types[current_level-1] == LevelType.Fortress){
+				foreach(pos p in tile.PositionsWhere(x=>tile[x].type == TileType.WALL)){
+					tile[p].color = Color.DarkGray;
+				}
+			}
 			if(poppy_event != null){
 				poppy_distance_map = tile.GetDijkstraMap(x=>!tile[x].Is(TileType.POPPY_FIELD),x=>tile[x].passable && !tile[x].Is(TileType.POPPY_FIELD));
 			}
@@ -3779,7 +3784,9 @@ namespace Forays{
 							}
 						}
 						if(cell == CellType.GraveDirt){
-							map[rr,rc] = CellType.Tombstone;
+							if(!new pos(rr,rc).PositionsAtDistance(1).Any(x=>map[x] == CellType.Tombstone)){
+								map[rr,rc] = CellType.Tombstone;
+							}
 						}
 						break;
 					}

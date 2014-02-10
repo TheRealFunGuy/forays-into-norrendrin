@@ -789,6 +789,9 @@ namespace Forays{
 				user.attrs[AttrType.IMMOBILE]++;
 				Q.Add(new Event(user,duration*100,AttrType.IMMOBILE,"You are no longer rooted to the ground. "));
 				Help.TutorialTip(TutorialTopic.Roots);
+				if(user.HasAttr(AttrType.FLYING) && user.tile().IsTrap()){
+					user.tile().TriggerTrap();
+				}
 				break;
 			}
 			case ConsumableType.VIGOR:
@@ -885,6 +888,7 @@ namespace Forays{
 						last_wall = t;
 						t = t.TileInDirection(dir);
 					}
+					Global.FlushInput();
 					if(t.actor() == null){
 						int r = user.row;
 						int c = user.col;
@@ -899,6 +903,7 @@ namespace Forays{
 							}
 							Thread.Sleep(35);
 						}
+						Global.FlushInput();
 						B.Add(user.You("travel") + " through the passage. ",user,t);
 					}
 					else{
@@ -929,6 +934,7 @@ namespace Forays{
 								}
 								Thread.Sleep(35);
 							}
+							Global.FlushInput();
 							B.Add(user.You("travel") + " through the passage. ",user,destination);
 						}
 						else{

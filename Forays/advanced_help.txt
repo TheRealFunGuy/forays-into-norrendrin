@@ -26,3 +26,9 @@ Because of this, you're much more likely to remain unseen
 if you stay two or more spaces away. Enemies automatically see
 you if you're carrying a light source, or if you're wearing
 plate mail and simply standing in the light.
+
+
+
+
+
+With special thanks to the people of #rgrd and -ot.

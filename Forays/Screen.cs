@@ -1673,6 +1673,8 @@ namespace Forays{
 		public static List<pos> mouse_path = null;
 		public static int LastRow = -1;
 		public static int LastCol = -1;
+		public static bool fire_arrow_hack = false; //hack, used to allow double-clicking [s]hoot to fire arrows.
+		public static bool descend_hack = false; //hack, used to make double-clicking Descend [>] cancel the
 		public static Button GetButton(int row,int col){
 			if(button_map.Last() == null || row < 0 || col < 0 || row >= Global.SCREEN_H || col >= Global.SCREEN_W){
 				return null;

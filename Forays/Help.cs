@@ -13,7 +13,7 @@ using System.Threading;
 using Utilities;
 namespace Forays{
 	public enum HelpTopic{Overview,Skills,Feats,Spells,Items,Commands,Advanced,Tips};
-	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,ActiveFeats,FindingConsumables,IdentifiedConsumables,UnidentifiedConsumables,SpellFailure,ShinyPlateArmor,HeavyPlateArmor,CriticalHits,NotRevealedByLight,Traps,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,FirePit,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
+	public enum TutorialTopic{Movement,Attacking,Torch,Fire,Recovery,SwitchingEquipment,RangedAttacks,Shrines,Feats,ActiveFeats,Spirit,FindingConsumables,IdentifiedConsumables,UnidentifiedConsumables,MagicTrinkets,SpellFailure,CastingWithoutMana,ShinyPlateArmor,HeavyPlateArmor,CriticalHits,NotRevealedByLight,Traps,PoolOfRestoration,StoneSlab,CrackedWall,BlastFungus,FirePit,Drowsiness,Silenced,Stunned,Frozen,Slimed,Oiled,Vulnerable,Immobilized,Acidified,Afraid,Grabbed,Dulled,Possessed,Heavy,Merciful,Negated,Stuck,Infested,WeakPoint,WornOut,Damaged,Stoneform,Vampirism,Roots};
 	public static class Help{
 		public static Dict<TutorialTopic,bool> displayed = new Dict<TutorialTopic,bool>();
 		public static void DisplayHelp(){ DisplayHelp(HelpTopic.Overview); }
@@ -291,6 +291,14 @@ namespace Forays{
 					"Until lit, it is rooted firmly to the ground by",
 					"its fuse. After being lit, it can be picked up",
 					"and thrown - quickly!"};
+			case TutorialTopic.CastingWithoutMana:
+				return new string[]{
+					"Casting without mana",
+					"",
+					"Spells can be cast even when you're out of mana.",
+					"",
+					"Doing this is exhausting - your exhaustion will",
+					"increase by 5% for every missing point of mana."};
 			case TutorialTopic.CrackedWall:
 				return new string[]{
 					"Cracked walls",
@@ -409,6 +417,17 @@ namespace Forays{
 					"",
 					"Like all equipment damage, this effect will end",
 					"when you [r]est to repair your equipment."};
+			case TutorialTopic.Immobilized:
+				return new string[]{
+					"Immobilized",
+					"",
+					"Some effects can entirely prevent your movement.",
+					"You won't be able to walk, teleport, be pulled",
+					"or pushed, etc.",
+					"",
+					"Pressing a directional key to move while",
+					"immobilized won't consume a turn - if you want",
+					"to wait it out, press [.] to stay where you are."};
 			case TutorialTopic.Infested:
 				return new string[]{
 					"Infested",
@@ -419,6 +438,16 @@ namespace Forays{
 					"",
 					"Like all equipment damage, this effect will end",
 					"when you [r]est to repair your equipment."};
+			case TutorialTopic.MagicTrinkets:
+				return new string[]{
+					"Magic trinkets",
+					"",
+					"Sometimes you'll find magical equipment instead",
+					"of consumable items. These trinkets give you a",
+					"permanent boost or passive effect. ",
+					"",
+					"(You'll automatically wear all of the",
+					"magic trinkets you find.)"};
 			case TutorialTopic.Merciful:
 				return new string[]{
 					"Merciful",
@@ -543,7 +572,21 @@ namespace Forays{
 					"",
 					"If your exhaustion has reached that threshold,",
 					"the spell will have a chance of failure equal",
-					"to your exhaustion.",};
+					"to your exhaustion."};
+			case TutorialTopic.Spirit:
+				return new string[]{
+					"Spirit",
+					"",
+					"This skill can entirely prevent certain",
+					"temporary effects like stuns, poison, fear,",
+					"and sleep.",
+					"",
+					"Each point of Spirit skill increases your",
+					"chance to shrug off these effects by 8%.",
+					"",
+					"(Spirit won't counteract the effects of potions,",
+					"and doesn't prevent external statuses like",
+					"burning, freezing, or being caught in a web.)"};
 			case TutorialTopic.Stoneform:
 				return new string[]{
 					"Stoneform",
@@ -782,6 +825,7 @@ namespace Forays{
 			if(Global.Option(OptionType.NEVER_DISPLAY_TIPS) || displayed[topic]){
 				return;
 			}
+			MouseUI.PushButtonMap();
 			Color box_edge_color = Color.Blue;
 			Color box_corner_color = Color.Yellow;
 			Color first_line_color = Color.Yellow;
@@ -816,11 +860,19 @@ namespace Forays{
 			}
 			int y = (Global.SCREEN_H - boxheight) / 2;
 			int x = (Global.SCREEN_W - boxwidth) / 2;
+			int spaces_on_left = stringwidth - 27;
+			MouseUI.CreateButton(ConsoleKey.A,false,y + boxheight - 3,x + 1 + (spaces_on_left+1)/2,1,27);
+			spaces_on_left = stringwidth - 21;
+			MouseUI.CreateButton(ConsoleKey.OemPlus,false,y + boxheight - 2,x + 1 + (spaces_on_left+1)/2,1,21);
 			colorchar[,] memory = Screen.GetCurrentRect(y,x,boxheight,boxwidth);
 			List<List<colorstring>> frames = new List<List<colorstring>>();
 			frames.Add(BoxAnimationFrame(boxheight-2,FrameWidth(boxheight,boxwidth)));
 			for(int i=boxheight-4;i>0;i-=2){
 				frames.Add(BoxAnimationFrame(i,FrameWidth(frames.Last().Count,frames.Last()[0].Length())));
+			}
+			Actor.player.DisplayStats(false);
+			if(!no_displaynow_call){
+				Actor.B.DisplayNow();
 			}
 			for(int i=frames.Count-1;i>=0;--i){ //since the frames are in reverse order
 				int y_offset = i + 1;
@@ -834,10 +886,6 @@ namespace Forays{
 			foreach(colorstring s in box){
 				Screen.WriteString(y,x,s);
 				++y;
-			}
-			Actor.player.DisplayStats(false);
-			if(!no_displaynow_call){
-				Actor.B.DisplayNow();
 			}
 			Screen.CursorVisible = false;
 			if(Screen.GLMode){
@@ -870,6 +918,7 @@ namespace Forays{
 			if(topic != TutorialTopic.Feats){ //another exception
 				Actor.player.DisplayStats(true);
 			}
+			MouseUI.PopButtonMap();
 			displayed[topic] = true;
 			Screen.CursorVisible = true;
 		}

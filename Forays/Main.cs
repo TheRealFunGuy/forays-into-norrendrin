@@ -22,7 +22,7 @@ using Forays;
 namespace Forays{
 	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,FIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,SLIDING_WALL_TRAP,GRENADE_TRAP,SHOCK_TRAP,ALARM_TRAP,DARKNESS_TRAP,POISON_GAS_TRAP,BLINDING_TRAP,ICE_TRAP,PHANTOM_TRAP,SCALDING_OIL_TRAP,FLING_TRAP,STONE_RAIN_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,SPELL_EXCHANGE_SHRINE,RUBBLE,FIRE_GEYSER,STATUE,POOL_OF_RESTORATION,FOG_VENT,POISON_GAS_VENT,STONE_SLAB,CHASM,BREACHED_WALL,WATER,ICE,CRACKED_WALL,BRUSH,POPPY_FIELD,JUNGLE,GRAVEL,BLAST_FUNGUS,GLOWING_FUNGUS,TOMBSTONE,GRAVE_DIRT,BARREL,STANDING_TORCH,VINE,POISON_BULB,WAX_WALL,DEMONIC_IDOL};
 	public enum FeatureType{GRENADE,TROLL_CORPSE,TROLL_BLOODWITCH_CORPSE,FOG,POISON_GAS,SLIME,TELEPORTAL,INACTIVE_TELEPORTAL,STABLE_TELEPORTAL,OIL,FIRE,BONES,WEB,PIXIE_DUST,FORASECT_EGG,SPORES};
-	public enum ActorType{PLAYER,SPECIAL,FIRE_DRAKE,GOBLIN,GIANT_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,SPORE_POD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,GOLDEN_DART_FROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,BERSERKER,GIANT_SLUG,VULGAR_DEMON,BANSHEE,CAVERN_HAG,ROBED_ZEALOT,DIRE_RAT,SKULKING_KILLER,WILD_BOAR,TROLL,DREAM_SPRITE,CLOUD_ELEMENTAL,DERANGED_ASCETIC,SHADOWVEIL_DUELIST,WARG,ALASI_SCOUT,CARRION_CRAWLER,MECHANICAL_KNIGHT,RUNIC_TRANSCENDENT,ALASI_BATTLEMAGE,ALASI_SOLDIER,SKITTERMOSS,STONE_GOLEM,MUD_ELEMENTAL,FLAMETONGUE_TOAD,ENTRANCER,OGRE,ORC_GRENADIER,SPELLMUDDLE_PIXIE,CRUSADING_KNIGHT,TROLL_BLOODWITCH,SAVAGE_HULK,MARBLE_HORROR,CORROSIVE_OOZE,PYREN_ARCHER,LASHER_FUNGUS,ALASI_SENTINEL,NOXIOUS_WORM,SUBTERRANEAN_TITAN,VAMPIRE,ORC_WARMAGE,NECROMANCER,STALKING_WEBSTRIDER,ORC_ASSASSIN,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,DREAM_WARRIOR_CLONE,DREAM_SPRITE_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,GHOST,FINAL_LEVEL_CULTIST,MINOR_DEMON,FROST_DEMON,BEAST_DEMON,DEMON_LORD,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
+	public enum ActorType{PLAYER,SPECIAL,FIRE_DRAKE,GOBLIN,GIANT_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,SPORE_POD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,GOLDEN_DART_FROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,BERSERKER,GIANT_SLUG,VULGAR_DEMON,BANSHEE,CAVERN_HAG,ROBED_ZEALOT,DIRE_RAT,SKULKING_KILLER,WILD_BOAR,TROLL,DREAM_SPRITE,CLOUD_ELEMENTAL,DERANGED_ASCETIC,SHADOWVEIL_DUELIST,WARG,ALASI_SCOUT,CARRION_CRAWLER,MECHANICAL_KNIGHT,RUNIC_TRANSCENDENT,ALASI_BATTLEMAGE,ALASI_SOLDIER,SKITTERMOSS,STONE_GOLEM,MUD_ELEMENTAL,FLAMETONGUE_TOAD,ENTRANCER,OGRE,ORC_GRENADIER,LASHER_FUNGUS,CRUSADING_KNIGHT,TROLL_BLOODWITCH,SAVAGE_HULK,MARBLE_HORROR,CORROSIVE_OOZE,PYREN_ARCHER,SPELLMUDDLE_PIXIE,ALASI_SENTINEL,NOXIOUS_WORM,SUBTERRANEAN_TITAN,VAMPIRE,ORC_WARMAGE,NECROMANCER,STALKING_WEBSTRIDER,ORC_ASSASSIN,LUMINOUS_AVENGER,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,DREAM_WARRIOR_CLONE,DREAM_SPRITE_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,GHOST,FINAL_LEVEL_CULTIST,MINOR_DEMON,FROST_DEMON,BEAST_DEMON,DEMON_LORD,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
 	public enum AttrType{STEALTHY,NONLIVING,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,MINDLESS,AGGRESSIVE,TERRITORIAL,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,DESCENDING,WANDERING,IMMOBILE,SHADOW_CLOAK,BRUTISH_STRENGTH,VIGOR,FLYING_LEAP,SILENCED,NOTICED,PLAYER_NOTICED,DANGER_SENSED,SHINING,LOW_LIGHT_VISION,REGENERATING,REGENERATES_FROM_DEATH,REASSEMBLES,NO_ITEM,STUNNED,PARALYZED,BLIND,POISONED,FROZEN,CHILLED,SLIMED,OIL_COVERED,BURNING,SLOWED,POPPY_COUNTER,MAGICAL_DROWSINESS,ASLEEP,AGGRAVATING,DETECTING_MONSTERS,DETECTING_MOVEMENT,TELEPORTING,VULNERABLE,SUSCEPTIBLE_TO_CRITS,LIGHT_SENSITIVE,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,POISON_HIT,PARALYSIS_HIT,DIM_VISION_HIT,STALAGMITE_HIT,WORN_OUT_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,ACID_HIT,FIERY_ARROWS,DULLS_BLADES,IMMUNE_BURNING,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ELECTRICITY,RESIST_WEAPONS,IMMUNE_ARROWS,RESIST_NECK_SNAP,COMBO_ATTACK,COOLDOWN_1,COOLDOWN_2,RADIANT_HALO,ARCANE_SHIELDED,SPORE_BURST,CAN_POISON_BLADES,ACIDIFIED,SILENCE_AURA,TERRIFYING,DAMAGE_REDUCTION,MECHANICAL_SHIELD,TURNS_HERE,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,EMPOWERED_SPELLS,BANDAGE_COUNTER,PERMANENT_DAMAGE,SWITCHING_ARMOR,JUST_GRABBED,JUST_TELEPORTED,JUST_FLUNG,JUST_BITTEN,JUST_SEARED,AGGRESSION_MESSAGE_PRINTED,NO_PLATE_ARMOR_NOISE,GRAVEL_MESSAGE_COOLDOWN,LUNGING_AUTO_HIT,TELEKINETICALLY_THROWN,SELF_TK_NO_DAMAGE,BURROWING,ROOTS,DODGED,CHAIN_CAST,IGNORES_QUIET_SOUNDS,ALERTED,SEES_ADJACENT_PLAYER,DIRECTION_OF_PREVIOUS_TILE,FOLLOW_DIRECTION_EXITED,AMNESIA_STUN,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,TURN_INTO_CORPSE,CORPSE,NO_CORPSE_KNOCKBACK,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
 	public enum SpellType{RADIANCE,FORCE_PALM,DETECT_MOVEMENT,FLYING_LEAP,MERCURIAL_SPHERE,GREASE,BLINK,FREEZE,SCORCH,LIGHTNING_BOLT,MAGIC_HAMMER,PORTAL,PASSAGE,AMNESIA,STONE_SPIKES,SHADOWSIGHT,BLIZZARD,COLLAPSE,DOOM,TELEKINESIS,NUM_SPELLS,NO_SPELL};
 	public enum SkillType{COMBAT,DEFENSE,MAGIC,SPIRIT,STEALTH,NUM_SKILLS,NO_SKILL};
@@ -37,7 +37,7 @@ namespace Forays{
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
 	public enum CriticalEffect{STUN,ONE_TURN_STUN,MAX_DAMAGE,PERCENT_DAMAGE,WEAK_POINT,WORN_OUT,REDUCE_ACCURACY,DRAIN_LIFE,GRAB,CHILL,FREEZE,INFLICT_VULNERABILITY,TRIP,KNOCKBACK,STRONG_KNOCKBACK,IGNITE,DIM_VISION,SWAP_POSITIONS,SLIME,MAKE_NOISE,BLIND,SLOW,POISON,PARALYZE,ONE_TURN_PARALYZE,STALAGMITES,FLING,PULL,SILENCE,INFEST,DISRUPTION,VICTORY,ACID,NO_CRIT};
 	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,REASSEMBLING,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,FOG,POISON_GAS_VENT,POISON_GAS,STONE_SLAB,MARBLE_HORROR,FIRE,NORMAL_LIGHTING,TELEPORTAL,BREACH,GRAVE_DIRT,POPPIES,TOMBSTONE_GHOST,SHIELDING,PIXIE_DUST,SPORES,BURROWING,FINAL_LEVEL_SPAWN_CULTISTS};
-	public enum OptionType{NO_WALL_SLIDING,AUTOPICKUP,TOP_ROW_MOVEMENT,NEVER_DISPLAY_TIPS,ALWAYS_RESET_TIPS};
+	public enum OptionType{NO_WALL_SLIDING,AUTOPICKUP,TOP_ROW_MOVEMENT,CONFIRM_BEFORE_RESTING,NEVER_DISPLAY_TIPS,ALWAYS_RESET_TIPS};
 	public class Game{
 		public Map M;
 		public Queue Q;
@@ -743,45 +743,54 @@ namespace Forays{
 						List<string> newhighscores = new List<string>();
 						int num_scores = 0;
 						bool added = false;
-						StreamReader file = new StreamReader("highscore.txt");
-						string s = "";
-						while(s.Length < 2 || s.Substring(0,2) != "--"){
-							s = file.ReadLine();
-							newhighscores.Add(s);
-						}
-						s = "!!";
-						while(s.Substring(0,2) != "--"){
-							s = file.ReadLine();
-							if(s.Substring(0,2) == "--"){
-								if(!added && num_scores < 22){
-									char symbol = Global.BOSS_KILLED? 'W' : '-';
-									newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name + " -- " + Global.KILLED_BY);
-								}
+						if(File.Exists("highscore.txt")){
+							StreamReader file = new StreamReader("highscore.txt");
+							string s = "";
+							while(s.Length < 2 || s.Substring(0,2) != "--"){
+								s = file.ReadLine();
 								newhighscores.Add(s);
-								break;
 							}
-							if(num_scores < 22){
-								string[] tokens = s.Split(' ');
-								int dlev = Convert.ToInt32(tokens[0]);
-								if(dlev < game.M.current_level || (dlev == game.M.current_level && Global.BOSS_KILLED)){
-									if(!added){
+							s = "!!";
+							while(s.Substring(0,2) != "--"){
+								s = file.ReadLine();
+								if(s.Substring(0,2) == "--"){
+									if(!added && num_scores < 22){
 										char symbol = Global.BOSS_KILLED? 'W' : '-';
 										newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name + " -- " + Global.KILLED_BY);
-										++num_scores;
-										added = true;
 									}
-									if(num_scores < 22){
+									newhighscores.Add(s);
+									break;
+								}
+								if(num_scores < 22){
+									string[] tokens = s.Split(' ');
+									int dlev = Convert.ToInt32(tokens[0]);
+									if(dlev < game.M.current_level || (dlev == game.M.current_level && Global.BOSS_KILLED)){
+										if(!added){
+											char symbol = Global.BOSS_KILLED? 'W' : '-';
+											newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name + " -- " + Global.KILLED_BY);
+											++num_scores;
+											added = true;
+										}
+										if(num_scores < 22){
+											newhighscores.Add(s);
+											++num_scores;
+										}
+									}
+									else{
 										newhighscores.Add(s);
 										++num_scores;
 									}
 								}
-								else{
-									newhighscores.Add(s);
-									++num_scores;
-								}
 							}
+							file.Close();
 						}
-						file.Close();
+						else{
+							newhighscores.Add("High scores:");
+							newhighscores.Add("--");
+							char symbol = Global.BOSS_KILLED? 'W' : '-';
+							newhighscores.Add(game.M.current_level.ToString() + " " + symbol + " " + Actor.player_name + " -- " + Global.KILLED_BY);
+							newhighscores.Add("--");
+						}
 						StreamWriter fileout = new StreamWriter("highscore.txt",false);
 						foreach(string str in newhighscores){
 							fileout.WriteLine(str);
@@ -1026,9 +1035,10 @@ namespace Forays{
 						}
 					}
 					Screen.MapDrawWithStrings(game.M.last_seen,0,0,Global.ROWS,Global.COLS);
-					game.B.DisplayNow("Press any key to continue. ");
-					Screen.CursorVisible = true;
-					Global.ReadKey();
+					game.player.GetTarget(true,-1,-1,true,false,false,false,"");
+					//game.B.DisplayNow("Press any key to continue. ");
+					//Screen.CursorVisible = true;
+					//Global.ReadKey();
 					MouseUI.PopButtonMap();
 					foreach(Actor a in drawn){
 						game.M.last_seen[a.row,a.col] = old_ch[a];
@@ -1435,34 +1445,74 @@ gl_FragColor = bgcolor_fs;
 			}
 			switch(MouseUI.Mode){
 			case MouseMode.Targeting:
-				if(!Global.KeyPressed && (row != MouseUI.LastRow || col != MouseUI.LastCol) && !KeyIsDown(Key.LControl) && !KeyIsDown(Key.RControl)){
-					MouseUI.LastRow = row;
-					MouseUI.LastCol = col;
-					Global.KeyPressed = true;
-					ConsoleKey key = ConsoleKey.F1;
-					Global.LastKey = new ConsoleKeyInfo(Global.GetChar(key,false),key,false,false,false);
+			{
+				int map_row = row - Global.MAP_OFFSET_ROWS;
+				int map_col = col - Global.MAP_OFFSET_COLS;
+				Button b = MouseUI.GetButton(row,col);
+				if(MouseUI.Highlighted != null && MouseUI.Highlighted != b){
+					MouseUI.RemoveHighlight();
+				}
+				if(args.XDelta == 0 && args.YDelta == 0){
+					return; //don't re-highlight immediately after a click
+				}
+				if(b != null){
+					if(b != MouseUI.Highlighted){
+						MouseUI.Highlighted = b;
+						colorchar[,] array = new colorchar[b.height,b.width];
+						for(int i=0;i<b.height;++i){
+							for(int j=0;j<b.width;++j){
+								array[i,j] = Screen.Char(i + b.row,j + b.col);
+								array[i,j].bgcolor = Color.Blue;
+							}
+						}
+						Screen.UpdateGLBuffer(b.row,b.col,array);
+					}
+				}
+				else{
+					if(!Global.KeyPressed && (row != MouseUI.LastRow || col != MouseUI.LastCol) && !KeyIsDown(Key.LControl) && !KeyIsDown(Key.RControl)){
+						MouseUI.LastRow = row;
+						MouseUI.LastCol = col;
+						Global.KeyPressed = true;
+						if(map_row >= 0 && map_row < Global.ROWS && map_col >= 0 && map_col < Global.COLS){
+							ConsoleKey key = ConsoleKey.F1;
+							Global.LastKey = new ConsoleKeyInfo(Global.GetChar(key,false),key,false,false,false);
+						}
+						else{
+							ConsoleKey key = ConsoleKey.F2;
+							Global.LastKey = new ConsoleKeyInfo(Global.GetChar(key,false),key,false,false,false);
+						}
+					}
 				}
 				break;
+			}
 			case MouseMode.Directional:
 			{
 				int map_row = row - Global.MAP_OFFSET_ROWS;
 				int map_col = col - Global.MAP_OFFSET_COLS;
-				int dir = Actor.player.DirectionOf(new pos(map_row,map_col));
-				pos p = Actor.player.p.PosInDir(dir);
-				Button dir_b = MouseUI.GetButton(Global.MAP_OFFSET_ROWS + p.row,Global.MAP_OFFSET_COLS + p.col);
-				if(MouseUI.Highlighted != null && MouseUI.Highlighted != dir_b){
-					MouseUI.RemoveHighlight();
+				if(map_row >= 0 && map_row < Global.ROWS && map_col >= 0 && map_col < Global.COLS){
+					int dir = Actor.player.DirectionOf(new pos(map_row,map_col));
+					pos p = Actor.player.p.PosInDir(dir);
+					Button dir_b = MouseUI.GetButton(Global.MAP_OFFSET_ROWS + p.row,Global.MAP_OFFSET_COLS + p.col);
+					if(MouseUI.Highlighted != null && MouseUI.Highlighted != dir_b){
+						MouseUI.RemoveHighlight();
+					}
+					if(dir_b != null && dir_b != MouseUI.Highlighted){
+						MouseUI.Highlighted = dir_b;
+						colorchar[,] array = new colorchar[1,1];
+						array[0,0] = Screen.Char(Global.MAP_OFFSET_ROWS + p.row,Global.MAP_OFFSET_COLS + p.col);
+						array[0,0].bgcolor = Color.Blue;
+						Screen.UpdateGLBuffer(dir_b.row,dir_b.col,array);
+					}
 				}
-				if(dir_b != null && dir_b != MouseUI.Highlighted){
-					MouseUI.Highlighted = dir_b;
-					colorchar[,] array = new colorchar[1,1];
-					array[0,0] = Screen.Char(Global.MAP_OFFSET_ROWS + p.row,Global.MAP_OFFSET_COLS + p.col);
-					array[0,0].bgcolor = Color.Blue;
-					Screen.UpdateGLBuffer(dir_b.row,dir_b.col,array);
+				else{
+					if(MouseUI.Highlighted != null){
+						MouseUI.RemoveHighlight();
+					}
 				}
 				break;
 			}
 			default:
+			{
 				Button b = MouseUI.GetButton(row,col);
 				if(MouseUI.Highlighted != null && MouseUI.Highlighted != b){
 					MouseUI.RemoveHighlight();
@@ -1505,13 +1555,17 @@ gl_FragColor = bgcolor_fs;
 						if(o != null && o != MouseUI.mouselook_current_target){
 							MouseUI.mouselook_current_target = o;
 							bool description_on_right = false;
-							int max_length = 29;
+							/*int max_length = 29;
 							if(map_col - 6 < max_length){
 								max_length = map_col - 6;
 							}
 							if(max_length < 20){
 								description_on_right = true;
 								max_length = 29;
+							}*/
+							int max_length = 28;
+							if(map_col <= 32){
+								description_on_right = true;
 							}
 							List<colorstring> desc_box = null;
 							Actor a = o as Actor;
@@ -1594,6 +1648,7 @@ gl_FragColor = bgcolor_fs;
 					}
 				}
 				break;
+			}
 			}
 		}
 		void MouseClickHandler(object sender,MouseButtonEventArgs args){
@@ -1705,12 +1760,29 @@ gl_FragColor = bgcolor_fs;
 					{
 						int map_row = row - Global.MAP_OFFSET_ROWS;
 						int map_col = col - Global.MAP_OFFSET_COLS;
-						int dir = Actor.player.DirectionOf(new pos(map_row,map_col));
-						pos p = Actor.player.p.PosInDir(dir);
-						Button dir_b = MouseUI.GetButton(Global.MAP_OFFSET_ROWS + p.row,Global.MAP_OFFSET_COLS + p.col);
-						if(dir_b != null){
-							bool shifted = (dir_b.mods & ConsoleModifiers.Shift) == ConsoleModifiers.Shift;
-							Global.LastKey = new ConsoleKeyInfo(Global.GetChar(dir_b.key,shifted),dir_b.key,shifted,false,false);
+						if(map_row >= 0 && map_row < Global.ROWS && map_col >= 0 && map_col < Global.COLS){
+							int dir = Actor.player.DirectionOf(new pos(map_row,map_col));
+							pos p = Actor.player.p.PosInDir(dir);
+							Button dir_b = MouseUI.GetButton(Global.MAP_OFFSET_ROWS + p.row,Global.MAP_OFFSET_COLS + p.col);
+							if(dir_b != null){
+								bool shifted = (dir_b.mods & ConsoleModifiers.Shift) == ConsoleModifiers.Shift;
+								Global.LastKey = new ConsoleKeyInfo(Global.GetChar(dir_b.key,shifted),dir_b.key,shifted,false,false);
+							}
+						}
+						else{
+							Global.LastKey = new ConsoleKeyInfo((char)27,ConsoleKey.Escape,false,false,false);
+						}
+						break;
+					}
+					case MouseMode.Targeting:
+					{
+						int map_row = row - Global.MAP_OFFSET_ROWS;
+						int map_col = col - Global.MAP_OFFSET_COLS;
+						if(map_row >= 0 && map_row < Global.ROWS && map_col >= 0 && map_col < Global.COLS){
+							Global.LastKey = new ConsoleKeyInfo((char)13,ConsoleKey.Enter,false,false,false);
+						}
+						else{
+							Global.LastKey = new ConsoleKeyInfo((char)27,ConsoleKey.Escape,false,false,false);
 						}
 						break;
 					}

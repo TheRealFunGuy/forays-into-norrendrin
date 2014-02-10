@@ -798,12 +798,22 @@ namespace Forays{
 					if(M.current_level >= 15 && R.PercentChance(1)){
 						ac = ActorType.MACHINE_OF_WAR;
 					}
-					Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col,true,true);
+					if(R.PercentChance(1)){
+						first.TileInDirection(dir).TransformTo(TileType.CHEST);
+						if(R.PercentChance(1)){
+							first.TileInDirection(dir).color = Color.Yellow;
+						}
+					}
+					else{
+						Actor.Create(ac,first.TileInDirection(dir).row,first.TileInDirection(dir).col,true,true);
+					}
 					first.TurnToFloor();
 					foreach(Tile t in first.TileInDirection(dir).TilesWithinDistance(1)){
 						t.solid_rock = false;
 					}
-					first.ActorInDirection(dir).FindPath(TileInDirection(dir));
+					if(first.ActorInDirection(dir) != null){
+						first.ActorInDirection(dir).FindPath(TileInDirection(dir)); //is this the correct destination? it seems to be working, anyway.
+					}
 					if(player.CanSee(first)){
 						B.Add("The wall slides away. ");
 					}
@@ -953,7 +963,7 @@ namespace Forays{
 				if(actor_here){
 					if(!actor().IsBurning()){
 						if(player.CanSee(this)){
-							B.Add("The air suddenly freezes, encasing " + actor().TheName(true) + " in ice. ");
+							B.Add("The air suddenly freezes around " + actor().TheName(true) + ". ");
 						}
 						actor().ApplyFreezing();
 					}
@@ -1137,6 +1147,7 @@ namespace Forays{
 							B.Add("You find a " + MagicTrinket.Name(trinket) + "! ");
 						}
 						player.magic_trinkets.Add(trinket);
+						Help.TutorialTip(TutorialTopic.MagicTrinkets);
 					}
 					else{
 						B.Add("The chest is empty! ");
