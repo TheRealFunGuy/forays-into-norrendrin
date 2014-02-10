@@ -2482,6 +2482,10 @@ compare this number to 1/2:  if less than 1/2, major.
 		public List<Tile> GetTargetLine(int max_distance){ return GetTarget(false,max_distance,0,false,true,false,true,""); }
 		public List<Tile> GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool return_extended_line,bool start_at_interesting_target,string always_displayed){
 			MouseUI.PushButtonMap(MouseMode.Targeting);
+			if(MouseUI.fire_arrow_hack){
+				MouseUI.CreateStatsButton(ConsoleKey.S,false,21,1);
+				MouseUI.fire_arrow_hack = false;
+			}
 			List<Tile> result = null;
 			ConsoleKeyInfo command;
 			int r,c;
@@ -3076,6 +3080,12 @@ compare this number to 1/2:  if less than 1/2, major.
 					if(command.Key == ConsoleKey.F1){
 						r = MouseUI.LastRow - Global.MAP_OFFSET_ROWS;
 						c = MouseUI.LastCol - Global.MAP_OFFSET_COLS;
+					}
+					else{
+						if(!lookmode && command.Key == ConsoleKey.F2){ //todo: not sure if I want this on or off. For lookmode, leaving the cursor on the side of the screen is just fine.
+							r = row;
+							c = col;
+						}
 					}
 					break;
 				}

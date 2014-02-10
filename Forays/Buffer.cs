@@ -142,6 +142,21 @@ namespace Forays{
 		}
 		public void Print(bool special_message){
 			Screen.CursorVisible = false;
+			int idx = str.Count - 1;
+			while(special_message && str[idx].Length > max_length - 7){
+				for(int i=max_length-8;i>=0;--i){
+					if(str[idx].Substring(i,1)==" "){
+						overflow = str[idx].Substring(i+1);
+						str[idx] = str[idx].Substring(0,i+1);
+						break;
+					}
+				}
+				if(overflow != ""){
+					Screen.ResetColors();
+					Print(false);
+					idx = str.Count - 1;
+				}
+			}
 			foreach(string s in str){
 				if(s != "You regenerate. " && s != "You rest... " && s != ""){
 					if(!player.HasAttr(AttrType.RESTING)){
@@ -167,7 +182,9 @@ namespace Forays{
 						too_long_if_repeated = true;
 					}
 					if(prev == s && str.Count == 1 && !too_long_if_repeated){ //trying this - only add the (x2) part if it's a single-line message, for ease of reading
-						log[last] = prev + "(x" + (Convert.ToInt32(count)+1).ToString() + ")";
+						if(s != "You can't move! " && s != "You're rooted to the ground! "){
+							log[last] = prev + "(x" + (Convert.ToInt32(count)+1).ToString() + ")"; //the immobilization messages could be confusing when repeated
+						}
 						repeated_message = true;
 					}
 					else{
@@ -216,10 +233,12 @@ namespace Forays{
 				}
 				M.Draw();
 				Screen.WriteString(cursor_row,cursor_col,"[more]",Color.Yellow);
+				MouseUI.PushButtonMap();
 				Screen.SetCursorPosition(cursor_col+6,cursor_row);
 				//Screen.ForegroundColor = ConsoleColor.Gray;
 				Screen.CursorVisible = true;
 				Global.ReadKey();
+				MouseUI.PopButtonMap();
 			}
 			str.Clear();
 			str.Add("");
@@ -284,6 +303,10 @@ namespace Forays{
 			MouseUI.PushButtonMap(MouseMode.YesNoPrompt);
 			MouseUI.CreateButton(ConsoleKey.Y,false,2,Global.MAP_OFFSET_COLS + s.Length + 1,1,2);
 			MouseUI.CreateButton(ConsoleKey.N,false,2,Global.MAP_OFFSET_COLS + s.Length + 4,1,2);
+			if(MouseUI.descend_hack && Actor.viewing_more_commands){
+				MouseUI.CreateStatsButton(ConsoleKey.N,false,16,1);
+				MouseUI.descend_hack = false;
+			}
 			DisplayNow(s + " (y/n): ");
 			Screen.CursorVisible = true;
 			while(true){

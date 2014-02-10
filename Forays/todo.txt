@@ -48,314 +48,56 @@ should !oSilence give you an aura? (so the guy you're fighting doesn't make nois
 you can be oiled and stoneformed at the same time, which leads to constant "you catch fire!" messages if you're near fire.
 -brutish strength knockback should happen instead of drive back, right?
 -make grabs interact with frozen - frozen probably breaks & prevents grabs.
+-"The grenade explodes! A noxious worm bursts through the wall! [more" <--the cursor was of course on the next row down, and the 'e' remained on the screen.
+-make sure burning enemies *advance* out of fire when possible, toward the player.
+(improved AI for handling hazardous terrain)
+-and, of course, AI could check the danger value of the tile it's about to walk into...
+give mindless to phase spider, or make it teleport away here, too? (made phase spider avoid hazards by teleporting, too)
+equipment screen colors "[a]" entirely in cyan. consider changing.
+bug: "You is no longer pinned." ...haha. Glad I found that one.
+bug: you become magical_drowsiness
+-some walls could become dark gray now that i use blue for out of sight, eh? (fortress changed to dark gray)
+-allow game to be started with no options.txt and highscore.txt
+crypts + naturally generated tombstones can put them too close together
+allow looking around the map after death?
+"you fade away in the darkness" should also appear when you put your torch away while shadow cloaked.
+-poppies shouldn't be hazardous if you're already drowsy or can't escape them anyway.
+-low chance to find a chest in a sliding wall trap?
+-flush input after more animations, especially passage. -- and bola!
+-disable mouse pathing while [more] is displayed - otherwise, you zoom off across the map after it clears.
+-monsters seem to EITHER continue down corridors OR continue down paths after seeing the player (if the player ducks out of LOS). THEN they go to the target_location. (I added path.Clear())
+-brambles don't cost enough yet, or else autoexplore isn't considering them:
+-perhaps a bigger penalty than -1 for each fork in the road when corridor-seeking?
+kobold(poison ticks for Q5),
+ahh, autoexplore pathing IS broken - it's trying to reach the nearest ones even if it goes over traps. (should be fixed - it was considering traps as valid if they were next to unexplored space)
+-consider flight for exploration pathing
+no IMMOBILIZATION of flying enemies with arrows, i think - no, keep this, but make them trigger traps when they get pinned. \o/
+plus, roots should end flying, but that's probably not needed because it'll outlast it. - no need, but make this trigger traps too.
+-hmm - double clicking [w]alk makes you (usually) walk to the left. Might need to disable that if you're outside the map.
+-make double clicking [w] and [X] cancel - send an Escape if you're outside the map.
+-hacky [s]hoot button added to targeting mode.
+consider reminder for "you can't move!" (x520)
+change freeze trap message to avoid double "encased in ice"
+reminder if you've missed a shrine when taking stairs? -needs a good message
+another lighting bug: I found a 2x3 (buggy) darkened section against a wall. might have been caused by a cultist lighting itself (and updating its radius) despite being slime-covered or something. - i don't know if this is fixed, but I did finally add a slime check for cultists
+option for confirmation before resting
+-I need to make a method to unify all the tile costs, and consider player-only stuff too.
+maybe move lashers or oozes to depth 8, and move pixies to depth 9 (and have them appear in groups) - also changed their crit effect.
+oh wow, lashers retaliate for every point of fire damage. hmmmm.
+...i just realized that you can read scrolls while blind
+drop how many? barely works with mouse.
+item bug: It's possible to have a (stack of) scroll(s) in the inventory that "you don't know what type this is". check all methods of item acquisition.
+the "you feel less vulnerable" message still appears if it has triggered.
+	-should be easy to clear those events
+bug: some trinkets don't get buttons - all of them after the first?
+there's another bug with the character screen buttons. When I had only a few feats, it was fine, but after it wrapped to the next line the button extended across the entire line.
+hmm...double clicking Descend will confirm "really descend without resting?".
+whoa, utility.cs is missing from the project.
+"The skeleton looks less disoriented. " - no skeleton in sight.
 
 done^
 
- 1: goblin bat wolf moth dweller bramble frostling
- 2: swordsman dreamwarrior cobra kobold sporepod forasect poltergeist
- 3: cultist archer shaman dartfrog skeleton shadow mimic
- 4: spider zombie berserker slug demon banshee hag
- 5: zealot direrat killer boar troll dreamsprite cloude
- 6: ascetic duelist warg scout crawler mechknight transcendent
- 7: battlemage soldier skittermoss golem mude flametongue entrancer
- 8: ogre grenadier pixie cknight bloodwitch hulk marblehorror
- 9: ooze pyren lasher sentinel worm titan vampire
-10: warmage necro webstrider assassin avenger behemoth warmachine
 
-
-
-
--make sure burning enemies *advance* out of fire when possible, toward the player.
-(improved AI for handling hazardous terrain)
-
-
-
-give mindless to phase spider, or make it teleport away here, too?
-
-
-
-
-adjust poppy AI math: they flee 1 turn too late, it seems.
-
-
-
-
-and, of course, AI could check the danger value of the tile it's about to walk into...
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--allow game to be started with no options.txt, then create a default.
-
-
-
-
-crypts + naturally generated tombstones can put them too close together
-
-
-
-
-allow looking around the map after death?
-
-
-
-
-equipment screen colors "[a]" entirely in cyan. consider changing.
-
-
-
-
-
-"you fade away in the darkness" should also appear when you put your torch away while shadow cloaked.
-
-
-
-
-
-bug: "You is no longer pinned." ...haha. Glad I found that one.
-
-
-
-
-
-bug: you become magical_drowsiness
-
-
-
-
-
-
-
--low chance to find a chest in a sliding wall trap?
-
-
-
-
--some walls could become dark gray now that i use blue for out of sight, eh?
-
-
-
-
--add a lot more combat info to monster description boxes: speed, damage, "Melee effect:" or "On hit:", "Critical effect:", "Abilities:".
-
-+-------------------------------+
-| The radiance of this empyreal |
-|   being makes your eyes hurt  |
-| after a few seconds. When you |
-|  look again it still has the  |
-|     shape of a human, but     |
-|  occasionally its silhouette  |
-|  seems to have wings, horns,  |
-|         or four legs.         |
-|                               |
-|      [=] Hide description     |
-+-------------------------------+
-###.##  ,.V
-.....#   .
-.###.#   .
-## #.#  #.#
-   #.#  #.#
-   #.####.### #
-   #.##.......#
-   #....#######
-   ######
-
-
-
-+-------------------------------+
-| The radiance of this empyreal |
-|   being makes your eyes hurt  |
-| after a few seconds. When you |
-|  look again it still has the  |
-|     shape of a human, but     |
-|  occasionally its silhouette  |
-|  seems to have wings, horns,  |
-|         or four legs.         |
-|                               |
-|   Melee attack damage: 3d6    |
-|   Crit effect: Vulnerability  |
-|   Abilities: Halo             |
-|                               |
-|      [=] Hide description     |
-+-------------------------------+
-   #.#  #.#
-   #.####.### #
-   #.##.......#
-   #....#######
-   ######
-
-Speed: Normal
-Damage: 4d6
-Critical effect: Stun & max damage
-Abilities: None
-
-
--now that there's so much room, add target health to sidebar. (but "corpsetower behemoth" doesn't fit! maybe use its symbol?)
-
-
-
-
--flush input after more animations, especially passage. -- and bola!
-
-
-
-
--consider brogue-style "traps don't block corridors" rule
-
-
-
-
--monsters seem to EITHER continue down corridors OR continue down paths after seeing the player (if the player ducks out of LOS). THEN they go to the target_location.
-
-
-
-
-
-
-
--let cloud e. and any other erratically moving monster also do so while wandering.
-
-
-
-
--perhaps a bigger penalty than -1 for each fork in the road when corridor-seeking?
-
-
-
-
--what if dim vision just automatically returned false for cansee checks at range 2+?
-
-
-
-
--make terrain descriptions appear in lookmode
-
-
-
-
--minor visual bug with passage when triggering a trap
-
-
-
-
-kobold(poison ticks for Q5),
-
-
-
-
-ahh, autoexplore pathing IS broken - it's trying to reach the nearest ones even if it goes over traps.
-	-can't figure out why, though.
-
-
-
-
-do I add doors before altering rooms in standard levels? that can lead to doors in the middle of corridors when cross rooms are involved.
-
-
-no IMMOBILIZATION of flying enemies with arrows, i think
-	-no, keep this, but make them trigger traps when they get pinned. \o/
-
-
-
-
-
-plus, roots should end flying, but that's probably not needed because it'll outlast it.
-	-no need, but make this trigger traps too.
-
-
-
-hmm - double clicking [w]alk makes you (usually) walk to the left. Might need to disable that if you're outside the map.
-
-
-
-
-
-need to consider visible immobile mobs when pathing - should be expensive! otherwise you get moved into bramble range when you click.
-
-
-
-
-option for confirmation before resting
-
-
-
-
-
-consider reminder for "you can't move!" (x520)
-
-
-
-
-
-
-remember "special thanks to..."
-
-
-
-
-the dungeon should sometimes hand out temporary skill boosts or something. "hey, i've got +5 spirit for some number of turns!"
-
-
-
-
-
-
-whoa, utility.cs is missing from the project.
-
-
-
-
-add duration info to spell help
-
-
-
-
-
-
-tutorial tips to do:
-
-tip for magic trinkets: "you always get the benefits of all your trinkets"
-
-more obvious tips for certain things, like exhaustion casting
-
-spirit tip: no burning, no freezing, no oil or slime or webs or grabs, no potions.
-
-
-design stuff that would put a halt to my productivity if I tackled it now:
-
-so, some monsters will get their own level types...and some monsters should get their own dungeon features. insects in small hives(maybe), and bats in wide caves or chasms(definitely), and probably features for moths and brambles and sporepods and cultists and skeletons and mimics (something that steals an item and drops it somewhere, and also spawns mimic or two that look just like it?) and zombies and slugs and hags...
-
-slippery surfaces + bat movement enemies. evil.
-
-consider making spellmuddle pixies appear in groups!
-
-revisit filenames - consider moving GL/Mouse stuff to its own file, remove DungeonGenerator and Parabola, consider removing Spell, etc.
-
-reminder if you've missed a shrine when taking stairs?
-	-needs a good message
-
-fast monsters burn too fast, and slow monsters burn too slowly. probably needs another
-  "time_of_last_action"-like variable.
-
-make enemies smarter about stepping into fire/poison. which ones, though? not zombies.
-
-bugs that might take a while to track down - do these last:
-
-another lighting bug: I found a 2x3 (buggy) darkened section against a wall. might have been caused by a cultist lighting itself (and updating its radius) despite being slime-covered or something.
 
 
 
@@ -372,12 +114,5 @@ seer casts glacial blast. The glacial blast hits you. You [more]
 die. [more]"
 
 visual bug for lightning bolt: when targeting past the target to hit it at an angle (when it's in a doorway, say), the bolt seems to go through walls.
-
-"The skeleton looks less disoriented. " - no skeleton in sight.
-	-reviewed code. should never happen, but it did.
-		-theory: it died and the message was still printed. rework removal from msg_obj list.
-			-happened again with "the skeleton looks more stable". debug the trap messages, then do the msg_obj fix.
-		-above theory is probably wrong: happened with a goblin that was alive
-			-yeah, this still happens. maybe the bug is in the 'forget about dead things' code in event.
 
 

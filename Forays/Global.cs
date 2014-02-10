@@ -14,7 +14,7 @@ using OpenTK.Input;
 using Utilities;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.8.X ";
+		public const string VERSION = "version 0.8.2 ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
@@ -465,6 +465,9 @@ namespace Forays{
 			return result;
 		}
 		public static void LoadOptions(){
+			if(!File.Exists("options.txt")){
+				return;
+			}
 			StreamReader file = new StreamReader("options.txt");
 			string s = "";
 			while(s.Length < 2 || s.Substring(0,2) != "--"){
@@ -513,7 +516,7 @@ namespace Forays{
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):");
 			file.WriteLine("no_wall_sliding autopickup top_row_movement never_display_tips always_reset_tips");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
-				if(Options[op]){
+				if(Option(op)){
 					file.Write("t ");
 				}
 				else{

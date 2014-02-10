@@ -411,8 +411,8 @@ namespace Forays{
 		public int TimeToExecute(){ return delay + time_created; }
 		public void Kill(PhysicalObject target_,EventType type_){
 			if(msg_objs != null && (type==type_ || type_==EventType.ANY_EVENT)){
-				if(msg_objs.Contains(target)){
-					msg_objs.Remove(target);
+				if(msg_objs.Contains(target_)){
+					msg_objs.Remove(target_);
 				}
 			}
 			Tile t = target_ as Tile;
@@ -1900,11 +1900,11 @@ namespace Forays{
 									a.RefreshDuration(AttrType.POPPY_COUNTER,200);
 								}
 								if(a.attrs[AttrType.POPPY_COUNTER] >= 4){
+									a.ApplyStatus(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100);
 									if(a == player && !a.HasAttr(AttrType.MAGICAL_DROWSINESS)){
-										B.Add("The poppies make you drowsy. ");
+										//B.Add("The poppies make you drowsy. ");
 										Help.TutorialTip(TutorialTopic.Drowsiness);
 									}
-									a.ApplyStatus(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100);
 									//a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,a.DurationOfMagicalEffect((R.Roll(3)+4)) * 100,a.YouFeel() + " less drowsy. ",a);
 								}
 							}
