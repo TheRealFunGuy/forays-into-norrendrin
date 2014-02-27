@@ -14,6 +14,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using Utilities;
+using GLDrawing;
 namespace Forays{
 	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
 	public struct colorchar{
@@ -321,69 +322,71 @@ namespace Forays{
 		}
 		public static void UpdateGLBuffer(int start_row,int start_col,int end_row,int end_col){
 			int num_positions = ((end_col + end_row*Global.SCREEN_W) - (start_col + start_row*Global.SCREEN_W)) + 1;
-			List<float> values = new List<float>(48 * num_positions);
 			int row = start_row;
 			int col = start_col;
-			while(true){
+			int[] sprite_rows = new int[num_positions];
+			int[] sprite_cols = new int[num_positions];
+			float[][] color_info = new float[2][];
+			color_info[0] = new float[4 * num_positions];
+			color_info[1] = new float[4 * num_positions];
+			for(int i=0;i<num_positions;++i){
 				Color4 color = GLGame.ConvertColor(memory[row,col].color);
 				Color4 bgcolor = GLGame.ConvertColor(memory[row,col].bgcolor);
-				float tex_start = GLGame.tile_unit * (int)memory[row,col].c;
-				float tex_end = tex_start + GLGame.tile_unit_padded;
-				int flipped_row = (Global.SCREEN_H-1) - row;
-				float fi = GLGame.screen_multiplier_h * (((float)flipped_row / GLGame.half_height) - 1.0f);
-				float fj = GLGame.screen_multiplier_w * (((float)col / GLGame.half_width) - 1.0f);
-				float fi_plus1 = GLGame.screen_multiplier_h * (((float)(flipped_row+1) / GLGame.half_height) - 1.0f);
-				float fj_plus1 = GLGame.screen_multiplier_w * (((float)(col+1) / GLGame.half_width) - 1.0f);
-				values.AddRange(new float[]{
-					fj,fi,tex_start,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-					fj,fi_plus1,tex_start,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-					fj_plus1,fi_plus1,tex_end,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-					fj_plus1,fi,tex_end,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A});
-				if(col == end_col && row == end_row){
+				sprite_rows[i] = 0;
+				sprite_cols[i] = (int)memory[row,col].c;
+				int idx4 = i * 4;
+				color_info[0][idx4] = color.R;
+				color_info[0][idx4 + 1] = color.G;
+				color_info[0][idx4 + 2] = color.B;
+				color_info[0][idx4 + 3] = color.A;
+				color_info[1][idx4] = bgcolor.R;
+				color_info[1][idx4 + 1] = bgcolor.G;
+				color_info[1][idx4 + 2] = bgcolor.B;
+				color_info[1][idx4 + 3] = bgcolor.A;
+				/*if(col == end_col && row == end_row){
 					break;
-				}
+				}*/
 				col++;
 				if(col == Global.SCREEN_W){
 					row++;
 					col = 0;
 				}
 			}
-			int idx = (start_col + start_row*Global.SCREEN_W) * 48;
-			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48*num_positions),values.ToArray());
+			//int idx = (start_col + start_row*Global.SCREEN_W) * 48;
+			//GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48*num_positions),values.ToArray());
+			Game.gl.UpdateVertexArray(start_row,start_col,GLGame.text_surface,sprite_rows,sprite_cols,color_info);
 		}
 		public static void UpdateGLBuffer(int row,int col){
-			Color4 color = GLGame.ConvertColor(memory[row,col].color);
+			colorchar cch = memory[row,col];
+			Game.gl.UpdateVertexArray(row,col,GLGame.text_surface,0,(int)cch.c,cch.color.GetFloatValues(),cch.bgcolor.GetFloatValues());
+			/*Color4 color = GLGame.ConvertColor(memory[row,col].color);
 			Color4 bgcolor = GLGame.ConvertColor(memory[row,col].bgcolor);
-			float tex_start = GLGame.tile_unit * (int)memory[row,col].c;
-			float tex_end = tex_start + GLGame.tile_unit_padded; //need 8/9 of it to account for the padding
-			int flipped_row = (Global.SCREEN_H-1) - row;
-				float fi = GLGame.screen_multiplier_h * (((float)flipped_row / GLGame.half_height) - 1.0f);
-				float fj = GLGame.screen_multiplier_w * (((float)col / GLGame.half_width) - 1.0f);
-				float fi_plus1 = GLGame.screen_multiplier_h * (((float)(flipped_row+1) / GLGame.half_height) - 1.0f);
-				float fj_plus1 = GLGame.screen_multiplier_w * (((float)(col+1) / GLGame.half_width) - 1.0f);
-			float[] values = new float[]{
-				fj,fi,tex_start,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-				fj,fi_plus1,tex_start,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-				fj_plus1,fi_plus1,tex_end,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-				fj_plus1,fi,tex_end,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A};
-			int idx = (col + row*Global.SCREEN_W) * 48;
-			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48),values);
+			float[][] color_info = new float[2][];
+			color_info[0] = new float[4];
+			color_info[1] = new float[4];
+			color_info[0][0] = color.R;
+			color_info[0][1] = color.G;
+			color_info[0][2] = color.B;
+			color_info[0][3] = color.A;
+			color_info[1][0] = bgcolor.R;
+			color_info[1][1] = bgcolor.G;
+			color_info[1][2] = bgcolor.B;
+			color_info[1][3] = bgcolor.A;
+			Game.gl.UpdateVertexArray(row,col,GLGame.text_surface,0,(int)memory[row,col].c,color_info);*/
 		}
 		public static void UpdateCursor(bool make_visible){
-			Color4 color = GLGame.ConvertColor(Color.Gray);
-			int idx = Global.SCREEN_H * Global.SCREEN_W * 48;
-			if(make_visible){
-				int flipped_row = (Global.SCREEN_H-1) - cursor_top;
-				float fi = GLGame.screen_multiplier_h * (((float)flipped_row / GLGame.half_height) - 1.0f);
-				float fj = GLGame.screen_multiplier_w * (((float)cursor_left / GLGame.half_width) - 1.0f);
-				float fi_plus1 = GLGame.screen_multiplier_h * (((-0.875f + (float)(flipped_row+1)) / GLGame.half_height) - 1.0f);
-				float fj_plus1 = GLGame.screen_multiplier_w * (((float)(cursor_left+1) / GLGame.half_width) - 1.0f);
-				float[] cursor_values = new float[]{fj,fi,GLGame.tile_unit*8,1,color.R,color.G,color.B,color.A,0,0,0,0,  fj,fi_plus1,GLGame.tile_unit*8,0.8f,color.R,color.G,color.B,color.A,0,0,0,0,  fj_plus1,fi_plus1,GLGame.tile_unit*8.5f,0.8f,color.R,color.G,color.B,color.A,0,0,0,0,  fj_plus1,fi,GLGame.tile_unit*8.5f,1,color.R,color.G,color.B,color.A,0,0,0,0};
-				GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48),cursor_values);
+			if(GLGame.graphics_surface.Disabled && make_visible){
+				float[] color_values = GLGame.ConvertColor(Color.Gray).GetFloatValues();
+				SpriteSurface s = GLGame.cursor_surface;
+				s.Disabled = false;
+				s.PixelHeightOffset = cursor_top * GLGame.text_surface.TileHeight + GLGame.text_surface.TileHeight * 7 / 8;
+				s.PixelWidthOffset = cursor_left * GLGame.text_surface.TileWidth;
+				s.GLCoordHeightOffset = ((float)((Game.gl.GameAreaHeight - s.PixelHeightOffset) - s.Rows*s.TileHeight) / (float)Game.gl.GameAreaHeight) * 2.0f - 1.0f;
+				s.GLCoordWidthOffset = ((float)s.PixelWidthOffset / (float)Game.gl.GameAreaWidth) * 2.0f - 1.0f;
+				Game.gl.UpdateVertexArray(0,0,s,0,0,color_values,color_values);
 			}
 			else{
-				float[] cursor_values = new float[]{2,2,GLGame.tile_unit*8,1,color.R,color.G,color.B,color.A,0,0,0,0,  2,2,GLGame.tile_unit*8,0,color.R,color.G,color.B,color.A,0,0,0,0,  2,2,GLGame.tile_unit*8.5f,0.75f,color.R,color.G,color.B,color.A,0,0,0,0,  2,2,GLGame.tile_unit*8.5f,1,color.R,color.G,color.B,color.A,0,0,0,0};
-				GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48),cursor_values);
+				GLGame.cursor_surface.Disabled = true;
 			}
 		}
 		public static void UpdateGLBuffer(int start_row,int start_col,colorchar[,] array){
@@ -392,29 +395,33 @@ namespace Forays{
 			int start_idx = start_col + start_row*Global.SCREEN_W;
 			int end_idx = (start_col + array_w - 1) + (start_row + array_h - 1)*Global.SCREEN_W;
 			int count = (end_idx - start_idx) + 1;
-			char[] chars = new char[count];
-			Color4[] colors = new Color4[count];
-			Color4[] bgcolors = new Color4[count];
-			int array_idx = -1;
-			for(int i=0;i<array_h;++i){
-				for(int j=0;j<array_w;++j){
-					array_idx = j + i*Global.SCREEN_W;
-					colorchar cch = array[i,j];
-					chars[array_idx] = cch.c;
-					colors[array_idx] = GLGame.ConvertColor(cch.color);
-					bgcolors[array_idx] = GLGame.ConvertColor(cch.bgcolor);
-				}
+			int end_row = start_row + array_h - 1;
+			int end_col = start_col + array_w - 1;
+			int[] sprite_rows = new int[count];
+			int[] sprite_cols = new int[count];
+			float[][] color_info = new float[2][];
+			color_info[0] = new float[4 * count];
+			color_info[1] = new float[4 * count];
+			for(int n=0;n<count;++n){
+				int i = n / Global.SCREEN_W;
+				int j = n % Global.SCREEN_W;
+				colorchar cch = (i >= start_row && i <= end_row && j >= start_col && j <= end_col)? array[i,j] : memory[i,j];
+				Color4 color = GLGame.ConvertColor(cch.color);
+				Color4 bgcolor = GLGame.ConvertColor(cch.bgcolor);
+				sprite_rows[i] = 0;
+				sprite_cols[i] = (int)cch.c;
+				int idx4 = j + i*Global.SCREEN_W * 4;
+				color_info[0][idx4] = color.R;
+				color_info[0][idx4 + 1] = color.G;
+				color_info[0][idx4 + 2] = color.B;
+				color_info[0][idx4 + 3] = color.A;
+				color_info[1][idx4] = bgcolor.R;
+				color_info[1][idx4 + 1] = bgcolor.G;
+				color_info[1][idx4 + 2] = bgcolor.B;
+				color_info[1][idx4 + 3] = bgcolor.A;
 			}
-			for(int i=0;i<count;++i){
-				if(chars[i] == (char)0){
-					int idx = i + start_idx;
-					colorchar cch = memory[idx / Global.SCREEN_W,idx % Global.SCREEN_W];
-					chars[i] = cch.c;
-					colors[i] = GLGame.ConvertColor(cch.color);
-					bgcolors[i] = GLGame.ConvertColor(cch.bgcolor);
-				}
-			}
-			Game.gl.UpdateVertexArray(start_row,start_col,chars,colors,bgcolors);
+			//Game.gl.UpdateVertexArray(start_row,start_col,chars,colors,bgcolors);
+			Game.gl.UpdateVertexArray(start_row,start_col,GLGame.text_surface,sprite_rows,sprite_cols,color_info);
 		}
 		public static void WriteChar(int r,int c,char ch){
 			WriteChar(r,c,new colorchar(Color.Gray,ch));
@@ -465,7 +472,7 @@ namespace Forays{
 							if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
 								BackgroundColor = co;
 							}
-							Console.SetCursorPosition(c,r);
+							Console.SetCursorPosition(c+j,r+i);
 							Console.Write(ch.c);
 						}
 					}
@@ -1842,7 +1849,7 @@ namespace Forays{
 					int i = p.row;
 					int j = p.col;
 					colorchar cch = Screen.MapChar(i,j); //I tried doing this with a single call to UpdateVertexArray. It was slow.
-					Game.gl.UpdateVertexArray(i+Global.MAP_OFFSET_ROWS,j+Global.MAP_OFFSET_COLS,cch.c,GLGame.ConvertColor(cch.color),GLGame.ConvertColor(cch.bgcolor));
+					Game.gl.UpdateVertexArray(i+Global.MAP_OFFSET_ROWS,j+Global.MAP_OFFSET_COLS,GLGame.text_surface,0,(int)cch.c,cch.color.GetFloatValues(),cch.bgcolor.GetFloatValues());
 				}
 				mouse_path = null;
 			}

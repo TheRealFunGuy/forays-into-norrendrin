@@ -11,6 +11,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Threading;
 using OpenTK.Input;
+using OpenTK.Graphics;
 using Utilities;
 namespace Forays{
 	public static class Global{
@@ -273,7 +274,9 @@ namespace Forays{
 				return Console.ReadKey(true);
 			}
 			while(true){
-				Game.gl.Update();
+				if(!Game.gl.Update()){
+					Global.Quit();
+				}
 				if(Screen.CursorVisible){
 					TimeSpan time = GLGame.Timer.Elapsed;
 					if(time.Seconds >= 1){
@@ -994,6 +997,13 @@ namespace Forays{
 			if(i < path.Count){
 				path.RemoveRange(i,path.Count - i);
 			}
+		}
+		public static float[] GetFloatValues(this Color color){
+			Color4 c = GLGame.ConvertColor(color);
+			return new float[]{c.R,c.G,c.B,c.A};
+		}
+		public static float[] GetFloatValues(this Color4 c){
+			return new float[]{c.R,c.G,c.B,c.A};
 		}
 	}
 }

@@ -27,9 +27,10 @@ Potion of roots - Drinking this potion will cause thick roots
 Potion of vigor - This potion will relieve your exhaustion and
   temporarily double your movement speed.
 
-Potion of silence - This potion will cause your actions to
-  become entirely soundless. You'll attract less attention, but
-  you'll be unable to speak words of magic.
+Potion of silence - This potion will cause you to radiate an
+  aura of silence, preventing all sounds within 2 spaces. This
+  is beneficial for stealth, but leaves you unable to speak
+  words of magic.
 
 Potion of cloaking - This potion will cause you to fade to
   invisibility while in the shadows.

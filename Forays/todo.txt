@@ -1,4 +1,31 @@
 
+ignoring the fact that I don't have a set with all the graphics I need just yet...
+
+what would I need for this?
+
+first, I know I need some sort of thing to keep track of the current screen position, horizontally only. This will be used when the player moves, in lookmode, and other stuff like that.
+
+
+then, i need texcoords for every graphic...
+
+
+
+so, the first thing to do is to prepare a bitmap with a few images in it. probably just wall, floor, dude.
+
+
+when I get graphical mode working, i'll need to change the mouse handler to check for that.
+
+NEXT: will I still support font changes for non-graphical mode? sounds good. i suppose graphical mode might be restricted to one font, so switching to graphics would resize the screen or whatever.
+
+
+
+
+note: i added parabola and schism to the project. didn't add the build script or opentk.dll.
+
+
+
+
+
 done:
 command line switch to start console version as GL.
 I used the wrong form of current_level when spawning monsters in sliding wall traps. as a result, corpsetower behemoths can appear very early.

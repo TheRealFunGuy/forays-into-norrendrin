@@ -4357,6 +4357,9 @@ namespace Forays{
 					if(Global.LINUX && !Screen.GLMode){
 						ls.Add("Attempt to fix display glitches on certain terminals".PadRight(COLS));
 					}
+					if(Screen.GLMode){
+						ls.Add("Disable graphics".PadRight(58) + (Global.Option(OptionType.DISABLE_GRAPHICS)? "yes ":"no ").PadLeft(4));
+					}
 					Select("Options: ",ls,true,false,false);
 					Screen.CursorVisible = true;
 					ch = ConvertInput(Global.ReadKey());
@@ -4418,6 +4421,15 @@ namespace Forays{
 								}
 							}
 						}
+						else{
+							if(Screen.GLMode){
+								Global.Options[OptionType.DISABLE_GRAPHICS] = !Global.Option(OptionType.DISABLE_GRAPHICS);
+								GLGame.graphics_surface.Disabled = Global.Option(OptionType.DISABLE_GRAPHICS);
+								if(Global.Option(OptionType.DISABLE_GRAPHICS)){
+									Screen.UpdateCursor(false);
+								}
+							}
+						}
 						break;
 					case (char)27:
 					case ' ':
@@ -4466,8 +4478,8 @@ namespace Forays{
 				ls.Add("Abandon character and quit game");
 				ls.Add("Quit game immediately - don't save anything");
 				ls.Add("Continue playing");
-				bool no_close = GLGame.NoClose;
-				GLGame.NoClose = false;
+				bool no_close = Game.gl.NoClose;
+				Game.gl.NoClose = false;
 				Screen.CursorVisible = true;
 				switch(Select("Quit? ",ls)){
 				case 0:
@@ -4498,7 +4510,7 @@ namespace Forays{
 				if(!Global.SAVING){
 					Q0();
 				}
-				GLGame.NoClose = no_close;
+				Game.gl.NoClose = no_close;
 				break;
 			}
 			case 'v':
@@ -4542,7 +4554,7 @@ namespace Forays{
 				Q0();
 				break;
 			case '~': //debug mode 
-				if(false){
+				if(true){
 					List<string> l = new List<string>();
 					l.Add("blink");
 					l.Add("create chests");
