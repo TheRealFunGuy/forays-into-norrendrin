@@ -484,6 +484,8 @@ namespace Forays{
 			}
 		}
 		public void Draw(){
+			//Game.gl.UpdateVertexArray(0,0,GLGame.graphics_surface, todo hack jumpto
+			//GLGame.UpdateMapVertexArrayForGraphics(Global.MAP_OFFSET_COLS,Global.MAP_OFFSET_ROWS,Global.COLS/2,Global.ROWS);
 			if(Screen.MapChar(0,0).c == '-'){ //kinda hacky. there won't be an open door in the corner, so this looks for
 				RedrawWithStrings(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely)
 			}
@@ -511,6 +513,20 @@ namespace Forays{
 						for(int i=0;i<ROWS;++i){ //if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; }
 							for(int j=0;j<COLS;++j){ //^--top secret, mostly because it doesn't work well - 
 								Screen.WriteMapChar(i,j,VisibleColorChar(i,j)); //redrawing leaves gaps for some reason.
+								//Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,2); //todo jumpto hack
+								if(j < 33){
+									if(actor[i,j] != null){
+										Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,3);
+									}
+									else{
+										if(tile[i,j].passable){
+											Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,2);
+										}
+										else{
+											Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,1);
+										}
+									}
+								}
 							}
 						}
 					}

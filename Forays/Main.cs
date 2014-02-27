@@ -19,6 +19,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using Utilities;
 using Forays;
+using GLDrawing;
 namespace Forays{
 	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,STALAGMITE,FIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,SLIDING_WALL_TRAP,GRENADE_TRAP,SHOCK_TRAP,ALARM_TRAP,DARKNESS_TRAP,POISON_GAS_TRAP,BLINDING_TRAP,ICE_TRAP,PHANTOM_TRAP,SCALDING_OIL_TRAP,FLING_TRAP,STONE_RAIN_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,SPELL_EXCHANGE_SHRINE,RUBBLE,FIRE_GEYSER,STATUE,POOL_OF_RESTORATION,FOG_VENT,POISON_GAS_VENT,STONE_SLAB,CHASM,BREACHED_WALL,WATER,ICE,CRACKED_WALL,BRUSH,POPPY_FIELD,JUNGLE,GRAVEL,BLAST_FUNGUS,GLOWING_FUNGUS,TOMBSTONE,GRAVE_DIRT,BARREL,STANDING_TORCH,VINE,POISON_BULB,WAX_WALL,DEMONIC_IDOL};
 	public enum FeatureType{GRENADE,TROLL_CORPSE,TROLL_BLOODWITCH_CORPSE,FOG,POISON_GAS,SLIME,TELEPORTAL,INACTIVE_TELEPORTAL,STABLE_TELEPORTAL,OIL,FIRE,BONES,WEB,PIXIE_DUST,FORASECT_EGG,SPORES};
@@ -37,7 +38,7 @@ namespace Forays{
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
 	public enum CriticalEffect{STUN,ONE_TURN_STUN,MAX_DAMAGE,PERCENT_DAMAGE,WEAK_POINT,WORN_OUT,REDUCE_ACCURACY,DRAIN_LIFE,GRAB,CHILL,FREEZE,INFLICT_VULNERABILITY,TRIP,KNOCKBACK,STRONG_KNOCKBACK,IGNITE,DIM_VISION,SWAP_POSITIONS,SLIME,MAKE_NOISE,BLIND,SLOW,POISON,PARALYZE,ONE_TURN_PARALYZE,STALAGMITES,FLING,PULL,SILENCE,INFEST,DISRUPTION,VICTORY,ACID,NO_CRIT};
 	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,REASSEMBLING,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,FOG,POISON_GAS_VENT,POISON_GAS,STONE_SLAB,MARBLE_HORROR,FIRE,NORMAL_LIGHTING,TELEPORTAL,BREACH,GRAVE_DIRT,POPPIES,TOMBSTONE_GHOST,SHIELDING,PIXIE_DUST,SPORES,BURROWING,FINAL_LEVEL_SPAWN_CULTISTS};
-	public enum OptionType{NO_WALL_SLIDING,AUTOPICKUP,TOP_ROW_MOVEMENT,CONFIRM_BEFORE_RESTING,NEVER_DISPLAY_TIPS,ALWAYS_RESET_TIPS};
+	public enum OptionType{NO_WALL_SLIDING,AUTOPICKUP,TOP_ROW_MOVEMENT,CONFIRM_BEFORE_RESTING,NEVER_DISPLAY_TIPS,ALWAYS_RESET_TIPS,DISABLE_GRAPHICS};
 	public class Game{
 		public Map M;
 		public Queue Q;
@@ -52,6 +53,7 @@ namespace Forays{
 					Global.LINUX = true;
 				}
 			}
+			//Screen.GLMode = false;
 			if(args != null && args.Length > 0){
 				if(args[0] == "-c" || args[0] == "--console"){
 					Screen.GLMode = false;
@@ -60,10 +62,24 @@ namespace Forays{
 					Screen.GLMode = true;
 				}
 			}
-			//Screen.GLMode = false;
 			if(Screen.GLMode){
-				gl = new GLGame();
-				gl.Initialize();
+				gl = new GLGame(400,640,25,80,400,640,"Forays into Norrendrin");
+				GLGame.text_surface = new SpriteSurface(gl,25,80,16,8,0,0,"font8x16.bmp",1,128,0,65,1.0f,8.0f / 9.0f,
+					GLWindow.GetBasicVertexShader(),GLWindow.GetBasicFontFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),
+					GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
+				gl.SpriteSurfaces.Add(GLGame.text_surface);
+				GLGame.graphics_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"test_tiles.png",1,4,0,1,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
+					GLWindow.GetBasicGraphicalFragmentShader(),GLWindow.GetBasicGraphicalVertexAttributeSizes(),null,GLWindow.GetBasicGraphicalVertexAttributes());
+				gl.SpriteSurfaces.Add(GLGame.graphics_surface);
+				GLGame.cursor_surface = new SpriteSurface(gl,1,1,2,8,-99,-99,"font6x12.bmp",1,128,0,0,1.0f,8.0f / 9.0f,
+					GLWindow.GetBasicVertexShader(),GLWindow.GetBasicFontFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),
+					GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
+				gl.SpriteSurfaces.Add(GLGame.cursor_surface);
+				GL.Enable(EnableCap.Blend);
+				GL.BlendFunc(BlendingFactorSrc.SrcAlpha,BlendingFactorDest.OneMinusSrcAlpha);
+				gl.AllowScaling = false;
+				//GLGame.graphics_surface.Disabled = true;
+				//gl.ToggleFullScreen(true);
 				gl.Visible = true;
 				GLGame.Timer = new Stopwatch();
 				GLGame.Timer.Start();
@@ -699,7 +715,7 @@ namespace Forays{
 						game.M.UpdateSafetyMap(game.player);
 						game.M.poppy_distance_map = game.M.tile.GetDijkstraMap(x=>!game.M.tile[x].Is(TileType.POPPY_FIELD),x=>game.M.tile[x].passable && !game.M.tile[x].Is(TileType.POPPY_FIELD));
 					}
-					GLGame.NoClose = true;
+					Game.gl.NoClose = true;
 					MouseUI.PushButtonMap(MouseMode.Map);
 					MouseUI.CreateStatsButton(ConsoleKey.I,false,12,1);
 					MouseUI.CreateStatsButton(ConsoleKey.E,false,13,1);
@@ -732,7 +748,7 @@ namespace Forays{
 					}
 					MouseUI.PopButtonMap();
 					MouseUI.IgnoreMouseMovement = false;
-					GLGame.NoClose = false;
+					Game.gl.NoClose = false;
 					Screen.CursorVisible = false;
 					Global.SaveOptions();
 					recentdepth = game.M.current_level;
@@ -1269,130 +1285,63 @@ namespace Forays{
 			MouseUI.PopButtonMap();
 		}
 	}
-	public class GLGame : GameWindow{
-		//private static bool Mono = (Type.GetType ("Mono.Runtime") != null); //this problem seems to have disappeared...?
-		private static bool Mono = false;
-		private static int hack_pixels = (Mono? 4 : 0);
-		private static int tile_w = 8;
-		private static int tile_h = 16;
-		private static int width = 80;
-		private static int height = 25;
-		public static float half_width = 0.5f * (float)width;
-		public static float half_height = 0.5f * (float)height;
-		public static float tile_unit = 1.0f / 128.0f;
-		public static float tile_unit_padded = tile_unit * 8.0f / 9.0f;
-		public static float screen_multiplier_h = 1.0f; //used to create a border for fullscreen
-		public static float screen_multiplier_w = 1.0f;
-		private static int num_elements = (height * width + 1) * 6;
-		public static Stopwatch Timer = null;
-		public static bool NoClose = false;
-		public static bool FullScreen = false;
-
-		//private static FrameEventArgs update_args = new FrameEventArgs();
-		private static FrameEventArgs render_args = new FrameEventArgs();
-
-		private static Dictionary<Key,bool> key_down = new Dictionary<Key, bool>();
-		public GLGame() : base(tile_w*width-hack_pixels,tile_h*height-hack_pixels,GraphicsMode.Default,"Forays into Norrendrin"){
-			VSync = VSyncMode.On;
-			//WindowBorder = WindowBorder.Fixed;
-			//WindowState = WindowState.Fullscreen;
-		}
-		public static void Main(){
-			using(GLGame game = new GLGame()){
-				game.Run(30.0); //30 or 60?
+	public class GLGame : GLWindow{
+		public static SpriteSurface text_surface = null;
+		public static SpriteSurface graphics_surface = null;
+		public static SpriteSurface cursor_surface = null;
+		public static Stopwatch Timer = null; //todo: move this to Global
+		public int CellRows{ //number of cells, for conversion of mouse movement & clicks
+			get{
+				return internal_cellrows;
+			}
+			set{
+				internal_cellrows = value;
+				cell_h = ClientRectangle.Height / value; //todo: i think this would break when fullscreened, since it uses the full height, regardless of border.
 			}
 		}
-		protected override void OnLoad(EventArgs e){
-			Initialize();
+		public int CellCols{
+			get{
+				return internal_cellcols;
+			}
+			set{
+				internal_cellcols = value;
+				cell_w = ClientRectangle.Width / value; //todo: same here
+			}
 		}
-		public void Initialize(){
+		public int GameAreaHeight{
+			get{
+				return internal_cellrows * cell_h;
+			}
+		}
+		public int GameAreaWidth{
+			get{
+				return internal_cellcols * cell_w;
+			}
+		}
+		private int internal_cellrows;
+		private int internal_cellcols;
+		private int cell_h;
+		private int cell_w;
+
+		public GLGame(int h,int w,int cell_rows,int cell_cols,int snap_h,int snap_w,string title) : base(h,w,title){
+			CellRows = cell_rows;
+			CellCols = cell_cols;
+			SnapHeight = snap_h;
+			SnapWidth = snap_w;
+			ResizingPreference = ResizeOption.ExactFitOnly;
+			ResizingFullScreenPreference = ResizeOption.AddBorder;
+			AllowScaling = true;
+		}
+		public void Initialize(){ //todo: not currently called; mouse is disabled
 			base.OnLoad(EventArgs.Empty);
 			LoadTexture("font8x16.bmp");
-			CreateVertexArray(width,height);
-			int vertex_shader = GL.CreateShader(ShaderType.VertexShader);
-			int fragment_shader = GL.CreateShader(ShaderType.FragmentShader);
-			GL.ShaderSource(vertex_shader,
-@"#version 120
-attribute vec4 position;
-attribute vec2 texcoord;
-attribute vec4 color;
-attribute vec4 bgcolor;
 
-varying vec2 texcoord_fs;
-varying vec4 color_fs;
-varying vec4 bgcolor_fs;
-
-void main(){
-texcoord_fs = texcoord;
-color_fs = color;
-bgcolor_fs = bgcolor;
-gl_Position = position;
-}
-");
-			GL.ShaderSource(fragment_shader,
-@"#version 120
-uniform sampler2D texture;
-
-varying vec2 texcoord_fs;
-varying vec4 color_fs;
-varying vec4 bgcolor_fs;
-
-void main(){
-vec4 v = texture2D(texture,texcoord_fs);
-if(v.r == 1.0 && v.g == 1.0 && v.b == 1.0){
-gl_FragColor = color_fs;
-}
-else{
-gl_FragColor = bgcolor_fs;
-}
-}
-");
-			GL.CompileShader(vertex_shader);
-			GL.CompileShader(fragment_shader);
-			int compiled;
-			GL.GetShader(vertex_shader,ShaderParameter.CompileStatus,out compiled);
-			if(compiled < 1){
-				Console.Error.WriteLine(GL.GetShaderInfoLog(vertex_shader));
-				throw new Exception("vertex shader compilation failed");
-			}
-			GL.GetShader(fragment_shader,ShaderParameter.CompileStatus,out compiled);
-			if(compiled < 1){ 
-				Console.Error.WriteLine(GL.GetShaderInfoLog(fragment_shader));
-				throw new Exception("fragment shader compilation failed");
-			}
-			int shader_program = GL.CreateProgram();
-			GL.AttachShader(shader_program,vertex_shader);
-			GL.AttachShader(shader_program,fragment_shader);
-			GL.BindAttribLocation(shader_program,0,"position");
-			GL.BindAttribLocation(shader_program,1,"texcoord");
-			GL.BindAttribLocation(shader_program,2,"color");
-			GL.BindAttribLocation(shader_program,3,"bgcolor");
-			GL.LinkProgram(shader_program);
-			GL.UseProgram(shader_program);
-			//GL.DeleteShader(
-			//int location = GL.GetUniformLocation(shader_program,"texture");
-			//GL.ActiveTexture(TextureUnit.Texture0);
-			//GL.BindTexture(TextureTarget.Texture2D,font_texture);
-			//GL.Uniform1(location,0);
-
-			GL.ClearColor(0.0f,0.0f,0.0f,0.0f);
-			//GL.Enable(EnableCap.DepthTest);
-			//GL.Enable(EnableCap.Texture2D);
-			//GL.Enable(EnableCap.Blend);
-			//GL.EnableClientState(ArrayCap.VertexArray);
-			//GL.EnableClientState(ArrayCap.TextureCoordArray);
-			//GL.BlendFunc(BlendingFactorSrc.SrcAlpha,BlendingFactorDest.OneMinusSrcAlpha);
-
-			Keyboard.KeyDown += KeyDownHandler;
-			Keyboard.KeyUp += KeyUpHandler;
-			Keyboard.KeyRepeat = true;
-			
 			Mouse.Move += MouseMoveHandler;
 			Mouse.ButtonUp += MouseClickHandler;
 			Mouse.WheelChanged += MouseWheelHandler;
 			MouseLeave += MouseLeaveHandler;
 		}
-		void KeyDownHandler(object sender,KeyboardKeyEventArgs args){
+		protected override void KeyDownHandler(object sender,KeyboardKeyEventArgs args){
 			key_down[args.Key] = true;
 			if(!Global.KeyPressed){
 				ConsoleKey ck = Global.GetConsoleKey(args.Key);
@@ -1421,14 +1370,6 @@ gl_FragColor = bgcolor_fs;
 				MouseUI.RemoveMouseover();
 			}
 		}
-		void KeyUpHandler(object sender,KeyboardKeyEventArgs args){
-			key_down[args.Key] = false;
-		}
-		public static bool KeyIsDown(Key key){
-			bool value;
-			key_down.TryGetValue(key,out value);
-			return value;
-		}
 		void MouseMoveHandler(object sender,MouseMoveEventArgs args){
 			if(MouseUI.IgnoreMouseMovement){
 				return;
@@ -1436,12 +1377,12 @@ gl_FragColor = bgcolor_fs;
 			int row;
 			int col;
 			if(FullScreen){
-				row = (int)(args.Y - ClientRectangle.Height * ((1.0f - screen_multiplier_h)*0.5f)) / tile_h; //todo: give this its own var?
-				col = (int)(args.X - ClientRectangle.Width * ((1.0f - screen_multiplier_w)*0.5f)) / tile_w;
+				row = (int)(args.Y - ClientRectangle.Height * ((1.0f - screen_multiplier_h)*0.5f)) / cell_h; //todo: give this its own var?
+				col = (int)(args.X - ClientRectangle.Width * ((1.0f - screen_multiplier_w)*0.5f)) / cell_w;
 			}
 			else{
-				row = args.Y / tile_h;
-				col = args.X / tile_w;
+				row = args.Y / cell_h;
+				col = args.X / cell_w;
 			}
 			switch(MouseUI.Mode){
 			case MouseMode.Targeting:
@@ -1638,7 +1579,8 @@ gl_FragColor = bgcolor_fs;
 									if(cch.color == Color.DarkGreen){
 										cch.color = Color.Black;
 									}
-									Game.gl.UpdateVertexArray(p.row+Global.MAP_OFFSET_ROWS,p.col+Global.MAP_OFFSET_COLS,cch.c,GLGame.ConvertColor(cch.color),GLGame.ConvertColor(cch.bgcolor));
+									//Game.gl.UpdateVertexArray(p.row+Global.MAP_OFFSET_ROWS,p.col+Global.MAP_OFFSET_COLS,text_surface,0,(int)cch.c);
+									Game.gl.UpdateVertexArray(p.row+Global.MAP_OFFSET_ROWS,p.col+Global.MAP_OFFSET_COLS,text_surface,0,(int)cch.c,cch.color.GetFloatValues(),cch.bgcolor.GetFloatValues());
 								}
 								if(MouseUI.mouse_path != null && MouseUI.mouse_path.Count == 0){
 									MouseUI.mouse_path = null;
@@ -1659,12 +1601,12 @@ gl_FragColor = bgcolor_fs;
 			int row;
 			int col;
 			if(FullScreen){
-				row = (int)(args.Y - ClientRectangle.Height * ((1.0f - screen_multiplier_h)*0.5f)) / tile_h;
-				col = (int)(args.X - ClientRectangle.Width * ((1.0f - screen_multiplier_w)*0.5f)) / tile_w;
+				row = (int)(args.Y - ClientRectangle.Height * ((1.0f - screen_multiplier_h)*0.5f)) / cell_h;
+				col = (int)(args.X - ClientRectangle.Width * ((1.0f - screen_multiplier_w)*0.5f)) / cell_w;
 			}
 			else{
-				row = args.Y / tile_h;
-				col = args.X / tile_w;
+				row = args.Y / cell_h;
+				col = args.X / cell_w;
 			}
 			Button b = MouseUI.GetButton(row,col);
 			if(!Global.KeyPressed){
@@ -1853,167 +1795,28 @@ gl_FragColor = bgcolor_fs;
 			MouseUI.RemoveHighlight();
 		}
 		protected override void OnClosing(System.ComponentModel.CancelEventArgs e){
-			e.Cancel = NoClose;
 			if(NoClose && !Global.KeyPressed && MouseUI.Mode == MouseMode.Map){
 				Global.KeyPressed = true;
 				Global.LastKey = new ConsoleKeyInfo('q',ConsoleKey.Q,false,false,false);
 			}
 			base.OnClosing(e);
 		}
-		protected override void OnFocusedChanged(EventArgs e){
-			base.OnFocusedChanged(e);
-			if(Focused){
-				key_down[Key.AltLeft] = false; //i could simply reset the whole dictionary, too...
-				key_down[Key.AltRight] = false;
-				key_down[Key.ShiftLeft] = false;
-				key_down[Key.ShiftRight] = false;
-				key_down[Key.ControlLeft] = false;
-				key_down[Key.ControlRight] = false;
-			}
-		}
-		protected override void OnResize(EventArgs e){
+		protected override void OnResize(EventArgs e){ //todo: the new version just needs to switch out the texture, update sprite size/padded size, ...
+			//...update snap h/w, and update the VBOs to account for the new values. ...but this stuff only applies to non-graphical mode. But it still needs to be done!
 			int best = GetBestFontWidth();
 			ChangeFont(best);
-			if(!FullScreen){
-				int new_height = tile_h * height;
-				int new_width = tile_w * width;
+			/*if(!FullScreen){
+				int new_height = cell_h * CellRows;
+				int new_width = cell_w * CellCols;
 				Height = new_height;
 				Width = new_width;
-			}
-			GL.Viewport(ClientRectangle.X,ClientRectangle.Y,ClientRectangle.Width,ClientRectangle.Height);
-		}
-		protected override void OnUpdateFrame(FrameEventArgs e){
-			Update();
-		}
-		public void Update(){
-			ProcessEvents();
-			if(IsExiting){
-				Global.Quit();
-			}
-			Render();
-		}
-		protected override void OnRenderFrame(FrameEventArgs e){
-			Render();
-		}
-		public void Render(){
-			base.OnRenderFrame(render_args);
-			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-			GL.DrawElements(PrimitiveType.Triangles,num_elements,DrawElementsType.UnsignedInt,IntPtr.Zero);
-			SwapBuffers();
-		}
-		int LoadTexture(string filename){
-			if(String.IsNullOrEmpty(filename)){
-				throw new ArgumentException(filename);
-			}
-			int id = GL.GenTexture();
-			GL.BindTexture(TextureTarget.Texture2D,id);
-			Bitmap bmp = new Bitmap(filename);
-			BitmapData bmp_data = bmp.LockBits(new Rectangle(0,0,bmp.Width,bmp.Height),ImageLockMode.ReadOnly,System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-			GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgba,bmp_data.Width,bmp_data.Height,0,OpenTK.Graphics.OpenGL.PixelFormat.Bgra,PixelType.UnsignedByte,bmp_data.Scan0);
-			bmp.UnlockBits(bmp_data);
-			GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMinFilter,(int)TextureMinFilter.Nearest);
-			GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMagFilter,(int)TextureMagFilter.Nearest);
-			return id;
-		}
-		void CreateVertexArray(int width,int height){
-			float[] f = new float[(height * width + 1) * 48]; //4 vertices, 12 pieces of data.
-			int[] indices = new int[(height * width + 1) * 6];
-			for(int i=0;i<height;++i){
-				for(int j=0;j<width;++j){
-					int idx = (j + i*width) * 48;
-					int flipped_row = (height-1) - i;
-					float fi = ((float)flipped_row / half_height) - 1.0f;
-					float fj = ((float)j / half_width) - 1.0f;
-					float fi_plus1 = ((float)(flipped_row+1) / half_height) - 1.0f;
-					float fj_plus1 = ((float)(j+1) / half_width) - 1.0f;
-					float[] values = new float[]{fj,fi,0,1,1,1,1,1,0,0,0,0,  fj,fi_plus1,0,0,1,1,1,1,0,0,0,0,  fj_plus1,fi_plus1,tile_unit,0,1,1,1,1,0,0,0,0,  fj_plus1,fi,tile_unit,1,1,1,1,1,0,0,0,0};
-					values.CopyTo(f,idx); //x, y, s?, t?, r, g, b, a, bgr, bgg, bgb, bga
-
-					int idx4 = (j + i*width) * 4;
-					int idx6 = (j + i*width) * 6;
-					indices[idx6] = idx4;
-					indices[idx6 + 1] = idx4 + 1;
-					indices[idx6 + 2] = idx4 + 2;
-					indices[idx6 + 3] = idx4;
-					indices[idx6 + 4] = idx4 + 2;
-					indices[idx6 + 5] = idx4 + 3;
-				}
-			}
-			float[] cursor_values = new float[]{2,2,tile_unit*8,1,1,1,0,1,0,0,0,0,  2,2,tile_unit*8,0,1,0,1,1,0,0,0,0,  2,2,tile_unit*8.5f,0.75f,1,1,1,1,0,0,0,0,  2,2,tile_unit*8.5f,1,1,1,1,1,0,0,0,0};
-			cursor_values.CopyTo(f,width*height*48);
-			int cursor_idx4 = width*height*4;
-			int cursor_idx6 = width*height*6;
-			indices[cursor_idx6] = cursor_idx4;
-			indices[cursor_idx6 + 1] = cursor_idx4 + 1;
-			indices[cursor_idx6 + 2] = cursor_idx4 + 2;
-			indices[cursor_idx6 + 3] = cursor_idx4;
-			indices[cursor_idx6 + 4] = cursor_idx4 + 2;
-			indices[cursor_idx6 + 5] = cursor_idx4 + 3;
-			int vert_id;
-			int elem_id;
-			GL.GenBuffers(1,out vert_id);
-			GL.GenBuffers(1,out elem_id);
-			GL.BindBuffer(BufferTarget.ArrayBuffer,vert_id);
-			GL.BindBuffer(BufferTarget.ElementArrayBuffer,elem_id);
-			GL.BufferData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*f.Length),f,BufferUsageHint.StreamDraw);
-			GL.BufferData(BufferTarget.ElementArrayBuffer,new IntPtr(sizeof(int)*indices.Length),indices,BufferUsageHint.StaticDraw);
-			GL.EnableVertexAttribArray(0);
-			GL.EnableVertexAttribArray(1);
-			GL.EnableVertexAttribArray(2);
-			GL.EnableVertexAttribArray(3);
-			GL.VertexAttribPointer(0,2,VertexAttribPointerType.Float,false,sizeof(float)*12,0);
-			GL.VertexAttribPointer(1,2,VertexAttribPointerType.Float,false,sizeof(float)*12,new IntPtr(sizeof(float)*2));
-			GL.VertexAttribPointer(2,4,VertexAttribPointerType.Float,false,sizeof(float)*12,new IntPtr(sizeof(float)*4));
-			GL.VertexAttribPointer(3,4,VertexAttribPointerType.Float,false,sizeof(float)*12,new IntPtr(sizeof(float)*8));
-		}
-		public void UpdateVertexArray(int row,int col,char ch,Color4 color,Color4 bgcolor){
-			int chi = (int)ch;
-			float tex_start = tile_unit * chi;
-			float tex_end = tex_start + tile_unit_padded; //need 8/9 of it to account for the padding
-			int flipped_row = (height-1) - row;
-			float fi = screen_multiplier_h * (((float)flipped_row / half_height) - 1.0f);
-			float fj = screen_multiplier_w * (((float)col / half_width) - 1.0f);
-			float fi_plus1 = screen_multiplier_h * (((float)(flipped_row+1) / half_height) - 1.0f);
-			float fj_plus1 = screen_multiplier_w * (((float)(col+1) / half_width) - 1.0f);
-			float[] values = new float[]{
-				fj,fi,tex_start,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-				fj,fi_plus1,tex_start,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-				fj_plus1,fi_plus1,tex_end,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-				fj_plus1,fi,tex_end,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A};
-			int idx = (col + row*width) * 48;
-			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48),values);
-		}
-		public void UpdateVertexArray(int start_row,int start_col,char[] chars,Color4[] colors,Color4[] bgcolors){
-			int count = chars.Length;
-			List<float> all_values = new List<float>(48 * count);
-			int row = start_row;
-			int col = start_col;
-			for(int i=0;i<count;++i){
-				float tex_start = tile_unit * (int)chars[i];
-				float tex_end = tex_start + tile_unit_padded;
-				int flipped_row = (height-1) - row;
-				float fi = screen_multiplier_h * (((float)flipped_row / half_height) - 1.0f);
-				float fj = screen_multiplier_w * (((float)col / half_width) - 1.0f);
-				float fi_plus1 = screen_multiplier_h * (((float)(flipped_row+1) / half_height) - 1.0f);
-				float fj_plus1 = screen_multiplier_w * (((float)(col+1) / half_width) - 1.0f);
-				float[] values = new float[]{
-					fj,fi,tex_start,1,colors[i].R,colors[i].G,colors[i].B,colors[i].A,bgcolors[i].R,bgcolors[i].G,bgcolors[i].B,bgcolors[i].A,
-					fj,fi_plus1,tex_start,0,colors[i].R,colors[i].G,colors[i].B,colors[i].A,bgcolors[i].R,bgcolors[i].G,bgcolors[i].B,bgcolors[i].A,
-					fj_plus1,fi_plus1,tex_end,0,colors[i].R,colors[i].G,colors[i].B,colors[i].A,bgcolors[i].R,bgcolors[i].G,bgcolors[i].B,bgcolors[i].A,
-					fj_plus1,fi,tex_end,1,colors[i].R,colors[i].G,colors[i].B,colors[i].A,bgcolors[i].R,bgcolors[i].G,bgcolors[i].B,bgcolors[i].A};
-				all_values.AddRange(values);
-				col++;
-				if(col == Global.SCREEN_W){
-					row++;
-					col = 0;
-				}
-			}
-			int idx = (start_col + start_row*Global.SCREEN_W) * 48;
-			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*idx),new IntPtr(sizeof(float)*48*count),all_values.ToArray());
+			}*/
+			//GL.Viewport(ClientRectangle.X,ClientRectangle.Y,ClientRectangle.Width,ClientRectangle.Height); //pretty sure this line should be removed too
+			base.OnResize(e);
 		}
 		public int GetBestFontWidth(){
-			int largest_possible_tile_h = ClientRectangle.Height / height;
-			int largest_possible_tile_w = ClientRectangle.Width / width;
+			int largest_possible_tile_h = ClientRectangle.Height / CellRows;
+			int largest_possible_tile_w = ClientRectangle.Width / CellCols;
 			int largest_possible = Math.Min(largest_possible_tile_h/2,largest_possible_tile_w);
 			if(largest_possible < 8){ //current valid sizes by width: 6,8,12,16,24,32
 				return 6;
@@ -2033,39 +1836,64 @@ gl_FragColor = bgcolor_fs;
 			return 32;
 		}
 		public void ChangeFont(int new_width){
-			if(new_width != tile_w){
+			if(new_width != cell_w){
 				string font = "";
+				float previous_w = text_surface.SpriteWidthPadded;
 				switch(new_width){
 				case 6:
 					font = "font6x12.bmp";
-					tile_unit_padded = tile_unit;
+					text_surface.SpriteWidthPadded = text_surface.SpriteWidth;
 					break;
 				case 8:
 					font = "font8x16.bmp";
-					tile_unit_padded = tile_unit * 8.0f / 9.0f;
+					text_surface.SpriteWidthPadded = text_surface.SpriteWidth * 8.0f / 9.0f;
 					break;
 				case 12:
 					font = "font12x24.bmp";
-					tile_unit_padded = tile_unit;
+					text_surface.SpriteWidthPadded = text_surface.SpriteWidth;
 					break;
 				case 16:
 					font = "font16x32.bmp";
-					tile_unit_padded = tile_unit;
+					text_surface.SpriteWidthPadded = text_surface.SpriteWidth;
 					break;
 				case 24:
 					font = "font12x24.bmp";
-					tile_unit_padded = tile_unit;
+					text_surface.SpriteWidthPadded = text_surface.SpriteWidth;
 					break;
 				case 32:
 					font = "font16x32.bmp";
-					tile_unit_padded = tile_unit;
+					text_surface.SpriteWidthPadded = text_surface.SpriteWidth;
 					break;
 				}
-				tile_w = new_width;
-				tile_h = tile_w * 2;
-				LoadTexture(font);
+				cell_w = new_width;
+				cell_h = new_width * 2;
+				SnapHeight = cell_h * CellRows;
+				SnapWidth = cell_w * CellCols;
+				text_surface.TileWidth = new_width;
+				text_surface.TileHeight = new_width * 2;
+				ReplaceTexture(text_surface.TextureIndex,font);
+				float width_difference = text_surface.SpriteWidthPadded - previous_w;
+				if(width_difference != 0.0f){
+					SpriteSurface s = text_surface;
+					GL.BindBuffer(BufferTarget.ArrayBuffer,s.ArrayBufferID);
+					IntPtr vbo = GL.MapBuffer(BufferTarget.ArrayBuffer,BufferAccess.ReadWrite);
+					int max = s.Rows * s.Cols * 4 * s.TotalVertexAttribSize;
+					for(int i=0;i<max;i += s.TotalVertexAttribSize*4){
+						int offset = (i + 2 + s.TotalVertexAttribSize*2) * 4; //4 bytes per float
+						byte[] bytes = BitConverter.GetBytes(width_difference + BitConverter.ToSingle(new byte[]{Marshal.ReadByte(vbo,offset),Marshal.ReadByte(vbo,offset+1),Marshal.ReadByte(vbo,offset+2),Marshal.ReadByte(vbo,offset+3)},0));
+						for(int j=0;j<4;++j){
+							Marshal.WriteByte(vbo,offset+j,bytes[j]);
+						}
+						offset += s.TotalVertexAttribSize * 4;
+						bytes = BitConverter.GetBytes(width_difference + BitConverter.ToSingle(new byte[]{Marshal.ReadByte(vbo,offset),Marshal.ReadByte(vbo,offset+1),Marshal.ReadByte(vbo,offset+2),Marshal.ReadByte(vbo,offset+3)},0));
+						for(int j=0;j<4;++j){
+							Marshal.WriteByte(vbo,offset+j,bytes[j]);
+						}
+					}
+					GL.UnmapBuffer(BufferTarget.ArrayBuffer);
+				}
 			}
-			if(FullScreen){
+			/*if(FullScreen){
 				screen_multiplier_h = (float)(height * tile_h) / (float)ClientRectangle.Height;
 				screen_multiplier_w = (float)(width * tile_w) / (float)ClientRectangle.Width;
 			}
@@ -2097,7 +1925,7 @@ gl_FragColor = bgcolor_fs;
 			}
 			float[] cursor_values = new float[]{2,2,tile_unit*8,1,1,1,0,1,0,0,0,0,  2,2,tile_unit*8,0,1,0,1,1,0,0,0,0,  2,2,tile_unit*8.5f,0.75f,1,1,1,1,0,0,0,0,  2,2,tile_unit*8.5f,1,1,1,1,1,0,0,0,0};
 			cursor_values.CopyTo(f,width*height*48); //just hide the cursor; it'll automatically reappear in the right place.
-			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(0),new IntPtr(sizeof(float)*f.Length),f);
+			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(0),new IntPtr(sizeof(float)*f.Length),f);*/
 		}
 		public static Color4 ConvertColor(Color c){
 			switch(c){

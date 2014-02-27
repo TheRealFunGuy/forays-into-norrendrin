@@ -12,8 +12,8 @@ Magic   - Measures your ability to cast spells.
 
 Spirit  - Measures your willpower and ability to tap into your
           emotions, whether devotion or rage.
-          Each level increases your resistance to magic damage
-          and effects(at rank 10, 5 fewer damage & 50% effect).
+          Each level increases your chance to ignore certain
+          status effects by 8%.
 
 Stealth - Measures your ability to avoid notice.
           Each level increases your chance to remain unseen by
@@ -98,7 +98,8 @@ Feel no pain - When your health becomes very low (less than
 
 Boiling blood - Taking damage briefly increases your movement
                 speed. (This effect can stack up to 5 times.
-                At 5 stacks, your speed is doubled.)
+                At 5 stacks, your speed is doubled and you are
+                immune to fire damage.)
 
 
 

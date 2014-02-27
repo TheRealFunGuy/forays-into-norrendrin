@@ -1431,7 +1431,7 @@ namespace Forays{
 						trigger_trap = false;
 					}
 					//List<Tile> area = new List<Tile>();
-					List<pos> cells = new List<pos>();
+					//List<pos> cells = new List<pos>();
 					Tile LOE_tile = t;
 					if(!t.passable && prev != null){
 						LOE_tile = prev;
@@ -1972,7 +1972,8 @@ namespace Forays{
 				case ConsumableType.SHIELDING:
 					return "This orb will create a zone of protection, shielding entities within for several turns.";
 				case ConsumableType.SILENCE:
-					return "This potion will cause your actions to become entirely soundless. You'll attract less attention, but you'll be unable to speak words of magic."; //meh
+					return "This potion will cause you to radiate an aura of silence, preventing all sounds within 2 spaces. This is beneficial for stealth, but leaves you unable to speak words of magic.";
+					//return "This potion will cause your actions to become entirely soundless. You'll attract less attention, but you'll be unable to speak words of magic.";
 				case ConsumableType.STONEFORM:
 					return "This potion will change you temporarily to unliving stone. You'll no longer be able to catch fire, and no toxin or potion will affect you.";
 				case ConsumableType.SUNLIGHT:
