@@ -431,6 +431,7 @@ namespace Forays{
 		public void InitLevel(){ //creates an empty level surrounded by walls. used for testing purposes.
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
+					tile[i,j] = null;
 					if(i==0 || j==0 || i==ROWS-1 || j==COLS-1){
 						tile[i,j] = Tile.Create(TileType.WALL,i,j);
 					}
@@ -483,206 +484,160 @@ namespace Forays{
 				Q.Add(e);
 			}
 		}
-		public void Draw(){
-			//Game.gl.UpdateVertexArray(0,0,GLGame.graphics_surface, todo hack jumpto
-			//GLGame.UpdateMapVertexArrayForGraphics(Global.MAP_OFFSET_COLS,Global.MAP_OFFSET_ROWS,Global.COLS/2,Global.ROWS);
-			if(Screen.MapChar(0,0).c == '-'){ //kinda hacky. there won't be an open door in the corner, so this looks for
-				RedrawWithStrings(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely)
+		public void Draw(){ //Draw should be faster than Redraw when most of the screen is unchanged.
+			if(Screen.MapChar(0,0).c == '-' && Global.Option(OptionType.DISABLE_GRAPHICS)){ //kinda hacky. there won't be an open door in the corner, so this looks for
+				Redraw(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely) //todo! this breaks in console mode if you have the option on.
 			}
 			else{
 				MouseUI.mouselook_objects = new PhysicalObject[ROWS,COLS];
 				Screen.CursorVisible = false;
+				int i_start = 0;
+				int j_start = 0;
+				int row_limit = ROWS;
+				int col_limit = COLS;
 				if(player.HasAttr(AttrType.BURNING)){
-					Screen.DrawMapBorder(new colorchar(Color.RandomFire,'&'));
-					for(int i=1;i<ROWS-1;++i){
-						for(int j=1;j<COLS-1;++j){
+					DrawMapBorder('&',Color.RandomFire);
+					i_start++;
+					j_start++;
+					row_limit--;
+					col_limit--;
+				}
+				else{
+					if(player.HasAttr(AttrType.FROZEN)){
+						DrawMapBorder('#',Color.RandomIce);
+						i_start++;
+						j_start++;
+						row_limit--;
+						col_limit--;
+					}
+				}
+				if(Global.Option(OptionType.DISABLE_GRAPHICS)){ //todo make this a boolean, not dictionary access
+					for(int i=i_start;i<row_limit;++i){ //if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; } <--this shows how to print non-ASCII symbols in the windows console.
+						for(int j=j_start;j<col_limit;++j){
 							Screen.WriteMapChar(i,j,VisibleColorChar(i,j));
 						}
 					}
 				}
 				else{
-					if(player.HasAttr(AttrType.FROZEN)){
-						Screen.DrawMapBorder(new colorchar(Color.RandomIce,'#'));
-						for(int i=1;i<ROWS-1;++i){
-							for(int j=1;j<COLS-1;++j){
-								Screen.WriteMapChar(i,j,VisibleColorChar(i,j));
-							}
+					for(int i=i_start;i<row_limit;++i){
+						for(int j=j_start;j<col_limit;++j){
+							VisibleColorChar(i,j); //mark tiles as seen, etc.
+							Screen.WriteMapChar(i,j,' ',Color.Transparent,Color.Transparent);
 						}
+					}
+					int graphics_mode_first_col = Screen.screen_center_col - 16;
+					int graphics_mode_last_col = Screen.screen_center_col + 16;
+					if(graphics_mode_first_col < 0){
+						graphics_mode_last_col -= graphics_mode_first_col;
+						graphics_mode_first_col = 0;
 					}
 					else{
-						for(int i=0;i<ROWS;++i){ //if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; }
-							for(int j=0;j<COLS;++j){ //^--top secret, mostly because it doesn't work well - 
-								Screen.WriteMapChar(i,j,VisibleColorChar(i,j)); //redrawing leaves gaps for some reason.
-								//Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,2); //todo jumpto hack
-								if(j < 33){
-									if(actor[i,j] != null){
-										Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,3);
+						if(graphics_mode_last_col >= COLS){
+							int diff = graphics_mode_last_col - (COLS-1);
+							graphics_mode_first_col -= diff;
+							graphics_mode_last_col = COLS-1;
+						}
+					}
+					for(int i=0;i<ROWS;++i){
+						for(int j=0;j<33;++j){ //todo: actually COLS/2
+							pos offset = new pos(i,j+graphics_mode_first_col);
+							if(tile[offset].seen){
+								if(player.CanSee(tile[offset])){
+									pos spr = tile[offset].sprite_offset;
+									if(tile[offset].IsLit()){
+										Screen.UpdateSurface(i,j,GLGame.graphics_surface,spr.row,spr.col);
+										//Screen.UpdateSurface(i,j,GLGame.visibility_surface,0,0);
 									}
 									else{
-										if(tile[i,j].passable){
-											Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,2);
-										}
-										else{
-											Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,0,1);
-										}
+										Screen.UpdateSurface(i,j,GLGame.graphics_surface,spr.row,spr.col,0.5f,0.5f,0.85f);
+										//Screen.UpdateSurface(i,j,GLGame.visibility_surface,0,1);
 									}
-								}
-							}
-						}
-					}
-					/*colorchar[,] scr = new colorchar[ROWS,COLS];
-					for(int i=0;i<ROWS;++i){
-						for(int j=0;j<COLS;++j){
-							scr[i,j] = VisibleColorChar(i,j);
-							if(scr[i,j].c == '#'){
-								//scr[i,j].color = Color.RandomBright;
-							}
-						}
-					}
-					if(row_displacement == null){
-						//row_displacement = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
-						//col_displacement = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
-						row_displacement = new int[ROWS,COLS];
-						col_displacement = new int[ROWS,COLS];
-						for(int i=0;i<ROWS;++i){
-							for(int j=0;j<COLS;++j){
-								//row_displacement[i,j] /= 16;
-								//col_displacement[i,j] /= 16;
-								row_displacement[i,j] = 0;
-								col_displacement[i,j] = 0;
-							}
-						}
-					}
-					else{*/
-						/*int[,] rd2 = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
-						int[,] cd2 = Actor.GetDiamondSquarePlasmaFractal(ROWS,COLS);
-						for(int i=0;i<ROWS;++i){
-							for(int j=0;j<COLS;++j){
-								rd2[i,j] /= 32;
-								cd2[i,j] /= 32;
-								row_displacement[i,j] += (rd2[i,j] < 0? -1 : rd2[i,j] > 0? 1 : 0);
-								col_displacement[i,j] += (cd2[i,j] < 0? -1 : cd2[i,j] > 0? 1 : 0);
-							}
-						}*/
-						/*for(int i=0;i<ROWS;++i){
-							for(int j=0;j<COLS;++j){
-								if(R.OneIn(40)){
-									if(row_displacement[i,j] < 0){
-										if(R.OneIn(10)){
-											row_displacement[i,j]--;
-										}
-										else{
-											row_displacement[i,j]++;
-										}
-									}
-									else{
-										if(row_displacement[i,j] > 0){
-											if(R.OneIn(10)){
-												row_displacement[i,j]++;
-											}
-											else{
-												row_displacement[i,j]--;
-											}
-										}
-										else{
-											if(R.CoinFlip()){
-												row_displacement[i,j]++;
-											}
-											else{
-												row_displacement[i,j]--;
-											}
-										}
-									}
-									if(col_displacement[i,j] < 0){
-										if(R.OneIn(10)){
-											col_displacement[i,j]--;
-										}
-										else{
-											col_displacement[i,j]++;
-										}
-									}
-									else{
-										if(col_displacement[i,j] > 0){
-											if(R.OneIn(10)){
-												col_displacement[i,j]++;
-											}
-											else{
-												col_displacement[i,j]--;
-											}
-										}
-										else{
-											if(R.CoinFlip()){
-												col_displacement[i,j]++;
-											}
-											else{
-												col_displacement[i,j]--;
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-					pos p = player.p;
-					actor[p] = null;
-					scr[p.row,p.col] = VisibleColorChar(p.row,p.col);
-					actor[p] = player;
-					int total_rd = 0;
-					int total_cd = 0;
-					for(int i=0;i<ROWS;++i){
-						for(int j=0;j<COLS;++j){
-							total_rd += row_displacement[i,j];
-							total_cd += col_displacement[i,j];
-						}
-					}
-					int avg_rd = total_rd / (ROWS*COLS);
-					int avg_cd = total_cd / (ROWS*COLS);
-					for(int i=0;i<ROWS;++i){
-						for(int j=0;j<COLS;++j){
-							row_displacement[i,j] -= avg_rd;
-							col_displacement[i,j] -= avg_cd;
-						}
-					}
-					for(int i=0;i<ROWS;++i){
-						for(int j=0;j<COLS;++j){
-							if(i == p.row && j == p.col){
-								Screen.WriteMapChar(i,j,'@',Color.White);
-							}
-							else{
-								if(U.BoundsCheck(i+row_displacement[i,j],j+col_displacement[i,j])){
-									Screen.WriteMapChar(i,j,scr[i+row_displacement[i,j],j+col_displacement[i,j]]);
 								}
 								else{
-									Screen.WriteMapChar(i,j,Screen.BlankChar());
+									Screen.UpdateSurface(i,j,GLGame.graphics_surface,tile[offset].sprite_offset.row,tile[offset].sprite_offset.col,0.5f,0.5f,0.5f);
+									//Screen.UpdateSurface(i,j,GLGame.visibility_surface,0,2);
+								}
+							}
+							else{
+								Screen.UpdateSurface(i,j,GLGame.graphics_surface,16,0);
+								//Game.gl.UpdateVertexArray(i,j,GLGame.graphics_surface,16,0);
+							}
+							if(actor[offset] != null){
+								Screen.UpdateSurface(i,j,GLGame.actors_surface,actor[offset].sprite_offset.row,actor[offset].sprite_offset.col);
+							}
+							else{
+								if(tile[offset].features.Count > 0){
+									pos spr = tile[offset].FeatureSprite();
+									if(tile[offset].IsLit()){
+										Screen.UpdateSurface(i,j,GLGame.actors_surface,spr.row,spr.col);
+									}
+									else{
+										Screen.UpdateSurface(i,j,GLGame.actors_surface,spr.row,spr.col,0.5f,0.5f,0.85f);
+									}
+								}
+								else{
+									if(tile[offset].inv != null){
+										Screen.UpdateSurface(i,j,GLGame.actors_surface,tile[offset].inv.sprite_offset.row,tile[offset].inv.sprite_offset.col);
+									}
+									else{
+										Screen.UpdateSurface(i,j,GLGame.actors_surface,32,40); //todo: find a static spot for a transparent sprite
+									}
 								}
 							}
 						}
-					}*/
-					//
-					//
+					}
 				}
 				Screen.ResetColors();
-			}
-			if(Screen.GLMode){
-				Game.gl.Update();
+				Screen.NoGLUpdate = false;
+				if(Screen.GLMode){
+					Game.gl.Update(); //todo! should this Update be here? I think it probably should, for animations and all that.
+				}
 			}
 		}
-		public void RedrawWithStrings(){
+		public void Redraw(){ //Redraw should be faster than Draw when most of the screen has changed.
 			MouseUI.mouselook_objects = new PhysicalObject[ROWS,COLS];
 			Screen.CursorVisible = false;
-			cstr s;
-			s.s = "";
-			s.bgcolor = Color.Black;
-			s.color = Color.Black;
-			int r = 0;
-			int c = 0;
+			int i_start = 0;
+			int j_start = 0;
+			int row_limit = ROWS;
+			int col_limit = COLS;
+			Screen.NoGLUpdate = true;
 			if(player.HasAttr(AttrType.BURNING)){
-				Screen.DrawMapBorder(new colorchar(Color.RandomFire,'&'));
-				for(int i=1;i<ROWS-1;++i){
+				DrawMapBorder('&',Color.RandomFire);
+				i_start++;
+				j_start++;
+				row_limit--;
+				col_limit--;
+			}
+			else{
+				if(player.HasAttr(AttrType.FROZEN)){
+					DrawMapBorder('#',Color.RandomIce);
+					i_start++;
+					j_start++;
+					row_limit--;
+					col_limit--;
+				}
+			}
+			if(Screen.GLMode){
+				for(int i=i_start;i<row_limit;++i){
+					for(int j=j_start;j<col_limit;++j){
+						Screen.WriteMapChar(i,j,VisibleColorChar(i,j));
+					}
+				}
+				Screen.UpdateGLBuffer(Global.MAP_OFFSET_ROWS,Global.MAP_OFFSET_COLS,Global.MAP_OFFSET_ROWS + Global.ROWS - 1,Global.MAP_OFFSET_COLS + Global.COLS - 1);
+			}
+			else{
+				cstr s;
+				s.s = "";
+				s.bgcolor = Color.Black;
+				s.color = Color.Black;
+				int r = 0;
+				int c = 0;
+				for(int i=i_start;i<row_limit;++i){
 					s.s = "";
 					r = i;
-					c = 1;
-					for(int j=1;j<COLS-1;++j){
+					c = 0;
+					for(int j=j_start;j<col_limit;++j){
 						colorchar ch = VisibleColorChar(i,j);
 						if(Screen.ResolveColor(ch.color) != s.color){
 							if(s.s.Length > 0){
@@ -704,67 +659,9 @@ namespace Forays{
 					}
 					Screen.WriteMapString(r,c,s);
 				}
+				Screen.ResetColors();
 			}
-			else{
-				if(player.HasAttr(AttrType.FROZEN)){
-					Screen.DrawMapBorder(new colorchar(Color.RandomIce,'#'));
-					for(int i=1;i<ROWS-1;++i){
-						s.s = "";
-						r = i;
-						c = 1;
-						for(int j=1;j<COLS-1;++j){
-							colorchar ch = VisibleColorChar(i,j);
-							if(Screen.ResolveColor(ch.color) != s.color){
-								if(s.s.Length > 0){
-									Screen.WriteMapString(r,c,s);
-									s.s = "";
-									s.s += ch.c;
-									s.color = ch.color;
-									r = i;
-									c = j;
-								}
-								else{
-									s.s += ch.c;
-									s.color = ch.color;
-								}
-							}
-							else{
-								s.s += ch.c;
-							}
-						}
-						Screen.WriteMapString(r,c,s);
-					}
-				}
-				else{
-					for(int i=0;i<ROWS;++i){
-						s.s = "";
-						r = i;
-						c = 0;
-						for(int j=0;j<COLS;++j){
-							colorchar ch = VisibleColorChar(i,j);
-							if(Screen.ResolveColor(ch.color) != s.color){
-								if(s.s.Length > 0){
-									Screen.WriteMapString(r,c,s);
-									s.s = "";
-									s.s += ch.c;
-									s.color = ch.color;
-									r = i;
-									c = j;
-								}
-								else{
-									s.s += ch.c;
-									s.color = ch.color;
-								}
-							}
-							else{
-								s.s += ch.c;
-							}
-						}
-						Screen.WriteMapString(r,c,s);
-					}
-				}
-			}
-			Screen.ResetColors();
+			Screen.NoGLUpdate = false;
 		}
 		public colorchar VisibleColorChar(int r,int c){
 			colorchar ch = Screen.BlankChar();
@@ -789,8 +686,7 @@ namespace Forays{
 				}
 				else{
 					if(tile[r,c].features.Count > 0){
-						ch.c = tile[r,c].FeatureSymbol();
-						ch.color = tile[r,c].FeatureColor();
+						ch = tile[r,c].FeatureVisual();
 						last_seen[r,c] = ch;
 					}
 					else{
@@ -881,28 +777,20 @@ namespace Forays{
 						ch.c = last_seen[r,c].c;
 						ch.color = unseencolor;
 					}
-					else{
-						ch.c = ' ';
-						ch.color = Color.Black;
+				}
+			}
+			return ch;
+		}
+		public void DrawMapBorder(char ch,Color color){ //calls Screen.DrawMapBorder and handles updating 'seen' variables for tiles
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					VisibleColorChar(i,j);
+					if(i != 0 && i != ROWS-1){
+						j += ROWS-2; //meh
 					}
 				}
 			}
-			/*if(ch.c == '+' && ch.color != Color.DarkYellow){ //here are more examples of code page switching to get new symbols
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {241})[0];
-			}
-			if(ch.c == '2'){
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {20})[0];
-			}
-			if(ch.c == '@'){
-				ch.c = Encoding.GetEncoding(850).GetChars(new byte[] {248})[0];
-			}
-			if(ch.c == ',' && ch.color == Color.Red){
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {15})[0];
-			}
-			if(ch.c == '8'){
-				ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {236})[0];
-			}*/
-			return ch;
+			Screen.DrawMapBorder(new colorchar(ch,color));
 		}
 		public void RemoveTargets(Actor a){ //cleanup of references to dead monsters
 			for(int i=0;i<ROWS;++i){
@@ -2952,6 +2840,7 @@ namespace Forays{
 				}
 			}
 			actor[player.row,player.col] = player; //this line fixes a bug that occurs when the player ends up in the same position on a new level
+			Screen.screen_center_col = player.col;
 			if(R.CoinFlip()){ //todo: copied and pasted below
 				bool done = false;
 				for(int tries=0;!done && tries<500;++tries){

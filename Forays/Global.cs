@@ -274,6 +274,7 @@ namespace Forays{
 				return Console.ReadKey(true);
 			}
 			while(true){
+				Animations.Update();
 				if(!Game.gl.Update()){
 					Global.Quit();
 				}

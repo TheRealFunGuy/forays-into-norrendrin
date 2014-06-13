@@ -113,22 +113,24 @@ namespace GLDrawing{
 			float ratio_h = screen_multiplier_h / previous_mult_h;
 			float ratio_w = screen_multiplier_w / previous_mult_w;
 			foreach(SpriteSurface s in SpriteSurfaces){
-				GL.BindBuffer(BufferTarget.ArrayBuffer,s.ArrayBufferID);
-				IntPtr vbo = GL.MapBuffer(BufferTarget.ArrayBuffer,BufferAccess.ReadWrite);
-				int max = s.Rows * s.Cols * 4 * s.TotalVertexAttribSize;
-				for(int i=0;i<max;i += s.TotalVertexAttribSize){
-					int offset = i * 4; //4 bytes per float
-					byte[] bytes = BitConverter.GetBytes(ratio_w * BitConverter.ToSingle(new byte[]{Marshal.ReadByte(vbo,offset),Marshal.ReadByte(vbo,offset+1),Marshal.ReadByte(vbo,offset+2),Marshal.ReadByte(vbo,offset+3)},0));
-					for(int j=0;j<4;++j){
-						Marshal.WriteByte(vbo,offset+j,bytes[j]);
+				if(s.NumElements > 0){
+					GL.BindBuffer(BufferTarget.ArrayBuffer,s.ArrayBufferID);
+					IntPtr vbo = GL.MapBuffer(BufferTarget.ArrayBuffer,BufferAccess.ReadWrite);
+					int max = s.Rows * s.Cols * 4 * s.TotalVertexAttribSize;
+					for(int i=0;i<max;i += s.TotalVertexAttribSize){
+						int offset = i * 4; //4 bytes per float
+						byte[] bytes = BitConverter.GetBytes(ratio_w * BitConverter.ToSingle(new byte[]{Marshal.ReadByte(vbo,offset),Marshal.ReadByte(vbo,offset+1),Marshal.ReadByte(vbo,offset+2),Marshal.ReadByte(vbo,offset+3)},0));
+						for(int j=0;j<4;++j){
+							Marshal.WriteByte(vbo,offset+j,bytes[j]);
+						}
+						offset += 4; //move to the next float
+						bytes = BitConverter.GetBytes(ratio_h * BitConverter.ToSingle(new byte[]{Marshal.ReadByte(vbo,offset),Marshal.ReadByte(vbo,offset+1),Marshal.ReadByte(vbo,offset+2),Marshal.ReadByte(vbo,offset+3)},0));
+						for(int j=0;j<4;++j){
+							Marshal.WriteByte(vbo,offset+j,bytes[j]);
+						}
 					}
-					offset += 4; //move to the next float
-					bytes = BitConverter.GetBytes(ratio_h * BitConverter.ToSingle(new byte[]{Marshal.ReadByte(vbo,offset),Marshal.ReadByte(vbo,offset+1),Marshal.ReadByte(vbo,offset+2),Marshal.ReadByte(vbo,offset+3)},0));
-					for(int j=0;j<4;++j){
-						Marshal.WriteByte(vbo,offset+j,bytes[j]);
-					}
+					GL.UnmapBuffer(BufferTarget.ArrayBuffer);
 				}
-				GL.UnmapBuffer(BufferTarget.ArrayBuffer);
 			}
 			GL.Viewport(ClientRectangle.X,ClientRectangle.Y,ClientRectangle.Width,ClientRectangle.Height);
 			Resizing = false;
@@ -158,6 +160,7 @@ namespace GLDrawing{
 			}
 			base.OnRenderFrame(render_args);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+			int todo_count = 0;
 			foreach(SpriteSurface s in SpriteSurfaces){
 				if(!s.Disabled){
 					if(SingleSurfaceMode){
@@ -172,16 +175,17 @@ namespace GLDrawing{
 						int stride = sizeof(float)*s.TotalVertexAttribSize;
 						int total_of_previous_attribs = 0;
 						for(int i=0;i<s.VertexAttribSize.Length;++i){
-							//GL.EnableVertexAttribArray(i);
+							GL.EnableVertexAttribArray(i);
 							GL.VertexAttribPointer(i,s.VertexAttribSize[i],VertexAttribPointerType.Float,false,stride,new IntPtr(sizeof(float)*total_of_previous_attribs));
 							total_of_previous_attribs += s.VertexAttribSize[i];
 						}
 						GL.DrawElements(PrimitiveType.Triangles,s.NumElements,DrawElementsType.UnsignedInt,IntPtr.Zero);
-						//for(int i=0;i<s.VertexAttribSize.Length;++i){
-							//GL.DisableVertexAttribArray(i);
-						//}
+						for(int i=0;i<s.VertexAttribSize.Length;++i){
+							GL.DisableVertexAttribArray(i);
+						}
 					}
 				}
+				++todo_count; //todo remove
 			}
 			SwapBuffers();
 		}
@@ -254,13 +258,16 @@ namespace GLDrawing{
 			return new string[]{"position","texcoord","color","bgcolor"};
 		}
 		public static float[][] GetBasicFontDefaultVertexAttributes(){ //i.e. default values for color and bgcolor
-			return new float[][]{new float[]{1,1,1,1},new float[]{0,0,0,0}};
+			return new float[][]{new float[]{1,1,1,1},new float[]{0,0,0,1}};
 		}
 		public static int[] GetBasicGraphicalVertexAttributeSizes(){
-			return new int[]{2,2};
+			return new int[]{2,2,4};
 		}
 		public static string[] GetBasicGraphicalVertexAttributes(){
-			return new string[]{"position","texcoord"};
+			return new string[]{"position","texcoord","color"};
+		}
+		public static float[][] GetBasicGraphicalDefaultVertexAttributes(){ //i.e. default values for color
+			return new float[][]{new float[]{1,1,1,1}};
 		}
 		public static string GetBasicVertexShader(){
 			return 
@@ -308,9 +315,17 @@ gl_FragColor = bgcolor_fs;
 uniform sampler2D texture;
 
 varying vec2 texcoord_fs;
+varying vec4 color_fs;
 
 void main(){
-gl_FragColor = texture2D(texture,texcoord_fs);
+//gl_FragColor = texture2D(texture,texcoord_fs);
+vec4 v = texture2D(texture,texcoord_fs);
+gl_FragColor = vec4(v.r * color_fs.r,v.g * color_fs.g,v.b * color_fs.b,v.a);
+//float f = 0.1 * v.r + 0.2 * v.b + 0.7 * v.g; //black & white shader
+//gl_FragColor = vec4(f,f,f,v.a);
+//if(v.r > 0.6 && v.g < 0.4 && v.b < 0.4){ //...with red
+//gl_FragColor = vec4(v.r,f,f,v.a);
+//}
 }
 ";
 		}
@@ -378,14 +393,14 @@ gl_FragColor = texture2D(texture,texcoord_fs);
 			GL.BufferData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*all_values.Length),all_values,BufferUsageHint.StreamDraw);
 			GL.BufferData(BufferTarget.ElementArrayBuffer,new IntPtr(sizeof(int)*indices.Length),indices,BufferUsageHint.StaticDraw);
 			int stride = sizeof(float)*s.TotalVertexAttribSize;
-			GL.EnableVertexAttribArray(0);
-			GL.EnableVertexAttribArray(1);
-			GL.VertexAttribPointer(0,2,VertexAttribPointerType.Float,false,stride,0);
-			GL.VertexAttribPointer(1,2,VertexAttribPointerType.Float,false,stride,new IntPtr(sizeof(float)*2));
+			//GL.EnableVertexAttribArray(0);
+			//GL.EnableVertexAttribArray(1);
+			//GL.VertexAttribPointer(0,2,VertexAttribPointerType.Float,false,stride,0);
+			//GL.VertexAttribPointer(1,2,VertexAttribPointerType.Float,false,stride,new IntPtr(sizeof(float)*2));
 			int total_of_previous_attribs = 4;
 			for(int g=2;g<s.VertexAttribSize.Length;++g){
-				GL.EnableVertexAttribArray(g);
-				GL.VertexAttribPointer(g,s.VertexAttribSize[g],VertexAttribPointerType.Float,false,stride,new IntPtr(sizeof(float)*total_of_previous_attribs));
+				//GL.EnableVertexAttribArray(g);
+				//GL.VertexAttribPointer(g,s.VertexAttribSize[g],VertexAttribPointerType.Float,false,stride,new IntPtr(sizeof(float)*total_of_previous_attribs));
 				total_of_previous_attribs += s.VertexAttribSize[g];
 			}
 		}

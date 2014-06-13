@@ -28,11 +28,27 @@ namespace Forays{
 				p.col = value;
 			}
 		}
-		public string name{get;set;}
+		public string name{get;set;} //todo: stop using properties here
 		public string a_name{get;set;}
 		public string the_name{get;set;}
-		public char symbol{get;set;}
-		public Color color{get;set;}
+		public colorchar visual;
+		public char symbol{
+			get{
+				return visual.c;
+			}
+			set{
+				visual.c = value;
+			}
+		}
+		public Color color{
+			get{
+				return visual.color;
+			}
+			set{
+				visual.color = value;
+			}
+		}
+		public pos sprite_offset;
 		public int light_radius{get;set;}
 		
 		public static Map M{get;set;}
@@ -50,6 +66,7 @@ namespace Forays{
 			symbol='%';
 			color=Color.White;
 			light_radius = 0;
+			sprite_offset = new pos(0,1);
 		}
 		public PhysicalObject(string name_,char symbol_,Color color_){
 			row = -1;

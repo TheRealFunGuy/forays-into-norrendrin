@@ -1,4 +1,15 @@
 
+to try:
+
+do a random walk algo, but once in a while let the shape of the walker change. so, it'd start as 1x1 but might connect new ones to itself, or remove them:
+# to ## to ## to # and so on...
+            #    #
+
+
+
+
+TODO: SEE ALL-CAPS NOTE BELOW!
+
 ignoring the fact that I don't have a set with all the graphics I need just yet...
 
 what would I need for this?
@@ -9,18 +20,72 @@ first, I know I need some sort of thing to keep track of the current screen posi
 then, i need texcoords for every graphic...
 
 
-
-so, the first thing to do is to prepare a bitmap with a few images in it. probably just wall, floor, dude.
-
-
 when I get graphical mode working, i'll need to change the mouse handler to check for that.
 
-NEXT: will I still support font changes for non-graphical mode? sounds good. i suppose graphical mode might be restricted to one font, so switching to graphics would resize the screen or whatever.
+
+will I still support font changes for non-graphical mode? sounds good. i suppose graphical mode might be restricted to one font, so switching to graphics would resize the screen or whatever.
+	-when graphical mode is enabled, we've gotta go back to whatever the default is. 
+
+NEXT: figure out how to do this^ to switch back to the default size when graphics are enabled, and also do map scrolling in graphics mode.
+
+well, i can ignore it in fullscreen, so that's nice. switching to ASCII mode is no problem: the only question is whether I should remember the previous size. (don't bother for now.) so, graphics -> ASCII requires no resize.
+
+all that's left is ASCII->graphics while the screen is anything but the default.
+
+(and now, just gotta disable resizing in graphical mode)
 
 
+ah, gotta check the previous size when un-fullscreening, too. (so, if the graphics were turned on while fullscreened, you can detect that and resize the screen to the proper graphics size.)
+	-this should probably happen in the overridden keyhandler, not in GL.
+
+
+BUG FOUND: in GenerateFloorTypes, line ~3605, there's no bounds check. I don't know how this hasn't crashed yet.
+
+
+check for 'disable graphics' on game start, too, and disable if needed.
+
+maybe make graphics_disabled a global bool (too?) to avoid dictionary access.
 
 
 note: i added parabola and schism to the project. didn't add the build script or opentk.dll.
+
+change Tile's bools so they're not properties.
+
+
+
+
+TODO! MUST DOWNLOAD NEW OPENTK VERSION TO FIX MONO CRASH, BEFORE THE 7DRL!
+	-did this. Make sure to use only the OpenTK.dll that is in forays/bin/debug/.
+		-still crashes. wtf.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
