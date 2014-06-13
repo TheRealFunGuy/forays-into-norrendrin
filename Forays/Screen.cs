@@ -16,7 +16,7 @@ using OpenTK.Graphics.OpenGL;
 using Utilities;
 using GLDrawing;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny};
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
 	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
@@ -143,6 +143,8 @@ namespace Forays{
 		private static readonly string bold_on = (char)27 + "[1m"; //VT100 codes, sweet
 		private static readonly string bold_off = (char)27 + "[m";
 		public static bool GLMode = true;
+		public static bool NoGLUpdate = false; //if NoGLUpdate is true, UpdateGLBuffer won't be called - only the memory will be updated. This is useful if you wish to update all at once, instead of one at a time.
+		public static int screen_center_col = -1;
 		private static bool cursor_visible = true; //these 3 values are only used in GL mode - in console mode, the Console values are used directly.
 		private static int cursor_top = 0;
 		private static int cursor_left = 0;
@@ -252,6 +254,14 @@ namespace Forays{
 				}
 			}
 		}
+		public static void UpdateScreenCenterColumn(int col){ //this is the alternative to "always centered" behavior.
+			if(col < screen_center_col-3){ //todo
+				screen_center_col = col-3;
+			}
+			if(col > screen_center_col+3){
+				screen_center_col = col+3;
+			}
+		}
 		public static colorchar Char(int r,int c){ return memory[r,c]; }
 		public static colorchar MapChar(int r,int c){ return memory[r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS]; }
 		public static colorchar StatsChar(int r,int c){ return memory[r,c]; } //changed from r+1,c
@@ -330,10 +340,11 @@ namespace Forays{
 			color_info[0] = new float[4 * num_positions];
 			color_info[1] = new float[4 * num_positions];
 			for(int i=0;i<num_positions;++i){
-				Color4 color = GLGame.ConvertColor(memory[row,col].color);
-				Color4 bgcolor = GLGame.ConvertColor(memory[row,col].bgcolor);
+				colorchar cch = memory[row,col];
+				Color4 color = GLGame.ConvertColor(cch.color);
+				Color4 bgcolor = GLGame.ConvertColor(cch.bgcolor);
 				sprite_rows[i] = 0;
-				sprite_cols[i] = (int)memory[row,col].c;
+				sprite_cols[i] = (int)cch.c;
 				int idx4 = i * 4;
 				color_info[0][idx4] = color.R;
 				color_info[0][idx4 + 1] = color.G;
@@ -343,9 +354,6 @@ namespace Forays{
 				color_info[1][idx4 + 1] = bgcolor.G;
 				color_info[1][idx4 + 2] = bgcolor.B;
 				color_info[1][idx4 + 3] = bgcolor.A;
-				/*if(col == end_col && row == end_row){
-					break;
-				}*/
 				col++;
 				if(col == Global.SCREEN_W){
 					row++;
@@ -375,7 +383,7 @@ namespace Forays{
 			Game.gl.UpdateVertexArray(row,col,GLGame.text_surface,0,(int)memory[row,col].c,color_info);*/
 		}
 		public static void UpdateCursor(bool make_visible){
-			if(GLGame.graphics_surface.Disabled && make_visible){
+			if(make_visible && (Global.Option(OptionType.DISABLE_GRAPHICS) || MouseUI.Mode != MouseMode.Map)){
 				float[] color_values = GLGame.ConvertColor(Color.Gray).GetFloatValues();
 				SpriteSurface s = GLGame.cursor_surface;
 				s.Disabled = false;
@@ -403,14 +411,14 @@ namespace Forays{
 			color_info[0] = new float[4 * count];
 			color_info[1] = new float[4 * count];
 			for(int n=0;n<count;++n){
-				int i = n / Global.SCREEN_W;
-				int j = n % Global.SCREEN_W;
-				colorchar cch = (i >= start_row && i <= end_row && j >= start_col && j <= end_col)? array[i,j] : memory[i,j];
+				int row = (n + start_col) / Global.SCREEN_W + start_row; //screen coords
+				int col = (n + start_col) % Global.SCREEN_W;
+				colorchar cch = (row >= start_row && row <= end_row && col >= start_col && col <= end_col)? array[row-start_row,col-start_col] : memory[row,col];
 				Color4 color = GLGame.ConvertColor(cch.color);
 				Color4 bgcolor = GLGame.ConvertColor(cch.bgcolor);
-				sprite_rows[i] = 0;
-				sprite_cols[i] = (int)cch.c;
-				int idx4 = j + i*Global.SCREEN_W * 4;
+				//sprite_rows[n] = 0;
+				sprite_cols[n] = (int)cch.c;
+				int idx4 = n * 4;
 				color_info[0][idx4] = color.R;
 				color_info[0][idx4 + 1] = color.G;
 				color_info[0][idx4 + 2] = color.B;
@@ -420,8 +428,13 @@ namespace Forays{
 				color_info[1][idx4 + 2] = bgcolor.B;
 				color_info[1][idx4 + 3] = bgcolor.A;
 			}
-			//Game.gl.UpdateVertexArray(start_row,start_col,chars,colors,bgcolors);
 			Game.gl.UpdateVertexArray(start_row,start_col,GLGame.text_surface,sprite_rows,sprite_cols,color_info);
+		}
+		public static void UpdateSurface(int row,int col,SpriteSurface s,int sprite_row,int sprite_col){
+			Game.gl.UpdateVertexArray(row,col,s,sprite_row,sprite_col,new float[][]{new float[]{1,1,1,1}});
+		}
+		public static void UpdateSurface(int row,int col,SpriteSurface s,int sprite_row,int sprite_col,float r,float g,float b){
+			Game.gl.UpdateVertexArray(row,col,s,sprite_row,sprite_col,new float[][]{new float[]{r,g,b,1}});
 		}
 		public static void WriteChar(int r,int c,char ch){
 			WriteChar(r,c,new colorchar(Color.Gray,ch));
@@ -429,13 +442,18 @@ namespace Forays{
 		public static void WriteChar(int r,int c,char ch,Color color){
 			WriteChar(r,c,new colorchar(ch,color));
 		}
+		public static void WriteChar(int r,int c,char ch,Color color,Color bgcolor){
+			WriteChar(r,c,new colorchar(ch,color,bgcolor));
+		}
 		public static void WriteChar(int r,int c,colorchar ch){
 			if(!memory[r,c].Equals(ch)){
 				ch.color = ResolveColor(ch.color);
 				ch.bgcolor = ResolveColor(ch.bgcolor);
 				memory[r,c] = ch;
 				if(GLMode){
-					UpdateGLBuffer(r,c);
+					if(!NoGLUpdate){
+						UpdateGLBuffer(r,c);
+					}
 				}
 				else{
 					ConsoleColor co = GetColor(ch.color);
@@ -478,7 +496,7 @@ namespace Forays{
 					}
 				}
 			}
-			if(GLMode){
+			if(GLMode && !NoGLUpdate){
 				UpdateGLBuffer(r,c,array);
 			}
 		}
@@ -532,7 +550,9 @@ namespace Forays{
 				}
 				if(changed){
 					if(GLMode){
-						UpdateGLBuffer(r,start_col,r,end_col);
+						if(!NoGLUpdate){
+							UpdateGLBuffer(r,start_col,r,end_col);
+						}
 					}
 					else{
 						Console.SetCursorPosition(c,r);
@@ -675,7 +695,7 @@ namespace Forays{
 					}
 					pos += s.s.Length;
 				}
-				if(GLMode && start_col != -1){
+				if(GLMode && !NoGLUpdate && start_col != -1){
 					UpdateGLBuffer(r,start_col,r,end_col);
 				}
 				if(MouseUI.AutomaticButtonsFromStrings && GLMode){
@@ -786,6 +806,9 @@ namespace Forays{
 		public static void WriteMapChar(int r,int c,char ch,Color color){
 			WriteMapChar(r,c,new colorchar(ch,color));
 		}
+		public static void WriteMapChar(int r,int c,char ch,Color color,Color bgcolor){
+			WriteMapChar(r,c,new colorchar(ch,color,bgcolor));
+		}
 		public static void WriteMapChar(int r,int c,colorchar ch){
 			WriteChar(r+Global.MAP_OFFSET_ROWS,c+Global.MAP_OFFSET_COLS,ch);
 		}
@@ -846,7 +869,9 @@ namespace Forays{
 				}
 				if(changed){
 					if(GLMode){
-						UpdateGLBuffer(r,start_col,r,end_col);
+						if(!NoGLUpdate){
+							UpdateGLBuffer(r,start_col,r,end_col);
+						}
 					}
 					else{
 						Console.SetCursorPosition(c,r);
@@ -930,7 +955,7 @@ namespace Forays{
 					}
 					cpos += s.s.Length;
 				}
-				if(GLMode && start_col != -1){
+				if(GLMode && !NoGLUpdate && start_col != -1){
 					UpdateGLBuffer(r,start_col,r,end_col);
 				}
 				if(MouseUI.AutomaticButtonsFromStrings && GLMode){
@@ -1030,7 +1055,9 @@ namespace Forays{
 				}
 				if(changed){
 					if(GLMode){
-						UpdateGLBuffer(r,start_col,r,end_col);
+						if(!NoGLUpdate){
+							UpdateGLBuffer(r,start_col,r,end_col);
+						}
 					}
 					else{
 						Console.SetCursorPosition(c,r);
@@ -1681,7 +1708,7 @@ namespace Forays{
 		public static int LastRow = -1;
 		public static int LastCol = -1;
 		public static bool fire_arrow_hack = false; //hack, used to allow double-clicking [s]hoot to fire arrows.
-		public static bool descend_hack = false; //hack, used to make double-clicking Descend [>] cancel the
+		public static bool descend_hack = false; //hack, used to make double-clicking Descend [>] cancel the action.
 		public static Button GetButton(int row,int col){
 			if(button_map.Last() == null || row < 0 || col < 0 || row >= Global.SCREEN_H || col >= Global.SCREEN_W){
 				return null;
@@ -1853,6 +1880,149 @@ namespace Forays{
 				}
 				mouse_path = null;
 			}
+		}
+	}
+	public class AnimationParticle{
+		public int frames_left;
+		public float row;
+		public float col;
+		public FloatNumber dy = null;
+		public FloatNumber dx = null;
+		public int sprite_pixel_row;
+		public int sprite_pixel_col;
+		public int sprite_h;
+		public int sprite_w;
+		public Color4 primary_color;
+		public Color4 secondary_color;
+		public AnimationParticle(int frames,float r,float c,int spritex,int spritey,int spriteh,int spritew,Color4 primary,Color4 secondary){
+			frames_left = frames;
+			row = r;
+			col = c;
+			sprite_pixel_row = spritex;
+			sprite_pixel_col = spritey;
+			sprite_h = spriteh;
+			sprite_w = spritew;
+			primary_color = primary;
+			secondary_color = secondary;
+		}
+	}
+	public class ParticleGenerator{
+		public int sprite_pixel_row;
+		public int sprite_pixel_col;
+		public int sprite_h;
+		public int sprite_w;
+		public Color4 primary_color;
+		public Color4 secondary_color;
+		public float origin_row;
+		public float origin_col;
+		public FloatNumber dist_from_origin;
+		public FloatNumber delta_row;
+		public FloatNumber delta_col;
+		public Number num_per_frame;
+		public Number duration_of_particle;
+		public int total_frames;
+		public int current_frame = 0;
+		public ParticleGenerator(int sprite_pixel_row_,int sprite_pixel_col_,int sprite_h_,int sprite_w_,Color4 primary_color_,Color4 secondary_color_,
+		                         float origin_row_,float origin_col_,FloatNumber dist_from_origin_,FloatNumber delta_row_,FloatNumber delta_col_,
+		                         Number num_per_frame_,Number duration_of_particle_,int total_frames_){
+			sprite_pixel_row = sprite_pixel_row_;
+			sprite_pixel_col = sprite_pixel_col_;
+			sprite_h = sprite_h_;
+			sprite_w = sprite_w_;
+			primary_color = primary_color_;
+			secondary_color = secondary_color_;
+			origin_row = origin_row_;
+			origin_col = origin_col_;
+			dist_from_origin = dist_from_origin_;
+			delta_row = delta_row_;
+			delta_col = delta_col_;
+			num_per_frame = num_per_frame_;
+			duration_of_particle = duration_of_particle_;
+			total_frames = total_frames_;
+		}
+		public bool Update(List<AnimationParticle> l){
+			if(current_frame >= total_frames){
+				return false;
+			}
+			++current_frame;
+			int num_this_frame = num_per_frame.GetValue();
+			for(int num=0;num<num_this_frame;++num){
+				float angle = (float)(R.r.NextDouble() * 2.0 * Math.PI);
+				float dist = dist_from_origin.GetValue();
+				l.Add(new AnimationParticle(duration_of_particle.GetValue(),origin_row + (float)Math.Sin(angle) * dist,origin_col + (float)Math.Cos(angle) * dist,0,0,sprite_h,sprite_w,primary_color,secondary_color));
+			}
+			return true;
+		}
+	}
+	public static class Animations{
+		public static List<AnimationParticle> Particles = new List<AnimationParticle>(); //todo: move animations to their own file. Let generators chain into other generators for complex and repeating effects.
+		public static List<ParticleGenerator> Generators = new List<ParticleGenerator>();
+		public static void Update(){
+			List<AnimationParticle> removed = new List<AnimationParticle>();
+			foreach(AnimationParticle p in Particles){
+				p.frames_left--;
+				if(p.frames_left <= 0){
+					removed.Add(p);
+				}
+				else{
+					if(p.dy != null){
+						p.row += p.dy.GetValue();
+					}
+					if(p.dx != null){
+						p.col += p.dx.GetValue();
+					}
+				}
+			}
+			foreach(AnimationParticle p in removed){
+				Particles.Remove(p);
+			}
+			Generators.RemoveWhere(g => !g.Update(Particles));
+			//GLGame.particle_surface.Disabled = false;
+			Game.gl.UpdateParticles(GLGame.particle_surface,Particles);
+			//Game.gl.Render();
+			//Thread.Sleep(20);
+			//GLGame.particle_surface.Disabled = true;
+			//GLGame.particle_surface.NumElements = 0;
+		}
+		public static void DoStuffTodoRename(int num_per_frame_todo,int duration_todo,int num_frames_todo){
+			GLGame.particle_surface.Disabled = false;
+			List<AnimationParticle> l = new List<AnimationParticle>();
+			float player_row = (float)Actor.player.row - 0.325f;
+			float player_col;
+			{
+				int graphics_mode_first_col = Screen.screen_center_col - 16;
+				int graphics_mode_last_col = Screen.screen_center_col + 16;
+				if(graphics_mode_first_col < 0){
+					graphics_mode_last_col -= graphics_mode_first_col;
+					graphics_mode_first_col = 0;
+				}
+				else{
+					if(graphics_mode_last_col >= Global.COLS){
+						int diff = graphics_mode_last_col - (Global.COLS-1);
+						graphics_mode_first_col -= diff;
+						graphics_mode_last_col = Global.COLS-1;
+					}
+				}
+				player_col = (float)(Actor.player.col - graphics_mode_first_col) + 0.4375f;
+			}
+			float dx = 0.1f;
+			float dy = 0.1f;
+			for(int time=0;time<num_frames_todo + duration_todo - 1;++time){
+				for(int num=0;num<num_per_frame_todo;++num){
+					l.Add(new AnimationParticle(time+duration_todo,player_row + (float)(R.Between(-100,100)) / 10,player_col + (float)(R.Between(-100,100)) / 10,0,0,5,3,Color4.Magenta,Color4.Yellow));
+					//l.Add(new AnimationParticle(time+duration_todo,player_col,player_row,0,0,5,3,Color4.DarkRed,Color4.Cyan)); //todo
+				}
+				l.RemoveWhere(p => time >= p.frames_left);
+				foreach(AnimationParticle p in l){
+					p.col += dx;
+					p.row += dy;
+				}
+				Game.gl.UpdateParticles(GLGame.particle_surface,l);
+				Game.gl.Render();
+				Thread.Sleep(20);
+			}
+			GLGame.particle_surface.Disabled = true;
+			GLGame.particle_surface.NumElements = 0;
 		}
 	}
 }

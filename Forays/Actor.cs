@@ -7,6 +7,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
+using System.Drawing; //todo remove
 using System.Collections.Generic;
 using System.Threading;
 using System.IO;
@@ -460,6 +461,7 @@ namespace Forays{
 			feats = new Dict<FeatType,bool>(a.feats);
 			spells = new Dict<SpellType,bool>(a.spells);
 			exhaustion = 0;
+			sprite_offset = a.sprite_offset;
 		}
 		public Actor(ActorType type_,string name_,char symbol_,Color color_,int maxhp_,int speed_,int light_radius_,params AttrType[] attrlist){
 			type = type_;
@@ -482,6 +484,27 @@ namespace Forays{
 			foreach(AttrType at in attrlist){
 				attrs[at]++;
 			}//row and col are -1
+			switch(type){
+			case ActorType.PLAYER:
+				sprite_offset = new pos(0,32);
+				break;
+			case ActorType.MUD_TENTACLE:
+				sprite_offset = new pos(13,32);
+				break;
+			case ActorType.GHOST:
+				sprite_offset = new pos(13,34);
+				break;
+			default:
+				if(type >= ActorType.MINOR_DEMON && type <= ActorType.DEMON_LORD){
+					int diff = type - ActorType.MINOR_DEMON;
+					sprite_offset = new pos(13,36+diff);
+				}
+				else{ //phantoms are handled in CreatePhantom()
+					int diff = type - ActorType.GOBLIN;
+					sprite_offset = new pos(4 + diff / 8,32 + (diff % 8)*2);
+				}
+				break;
+			}
 		}
 		public static Actor Create(ActorType type,int r,int c){ return Create(type,r,c,false,false); } //not sure that false,false should be the default here
 		public static Actor Create(ActorType type,int r,int c,bool add_to_tiebreaker_list,bool insert_after_current){
@@ -569,6 +592,8 @@ namespace Forays{
 				a.speed = 150;
 				break;
 			}
+			int diff = (a.type - ActorType.PHANTOM_ZOMBIE) + 6;
+			a.sprite_offset = new pos(13 + diff / 8,32 + (diff % 8)*2);
 			return a;
 		}
 		public bool Is(params ActorType[] types){
@@ -2033,6 +2058,7 @@ namespace Forays{
 			if(HasFeat(FeatType.DANGER_SENSE)){
 				M.UpdateDangerValues();
 			}
+			Screen.UpdateScreenCenterColumn(col);
 			M.Draw();
 			if(HasAttr(AttrType.AUTOEXPLORE)){
 				if(path.Count == 0){
@@ -2367,8 +2393,7 @@ namespace Forays{
 									}
 									else{
 										if(t.features.Count > 0){
-											ch2.c = t.FeatureSymbol();
-											ch2.color = t.FeatureColor();
+											ch2 = t.FeatureVisual();
 											M.last_seen[t.row,t.col] = ch2;
 										}
 										else{
@@ -3033,7 +3058,7 @@ namespace Forays{
 				foreach(Actor a in drawn){
 					M.last_seen[a.row,a.col] = old_ch[a];
 				}
-				M.RedrawWithStrings();
+				M.Redraw();
 				if(path.Count > 0){
 					PlayerWalk(DirectionOf(path[0]));
 					if(path.Count > 0){
@@ -3294,7 +3319,7 @@ namespace Forays{
 							Screen.WriteArray(0,0,screen);
 						}
 						else{
-							M.RedrawWithStrings(); //this will break if the box goes off the map, todo
+							M.Redraw(); //this will break if the box goes off the map, todo
 							break;
 						}
 						Screen.CursorVisible = true;
@@ -3644,7 +3669,7 @@ namespace Forays{
 									Screen.WriteArray(0,0,screen);
 								}
 								else{
-									M.RedrawWithStrings(); //this will break if the box goes off the map, todo
+									M.Redraw(); //this will break if the box goes off the map, todo
 									break;
 								}
 								Screen.CursorVisible = true;
@@ -4217,7 +4242,7 @@ namespace Forays{
 				Screen.CursorVisible = true;
 				Global.ReadKey();
 				MouseUI.PopButtonMap();
-				M.RedrawWithStrings();
+				M.Redraw();
 				Q0();
 				break;
 			case 'p':
@@ -4251,7 +4276,7 @@ namespace Forays{
 					foreach(FeatType f in feats_in_order){
 						if(Feat.IsActivated(f)){
 							if(feat == 0){
-								M.RedrawWithStrings();
+								M.Redraw();
 								if(StunnedThisTurn()){
 									break;
 								}
@@ -4427,6 +4452,9 @@ namespace Forays{
 								GLGame.graphics_surface.Disabled = Global.Option(OptionType.DISABLE_GRAPHICS);
 								if(Global.Option(OptionType.DISABLE_GRAPHICS)){
 									Screen.UpdateCursor(false);
+								}
+								else{
+									Game.gl.ResizeToDefault();
 								}
 							}
 						}
@@ -4636,9 +4664,32 @@ namespace Forays{
 							}
 						}
 						Global.ReadKey();*/
-						for(int i=0;i<ROWS;++i){
+						/*var noise = U.GetNoise(17);
+						for(int i=0;i<17;++i){
+							for(int j=0;j<17;++j){
+								char ch2 = '~';
+								if(noise[i,j] > 0.5f){
+									ch2 = '^';
+								}
+								else{
+									if(noise[i,j] > 0.1f){
+										ch2 = '#';
+									}
+									else{
+										if(noise[i,j] > -0.1f){
+											ch2 = '.';
+										}
+										else{
+											if(noise[i,j] > -0.5f){
+												ch2 = ',';
+											}
+										}
+									}
+								}
+								Screen.WriteChar(i,j,ch2);
+							}
 							//Screen.WriteMapString(i,0,Global.GenerateCharacterName().PadToMapSize());
-							Screen.WriteMapString(i,0,Item.RandomItem().ToString().PadToMapSize());
+							//Screen.WriteMapString(i,0,Item.RandomItem().ToString().PadToMapSize());
 						}
 						/*for(int i=0;i<(int)EquipmentStatus.NUM_STATUS;++i){
 							Sword.status[(EquipmentStatus)i] = true;
@@ -4661,7 +4712,165 @@ namespace Forays{
 								}
 							}
 						}*/
-						Global.ReadKey();
+						//Global.ReadKey();
+						//M.InitLevel();
+						//Move(1,1);
+						//List<TileType> tilelist = new List<TileType>{TileType.WALL,TileType.WATER,TileType.VINE,TileType.WAX_WALL,TileType.FLOOR,TileType.BREACHED_WALL,TileType.DOOR_C,TileType.DOOR_O,TileType.CHEST,TileType.STATUE,TileType.FIREPIT,TileType.STALAGMITE,TileType.RUBBLE,TileType.COMBAT_SHRINE,TileType.DEFENSE_SHRINE,TileType.MAGIC_SHRINE,TileType.SPIRIT_SHRINE,TileType.STEALTH_SHRINE,TileType.SPELL_EXCHANGE_SHRINE,TileType.RUINED_SHRINE,TileType.FIRE_GEYSER,TileType.FOG_VENT,TileType.POISON_GAS_VENT,TileType.ICE,TileType.STONE_SLAB,TileType.CHASM,TileType.CRACKED_WALL,TileType.BRUSH,TileType.POPPY_FIELD,TileType.BLAST_FUNGUS,TileType.GLOWING_FUNGUS,TileType.TOMBSTONE,TileType.GRAVE_DIRT,TileType.BARREL,TileType.STANDING_TORCH,TileType.POISON_BULB,TileType.DEMONIC_IDOL,TileType.FIRE_TRAP,TileType.TELEPORT_TRAP,TileType.LIGHT_TRAP,TileType.SLIDING_WALL_TRAP,TileType.GRENADE_TRAP,TileType.SHOCK_TRAP,TileType.ALARM_TRAP,TileType.DARKNESS_TRAP,TileType.POISON_GAS_TRAP,TileType.BLINDING_TRAP,TileType.ICE_TRAP,TileType.PHANTOM_TRAP,TileType.SCALDING_OIL_TRAP,TileType.FLING_TRAP,TileType.STONE_RAIN_TRAP};
+						//List<pos> tileposlist = new List<pos>{new pos(0,0),new pos(4,0),new pos(8,0),new pos(12,0),new pos(0,8),new pos(0,9),new pos(0,10),new pos(2,10),new pos(4,10),new pos(8,10),new pos(12,10),new pos(13,10),new pos(14,10),new pos(0,11),new pos(1,11),new pos(2,11),new pos(3,11),new pos(4,11),new pos(5,11),new pos(6,11),new pos(8,11),new pos(9,11),new pos(10,11),new pos(11,11),new pos(12,11),new pos(14,11),new pos(15,11),new pos(0,12),new pos(4,12),new pos(5,12),new pos(10,12),new pos(12,12),new pos(13,12),new pos(14,12),new pos(15,12),new pos(0,13),new pos(1,13),new pos(0,14),new pos(1,14),new pos(2,14),new pos(3,14),new pos(4,14),new pos(5,14),new pos(6,14),new pos(7,14),new pos(8,14),new pos(9,14),new pos(10,14),new pos(11,14),new pos(12,14),new pos(13,14),new pos(14,14)};
+						/*int[] intarray = new int[16];
+						intarray[1] = 1;
+						intarray[2] = 1;
+						intarray[5] = -1;
+						intarray[8] = 1;
+						intarray[9] = -1;
+						intarray[10] = 3;*/
+						/*Bitmap bmp = new Bitmap("todo_remove.png");
+						Bitmap result;
+						using(var temp = new Bitmap("result_remove.png")){
+							result = new Bitmap(temp);
+						}*/
+						//Bitmap result = new Bitmap("result_remove.png");
+						//int idx=0;
+						/*foreach(ConsumableType ct in Enum.GetValues(typeof(ConsumableType))){
+							if(Item.NameOfItemType(ct) == "other"){
+								M.tile[2,2].inv = null;
+								Item.Create(ct,2,2);
+								colorchar cch = M.VisibleColorChar(2,2);
+								int ch_offset = (int)(cch.c) * 16;
+								int pos_col = 48 + (idx % 16);
+								int pos_row = 5 + idx / 16;
+								for(int i=0;i<16;++i){
+									for(int j=0;j<16;++j){
+										if(bmp.GetPixel(ch_offset + j,i).ToArgb() == System.Drawing.Color.Black.ToArgb()){
+											System.Drawing.Color pixel_color = System.Drawing.Color.FromArgb(GLGame.ConvertColor(Screen.ResolveColor(cch.color)).ToArgb());
+											result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,pixel_color);
+										}
+										else{
+											result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,System.Drawing.Color.Transparent);
+										}
+									}
+								}
+								++idx;
+							}
+						}*/
+						/*attrs[AttrType.DETECTING_MONSTERS] = 1;
+						for(ActorType at = ActorType.GOBLIN;at <= ActorType.DEMON_LORD;at++){
+							if(at != ActorType.MARBLE_HORROR_STATUE && at != ActorType.FINAL_LEVEL_CULTIST){
+								M.actor[2,2] = null;
+								Actor.Create(at,2,2);
+								colorchar cch = M.VisibleColorChar(2,2);
+								int ch_offset = (int)(cch.c) * 16;
+								int pos_col = 32 + (idx % 16);
+								int pos_row = 4 + idx / 16;
+								for(int i=0;i<16;++i){
+									for(int j=0;j<16;++j){
+										if(bmp.GetPixel(ch_offset + j,i).ToArgb() == System.Drawing.Color.Black.ToArgb()){
+											System.Drawing.Color pixel_color = System.Drawing.Color.FromArgb(GLGame.ConvertColor(Screen.ResolveColor(cch.color)).ToArgb());
+											result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,pixel_color);
+											result.SetPixel(pos_col * 16 + j + 16,pos_row * 16 + i,pixel_color);
+										}
+										else{
+											result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,System.Drawing.Color.Transparent);
+											result.SetPixel(pos_col * 16 + j + 16,pos_row * 16 + i,System.Drawing.Color.Transparent);
+										}
+									}
+								}
+								idx += 2;
+							}
+						}
+						{
+							colorchar cch = M.VisibleColorChar(1,1);
+							int ch_offset = (int)(cch.c) * 16;
+							int pos_col = 32;
+							int pos_row = 0;
+							for(int i=0;i<16;++i){
+								for(int j=0;j<16;++j){
+									if(bmp.GetPixel(ch_offset + j,i).ToArgb() == System.Drawing.Color.Black.ToArgb()){
+										System.Drawing.Color pixel_color = System.Drawing.Color.FromArgb(GLGame.ConvertColor(Screen.ResolveColor(cch.color)).ToArgb());
+										result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,pixel_color);
+										result.SetPixel(pos_col * 16 + j + 16,pos_row * 16 + i,pixel_color);
+									}
+									else{
+										result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,System.Drawing.Color.Transparent);
+										result.SetPixel(pos_col * 16 + j + 16,pos_row * 16 + i,System.Drawing.Color.Transparent);
+									}
+								}
+							}
+						}
+						for(ActorType at = ActorType.PHANTOM_ZOMBIE;at <= ActorType.PHANTOM_CONSTRICTOR;at++){
+								M.actor[2,2] = null;
+							Actor.CreatePhantom(2,2);
+							if(!M.actor[2,2].Is(at)){
+								at--;
+								continue;
+							}
+								colorchar cch = M.VisibleColorChar(2,2);
+								int ch_offset = (int)(cch.c) * 16;
+								int pos_col = 32 + (idx % 16);
+								int pos_row = 4 + idx / 16;
+								for(int i=0;i<16;++i){
+									for(int j=0;j<16;++j){
+										if(bmp.GetPixel(ch_offset + j,i).ToArgb() == System.Drawing.Color.Black.ToArgb()){
+											System.Drawing.Color pixel_color = System.Drawing.Color.FromArgb(GLGame.ConvertColor(Screen.ResolveColor(cch.color)).ToArgb());
+											result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,pixel_color);
+											result.SetPixel(pos_col * 16 + j + 16,pos_row * 16 + i,pixel_color);
+										}
+										else{
+											result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,System.Drawing.Color.Transparent);
+											result.SetPixel(pos_col * 16 + j + 16,pos_row * 16 + i,System.Drawing.Color.Transparent);
+										}
+									}
+								}
+								idx += 2;
+						}*/
+						/*int diff = 0;
+						foreach(FeatureType ft in Enum.GetValues(typeof(FeatureType))){
+							M.tile[2,2] = null;
+							Tile.Create(TileType.FLOOR,2,2);
+							M.tile[2,2].revealed_by_light = true;
+							M.tile[2,2].AddFeature(ft);
+							colorchar cch = M.VisibleColorChar(2,2);
+							int ch_offset = (int)(cch.c) * 16;
+							int pos_col = 16 + (diff % 16);
+							int pos_row = diff / 16;
+							for(int i=0;i<16;++i){
+								for(int j=0;j<16;++j){
+									if(bmp.GetPixel(ch_offset + j,i).ToArgb() == System.Drawing.Color.Black.ToArgb()){
+										System.Drawing.Color pixel_color = System.Drawing.Color.FromArgb(GLGame.ConvertColor(Screen.ResolveColor(cch.color)).ToArgb());
+										result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,pixel_color);
+									}
+									else{
+										result.SetPixel(pos_col * 16 + j,pos_row * 16 + i,System.Drawing.Color.Transparent);
+									}
+								}
+							}
+							diff += intarray[idx];
+							diff++;
+							++idx;
+						}*/
+						/*foreach(TileType tt in tilelist){
+							M.tile[2,2] = null;
+							pos tilepos = tileposlist[idx];
+							Tile.Create(tt,2,2);
+							M.tile[2,2].revealed_by_light = true;
+							colorchar cch = M.VisibleColorChar(2,2);
+							int ch_offset = (int)(cch.c) * 16;
+							for(int i=0;i<16;++i){
+								for(int j=0;j<16;++j){
+									if(bmp.GetPixel(ch_offset + j,i).ToArgb() == System.Drawing.Color.Black.ToArgb()){
+										System.Drawing.Color pixel_color = System.Drawing.Color.FromArgb(GLGame.ConvertColor(Screen.ResolveColor(cch.color)).ToArgb());
+										result.SetPixel(tilepos.row * 16 + j,tilepos.col * 16 + i,pixel_color);
+									}
+									else{
+										result.SetPixel(tilepos.row * 16 + j,tilepos.col * 16 + i,System.Drawing.Color.Black);
+									}
+								}
+							}
+							++idx;
+						}*/
+						//result.Save("result_remove.png");
+						//Animate.DoStuffTodoRename(15,5,100);
+						//Animations.Update
 						Q0();
 						break;
 					}
@@ -4997,8 +5206,7 @@ namespace Forays{
 							}
 							else{
 								if(t.features.Count > 0){
-									ch2.c = t.FeatureSymbol();
-									ch2.color = t.FeatureColor();
+									ch2 = t.FeatureVisual();
 									M.last_seen[t.row,t.col] = ch2;
 								}
 								else{
@@ -16460,7 +16668,7 @@ namespace Forays{
 					}
 					else{
 						if(!never_redraw_map && result.value != -1 && !result.description_requested){
-							M.RedrawWithStrings();
+							M.Redraw();
 						}
 						MouseUI.PopButtonMap();
 						MouseUI.AutomaticButtonsFromStrings = false;
@@ -16548,7 +16756,12 @@ namespace Forays{
 			else{
 				int result = GetSelection(message,strings.Count,no_cancel,easy_cancel,false);
 				if(result != -1){
-					M.RedrawWithStrings(); //again, todo: why is this here? - i think it's as close as it's gonna get now.
+					if(Global.Option(OptionType.DISABLE_GRAPHICS)){ //todo switch to bool
+						M.Redraw(); //again, todo: why is this here? - i think it's as close as it's gonna get now.
+					}
+					else{
+						M.Draw();
+					}
 				}
 				if(!no_ask){
 					MouseUI.PopButtonMap();
@@ -16598,7 +16811,7 @@ namespace Forays{
 					}
 					else{
 						if(!never_redraw_map && result != -1){
-							M.RedrawWithStrings();
+							M.Redraw();
 						}
 						if(!no_ask){
 							MouseUI.PopButtonMap();

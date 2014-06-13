@@ -97,6 +97,7 @@ namespace Forays{
 			row = -1;
 			col = -1;
 			light_radius = 0;
+			sprite_offset = new pos(0,1);
 		}
 		public Item(Item i,int r,int c){
 			type = i.type;
@@ -113,6 +114,7 @@ namespace Forays{
 			row = r;
 			col = c;
 			light_radius = i.light_radius;
+			sprite_offset = i.sprite_offset;
 		}
 		public static Item Create(ConsumableType type,int r,int c){
 			Item i = null;
@@ -557,6 +559,10 @@ namespace Forays{
 			identified = new Dict<ConsumableType,bool>();
 			List<string> potion_flavors = new List<string>{"vermilion","cerulean","emerald","fuchsia","aquamarine","goldenrod","violet","silver","indigo","crimson"};
 			List<Color> potion_colors = new List<Color>{Color.Red,Color.Blue,Color.Green,Color.Magenta,Color.Cyan,Color.Yellow,Color.DarkMagenta,Color.Gray,Color.DarkBlue,Color.DarkRed};
+			List<pos> potion_sprites = new List<pos>();
+			for(int i=0;i<10;++i){
+				potion_sprites.Add(new pos(0,48+i));
+			}
 			List<string> orb_flavors = new List<string>{"flickering","iridescent","sparkling","chromatic","psychedelic","scintillating","glimmering","kaleidoscopic"};
 			List<Color> orb_colors = new List<Color>{Color.RandomRGB,Color.RandomCMY,Color.RandomDRGB,Color.RandomDCMY,Color.RandomRainbow,Color.RandomBright,Color.RandomDark,Color.RandomAny};
 			foreach(ConsumableType type in Enum.GetValues(typeof(ConsumableType))){
@@ -565,23 +571,40 @@ namespace Forays{
 					int num = R.Roll(potion_flavors.Count) - 1;
 					unIDed_name[type] = potion_flavors[num] + " potion~";
 					proto[type].color = potion_colors[num];
+					proto[type].sprite_offset = potion_sprites[num];
 					potion_flavors.RemoveAt(num);
 					potion_colors.RemoveAt(num);
+					potion_sprites.RemoveAt(num);
 				}
 				else{
 					if(type_name == "scroll"){
 						unIDed_name[type] = "scroll~ labeled '" + GenerateScrollName() + "'";
+						proto[type].sprite_offset = new pos(2,48);
 					}
 					else{
 						if(type_name == "orb"){
 							unIDed_name[type] = orb_flavors.RemoveRandom() + " orb~";
-							proto[type].color = orb_colors.RemoveRandom(); //note that color isn't tied to name for orbs. they're all random.
+							int color_num = R.Roll(orb_colors.Count) - 1;
+							proto[type].color = orb_colors[color_num]; //note that color isn't tied to name for orbs. they're all random.
+							orb_colors.RemoveAt(color_num);
+							proto[type].sprite_offset = new pos(3,48+color_num);
 							if(type == ConsumableType.TELEPORTAL){
 								Tile.Feature(FeatureType.TELEPORTAL).color = proto[type].color;
 							}
 						}
 						else{
 							identified[type] = true; //bandages, trap, blast fungus...
+							switch(type){
+							case ConsumableType.BANDAGES:
+								proto[type].sprite_offset = new pos(5,48);
+								break;
+							case ConsumableType.FLINT_AND_STEEL:
+								proto[type].sprite_offset = new pos(5,49);
+								break;
+							case ConsumableType.BLAST_FUNGUS:
+								proto[type].sprite_offset = new pos(5,50);
+								break;
+							}
 						}
 					}
 				}
@@ -1011,8 +1034,7 @@ namespace Forays{
 						}
 						else{
 							if(t.features.Count > 0){
-								ch2.c = t.FeatureSymbol();
-								ch2.color = t.FeatureColor();
+								ch2 = t.FeatureVisual();
 								M.last_seen[t.row,t.col] = ch2;
 							}
 							else{

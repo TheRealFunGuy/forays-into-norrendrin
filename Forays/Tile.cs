@@ -15,7 +15,37 @@ namespace Forays{
 		public bool passable{get;set;}
 		public bool opaque{get{ return internal_opaque || features.Contains(FeatureType.FOG); } set{ internal_opaque = value; }}
 		private bool internal_opaque; //no need to ever access this directly
-		public bool seen{get;set;}
+		public bool seen{
+			get{
+				return internal_seen;
+			}
+			set{
+				if(value == true){
+					if(!internal_seen){
+						internal_seen = true;
+						if(row > 0){
+							M.tile[row-1,col].CheckForSpriteUpdate();
+							if(col > 0){
+								M.tile[row-1,col-1].CheckForSpriteUpdate();
+							}
+							if(col < COLS-1){
+								M.tile[row-1,col+1].CheckForSpriteUpdate();
+							}
+						}
+						if(col > 0){
+							M.tile[row,col-1].CheckForSpriteUpdate();
+						}
+						if(col < COLS-1){
+							M.tile[row,col+1].CheckForSpriteUpdate();
+						}
+					}
+				}
+				else{
+					internal_seen = false;
+				}
+			}
+		}
+		private bool internal_seen;
 		public bool revealed_by_light{get;set;}
 		public bool solid_rock{get;set;} //used for walls that will never be seen, to speed up LOS checks
 		public int light_value{
@@ -163,6 +193,56 @@ namespace Forays{
 		}
 		private static void Define(FeatureType type_,string name_,char symbol_,Color color_){
 			proto_feature[type_] = new PhysicalObject(name_,symbol_,color_);
+			switch(type_){
+			case FeatureType.BONES:
+				proto_feature[type_].sprite_offset = new pos(0,31);
+				break;
+			case FeatureType.FIRE:
+				proto_feature[type_].sprite_offset = new pos(0,27);
+				break;
+			case FeatureType.FOG:
+				proto_feature[type_].sprite_offset = new pos(0,21);
+				break;
+			case FeatureType.FORASECT_EGG:
+				proto_feature[type_].sprite_offset = new pos(1,18);
+				break;
+			case FeatureType.GRENADE:
+				proto_feature[type_].sprite_offset = new pos(0,16);
+				break;
+			case FeatureType.INACTIVE_TELEPORTAL:
+				proto_feature[type_].sprite_offset = new pos(0,24);
+				break;
+			case FeatureType.OIL:
+				proto_feature[type_].sprite_offset = new pos(2,20);
+				break;
+			case FeatureType.PIXIE_DUST:
+				proto_feature[type_].sprite_offset = new pos(1,17);
+				break;
+			case FeatureType.POISON_GAS:
+				proto_feature[type_].sprite_offset = new pos(0,22);
+				break;
+			case FeatureType.SLIME:
+				proto_feature[type_].sprite_offset = new pos(2,16);
+				break;
+			case FeatureType.SPORES:
+				proto_feature[type_].sprite_offset = new pos(1,19);
+				break;
+			case FeatureType.STABLE_TELEPORTAL:
+				proto_feature[type_].sprite_offset = new pos(0,25);
+				break;
+			case FeatureType.TELEPORTAL:
+				proto_feature[type_].sprite_offset = new pos(0,23);
+				break;
+			case FeatureType.TROLL_BLOODWITCH_CORPSE:
+				proto_feature[type_].sprite_offset = new pos(0,19);
+				break;
+			case FeatureType.TROLL_CORPSE:
+				proto_feature[type_].sprite_offset = new pos(0,17);
+				break;
+			case FeatureType.WEB:
+				proto_feature[type_].sprite_offset = new pos(1,16);
+				break;
+			}
 		}
 		public Tile(){}
 		public Tile(Tile t,int r,int c){
@@ -192,6 +272,7 @@ namespace Forays{
 			col = c;
 			light_radius = t.light_radius;
 			direction_exited = 0;
+			sprite_offset = t.sprite_offset;
 		}
 		public Tile(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
 			type = type_;
@@ -229,6 +310,129 @@ namespace Forays{
 			inv = null;
 			light_radius = 0;
 			direction_exited = 0;
+			if(type >= TileType.COMBAT_SHRINE && type <= TileType.STEALTH_SHRINE){
+				int diff = type - TileType.COMBAT_SHRINE;
+				sprite_offset = new pos(11,diff);
+			}
+			else{
+				if(type >= TileType.FIRE_TRAP && type <= TileType.STONE_RAIN_TRAP){
+					int diff = type - TileType.FIRE_TRAP;
+					sprite_offset = new pos(14 + diff/16,diff%16);
+				}
+				else{
+					if(passable){
+						sprite_offset = new pos(8,0);
+					}
+					else{
+						sprite_offset = new pos(0,0);
+					}
+					switch(type){
+					case TileType.BARREL:
+						sprite_offset = new pos(12,14);
+						break;
+					case TileType.BLAST_FUNGUS:
+						sprite_offset = new pos(12,5);
+						break;
+					case TileType.BREACHED_WALL:
+						sprite_offset = new pos(9,0);
+						break;
+					case TileType.BRUSH:
+						sprite_offset = new pos(12,0);
+						break;
+					case TileType.CHASM:
+						sprite_offset = new pos(11,14);
+						break;
+					case TileType.CHEST:
+						sprite_offset = new pos(10,4);
+						break;
+					case TileType.CRACKED_WALL:
+						sprite_offset = new pos(0,1);
+						break;
+					case TileType.DEMONIC_IDOL:
+						sprite_offset = new pos(13,1);
+						break;
+					case TileType.DOOR_C:
+						sprite_offset = new pos(10,0);
+						break;
+					case TileType.DOOR_O:
+						sprite_offset = new pos(10,2);
+						break;
+					case TileType.FIRE_GEYSER:
+						sprite_offset = new pos(11,8);
+						break;
+					case TileType.FIREPIT:
+						sprite_offset = new pos(10,12);
+						break;
+					case TileType.FLOOR:
+						sprite_offset = new pos(8,0);
+						break;
+					case TileType.FOG_VENT:
+						sprite_offset = new pos(11,9);
+						break;
+					case TileType.GLOWING_FUNGUS:
+						sprite_offset = new pos(12,10);
+						break;
+					case TileType.GRAVE_DIRT:
+						sprite_offset = new pos(12,13);
+						break;
+					case TileType.GRAVEL:
+						sprite_offset = new pos(10,15);
+						break;
+					case TileType.ICE:
+						sprite_offset = new pos(11,11);
+						break;
+					case TileType.JUNGLE:
+						sprite_offset = new pos(0,0); //unused
+						break;
+					case TileType.POISON_BULB:
+						sprite_offset = new pos(13,0);
+						break;
+					case TileType.POISON_GAS_VENT:
+						sprite_offset = new pos(11,10);
+						break;
+					case TileType.POOL_OF_RESTORATION:
+						sprite_offset = new pos(13,5);
+						break;
+					case TileType.POPPY_FIELD:
+						sprite_offset = new pos(12,4);
+						break;
+					case TileType.RUBBLE:
+						sprite_offset = new pos(10,14);
+						break;
+					case TileType.STAIRS:
+						sprite_offset = new pos(13,6);
+						break;
+					case TileType.STALAGMITE:
+						sprite_offset = new pos(10,13);
+						break;
+					case TileType.STANDING_TORCH:
+						sprite_offset = new pos(12,15);
+						break;
+					case TileType.STATUE:
+						sprite_offset = new pos(10,8);
+						break;
+					case TileType.STONE_SLAB:
+						sprite_offset = new pos(11,12);
+						break;
+					case TileType.TOMBSTONE:
+						sprite_offset = new pos(12,12);
+						break;
+					case TileType.VINE:
+						sprite_offset = new pos(0,8);
+						break;
+					case TileType.WALL:
+					case TileType.HIDDEN_DOOR:
+						sprite_offset = new pos(0,0);
+						break;
+					case TileType.WATER:
+						sprite_offset = new pos(0,4);
+						break;
+					case TileType.WAX_WALL:
+						sprite_offset = new pos(0,12);
+						break;
+					}
+				}
+			}
 		}
 		public override string ToString(){
 			return symbol.ToString();
@@ -240,6 +444,90 @@ namespace Forays{
 				M.tile[r,c] = t; //bounds checking here?
 			}
 			return t;
+		}
+		public bool IsVisuallyWall(){
+			return Is(TileType.WALL,TileType.CRACKED_WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.DOOR_C,TileType.DOOR_O);
+		}
+		public void CheckForSpriteUpdate(){ //makes walls face the right way, for instance.
+			switch(type){
+			case TileType.WALL:
+			case TileType.HIDDEN_DOOR:
+				if(row < ROWS-1 && M.tile[row+1,col].seen && !M.tile[row+1,col].IsVisuallyWall()){
+					sprite_offset = new pos(2,0);
+				}
+				else{
+					bool side_wall = false;
+					if(col > 0){
+						if(row < ROWS-1 && M.tile[row+1,col-1].seen && !M.tile[row+1,col-1].IsVisuallyWall()){
+							side_wall = true;
+						}
+						if(!side_wall && M.tile[row,col-1].seen && !M.tile[row,col-1].IsVisuallyWall()){
+							side_wall = true;
+						}
+					}
+					if(!side_wall && col < COLS-1){
+						if(row < ROWS-1 && M.tile[row+1,col+1].seen && !M.tile[row+1,col+1].IsVisuallyWall()){
+							side_wall = true;
+						}
+						if(!side_wall && M.tile[row,col+1].seen && !M.tile[row,col+1].IsVisuallyWall()){
+							side_wall = true;
+						}
+					}
+					if(side_wall){
+						sprite_offset = new pos(1,0);
+					}
+					else{
+						sprite_offset = new pos(0,0);
+					}
+				}
+				break;
+			case TileType.CRACKED_WALL:
+				if(row < ROWS-1 && M.tile[row+1,col].seen && !M.tile[row+1,col].IsVisuallyWall()){
+					sprite_offset = new pos(2,1);
+				}
+				else{
+					bool side_wall = false;
+					if(col > 0){
+						if(row < ROWS-1 && M.tile[row+1,col-1].seen && !M.tile[row+1,col-1].IsVisuallyWall()){
+							side_wall = true;
+						}
+						if(!side_wall && M.tile[row,col-1].seen && !M.tile[row,col-1].IsVisuallyWall()){
+							side_wall = true;
+						}
+					}
+					if(!side_wall && col < COLS-1){
+						if(row < ROWS-1 && M.tile[row+1,col+1].seen && !M.tile[row+1,col+1].IsVisuallyWall()){
+							side_wall = true;
+						}
+						if(!side_wall && M.tile[row,col+1].seen && !M.tile[row,col+1].IsVisuallyWall()){
+							side_wall = true;
+						}
+					}
+					if(side_wall){
+						sprite_offset = new pos(1,1);
+					}
+					else{
+						sprite_offset = new pos(0,1);
+					}
+				}
+				break;
+			case TileType.DOOR_C:
+				if(!M.tile[row+1,col].passable || !M.tile[row-1,col].passable){
+					sprite_offset = new pos(10,0);
+				}
+				else{
+					sprite_offset = new pos(10,1);
+				}
+				break;
+			case TileType.DOOR_O:
+				if(!M.tile[row+1,col].passable || !M.tile[row-1,col].passable){
+					sprite_offset = new pos(10,2);
+				}
+				else{
+					sprite_offset = new pos(10,3);
+				}
+				break;
+			}
 		}
 		public bool SaveInternalOpacity(){ //annoying - this is the only value I need to do this for, right now, so I'll hack it in and move on.
 			return internal_opaque;
@@ -334,31 +622,55 @@ namespace Forays{
 			}
 			return false;
 		}
-		public char FeatureSymbol(){
+		public colorchar FeatureVisual(){
 			foreach(FeatureType ft in feature_priority){
-				if(ft == FeatureType.OIL){ //special hack - important tile types (like stairs and traps) get priority over oil & slime
-					if(IsKnownTrap() || IsShrine() || Is(TileType.CHEST,TileType.RUINED_SHRINE,TileType.STAIRS,TileType.BLAST_FUNGUS)){
-						return symbol;
-					}
-				}
 				if(Is(ft)){
+					if(ft == FeatureType.OIL || ft == FeatureType.SLIME){ //special hack - important tile types (like stairs and traps) get priority over oil & slime
+						if(IsKnownTrap() || IsShrine() || Is(TileType.CHEST,TileType.STAIRS,TileType.BLAST_FUNGUS)){
+							return visual;
+						}
+					}
 					if(ft == FeatureType.FIRE){
 						if(type == TileType.BARREL){
-							return '0';
+							return new colorchar('0',Tile.Feature(ft).color);
 						}
 						if(type == TileType.FIRE_GEYSER){
-							return '~';
+							return new colorchar('~',Tile.Feature(ft).color);
 						}
 					}
 					if(ft == FeatureType.OIL && type == TileType.WATER){
-						return '~';
+						return new colorchar('~',Tile.Feature(ft).color);
 					}
-					return Tile.Feature(ft).symbol;
+					return Tile.Feature(ft).visual;
 				}
 			}
-			return symbol;
+			return visual;
 		}
-		public Color FeatureColor(){
+		public pos FeatureSprite(){
+			foreach(FeatureType ft in feature_priority){
+				if(Is(ft)){
+					if(ft == FeatureType.OIL || ft == FeatureType.SLIME){ //special hack - important tile types (like stairs and traps) get priority over oil & slime
+						if(IsKnownTrap() || IsShrine() || Is(TileType.CHEST,TileType.STAIRS,TileType.BLAST_FUNGUS)){
+							return sprite_offset;
+						}
+					}
+					if(ft == FeatureType.FIRE){
+						if(type == TileType.BARREL){
+							//todo return new colorchar('0',Tile.Feature(ft).color);
+						}
+						if(type == TileType.FIRE_GEYSER){
+							//todo return new colorchar('~',Tile.Feature(ft).color);
+						}
+					}
+					if(ft == FeatureType.OIL && type == TileType.WATER){
+						//todo return new colorchar('~',Tile.Feature(ft).color);
+					}
+					return Tile.Feature(ft).sprite_offset;
+				}
+			}
+			return sprite_offset;
+		}
+		/*public Color FeatureColor(){
 			foreach(FeatureType ft in feature_priority){
 				if(ft == FeatureType.OIL){ //special hack - important tile types (like stairs and traps) get priority over oil & slime
 					if(IsKnownTrap() || IsShrine() || Is(TileType.CHEST,TileType.RUINED_SHRINE,TileType.STAIRS,TileType.BLAST_FUNGUS)){
@@ -370,7 +682,7 @@ namespace Forays{
 				}
 			}
 			return color;
-		}
+		}*/
 		public string Preposition(){
 			switch(type){
 			case TileType.FLOOR:
@@ -591,6 +903,7 @@ namespace Forays{
 					RemoveFeature(ft);
 				}
 			}
+			CheckForSpriteUpdate();
 		}
 		public void TransformTo(TileType type_){
 			name=Prototype(type_).name;
@@ -610,6 +923,7 @@ namespace Forays{
 			}
 			light_radius = Prototype(type_).light_radius;
 			revealed_by_light = false;
+			sprite_offset = Prototype(type_).sprite_offset;
 		}
 		public void TurnToFloor(){
 			Toggle(null,TileType.FLOOR);

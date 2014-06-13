@@ -1,4 +1,4 @@
-/*Copyright (c) 2013  Derrick Creamer
+/*Copyright (c) 2013-2014  Derrick Creamer
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
 files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish,
 distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -545,6 +545,15 @@ namespace Utilities{
 				l.Remove(t);
 			}
 		}
+		public static int Modulo(this int i,int mod){ //true modulo, for wrapping in a specific range
+			int r = i % mod;
+			if(r < 0){
+				return r + mod;
+			}
+			else{
+				return r;
+			}
+		}
 		public static string PadOuter(this string s,int totalWidth){ //and the missing counterpart to PadRight and PadLeft
 			return s.PadOuter(totalWidth,' ');
 		}
@@ -829,6 +838,83 @@ namespace Utilities{
 			}
 			return map;
 		}
+		public static T GetWrapped<T>(this PosArray<T> array,pos p){
+			return array.GetWrapped(p.row,p.col);
+		}
+		public static T GetWrapped<T>(this PosArray<T> array,int row,int col){
+			return array[row.Modulo(array.objs.GetLength(0)),col.Modulo(array.objs.GetLength(1))];
+		}
+		public static void SetWrapped<T>(this PosArray<T> array,pos p,T t){
+			array.SetWrapped(p.row,p.col,t);
+		}
+		public static void SetWrapped<T>(this PosArray<T> array,int row,int col,T t){
+			array[row.Modulo(array.objs.GetLength(0)),col.Modulo(array.objs.GetLength(1))] = t;
+		}
+		public static PosArray<float> GetNoise(int height,int width){
+			return GetNoise(Math.Max(height,width));
+		}
+		public static PosArray<float> GetNoise(int size){
+			int size2 = 2;
+			while(size2+1 < size){
+				size2 *= 2;
+			}
+			++size2; //power of two, plus one
+			PosArray<float> n = new PosArray<float>(size2,size2);
+			int step = 1;
+			while(DiamondStep(n,step)){
+				SquareStep(n,step);
+				++step;
+			}
+			return n;
+		}
+		private static bool DiamondStep(this PosArray<float> a,int step){
+			int divisions = 1; //divisions^2 is the number of squares
+			while(step > 1){
+				divisions *= 2;
+				--step;
+			}
+			int increment = a.objs.GetUpperBound(0) / divisions;
+			if(increment == 1){
+				return false; //done!
+			}
+			for(int i=0;i<divisions;++i){
+				for(int j=0;j<divisions;++j){
+					float total = 0;
+					total += a[i*increment,j*increment];
+					total += a[i*increment,(j+1)*increment];
+					total += a[(i+1)*increment,j*increment];
+					total += a[(i+1)*increment,(j+1)*increment];
+					total = total / 4;
+					double val = (R.r.NextDouble() - 0.5) * 2;
+					total += (float)(val / divisions);
+					a[i*increment + increment/2,j*increment + increment/2] = total;
+				}
+			}
+			return true;
+		}
+		private static void SquareStep(this PosArray<float> a,int step){
+			int divisions = 1;
+			while(step > 0){
+				divisions *= 2;
+				--step;
+			}
+			int increment = a.objs.GetUpperBound(0) / divisions;
+			for(int i=0;i<=divisions;++i){
+				for(int j=0;j<=divisions;++j){
+					if((i+j)%2 == 1){
+						float total = 0;
+						total += a.GetWrapped((i-1)*increment,j*increment);
+						total += a.GetWrapped(i*increment,(j-1)*increment);
+						total += a.GetWrapped(i*increment,(j+1)*increment);
+						total += a.GetWrapped((i+1)*increment,j*increment);
+						total = total / 4;
+						double val = (R.r.NextDouble() - 0.5) * 2;
+						total += (float)(val / (divisions/2));
+						a[i*increment,j*increment] = total;
+					}
+				}
+			}
+		}
 	}
 	public static class R{ //random methods
 		public static Random r = new Random();
@@ -864,6 +950,184 @@ namespace Utilities{
 		}
 		public static bool PercentChance(int x){
 			return r.Next(1,101) <= x;
+		}
+	}
+	public enum NumberType{Value,Range,Sequence,Delta};
+	public class Number{
+		public NumberType Type = NumberType.Value;
+		public int Value = 0;
+		public Number RangeMin = null;
+		public Number RangeMax = null;
+		public List<Number> Sequence = null;
+		public int sequence_index = 0;
+		public Number Delta = null; //todo: some of these should be properties, with validation on changes.
+		public int GetValue(){ //also, need to enforce the requirement that every number eventually evaluates to an int.
+			switch(Type){
+			case NumberType.Range:
+				return R.Between(RangeMin.GetValue(),RangeMax.GetValue());
+			case NumberType.Sequence:
+			{
+				int result = Sequence[sequence_index].GetValue();
+				++sequence_index;
+				if(sequence_index == Sequence.Count){
+					sequence_index = 0;
+				}
+				return result;
+			}
+			case NumberType.Delta:
+			{
+				int result = Value;
+				Value += Delta.GetValue();
+				return result;
+			}
+			case NumberType.Value:
+			default:
+				return Value;
+			}
+		}
+		public static Number CreateValue(int value){
+			Number n = new Number();
+			n.Value = value;
+			return n;
+		}
+		public static Number CreateRange(Number min,Number max){
+			Number n = new Number();
+			n.Type = NumberType.Range;
+			n.RangeMin = min;
+			n.RangeMax = max;
+			return n;
+		}
+		public static Number CreateRange(int min,int max){
+			return CreateRange(CreateValue(min),CreateValue(max));
+		}
+		public static Number CreateRange(Number min,int max){
+			return CreateRange(min,CreateValue(max));
+		}
+		public static Number CreateRange(int min,Number max){
+			return CreateRange(CreateValue(min),max);
+		}
+		public static Number CreateSequence(){
+			Number n = new Number();
+			n.Type = NumberType.Sequence;
+			n.Sequence = new List<Number>();
+			return n;
+		}
+		public Number Add(int value){
+			if(Type != NumberType.Sequence){
+				throw new InvalidOperationException("This method can only be used with a Sequence");
+			}
+			Sequence.Add(CreateValue(value));
+			return this;
+		}
+		public Number Add(Number number){
+			if(Type != NumberType.Sequence){
+				throw new InvalidOperationException("This method can only be used with a Sequence");
+			}
+			Sequence.Add(number);
+			return this;
+		}
+		public static Number CreateDelta(int initial_value,Number delta){
+			Number n = new Number();
+			n.Type = NumberType.Delta;
+			n.Value = initial_value;
+			n.Delta = delta;
+			return n;
+		}
+		public static Number CreateDelta(int initial_value,int delta){
+			return CreateDelta(initial_value,CreateValue(delta));
+		}
+	}
+	public class FloatNumber{
+		public NumberType Type = NumberType.Value;
+		public float Value = 0;
+		public FloatNumber RangeMin = null;
+		public FloatNumber RangeMax = null;
+		public List<FloatNumber> Sequence = null;
+		public int sequence_index = 0;
+		public FloatNumber Delta = null; //todo: some of these should be properties, with validation on changes.
+		public float GetValue(){ //also, need to enforce the requirement that every number eventually evaluates to a float.
+			switch(Type){
+			case NumberType.Range:
+			{
+				while(true){
+					float min = RangeMin.GetValue();
+					float max = RangeMax.GetValue();
+					float result = (float)(R.r.NextDouble() * (double)(max-min) + (double)min);
+					if(!float.IsInfinity(result) && !float.IsNaN(result)){
+						return result;
+					}
+				}
+			}
+			case NumberType.Sequence:
+			{
+				float result = Sequence[sequence_index].GetValue();
+				++sequence_index;
+				if(sequence_index == Sequence.Count){
+					sequence_index = 0;
+				}
+				return result;
+			}
+			case NumberType.Delta:
+			{
+				float result = Value;
+				Value += Delta.GetValue();
+				return result;
+			}
+			case NumberType.Value:
+			default:
+				return Value;
+			}
+		}
+		public static FloatNumber CreateValue(float value){
+			FloatNumber n = new FloatNumber();
+			n.Value = value;
+			return n;
+		}
+		public static FloatNumber CreateRange(FloatNumber min,FloatNumber max){
+			FloatNumber n = new FloatNumber();
+			n.Type = NumberType.Range;
+			n.RangeMin = min;
+			n.RangeMax = max;
+			return n;
+		}
+		public static FloatNumber CreateRange(float min,float max){
+			return CreateRange(CreateValue(min),CreateValue(max));
+		}
+		public static FloatNumber CreateRange(FloatNumber min,float max){
+			return CreateRange(min,CreateValue(max));
+		}
+		public static FloatNumber CreateRange(float min,FloatNumber max){
+			return CreateRange(CreateValue(min),max);
+		}
+		public static FloatNumber CreateSequence(){
+			FloatNumber n = new FloatNumber();
+			n.Type = NumberType.Sequence;
+			n.Sequence = new List<FloatNumber>();
+			return n;
+		}
+		public FloatNumber Add(float value){
+			if(Type != NumberType.Sequence){
+				throw new InvalidOperationException("This method can only be used with a Sequence");
+			}
+			Sequence.Add(CreateValue(value));
+			return this;
+		}
+		public FloatNumber Add(FloatNumber number){
+			if(Type != NumberType.Sequence){
+				throw new InvalidOperationException("This method can only be used with a Sequence");
+			}
+			Sequence.Add(number);
+			return this;
+		}
+		public static FloatNumber CreateDelta(float initial_value,FloatNumber delta){
+			FloatNumber n = new FloatNumber();
+			n.Type = NumberType.Delta;
+			n.Value = initial_value;
+			n.Delta = delta;
+			return n;
+		}
+		public static FloatNumber CreateDelta(float initial_value,float delta){
+			return CreateDelta(initial_value,CreateValue(delta));
 		}
 	}
 }

@@ -64,17 +64,41 @@ namespace Forays{
 			}
 			if(Screen.GLMode){
 				gl = new GLGame(400,640,25,80,400,640,"Forays into Norrendrin");
-				GLGame.text_surface = new SpriteSurface(gl,25,80,16,8,0,0,"font8x16.bmp",1,128,0,65,1.0f,8.0f / 9.0f,
+				GLGame.text_surface = new SpriteSurface(gl,25,80,16,8,0,0,"font8x16.bmp",1,128,0,0,1.0f,8.0f / 9.0f,
 					GLWindow.GetBasicVertexShader(),GLWindow.GetBasicFontFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),
 					GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
-				gl.SpriteSurfaces.Add(GLGame.text_surface);
-				GLGame.graphics_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"test_tiles.png",1,4,0,1,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
-					GLWindow.GetBasicGraphicalFragmentShader(),GLWindow.GetBasicGraphicalVertexAttributeSizes(),null,GLWindow.GetBasicGraphicalVertexAttributes());
+				GLGame.graphics_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"sprites.png",64,64,17,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
+					GLWindow.GetBasicGraphicalFragmentShader(),GLWindow.GetBasicGraphicalVertexAttributeSizes(),GLWindow.GetBasicGraphicalDefaultVertexAttributes(),GLWindow.GetBasicGraphicalVertexAttributes());
 				gl.SpriteSurfaces.Add(GLGame.graphics_surface);
+				GLGame.actors_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"sprites.png",64,64,17,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
+					GLWindow.GetBasicGraphicalFragmentShader(),GLWindow.GetBasicGraphicalVertexAttributeSizes(),GLWindow.GetBasicGraphicalDefaultVertexAttributes(),GLWindow.GetBasicGraphicalVertexAttributes());
+				gl.SpriteSurfaces.Add(GLGame.actors_surface);
+				GLGame.visibility_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"visibility.png",1,3,0,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
+					GLWindow.GetBasicGraphicalFragmentShader(),GLWindow.GetBasicGraphicalVertexAttributeSizes(),GLWindow.GetBasicGraphicalDefaultVertexAttributes(),GLWindow.GetBasicGraphicalVertexAttributes());
+				gl.SpriteSurfaces.Add(GLGame.visibility_surface);
+				gl.SpriteSurfaces.Add(GLGame.text_surface);
 				GLGame.cursor_surface = new SpriteSurface(gl,1,1,2,8,-99,-99,"font6x12.bmp",1,128,0,0,1.0f,8.0f / 9.0f,
 					GLWindow.GetBasicVertexShader(),GLWindow.GetBasicFontFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),
 					GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
 				gl.SpriteSurfaces.Add(GLGame.cursor_surface);
+				GLGame.particle_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"animations.png",128,128,0,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
+					GLGame.GetParticleFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
+				gl.SpriteSurfaces.Add(GLGame.particle_surface);
+				GLGame.particle_surface.NumElements = 0;
+				float r1 = (float)(R.r.NextDouble() * 22);
+				float r2 = (float)(R.r.NextDouble() * 22);
+				float r3 = (float)(R.r.NextDouble() * 22);
+				float c1 = (float)(R.r.NextDouble() * 33);
+				float c2 = (float)(R.r.NextDouble() * 33);
+				float c3 = (float)(R.r.NextDouble() * 33);
+				int s1 = R.Roll(10) + 4;
+				int s2 = R.Roll(10) + 4;
+				int s3 = R.Roll(10) + 4;
+				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Magenta,Color4.White,r1,c1,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s1),FloatNumber.CreateDelta(0.1f,0.003f * s1)),FloatNumber.CreateValue(0.0f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s1));
+				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Yellow,Color4.Firebrick,r2,c2,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s2),FloatNumber.CreateDelta(0.01f,0.003f * s2)),FloatNumber.CreateValue(0.0f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s2));
+				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Cyan,Color4.Yellow,r3,c3,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s3),FloatNumber.CreateDelta(0.01f,0.003f * s3)),FloatNumber.CreateDelta(0.0f,0.01f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s3));
+				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Chocolate,Color4.Cyan,r1,c1,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s1),FloatNumber.CreateDelta(0.1f,0.003f * s1)),FloatNumber.CreateValue(0.0f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s1));
+				//GLGame.particle_surface.Disabled = true;
 				GL.Enable(EnableCap.Blend);
 				GL.BlendFunc(BlendingFactorSrc.SrcAlpha,BlendingFactorDest.OneMinusSrcAlpha);
 				gl.AllowScaling = false;
@@ -737,6 +761,7 @@ namespace Forays{
 					}
 					catch(Exception e){
 						StreamWriter fileout = new StreamWriter("error.txt",false);
+						fileout.WriteLine(e.Message);
 						fileout.WriteLine(e.StackTrace);
 						fileout.Close();
 						MouseUI.IgnoreMouseMovement = true;
@@ -1059,7 +1084,7 @@ namespace Forays{
 					foreach(Actor a in drawn){
 						game.M.last_seen[a.row,a.col] = old_ch[a];
 					}
-					game.M.RedrawWithStrings();
+					game.M.Redraw();
 					/*foreach(Tile t in game.M.AllTiles()){
 						if(t.type != TileType.FLOOR && !t.IsTrap()){
 							bool good = false;
@@ -1242,7 +1267,7 @@ namespace Forays{
 							}
 						}
 					}
-					Screen.WriteMapChar(0,0,'-');
+					Screen.WriteMapChar(0,0,'-'); //todo: this was a hack. can now be replaced with the proper Redraw method, I think.
 					game.M.Draw();
 					int col = 0;
 					foreach(colorchar cch in Screen.GetCurrentMap()){
@@ -1288,7 +1313,10 @@ namespace Forays{
 	public class GLGame : GLWindow{
 		public static SpriteSurface text_surface = null;
 		public static SpriteSurface graphics_surface = null;
+		public static SpriteSurface actors_surface = null;
+		public static SpriteSurface visibility_surface = null;
 		public static SpriteSurface cursor_surface = null;
+		public static SpriteSurface particle_surface = null;
 		public static Stopwatch Timer = null; //todo: move this to Global
 		public int CellRows{ //number of cells, for conversion of mouse movement & clicks
 			get{
@@ -1331,11 +1359,6 @@ namespace Forays{
 			ResizingPreference = ResizeOption.ExactFitOnly;
 			ResizingFullScreenPreference = ResizeOption.AddBorder;
 			AllowScaling = true;
-		}
-		public void Initialize(){ //todo: not currently called; mouse is disabled
-			base.OnLoad(EventArgs.Empty);
-			LoadTexture("font8x16.bmp");
-
 			Mouse.Move += MouseMoveHandler;
 			Mouse.ButtonUp += MouseClickHandler;
 			Mouse.WheelChanged += MouseWheelHandler;
@@ -1353,12 +1376,10 @@ namespace Forays{
 						if(FullScreen){
 							FullScreen = false;
 							WindowState = WindowState.Normal;
-							GL.Viewport(ClientRectangle.X,ClientRectangle.Y,ClientRectangle.Width,ClientRectangle.Height);
 						}
 						else{
 							FullScreen = true;
 							WindowState = WindowState.Fullscreen;
-							GL.Viewport(ClientRectangle.X,ClientRectangle.Y,ClientRectangle.Width,ClientRectangle.Height);
 						}
 					}
 					else{
@@ -1801,18 +1822,18 @@ namespace Forays{
 			}
 			base.OnClosing(e);
 		}
-		protected override void OnResize(EventArgs e){ //todo: the new version just needs to switch out the texture, update sprite size/padded size, ...
-			//...update snap h/w, and update the VBOs to account for the new values. ...but this stuff only applies to non-graphical mode. But it still needs to be done!
-			int best = GetBestFontWidth();
-			ChangeFont(best);
-			/*if(!FullScreen){
-				int new_height = cell_h * CellRows;
-				int new_width = cell_w * CellCols;
-				Height = new_height;
-				Width = new_width;
-			}*/
-			//GL.Viewport(ClientRectangle.X,ClientRectangle.Y,ClientRectangle.Width,ClientRectangle.Height); //pretty sure this line should be removed too
-			base.OnResize(e);
+		protected override void OnResize(EventArgs e){
+			if(!Resizing){
+				int best = GetBestFontWidth();
+				ChangeFont(best);
+				base.OnResize(e);
+			}
+		}
+		public void ResizeToDefault(){
+			if(!FullScreen){
+				Resizing = true;
+				ChangeFont(8);
+			}
 		}
 		public int GetBestFontWidth(){
 			int largest_possible_tile_h = ClientRectangle.Height / CellRows;
@@ -1893,39 +1914,6 @@ namespace Forays{
 					GL.UnmapBuffer(BufferTarget.ArrayBuffer);
 				}
 			}
-			/*if(FullScreen){
-				screen_multiplier_h = (float)(height * tile_h) / (float)ClientRectangle.Height;
-				screen_multiplier_w = (float)(width * tile_w) / (float)ClientRectangle.Width;
-			}
-			else{
-				screen_multiplier_h = 1.0f;
-				screen_multiplier_w = 1.0f;
-			}
-			float[] f = new float[(height * width + 1) * 48]; //4 vertices, 12 pieces of data.
-			for(int i=0;i<height;++i){
-				for(int j=0;j<width;++j){
-					colorchar cch = Screen.Char(i,j);
-					Color4 color = ConvertColor(cch.color);
-					Color4 bgcolor = ConvertColor(cch.bgcolor);
-					float tex_start = tile_unit * (int)cch.c;
-					float tex_end = tex_start + tile_unit_padded;
-					int idx = (j + i*width) * 48;
-					int flipped_row = (height-1) - i;
-					float fi = screen_multiplier_h * (((float)flipped_row / half_height) - 1.0f);
-					float fj = screen_multiplier_w * (((float)j / half_width) - 1.0f);
-					float fi_plus1 = screen_multiplier_h * (((float)(flipped_row+1) / half_height) - 1.0f);
-					float fj_plus1 = screen_multiplier_w * (((float)(j+1) / half_width) - 1.0f);
-					float[] values = new float[]{
-						fj,fi,tex_start,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-						fj,fi_plus1,tex_start,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-						fj_plus1,fi_plus1,tex_end,0,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A,
-						fj_plus1,fi,tex_end,1,color.R,color.G,color.B,color.A,bgcolor.R,bgcolor.G,bgcolor.B,bgcolor.A};
-					values.CopyTo(f,idx); //x, y, s?, t?, r, g, b, a, bgr, bgg, bgb, bga
-				}
-			}
-			float[] cursor_values = new float[]{2,2,tile_unit*8,1,1,1,0,1,0,0,0,0,  2,2,tile_unit*8,0,1,0,1,1,0,0,0,0,  2,2,tile_unit*8.5f,0.75f,1,1,1,1,0,0,0,0,  2,2,tile_unit*8.5f,1,1,1,1,1,0,0,0,0};
-			cursor_values.CopyTo(f,width*height*48); //just hide the cursor; it'll automatically reappear in the right place.
-			GL.BufferSubData(BufferTarget.ArrayBuffer,new IntPtr(0),new IntPtr(sizeof(float)*f.Length),f);*/
 		}
 		public static Color4 ConvertColor(Color c){
 			switch(c){
@@ -1963,9 +1951,107 @@ namespace Forays{
 				return Color4.White;
 			case Color.Yellow:
 				return Color4.Yellow;
+			case Color.Transparent:
+				return Color4.Transparent;
 			default:
 				return Color4.Black;
 			}
+		}
+		public static string GetParticleFragmentShader(){
+			return 
+				@"#version 120
+uniform sampler2D texture;
+
+varying vec2 texcoord_fs;
+varying vec4 color_fs;
+varying vec4 bgcolor_fs;
+
+void main(){
+vec4 v = texture2D(texture,texcoord_fs);
+if(v.a > 0.1){
+ if(v.r > 0.9){
+  gl_FragColor = bgcolor_fs;
+ }
+ else{
+  gl_FragColor = color_fs;
+ }
+}
+else{
+ gl_FragColor = v;
+}
+}
+";
+		}
+		public void UpdateParticles(SpriteSurface s,List<AnimationParticle> l){
+			if(l.Count == 0){
+				s.NumElements = 0;
+				s.Disabled = true;
+				return;
+			}
+			GL.BindBuffer(BufferTarget.ArrayBuffer,s.ArrayBufferID);
+			int count = l.Count;
+			s.NumElements = count * 6;
+			List<float> all_values = new List<float>(4 * s.TotalVertexAttribSize * count);
+			int[] indices = new int[s.NumElements];
+			for(int i=0;i<count;++i){
+				float tex_start_h = s.SpriteHeight * (float)l[i].sprite_pixel_row;
+				float tex_start_w = s.SpriteWidth * (float)l[i].sprite_pixel_col;
+				float tex_end_h = tex_start_h + s.SpriteHeight * (float)l[i].sprite_h;
+				float tex_end_w = tex_start_w + s.SpriteWidth * (float)l[i].sprite_w;
+				float flipped_row = (float)(s.Rows-1) - l[i].row;
+				float col = l[i].col;
+				float fi = screen_multiplier_h * ((flipped_row / s.HeightScale) + s.GLCoordHeightOffset);
+				float fj = screen_multiplier_w * ((col / s.WidthScale) + s.GLCoordWidthOffset);
+				float fi_plus1 = screen_multiplier_h * (((flipped_row+((float)l[i].sprite_h / (float)s.TileHeight)) / s.HeightScale) + s.GLCoordHeightOffset);
+				float fj_plus1 = screen_multiplier_w * (((col+((float)l[i].sprite_w / (float)s.TileWidth)) / s.WidthScale) + s.GLCoordWidthOffset);
+				float[] values = new float[4 * s.TotalVertexAttribSize];
+				values[0] = fj;
+				values[1] = fi;
+				values[2] = tex_start_w;
+				values[3] = tex_end_h;
+				values[s.TotalVertexAttribSize] = fj;
+				values[1 + s.TotalVertexAttribSize] = fi_plus1;
+				values[2 + s.TotalVertexAttribSize] = tex_start_w;
+				values[3 + s.TotalVertexAttribSize] = tex_start_h;
+				values[s.TotalVertexAttribSize*2] = fj_plus1;
+				values[1 + s.TotalVertexAttribSize*2] = fi_plus1;
+				values[2 + s.TotalVertexAttribSize*2] = tex_end_w;
+				values[3 + s.TotalVertexAttribSize*2] = tex_start_h;
+				values[s.TotalVertexAttribSize*3] = fj_plus1;
+				values[1 + s.TotalVertexAttribSize*3] = fi;
+				values[2 + s.TotalVertexAttribSize*3] = tex_end_w;
+				values[3 + s.TotalVertexAttribSize*3] = tex_end_h;
+				int total_of_previous_attribs = 4;
+				int k=0;
+				foreach(float attrib in l[i].primary_color.GetFloatValues()){
+					values[total_of_previous_attribs+k] = attrib;
+					values[total_of_previous_attribs+k+s.TotalVertexAttribSize] = attrib;
+					values[total_of_previous_attribs+k+(s.TotalVertexAttribSize*2)] = attrib;
+					values[total_of_previous_attribs+k+(s.TotalVertexAttribSize*3)] = attrib;
+					++k;
+				}
+				total_of_previous_attribs += 4;
+				k=0;
+				foreach(float attrib in l[i].secondary_color.GetFloatValues()){
+					values[total_of_previous_attribs+k] = attrib;
+					values[total_of_previous_attribs+k+s.TotalVertexAttribSize] = attrib;
+					values[total_of_previous_attribs+k+(s.TotalVertexAttribSize*2)] = attrib;
+					values[total_of_previous_attribs+k+(s.TotalVertexAttribSize*3)] = attrib;
+					++k;
+				}
+				all_values.AddRange(values);
+				int idx4 = i * 4;
+				int idx6 = i * 6;
+				indices[idx6] = idx4;
+				indices[idx6 + 1] = idx4 + 1;
+				indices[idx6 + 2] = idx4 + 2;
+				indices[idx6 + 3] = idx4;
+				indices[idx6 + 4] = idx4 + 2;
+				indices[idx6 + 5] = idx4 + 3;
+			}
+			GL.BufferData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)* 4 * s.TotalVertexAttribSize * count),all_values.ToArray(),BufferUsageHint.StreamDraw);
+			GL.BindBuffer(BufferTarget.ElementArrayBuffer,s.ElementArrayBufferID);
+			GL.BufferData(BufferTarget.ElementArrayBuffer,new IntPtr(sizeof(int)*indices.Length),indices,BufferUsageHint.StreamDraw);
 		}
 	}
 }
