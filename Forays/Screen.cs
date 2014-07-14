@@ -16,7 +16,7 @@ using OpenTK.Graphics.OpenGL;
 using Utilities;
 using GLDrawing;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomSmite,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
 	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
@@ -1404,6 +1404,7 @@ namespace Forays{
 			case Color.RandomGlowingFungus:
 			case Color.RandomTorch:
 			case Color.RandomDoom:
+			case Color.RandomSmite:
 			case Color.RandomDark:
 			case Color.RandomBright:
 			case Color.RandomRGB:
@@ -1517,6 +1518,17 @@ namespace Forays{
 				case 4:
 				default:
 					return Color.DarkMagenta;
+				}
+			case Color.RandomSmite:
+				switch(R.Roll(5)){
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+					return Color.Yellow;
+				case 5:
+				default:
+					return Color.Magenta;
 				}
 			case Color.RandomDark:
 				switch(R.Roll(7)){

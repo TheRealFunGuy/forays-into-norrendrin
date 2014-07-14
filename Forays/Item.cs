@@ -758,6 +758,8 @@ namespace Forays{
 				}
 				user.attrs[AttrType.IMMUNE_BURNING]++;
 				Q.Add(new Event(user,duration*100,AttrType.IMMUNE_BURNING));
+				user.attrs[AttrType.DAMAGE_RESISTANCE]++;
+				Q.Add(new Event(user,duration*100,AttrType.DAMAGE_RESISTANCE));
 				user.RefreshDuration(AttrType.NONLIVING,duration*100,"Your rocky form reverts to flesh. ");
 				break;
 			}
@@ -1641,15 +1643,23 @@ namespace Forays{
 					}
 					foreach(Tile tile in t.TilesWithinDistance(1)){
 						if(tile.passable && LOE_tile.HasLOE(tile)){
+							colorchar cch = tile.visual;
 							if(tile.actor() != null){
-								if(tile.actor().attrs[AttrType.ARCANE_SHIELDED] < 10){
-									tile.actor().attrs[AttrType.ARCANE_SHIELDED] = 10;
+								if(!tile.actor().HasAttr(AttrType.SHIELDED)){
+									tile.actor().attrs[AttrType.SHIELDED] = 1;
 								}
-								symbols.Add(new colorchar(tile.actor().symbol,Color.Blue));
+								if(user.CanSee(tile.actor())){
+									cch = tile.actor().visual;
+								}
 							}
-							else{
-								symbols.Add(new colorchar('+',Color.Blue));
+							cch.bgcolor = Color.Blue;
+							if(cch.color == Color.Blue){
+								cch.color = Color.Black;
 							}
+							if(cch.c == '.'){
+								cch.c = '+';
+							}
+							symbols.Add(cch);
 							cells.Add(tile.p);
 							area.Add(tile);
 						}
@@ -1843,9 +1853,9 @@ namespace Forays{
 				break;
 			}
 			case ConsumableType.BANDAGES:
-				if(!user.HasAttr(AttrType.BANDAGE_COUNTER)){
-					user.attrs[AttrType.BANDAGE_COUNTER] = 10;
-					user.recover_time = Q.turn + 500;
+				if(!user.HasAttr(AttrType.BANDAGED)){
+					user.attrs[AttrType.BANDAGED] = 20;
+					//user.recover_time = Q.turn + 100;
 					B.Add("You apply a bandage. ");
 				}
 				else{
