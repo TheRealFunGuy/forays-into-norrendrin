@@ -123,8 +123,37 @@ namespace Forays{
 			Screen.CursorVisible = false;
 			Screen.ResetColors();
 			int lines = str.Count;
+			bool repeated_message = false;
+			string repeated_string = "";
 			if(str.Last() == ""){
 				--lines;
+			}
+			else{
+				string s = str.Last();
+				int last = position-1;
+				if(last == -1){ last = 19; }
+				string prev = log[last];
+				string count = "1";
+				int pos = prev.LastIndexOf(" (x");
+				if(pos != -1){
+					count = prev.Substring(pos+3);
+					count = count.Substring(0,count.Length-1);
+					prev = prev.Substring(0,pos+1);
+				}
+				bool too_long_if_repeated = false;
+				if(prev.Length + 3 + (Convert.ToInt32(count)+1).ToString().Length > max_length){
+					too_long_if_repeated = true;
+				}
+				if(prev == s && str.Count == 1 && !too_long_if_repeated){ //trying this - only add the (x2) part if it's a single-line message, for ease of reading
+					if(s != "You can't move! " && s != "You're rooted to the ground! "){
+						repeated_string = prev + "(x" + (Convert.ToInt32(count)+1).ToString() + ")"; //the immobilization messages could be confusing when repeated
+					}
+					repeated_message = true;
+				}
+			}
+			int offset = 0;
+			if(repeated_message){
+				offset = 1;
 			}
 			for(int i=0;i<3;++i){
 				bool old_message = true;
@@ -132,11 +161,23 @@ namespace Forays{
 					old_message = false;
 				}
 				if(old_message){
-					Screen.WriteMapString(i-3,0,PreviousMessage(3-(i+lines)).PadToMapSize(),Color.DarkGray);
+					Screen.WriteMapString(i-3,0,PreviousMessage(offset+3-(i+lines)).PadToMapSize(),Color.DarkGray);
 					//Screen.ForegroundColor = ConsoleColor.Gray;
 				}
 				else{
-					Screen.WriteMapString(i-3,0,str[(i+lines)-3].PadToMapSize());
+					if(repeated_message){
+						int pos = repeated_string.LastIndexOf(" (x");
+						if(pos != -1){
+							Screen.WriteMapString(i-3,0,repeated_string.Substring(0,pos));
+							Screen.WriteMapString(i-3,pos,repeated_string.Substring(pos).PadToMapSize(),Color.DarkGray);
+						}
+						else{
+							Screen.WriteMapString(i-3,0,repeated_string.PadToMapSize());
+						}
+					}
+					else{
+						Screen.WriteMapString(i-3,0,str[(i+lines)-3].PadToMapSize());
+					}
 				}
 			}
 		}
@@ -250,7 +291,7 @@ namespace Forays{
 			Screen.ResetColors();
 			if(str.Last() != ""){
 				if(str.Last().Length > max_length-7){
-					for(int i=max_length-7;i>=0;--i){
+					for(int i=max_length-8;i>=0;--i){
 						if(str.Last().Substring(i,1)==" "){
 							overflow = str.Last().Substring(i+1);
 							str[str.Count-1] = str.Last().Substring(0,i+1);

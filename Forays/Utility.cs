@@ -172,6 +172,7 @@ namespace Utilities{
 		public static int[] EightDirections = {8,9,6,3,2,1,4,7}; //these all start at 8 (up) and go clockwise.
 		public static int[] FourDirections = {8,6,2,4}; //the directions correspond to the numbers on a keyboard's numpad.
 		public static int[] DiagonalDirections = {9,3,1,7};
+		public static int[] NineDirections = {5,8,9,6,3,2,1,4,7}; //eight, plus the direction that corresponds to "here".
 		public static int RotateDir(this int dir,bool clockwise){ return dir.RotateDir(clockwise,1); }
 		public static int RotateDir(this int dir,bool clockwise,int times){
 			if(dir == 5){

@@ -72,6 +72,8 @@ namespace Forays{
 		public int[] final_level_cultist_count = null;
 		public int final_level_demon_count = 0;
 		public int final_level_clock = 0;
+		public bool feat_gained_this_level = false;
+		public int extra_danger = 0; //used to eventually spawn more threatening wandering monsters
 
 		public static Color darkcolor = Color.DarkCyan;
 		public static Color unseencolor = Color.DarkBlue;
@@ -909,6 +911,57 @@ namespace Forays{
 			generated_this_level[result]++;
 			return result;
 		}
+		public ActorType WanderingMobType(){
+			ActorType result = ActorType.SPECIAL;
+			bool good_result = false;
+			while(!good_result){
+				int level = 1;
+				int effective_current_level = current_level + extra_danger;
+				if(effective_current_level > 20){
+					effective_current_level = 20;
+				}
+				int monster_depth = (effective_current_level+1) / 2; //1-10, not 1-20
+				if(current_level != 1){ //depth 1 only generates level 1 monsters
+					List<int> levels = new List<int>();
+					for(int i=-2;i<=2;++i){
+						if(monster_depth + i >= 1 && monster_depth + i <= 10){
+							int j = 1 + Math.Abs(i);
+							if(R.OneIn(j)){ //current depth is considered 1 out of 1 times, depth+1 and depth-1 one out of 2 times, etc.
+								levels.Add(monster_depth + i);
+							}
+						}
+					}
+					level = levels.Random();
+				}
+				LevelType lt = level_types[current_level-1];
+				if(R.OneIn(10) && (lt == LevelType.Cave || lt == LevelType.Crypt || lt == LevelType.Hive || lt == LevelType.Mine || lt == LevelType.Slime)){
+					result = ActorType.SPECIAL; //zombies in crypts, kobolds in mines, etc.
+				}
+				else{
+					if(level == 1){ //level 1 monsters are all equal in rarity
+						result = (ActorType)(level*7 + R.Between(-4,2));
+					}
+					else{
+						int roll = R.Roll(100);
+						if(roll <= 3){ //3% rare
+							result = (ActorType)(level*7 + 2);
+						}
+						else{
+							if(roll <= 22){ //19% uncommon (9.5% each)
+								result = (ActorType)(level*7 + R.Between(0,1));
+							}
+							else{ //78% common (19.5% each)
+								result = (ActorType)(level*7 + R.Between(-4,-1));
+							}
+						}
+					}
+				}
+				if(!Actor.Prototype(result).HasAttr(AttrType.IMMOBILE) && result != ActorType.MIMIC && result != ActorType.MARBLE_HORROR && result != ActorType.POLTERGEIST){
+					good_result = true;
+				}
+			}
+			return result;
+		}
 		public Actor SpawnMob(){ return SpawnMob(MobType()); }
 		public Actor SpawnMob(ActorType type){
 			Actor result = null;
@@ -1184,6 +1237,115 @@ namespace Forays{
 						}
 					}
 				}
+				return result;
+			}
+		}
+		public Actor SpawnWanderingMob(){
+			ActorType type = WanderingMobType();
+			Actor result = null;
+			int number = 1;
+			if(Actor.Prototype(type).HasAttr(AttrType.SMALL_GROUP)){
+				number = R.Roll(2)+1;
+			}
+			if(Actor.Prototype(type).HasAttr(AttrType.MEDIUM_GROUP)){
+				number = R.Roll(2)+2;
+			}
+			if(Actor.Prototype(type).HasAttr(AttrType.LARGE_GROUP)){
+				number = R.Roll(2)+4;
+			}
+			if(type == ActorType.SPECIAL){
+				number = 1 + (current_level-3)/3;
+				if(current_level > 5 && R.CoinFlip()){
+					--number;
+				}
+			}
+			List<Tile> group_tiles = new List<Tile>();
+			List<Actor> group = null;
+			if(number > 1){
+				group = new List<Actor>();
+			}
+			var dijkstra = tile.GetDijkstraMap(x=>!tile[x].passable,x=>player.HasLOS(tile[x]) || player.HasLOE(tile[x]));
+			for(int i=0;i<number;++i){
+				ActorType final_type = type;
+				if(type == ActorType.SPECIAL){
+					switch(level_types[current_level-1]){
+					case LevelType.Cave:
+						if(R.CoinFlip()){
+							final_type = ActorType.GOBLIN;
+						}
+						else{
+							if(R.CoinFlip()){
+								final_type = ActorType.GOBLIN_ARCHER;
+							}
+							else{
+								final_type = ActorType.GOBLIN_SHAMAN;
+							}
+						}
+						break;
+					case LevelType.Crypt:
+						final_type = ActorType.ZOMBIE;
+						break;
+					case LevelType.Hive:
+						final_type = ActorType.FORASECT;
+						break;
+					case LevelType.Mine:
+						final_type = ActorType.KOBOLD;
+						break;
+					case LevelType.Slime:
+						final_type = ActorType.GIANT_SLUG;
+						break;
+					}
+				}
+				if(i == 0){
+					for(int j=0;j<1999;++j){
+						int rr = R.Roll(ROWS-2);
+						int rc = R.Roll(COLS-2);
+						if(!tile[rr,rc].IsTrap() && tile[rr,rc].passable && actor[rr,rc] == null && dijkstra[rr,rc] >= 6){
+							result = Actor.Create(final_type,rr,rc,true,false);
+							if(number > 1){
+								group_tiles.Add(tile[rr,rc]);
+								group.Add(result);
+								result.group = group;
+							}
+							break;
+						}
+					}
+				}
+				else{
+					for(int j=0;j<1999;++j){
+						if(group_tiles.Count == 0){ //no space left!
+							if(group.Count > 0){
+								return group[0];
+							}
+							else{
+								return result;
+							}
+						}
+						Tile t = group_tiles.Random();
+						List<Tile> empty_neighbors = new List<Tile>();
+						foreach(Tile neighbor in t.TilesAtDistance(1)){
+							if(neighbor.passable && !neighbor.IsTrap() && neighbor.actor() == null && dijkstra[neighbor.row,neighbor.col] >= 3){
+								empty_neighbors.Add(neighbor);
+							}
+						}
+						if(empty_neighbors.Count > 0){
+							t = empty_neighbors.Random();
+							result = Actor.Create(final_type,t.row,t.col,true,false);
+							group_tiles.Add(t);
+							group.Add(result);
+							result.group = group;
+							break;
+						}
+						else{
+							group_tiles.Remove(t);
+						}
+					}
+				}
+			}
+			if(number > 1){
+				return group[0];
+			}
+			else{
 				return result;
 			}
 		}
@@ -2047,6 +2209,7 @@ namespace Forays{
 			}
 			wiz_lite = false;
 			wiz_dark = false;
+			feat_gained_this_level = false;
 			generated_this_level = new Dict<ActorType, int>();
 			monster_density = new PosArray<int>(ROWS,COLS);
 			Q.ResetForNewLevel();
@@ -3288,6 +3451,11 @@ namespace Forays{
 				e.tiebreaker = 0;
 				Q.Add(e);
 			}
+			{
+				Event e = new Event(25000,EventType.SPAWN_WANDERING_MONSTER);
+				e.tiebreaker = 0;
+				Q.Add(e);
+			}
 			if(current_level == 1){
 				B.Add("In the mountain pass where travelers vanish, a stone staircase leads downward... Welcome, " + Actor.player_name + "! ");
 			}
@@ -3415,6 +3583,7 @@ namespace Forays{
 			}
 			wiz_lite = false;
 			wiz_dark = false;
+			feat_gained_this_level = false;
 			generated_this_level = new Dict<ActorType, int>();
 			monster_density = new PosArray<int>(ROWS,COLS);
 			Q.ResetForNewLevel();

@@ -585,11 +585,12 @@ namespace Forays{
 				{
 					if(M.AllActors().Count == 1 && !Q.Contains(EventType.POLTERGEIST)
 					&& !Q.Contains(EventType.REGENERATING_FROM_DEATH) && !Q.Contains(EventType.MIMIC) && !Q.Contains(EventType.MARBLE_HORROR)){
-						B.Add("The dungeon is still and silent. ");
+						//B.Add("The dungeon is still and silent. ");
+						B.Add("The dungeon is utterly silent for a moment. ");
 						B.PrintAll();
 					}
 					else{
-						Q.Add(new Event((R.Roll(20)+40)*100,EventType.RELATIVELY_SAFE));
+						Q.Add(new Event((R.Roll(20)+30)*100,EventType.RELATIVELY_SAFE));
 					}
 					break;
 				}
@@ -1417,21 +1418,24 @@ namespace Forays{
 					List<colorchar> symbols = new List<colorchar>();
 					int animation_delay = 75;
 					foreach(Tile tile in area){
+						colorchar cch = tile.visual;
 						if(tile.actor() != null){
-							if(tile.actor().attrs[AttrType.ARCANE_SHIELDED] < 10){
-								tile.actor().attrs[AttrType.ARCANE_SHIELDED] = 10;
+							if(!tile.actor().HasAttr(AttrType.SHIELDED)){
+								tile.actor().attrs[AttrType.SHIELDED] = 1;
 							}
 							if(player.CanSee(tile.actor())){
 								animation_delay = 150;
-								symbols.Add(new colorchar(tile.actor().symbol,Color.Blue));
-							}
-							else{
-								symbols.Add(new colorchar('+',Color.Blue));
+								cch = tile.actor().visual;
 							}
 						}
-						else{
-							symbols.Add(new colorchar('+',Color.Blue));
+						cch.bgcolor = Color.Blue;
+						if(cch.color == Color.Blue){
+							cch.color = Color.Black;
 						}
+						if(cch.c == '.'){
+							cch.c = '+';
+						}
+						symbols.Add(cch);
 						cells.Add(tile.p);
 					}
 					M.Draw();
@@ -1948,6 +1952,80 @@ namespace Forays{
 					}
 					break;
 				}
+				case EventType.SPAWN_WANDERING_MONSTER:
+				{
+					int spawn_chance = 2;
+					foreach(Actor a in Actor.tiebreakers){
+						if(a != player && a != null && !a.HasAttr(AttrType.IMMOBILE) && (a.group == null || a.group.Count == 0 || a.group[0] == a)){
+							spawn_chance *= 2;
+						}
+					}
+					if(R.OneIn(spawn_chance)){
+						if(M.extra_danger < 8 && R.CoinFlip() && M.current_level != 1){
+							M.extra_danger++;
+							B.Add("You sense danger. ");
+						}
+						Actor a = M.SpawnWanderingMob();
+						if(a != null){
+							a.attrs[AttrType.WANDERING] = 1;
+							a.attrs[AttrType.NO_ITEM] = 1;
+							if(player.CanSee(a)){
+								B.Add("You suddenly sense the presence of " + a.AName(true) + ". ");
+							}
+						}
+					}
+					Q.Add(new Event(R.Between(20,60)*100,EventType.SPAWN_WANDERING_MONSTER));
+					break;
+				}
+				/*case EventType.GAS_UPDATE:
+				{
+					int ROWS = Global.ROWS;
+					int COLS = Global.COLS;
+					float[,] g = null;
+					for(int num=0;num<3;++num){
+						g = new float[ROWS,COLS];
+						for(int i=1;i<ROWS-1;++i){
+							for(int j=1;j<COLS-1;++j){
+								if(M.tile[i,j].passable){
+									float neighbors_total = 0.0f;
+									int open = 0;
+									foreach(int dir in U.EightDirections){
+										if(M.tile[i,j].TileInDirection(dir).passable){
+											pos p = new pos(i,j).PosInDir(dir);
+											neighbors_total += M.gas[p.row,p.col];
+											++open;
+										}
+									}
+									if(open > 0){
+										float avg = neighbors_total / (float)open;
+										float d = 0.03f * open;
+										g[i,j] = M.gas[i,j] * (1-d) + avg * d;
+									}
+								}
+							}
+						}
+						M.gas = g;
+					}
+					for(int i=0;i<ROWS;++i){
+						for(int j=0;j<COLS;++j){
+							if(g[i,j] > 0.0f){
+								if(g[i,j] <= 0.001f){
+									g[i,j] = 0.0f;
+									M.tile[i,j].features.Remove(FeatureType.POISON_GAS);
+								}
+								else{
+									g[i,j] -= 0.001f;// * (float)R.r.NextDouble();
+									M.tile[i,j].features.AddUnique(FeatureType.POISON_GAS);
+								}
+							}
+							else{
+								M.tile[i,j].features.Remove(FeatureType.POISON_GAS);
+							}
+						}
+					}
+					Q.Add(new Event(100,EventType.GAS_UPDATE));
+					break;
+				}*/
 				case EventType.FIRE:
 				{
 					List<Tile> chance_to_burn = new List<Tile>(); //tiles that might be affected
@@ -1963,7 +2041,7 @@ namespace Forays{
 										}
 										player.RefreshDuration(AttrType.JUST_SEARED,50);
 									}
-									neighbor.actor().TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,1,null,"searing heat");
+									neighbor.actor().TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,false,1,null,"searing heat");
 								}
 								//every actor adjacent to a burning object takes proximity fire damage. (actors never get set on
 								//  fire directly this way, but an actor covered in oil will ignite if it takes any fire damage)

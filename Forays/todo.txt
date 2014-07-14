@@ -1,9 +1,29 @@
 
+
+0.8.3 changes so far:       [remember to actually test all these]
+feat advancement changed
+spell learning changed
+bow ammo added
+wandering monster spawns (with escalating difficulty)
+slight tweak to gas behavior - new gas now replaces old gas. no more mixing.
+enemies no longer devastate the player when their sneak attack scores a critical hit
+fear changed: no longer prevents movement when all destinations are equally frightening - this means you can slip past a terrifying enemy and keep running. Also added visual indicator.
+confusion status effect added. given to dream warrior on crit.
+burning now deals 2 or 3 damage each turn, instead of 1d6.
+major/minor damage, changes to bandages, vulnerability, some new immunities and shielded statuses. (minor damage mostly includes damage over time: poison, bleeding, burning, searing heat, infestation, acid...)
+bleeding status added, given to swordsman on combo
+damage resistance given to several enemies. stoneform potions also grant some DR.
+robed zealot reworked
+
+
+
 to try:
 
 do a random walk algo, but once in a while let the shape of the walker change. so, it'd start as 1x1 but might connect new ones to itself, or remove them:
 # to ## to ## to # and so on...
             #    #
+
+
 
 
 
@@ -54,19 +74,12 @@ change Tile's bools so they're not properties.
 
 
 
-TODO! MUST DOWNLOAD NEW OPENTK VERSION TO FIX MONO CRASH, BEFORE THE 7DRL!
-	-did this. Make sure to use only the OpenTK.dll that is in forays/bin/debug/.
-		-still crashes. wtf.
+
+monodevelop crashes seem to have vanished. knock on wood.
 
 
 
-
-
-
-
-
-
-
+todo: while fixing map scrolling in graphics mode, make sure to add a gradual scroll. When you teleport across the map, it should move once, then draw, then move again, then draw, and so on until it gets to your new position.
 
 
 
@@ -196,6 +209,7 @@ done^
 
 
 -write cave corridor & twisty cave article for RB. also possibly dijkstra maps part 2 with screenshots.
+-in fact, make a dijkstra visualizer. see distances by number and/or by color. Add or multiply different maps, and change them in realtime.
 
 bugs: 
 
