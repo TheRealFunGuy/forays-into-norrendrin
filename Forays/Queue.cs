@@ -1314,7 +1314,7 @@ namespace Forays{
 						if(player.CanSee(target) && player.HasLOS(target)){
 							List<pos> cells = new List<pos>();
 							List<colorchar> cch = new List<colorchar>();
-							foreach(pos p2 in target.PositionsWithinDistance(6)){
+							foreach(pos p2 in target.PositionsWithinDistance(4)){
 								if(M.actor[p2] != null && target.HasLOE(M.actor[p2]) && player.CanSee(M.actor[p2])){
 									cells.Add(p2);
 									colorchar ch = new colorchar(M.actor[p2].symbol,Color.DarkRed);
@@ -1327,7 +1327,7 @@ namespace Forays{
 							M.Draw();
 							Screen.AnimateMapCells(cells,cch,150);
 						}
-						foreach(Actor a in target.ActorsWithinDistance(6)){
+						foreach(Actor a in target.ActorsWithinDistance(4)){
 							if(target.HasLOE(a)){
 								a.TakeDamage(DamageType.NORMAL,DamageClass.MAGICAL,recovered,null,"trollish blood magic");
 							}

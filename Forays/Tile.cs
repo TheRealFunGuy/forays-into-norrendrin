@@ -1623,13 +1623,13 @@ namespace Forays{
 			}
 			return false;
 		}
-		public bool IsCurrentlyFlammable(){
+		public bool IsCurrentlyFlammable(){ //todo update
 			if(Is(FeatureType.FIRE,FeatureType.POISON_GAS)){
 				return false;
 			}
-			if(Is(FeatureType.WEB,FeatureType.OIL)){
+			if(Is(FeatureType.WEB,FeatureType.OIL,FeatureType.SPORES)){
 				return true;
-			}
+			} //todo: check for oiled actors here, too?
 			switch(type){
 			case TileType.WATER:
 			case TileType.POOL_OF_RESTORATION:
@@ -1640,7 +1640,7 @@ namespace Forays{
 			case TileType.POISON_BULB:
 			case TileType.BARREL:
 				return true;
-			}
+			} //below this point, we're checking for things that would be protected from burning by water:
 			if(Is(FeatureType.TROLL_CORPSE,FeatureType.TROLL_BLOODWITCH_CORPSE)){
 				return true;
 			}
@@ -1950,6 +1950,7 @@ namespace Forays{
 				switch(f){
 				case FeatureType.FOG:
 					if(!Is(FeatureType.FIRE)){
+						RemoveAllGases();
 						AddOpaqueFeature(FeatureType.FOG);
 					}
 					break;
@@ -1957,15 +1958,11 @@ namespace Forays{
 					if(IsBurning()){
 						return;
 					}
-					if(Is(FeatureType.POISON_GAS)){
-						RemoveFeature(FeatureType.POISON_GAS);
-					}
+					RemoveAllGases();
 					features.Add(FeatureType.SPORES);
 					break;
 				case FeatureType.POISON_GAS:
-					if(Is(FeatureType.SPORES)){
-						return;
-					}
+					RemoveAllGases();
 					if(Is(FeatureType.FIRE)){
 						RemoveFeature(FeatureType.FIRE);
 						Fire.burning_objects.Remove(this);
@@ -1982,6 +1979,10 @@ namespace Forays{
 						actor().RefreshDuration(AttrType.BURNING,0);
 					}
 					features.Add(FeatureType.POISON_GAS);
+					break;
+				case FeatureType.PIXIE_DUST: //todo
+					RemoveAllGases();
+					features.Add(FeatureType.PIXIE_DUST);
 					break;
 				case FeatureType.OIL:
 					if(actor() != null && actor().HasAttr(AttrType.BURNING)){
@@ -2065,6 +2066,11 @@ namespace Forays{
 					features.Remove(f);
 					break;
 				}
+			}
+		}
+		private void RemoveAllGases(){
+			foreach(FeatureType f in new List<FeatureType>{FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.POISON_GAS,FeatureType.SPORES}){
+				RemoveFeature(f);
 			}
 		}
 		private void AddOpaqueFeature(FeatureType f){

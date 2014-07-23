@@ -2750,13 +2750,11 @@ namespace Forays{
 											case ActorType.TROLL:
 											case ActorType.CRUSADING_KNIGHT:
 											case ActorType.SKITTERMOSS:
-											case ActorType.OGRE:
-											case ActorType.SHADOWVEIL_DUELIST:
+											case ActorType.OGRE_BARBARIAN:
 											case ActorType.STONE_GOLEM:
 											case ActorType.LUMINOUS_AVENGER:
 											case ActorType.WILD_BOAR:
 											case ActorType.ALASI_SOLDIER:
-											case ActorType.SAVAGE_HULK:
 											case ActorType.CORROSIVE_OOZE:
 											case ActorType.ALASI_SENTINEL:
 												done = true;
@@ -2796,7 +2794,7 @@ namespace Forays{
 					}
 				}
 			}
-			for(int i=current_level/7;i>0;--i){ //yes, this is all copied and pasted for a one-line change. i'll try to fix it later.
+			for(int i=(current_level-3)/4;i>0;--i){ //yes, this is all copied and pasted for a one-line change. i'll try to fix it later.
 				if(R.CoinFlip()){ //generate some shallow monsters
 					ActorType type = ShallowMobType();
 					if(type == ActorType.POLTERGEIST){
@@ -2856,13 +2854,12 @@ namespace Forays{
 												case ActorType.TROLL:
 												case ActorType.CRUSADING_KNIGHT:
 												case ActorType.SKITTERMOSS:
-												case ActorType.OGRE:
-												case ActorType.SHADOWVEIL_DUELIST:
+												case ActorType.OGRE_BARBARIAN:
+												case ActorType.SNEAK_THIEF:
 												case ActorType.STONE_GOLEM:
 												case ActorType.LUMINOUS_AVENGER:
 												case ActorType.WILD_BOAR:
 												case ActorType.ALASI_SOLDIER:
-												case ActorType.SAVAGE_HULK:
 												case ActorType.CORROSIVE_OOZE:
 												case ActorType.ALASI_SENTINEL:
 													done = true;

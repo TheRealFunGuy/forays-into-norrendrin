@@ -3,9 +3,8 @@
 0.8.3 changes so far:       [remember to actually test all these]
 feat advancement changed
 spell learning changed
-bow ammo added
+bow ammo added - last arrow gets a base accuracy of 100%
 wandering monster spawns (with escalating difficulty)
-slight tweak to gas behavior - new gas now replaces old gas. no more mixing.
 enemies no longer devastate the player when their sneak attack scores a critical hit
 fear changed: no longer prevents movement when all destinations are equally frightening - this means you can slip past a terrifying enemy and keep running. Also added visual indicator.
 confusion status effect added. given to dream warrior on crit.
@@ -14,6 +13,27 @@ major/minor damage, changes to bandages, vulnerability, some new immunities and 
 bleeding status added, given to swordsman on combo
 damage resistance given to several enemies. stoneform potions also grant some DR.
 robed zealot reworked
+silence aura guys print a message when they step nearby (with cooldown and LOE check)
+more likely to spawn more than 1 "shallow" monster on deeper levels
+bugfix: staff swapping places while immobile
+let frog affect all weapons (what's the chance on each hit?) but give Poisoned weapons a chance to poison their user - maybe when you attack, maybe something else.
+slight tweak to gas behavior - new gas now replaces old gas. no more mixing.
+marble horror reworked: gains bleeding attack, heals to full when it transforms, avoids light.
+changes to several monsters, and a few new ones
+monsters with noneuclidean movement now ignore slippery surfaces and webs
+dodge mechanic added to several monsters
+assassin becomes stealth+dodge+lunge+silence.
+bloodwitch's radius decreased
+ogre barbarian added
+
+
+
+
+
+
+
+
+
 
 
 

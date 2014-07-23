@@ -16,7 +16,7 @@ using OpenTK.Graphics.OpenGL;
 using Utilities;
 using GLDrawing;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomSmite,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomCMY,RandomDCMY,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomSmite,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomRGBW,RandomCMY,RandomDCMY,RandomCMYW,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
 	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
@@ -1409,8 +1409,10 @@ namespace Forays{
 			case Color.RandomBright:
 			case Color.RandomRGB:
 			case Color.RandomDRGB:
+			case Color.RandomRGBW:
 			case Color.RandomCMY:
 			case Color.RandomDCMY:
+			case Color.RandomCMYW:
 			case Color.RandomRainbow:
 			case Color.RandomAny:
 				return GetColor(ResolveColor(c));
@@ -1592,6 +1594,18 @@ namespace Forays{
 				default:
 					return Color.Black;
 				}
+			case Color.RandomRGBW:
+				switch(R.Roll(4)){
+				case 1:
+					return Color.Red;
+				case 2:
+					return Color.Green;
+				case 3:
+					return Color.Blue;
+				case 4:
+				default:
+					return Color.White;
+				}
 			case Color.RandomCMY:
 				switch(R.Roll(1,3)){
 				case 1:
@@ -1613,6 +1627,18 @@ namespace Forays{
 					return Color.DarkYellow;
 				default:
 					return Color.Black;
+				}
+			case Color.RandomCMYW:
+				switch(R.Roll(4)){
+				case 1:
+					return Color.Cyan;
+				case 2:
+					return Color.Magenta;
+				case 3:
+					return Color.Yellow;
+				case 4:
+				default:
+					return Color.White;
 				}
 			case Color.RandomRainbow:
 				switch(R.Roll(1,12)){
