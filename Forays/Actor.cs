@@ -20,19 +20,19 @@ namespace Forays{
 		public string hit;
 		public string miss;
 		public AttackInfo(int cost_,int dice_,CriticalEffect crit_,string hit_){
-			cost=cost_;
-			damage.dice=dice_;
+			cost = cost_;
+			damage.dice = dice_;
 			damage.type = DamageType.NORMAL;
-			damage.damclass=DamageClass.PHYSICAL;
+			damage.damclass = DamageClass.PHYSICAL;
 			crit = crit_;
 			hit = hit_;
 			miss = "";
 		}
 		public AttackInfo(int cost_,int dice_,CriticalEffect crit_,string hit_,string miss_){
-			cost=cost_;
-			damage.dice=dice_;
+			cost = cost_;
+			damage.dice = dice_;
 			damage.type = DamageType.NORMAL;
-			damage.damclass=DamageClass.PHYSICAL;
+			damage.damclass = DamageClass.PHYSICAL;
 			crit = crit_;
 			hit = hit_;
 			miss = miss_;
@@ -4312,8 +4312,8 @@ namespace Forays{
 			{
 				MouseUI.PushButtonMap();
 				int width = 25;
-				List<ConsumableType> potion_order = new List<ConsumableType>{ConsumableType.CLOAKING,ConsumableType.HEALING,ConsumableType.STONEFORM,ConsumableType.SILENCE,ConsumableType.VAMPIRISM,ConsumableType.CLARITY,ConsumableType.REGENERATION,ConsumableType.ROOTS,ConsumableType.BRUTISH_STRENGTH,ConsumableType.VIGOR};
-				List<ConsumableType> scroll_order = new List<ConsumableType>{ConsumableType.SUNLIGHT,ConsumableType.DARKNESS,ConsumableType.FIRE_RING,ConsumableType.BLINKING,ConsumableType.KNOWLEDGE,ConsumableType.RENEWAL,ConsumableType.THUNDERCLAP,ConsumableType.CALLING,ConsumableType.ENCHANTMENT,ConsumableType.PASSAGE,ConsumableType.TRAP_CLEARING,ConsumableType.RAGE,ConsumableType.DETECT_MONSTERS,ConsumableType.TIME};
+				List<ConsumableType> potion_order = new List<ConsumableType>{ConsumableType.STONEFORM,ConsumableType.CLOAKING,ConsumableType.VAMPIRISM,ConsumableType.HEALING,ConsumableType.MYSTIC_MIND,ConsumableType.SILENCE,ConsumableType.REGENERATION,ConsumableType.ROOTS,ConsumableType.BRUTISH_STRENGTH,ConsumableType.HASTE};
+				List<ConsumableType> scroll_order = new List<ConsumableType>{ConsumableType.SUNLIGHT,ConsumableType.DARKNESS,ConsumableType.BLINKING,ConsumableType.RENEWAL,ConsumableType.FIRE_RING,ConsumableType.CALLING,ConsumableType.KNOWLEDGE,ConsumableType.PASSAGE,ConsumableType.THUNDERCLAP,ConsumableType.RAGE,ConsumableType.ENCHANTMENT,ConsumableType.TIME,ConsumableType.TRAP_CLEARING};
 				List<ConsumableType> orb_order = new List<ConsumableType>{ConsumableType.BREACHING,ConsumableType.FREEZING,ConsumableType.SHIELDING,ConsumableType.BLADES,ConsumableType.CONFUSION,ConsumableType.FLAMES,ConsumableType.DETONATION,ConsumableType.PAIN,ConsumableType.TELEPORTAL,ConsumableType.FOG};
 				List<ConsumableType> wand_order = new List<ConsumableType>{ConsumableType.DUST_STORM,ConsumableType.DIGGING,ConsumableType.TELEKINESIS,ConsumableType.SLUMBER,ConsumableType.INVISIBILITY,ConsumableType.REACH,ConsumableType.FLESH_TO_FIRE,ConsumableType.WEBS};
 				List<colorstring> potions = new List<colorstring>();
@@ -4981,7 +4981,7 @@ namespace Forays{
 								t.AddOpaqueFeature(FeatureType.FOG);
 							}
 						}*/
-						M.SpawnMob(ActorType.OGRE_BARBARIAN);
+						M.SpawnMob(ActorType.CYCLOPEAN_TITAN);
 						/*foreach(Actor a in M.AllActors()){
 							if(a.type == ActorType.WARG){
 								a.attrs[AttrType.WANDERING] = 1;
@@ -5892,22 +5892,21 @@ namespace Forays{
 				else{
 					Tile t = TileInDirection(dir);
 					if(t.passable){
-						if(tile().Is(FeatureType.WEB) && type != ActorType.STALKING_WEBSTRIDER){
-							if(HasAttr(AttrType.BRUTISH_STRENGTH,AttrType.SLIMED,AttrType.OIL_COVERED)){
-								tile().RemoveFeature(FeatureType.WEB);
-							}
-							else{
-								if(R.CoinFlip()){
-									B.Add(You("break") + " free. ",this);
-									tile().RemoveFeature(FeatureType.WEB);
-								}
-								else{
-									B.Add(You("try",false,true) + " to break free. ",this);
-								}
-								IncreaseExhaustion(3);
+						if(HasAttr(AttrType.IMMOBILE)){
+							if(HasAttr(AttrType.CONFUSED)){
+								B.Add("You struggle, briefly forgetting your immobility. ");
 								Q1();
 								return;
 							}
+							if(HasAttr(AttrType.ROOTS)){
+								B.Add("You're rooted to the ground! ");
+							}
+							else{
+								B.Add("You can't move! ");
+							}
+							Help.TutorialTip(TutorialTopic.Immobilized);
+							Q0();
+							return;
 						}
 						if(GrabPreventsMovement(t)){
 							List<Actor> grabbers = new List<Actor>();
@@ -5925,21 +5924,22 @@ namespace Forays{
 							}
 							return;
 						}
-						if(HasAttr(AttrType.IMMOBILE)){
-							if(HasAttr(AttrType.CONFUSED)){
-								B.Add("You struggle, briefly forgetting your immobility. ");
+						if(tile().Is(FeatureType.WEB)){
+							if(HasAttr(AttrType.BRUTISH_STRENGTH,AttrType.SLIMED,AttrType.OIL_COVERED)){
+								tile().RemoveFeature(FeatureType.WEB);
+							}
+							else{
+								if(R.CoinFlip()){
+									B.Add(You("break") + " free. ",this);
+									tile().RemoveFeature(FeatureType.WEB);
+								}
+								else{
+									B.Add(You("try",false,true) + " to break free. ",this);
+								}
+								IncreaseExhaustion(3);
 								Q1();
 								return;
 							}
-							if(HasAttr(AttrType.ROOTS)){
-								B.Add("You're rooted to the ground! ");
-							}
-							else{
-								B.Add("You can't move! ");
-							}
-							Help.TutorialTip(TutorialTopic.Immobilized);
-							Q0();
-							return;
 						}
 						for(int i=t.row-1;i<=t.row+1;++i){
 							for(int j=t.col-1;j<=t.col+1;++j){
@@ -6140,7 +6140,7 @@ namespace Forays{
 						QS();
 					}
 					else{
-						if(HasAttr(AttrType.BRUTISH_STRENGTH) && t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.STALAGMITE,TileType.STATUE,TileType.RUBBLE)){
+						if(HasAttr(AttrType.BRUTISH_STRENGTH) && !MovementPrevented(t) && t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.STALAGMITE,TileType.STATUE,TileType.RUBBLE)){
 							B.Add("You smash " + t.TheName(true) + ". ");
 							if(t.Is(TileType.STALAGMITE)){
 								t.Toggle(this);
@@ -6186,7 +6186,7 @@ namespace Forays{
 										if(StunnedThisTurn()){
 											return;
 										}
-										if(t.name.Contains("damaged") || HasAttr(AttrType.BRUTISH_STRENGTH)){
+										if(t.name.Contains("damaged") || (HasAttr(AttrType.BRUTISH_STRENGTH) && !MovementPrevented(t))){
 											if(HasAttr(AttrType.BRUTISH_STRENGTH)){
 												B.Add("You smash the demonic idol. ");
 											}
@@ -6230,7 +6230,7 @@ namespace Forays{
 													return;
 												}
 											}
-											if(HasAttr(AttrType.BRUTISH_STRENGTH) && !Global.GAME_OVER){
+											if(HasAttr(AttrType.BRUTISH_STRENGTH) && !MovementPrevented(t) && !Global.GAME_OVER){
 												Move(t.row,t.col);
 											}
 											Q1();
@@ -6591,123 +6591,7 @@ namespace Forays{
 			}
 			bool no_act = false;
 			if(HasAttr(AttrType.BLIND)){
-				string verb = "stagger";
-				bool es = false;
-				if(HasAttr(AttrType.FLYING)){
-					verb = "careen";
-				}
-				else{
-					if(Is(ActorType.SPITTING_COBRA,ActorType.MIMIC,ActorType.GIANT_SLUG,ActorType.SKITTERMOSS,ActorType.NOXIOUS_WORM,ActorType.CORROSIVE_OOZE)){
-						verb = "lurch";
-						es = true;
-					}
-				}
-				Tile t = null;
-				if(HasAttr(AttrType.NONEUCLIDEAN_MOVEMENT)){
-					if(target != null){
-						t = target.TilesWithinDistance(DistanceFrom(target)+1).Where(x=>x.DistanceFrom(target) >= DistanceFrom(target)-1).Random();
-					}
-				}
-				else{
-					t = TileInDirection(Global.RandomDirection());
-				}
-				if(t != null){
-					Actor a = t.actor();
-					if(!t.passable){
-						if(HasAttr(AttrType.BRUTISH_STRENGTH) && t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.STALAGMITE,TileType.STATUE,TileType.RUBBLE)){
-							B.Add(YouVisible("smash",true) + " " + t.TheName(true) + ". ",this,t);
-							if(t.Is(TileType.STALAGMITE)){
-								t.Toggle(this);
-							}
-							else{
-								t.TurnToFloor();
-							}
-							foreach(Tile neighbor in t.TilesAtDistance(1)){
-								neighbor.solid_rock = false;
-							}
-							Move(t.row,t.col);
-						}
-						else{
-							if(HasAttr(AttrType.BRUTISH_STRENGTH) && t.IsTrap()){
-								t.SetName(Tile.Prototype(t.type).name);
-								B.Add(YouVisible("smash",true) + " " + t.TheName(true) + ". ",this,t);
-								t.TurnToFloor();
-							}
-							else{
-								if(type == ActorType.CYCLOPEAN_TITAN && t.p.BoundsCheck(M.tile,false) && t.Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.WAX_WALL)){
-									B.Add(YouVisible("smash",true) + " through " + t.TheName(true) + ". ",this,t);
-									for(int i=-1;i<=1;++i){
-										pos p2 = p.PosInDir(DirectionOf(t).RotateDir(true,i));
-										if(!p2.BoundsCheck(M.tile,false)){
-											continue;
-										}
-										Tile t2 = TileInDirection(DirectionOf(t).RotateDir(true,i));
-										if(t2.Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.WAX_WALL)){
-											t2.TurnToFloor();
-											foreach(Tile neighbor in t2.TilesAtDistance(1)){
-												neighbor.solid_rock = false;
-											}
-											if(t.Is(TileType.STONE_SLAB)){
-												Event e = Q.FindTargetedEvent(t,EventType.STONE_SLAB);
-												if(e != null){
-													e.dead = true;
-												}
-											}
-											if(t.Is(TileType.HIDDEN_DOOR)){
-												foreach(Event e in Q.list){
-													if(e.type == EventType.CHECK_FOR_HIDDEN){
-														e.area.Remove(t);
-														if(e.area.Count == 0){
-															e.dead = true;
-														}
-														break;
-													}
-												}
-											}
-										}
-									}
-									Move(t.row,t.col);
-								}
-								else{
-								   B.Add(You(verb,es) + " into " + t.the_name + ". ",this);
-									if(!HasAttr(AttrType.SMALL) || t.Is(TileType.POISON_BULB)){ //small monsters can't bump anything but fragile terrain like bulbs
-										t.Bump(DirectionOf(t));
-									}
-								}
-							}
-						}
-					}
-					else{
-						if(a != null){
-							pos original_pos = this.p;
-							pos target_original_pos = a.p;
-							B.Add(YouVisible(verb,es) + " into " + a.TheName(true) + ". ",this,a);
-							if(a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK) && a.maxhp == 1){
-								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,false,1,this);
-							}
-							else{
-								if(HasAttr(AttrType.BRUTISH_STRENGTH)){
-									a.attrs[AttrType.TURN_INTO_CORPSE]++;
-									KnockObjectBack(a,5);
-									a.CorpseCleanup();
-								}
-							}
-							if(HasAttr(AttrType.BRUTISH_STRENGTH) && p.Equals(original_pos)){
-								Move(target_original_pos.row,target_original_pos.col);
-							}
-						}
-						else{
-							if(MovementPrevented(t)){
-								B.Add(You(verb,es) + " and almost falls over. ",this);
-							}
-							else{
-								B.Add(You(verb,es) + ". ",this);
-								Move(t.row,t.col);
-							}
-						}
-					}
-				}
-				QS();
+				Stagger();
 				no_act = true;
 			}
 			bool aware_of_player = CanSee(player);
@@ -10041,6 +9925,136 @@ namespace Forays{
 				QS();
 			}
 		}
+		private void Stagger(){
+			string verb = "stagger";
+			bool es = false;
+			if(HasAttr(AttrType.FLYING)){
+				verb = "careen";
+			}
+			else{
+				if(Is(ActorType.SPITTING_COBRA,ActorType.MIMIC,ActorType.GIANT_SLUG,ActorType.SKITTERMOSS,ActorType.NOXIOUS_WORM,ActorType.CORROSIVE_OOZE)){
+					verb = "lurch"; //todo check for updates to this list. All these lists...maybe I should make these into categories or something. HasTag(Tag.Lurches)? crawls? I don't even know how to name this group.
+					es = true;
+				}
+			}
+			Tile t = null;
+			if(HasAttr(AttrType.NONEUCLIDEAN_MOVEMENT)){
+				if(target != null){
+					t = target.TilesWithinDistance(DistanceFrom(target)+1).Where(x=>x.DistanceFrom(target) >= DistanceFrom(target)-1).Random();
+				}
+			}
+			else{
+				t = TileInDirection(Global.RandomDirection());
+			}
+			if(t != null){
+				if(MovementPrevented(t)){
+					if(type == ActorType.PLAYER){
+						B.Add(You(verb,es) + " and almost fall over. ",this);
+					}
+					else{
+						B.Add(You(verb,es) + " and almost falls over. ",this);
+					}
+				}
+				else{
+					Actor a = t.actor();
+					if(!t.passable){
+						if(HasAttr(AttrType.BRUTISH_STRENGTH) && t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.STALAGMITE,TileType.STATUE,TileType.RUBBLE)){
+							B.Add(YouVisible(verb,es) + ", smashing " + t.TheName(true) + ". ",this,t);
+							//B.Add(YouVisible("smash",true) + " " + t.TheName(true) + ". ",this,t);
+							if(t.Is(TileType.STALAGMITE)){
+								t.Toggle(this);
+							}
+							else{
+								t.TurnToFloor();
+							}
+							foreach(Tile neighbor in t.TilesAtDistance(1)){
+								neighbor.solid_rock = false;
+							}
+							Move(t.row,t.col);
+						}
+						else{
+							if(type == ActorType.CYCLOPEAN_TITAN && t.p.BoundsCheck(M.tile,false) && t.Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.WAX_WALL)){
+								B.Add(YouVisible(verb,es) + ", smashing through " + t.TheName(true) + ". ",this,t);
+								for(int i=-1;i<=1;++i){
+									pos p2 = p.PosInDir(DirectionOf(t).RotateDir(true,i));
+									if(!p2.BoundsCheck(M.tile,false)){
+										continue;
+									}
+									Tile t2 = TileInDirection(DirectionOf(t).RotateDir(true,i));
+									if(t2.Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.WAX_WALL)){
+										t2.TurnToFloor();
+										foreach(Tile neighbor in t2.TilesAtDistance(1)){
+											neighbor.solid_rock = false;
+										}
+										if(t.Is(TileType.STONE_SLAB)){
+											Event e = Q.FindTargetedEvent(t,EventType.STONE_SLAB);
+											if(e != null){
+												e.dead = true;
+											}
+										}
+										if(t.Is(TileType.HIDDEN_DOOR)){
+											foreach(Event e in Q.list){
+												if(e.type == EventType.CHECK_FOR_HIDDEN){
+													e.area.Remove(t);
+													if(e.area.Count == 0){
+														e.dead = true;
+													}
+													break;
+												}
+											}
+										}
+									}
+								}
+								Move(t.row,t.col);
+							}
+							else{
+								B.Add(You(verb,es) + " into " + t.the_name + ". ",this);
+								if(!HasAttr(AttrType.SMALL) || t.Is(TileType.POISON_BULB)){ //small monsters can't bump anything but fragile terrain like bulbs
+									t.Bump(DirectionOf(t));
+								}
+							}
+						}
+					}
+					else{
+						if(a != null){
+							pos original_pos = this.p;
+							B.Add(YouVisible(verb,es) + " into " + a.TheName(true) + ". ",this,a);
+							if(a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK) && a.maxhp == 1){
+								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,false,1,this);
+							}
+							else{
+								if(type == ActorType.CYCLOPEAN_TITAN){
+									a.attrs[AttrType.TURN_INTO_CORPSE]++;
+									a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(3,6),this,"*trampled by " + a_name); //todo: test this once the titan can be blinded
+									KnockObjectBack(a,5);
+									a.CorpseCleanup();
+								}
+							}
+							if(type == ActorType.CYCLOPEAN_TITAN && p.Equals(original_pos) && t.actor() == null){
+								if(t.IsTrap()){
+									t.SetName(Tile.Prototype(t.type).name);
+									t.TurnToFloor();
+								}
+								Move(t.row,t.col);
+							}
+						}
+						else{
+							if(HasAttr(AttrType.BRUTISH_STRENGTH) && t.IsTrap()){
+								t.SetName(Tile.Prototype(t.type).name);
+								B.Add(YouVisible(verb,es) + ", smashing " + t.TheName(true) + ". ",this,t);
+								t.TurnToFloor();
+								Move(t.row,t.col);
+							}
+							else{
+								B.Add(You(verb,es) + ". ",this);
+								Move(t.row,t.col);
+							}
+						}
+					}
+				}
+			}
+			QS();
+		}
 		public void CalculateDimming(){
 			if(M.wiz_lite || M.wiz_dark){
 				return;
@@ -11487,7 +11501,7 @@ namespace Forays{
 					}
 				}
 			}
-			if(!hit && HasAttr(AttrType.BRUTISH_STRENGTH) && p.Equals(original_pos) && M.actor[target_original_pos] != null){
+			/*if(!hit && HasAttr(AttrType.BRUTISH_STRENGTH) && p.Equals(original_pos) && M.actor[target_original_pos] != null){
 				Actor a2 = M.actor[target_original_pos];
 				if(a2.HasAttr(AttrType.NO_CORPSE_KNOCKBACK) && a2.maxhp == 1){
 					B.Add(YouVisible("push",true) + " " + a2.TheName(true) + ". ",this,a2);
@@ -11498,17 +11512,18 @@ namespace Forays{
 					KnockObjectBack(a2,5);
 					a2.CorpseCleanup();
 				}
-			}
+			}*/
 			if(!hit && sneak_attack && this != player){
 				attrs[AttrType.TURNS_VISIBLE] = -1;
 				attrs[AttrType.NOTICED]++;
 			}
-			if(HasAttr(AttrType.BRUTISH_STRENGTH) && p.Equals(original_pos) && !HasAttr(AttrType.IMMOBILE)){
-				if(M.actor[target_original_pos] != null && !M.actor[target_original_pos].HasAttr(AttrType.IMMOBILE)){
-					Actor a2 = M.actor[target_original_pos];
-					B.Add(YouVisible("push",true) + " " + a2.TheName(true) + ". ",this,a2);
+			if(hit && HasAttr(AttrType.BRUTISH_STRENGTH) && p.Equals(original_pos) && M.actor[target_original_pos] == null && !MovementPrevented(M.tile[target_original_pos])){
+				Tile t = M.tile[target_original_pos];
+				if(t.IsTrap()){
+					t.SetName(Tile.Prototype(t.type).name);
+					t.TurnToFloor();
 				}
-				Move(target_original_pos.row,target_original_pos.col);
+				Move(t.row,t.col);
 			}
 			if(hit && EquippedWeapon.enchantment == EnchantmentType.ECHOES && !EquippedWeapon.status[EquipmentStatus.NEGATED]){
 				List<Tile> line = GetBestExtendedLineOfEffect(target_original_pos.row,target_original_pos.col);
@@ -14659,131 +14674,11 @@ namespace Forays{
 		public bool StunnedThisTurn(){
 			if(HasAttr(AttrType.STUNNED) && R.OneIn(3)){
 				if(HasAttr(AttrType.IMMOBILE)){
+					B.Add(YouAre() + " momentarily stunned. ",this);
 					QS();
 					return true;
 				}
-				string verb = "stagger";
-				bool es = false;
-				if(HasAttr(AttrType.FLYING)){
-					verb = "careen";
-				}
-				else{
-					if(Is(ActorType.SPITTING_COBRA,ActorType.MIMIC,ActorType.GIANT_SLUG,ActorType.SKITTERMOSS,ActorType.NOXIOUS_WORM)){
-						verb = "lurch";
-						es = true;
-					}
-				}
-				Tile t = null;
-				if(HasAttr(AttrType.NONEUCLIDEAN_MOVEMENT)){
-					if(target != null){
-						t = target.TilesWithinDistance(DistanceFrom(target)+1).Where(x=>x.DistanceFrom(target) >= DistanceFrom(target)-1).Random();
-					}
-				}
-				else{
-					t = TileInDirection(Global.RandomDirection());
-				}
-				if(t != null){
-					Actor a = t.actor();
-					if(!t.passable){
-						if(HasAttr(AttrType.BRUTISH_STRENGTH) && t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.STALAGMITE,TileType.STATUE,TileType.RUBBLE)){
-							B.Add(YouVisible("smash",true) + " " + t.TheName(true) + ". ",this,t);
-							if(t.Is(TileType.STALAGMITE)){
-								t.Toggle(this);
-							}
-							else{
-								t.TurnToFloor();
-							}
-							foreach(Tile neighbor in t.TilesAtDistance(1)){
-								neighbor.solid_rock = false;
-							}
-							Move(t.row,t.col);
-						}
-						else{
-							if(HasAttr(AttrType.BRUTISH_STRENGTH) && t.IsTrap()){
-								t.SetName(Tile.Prototype(t.type).name);
-								B.Add(YouVisible("smash",true) + " " + t.TheName(true) + ". ",this,t);
-								t.TurnToFloor();
-							}
-							else{
-								if(type == ActorType.CYCLOPEAN_TITAN && t.p.BoundsCheck(M.tile,false) && t.Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.WAX_WALL)){
-									B.Add(YouVisible("smash",true) + " through " + t.TheName(true) + ". ",this,t);
-									for(int i=-1;i<=1;++i){
-										pos p2 = p.PosInDir(DirectionOf(t).RotateDir(true,i));
-										if(!p2.BoundsCheck(M.tile,false)){
-											continue;
-										}
-										Tile t2 = TileInDirection(DirectionOf(t).RotateDir(true,i));
-										if(t2.Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.WAX_WALL)){
-											t2.TurnToFloor();
-											foreach(Tile neighbor in t2.TilesAtDistance(1)){
-												neighbor.solid_rock = false;
-											}
-											if(t.Is(TileType.STONE_SLAB)){
-												Event e = Q.FindTargetedEvent(t,EventType.STONE_SLAB);
-												if(e != null){
-													e.dead = true;
-												}
-											}
-											if(t.Is(TileType.HIDDEN_DOOR)){
-												foreach(Event e in Q.list){
-													if(e.type == EventType.CHECK_FOR_HIDDEN){
-														e.area.Remove(t);
-														if(e.area.Count == 0){
-															e.dead = true;
-														}
-														break;
-													}
-												}
-											}
-										}
-									}
-									Move(t.row,t.col);
-								}
-								else{
-								   B.Add(You(verb,es) + " into " + t.the_name + ". ",this);
-									if(!HasAttr(AttrType.SMALL) || t.Is(TileType.POISON_BULB)){ //small monsters can't bump anything but fragile terrain like bulbs
-										t.Bump(DirectionOf(t));
-									}
-								}
-							}
-						}
-					}
-					else{
-						if(a != null){
-							pos original_pos = this.p;
-							pos target_original_pos = a.p;
-							B.Add(YouVisible(verb,es) + " into " + a.TheName(true) + ". ",this,a);
-							if(a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK) && a.maxhp == 1){
-								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,false,1,this);
-							}
-							else{
-								if(HasAttr(AttrType.BRUTISH_STRENGTH)){
-									a.attrs[AttrType.TURN_INTO_CORPSE]++;
-									KnockObjectBack(a,5);
-									a.CorpseCleanup();
-								}
-							}
-							if(HasAttr(AttrType.BRUTISH_STRENGTH) && p.Equals(original_pos)){
-								Move(target_original_pos.row,target_original_pos.col);
-							}
-						}
-						else{
-							if(MovementPrevented(t)){
-								if(type == ActorType.PLAYER){
-									B.Add(You(verb,es) + " and almost fall over. ",this);
-								}
-								else{
-									B.Add(You(verb,es) + " and almost falls over. ",this);
-								}
-							}
-							else{
-								B.Add(You(verb,es) + ". ",this);
-								Move(t.row,t.col);
-							}
-						}
-					}
-				}
-				QS();
+				Stagger();
 				return true;
 			}
 			return false;

@@ -32,14 +32,13 @@ namespace Forays{
 			Define(ConsumableType.VAMPIRISM,"potion~ of vampirism",'!',Color.White);
 			Define(ConsumableType.BRUTISH_STRENGTH,"potion~ of brutish strength",'!',Color.White);
 			Define(ConsumableType.ROOTS,"potion~ of roots",'!',Color.White);
-			Define(ConsumableType.VIGOR,"potion~ of vigor",'!',Color.White);
+			Define(ConsumableType.HASTE,"potion~ of haste",'!',Color.White);
 			Define(ConsumableType.SILENCE,"potion~ of silence",'!',Color.White);
 			Define(ConsumableType.CLOAKING,"potion~ of cloaking",'!',Color.White);
-			Define(ConsumableType.CLARITY,"potion~ of clarity",'!',Color.White);
+			Define(ConsumableType.MYSTIC_MIND,"potion~ of mystic mind",'!',Color.White);
 			Define(ConsumableType.BLINKING,"scroll~ of blinking",'?',Color.White);
 			Define(ConsumableType.PASSAGE,"scroll~ of passage",'?',Color.White);
 			Define(ConsumableType.TIME,"scroll~ of time",'?',Color.White);
-			Define(ConsumableType.DETECT_MONSTERS,"scroll~ of detect monsters",'?',Color.White);
 			Define(ConsumableType.KNOWLEDGE,"scroll~ of knowledge",'?',Color.White);
 			Define(ConsumableType.SUNLIGHT,"scroll~ of sunlight",'?',Color.White);
 			Define(ConsumableType.DARKNESS,"scroll~ of darkness",'?',Color.White);
@@ -495,15 +494,14 @@ namespace Forays{
 			case ConsumableType.VAMPIRISM:
 			case ConsumableType.BRUTISH_STRENGTH:
 			case ConsumableType.ROOTS:
-			case ConsumableType.VIGOR:
+			case ConsumableType.HASTE:
 			case ConsumableType.SILENCE:
 			case ConsumableType.CLOAKING:
-			case ConsumableType.CLARITY:
+			case ConsumableType.MYSTIC_MIND:
 				return "potion";
 			case ConsumableType.BLINKING:
 			case ConsumableType.PASSAGE:
 			case ConsumableType.TIME:
-			case ConsumableType.DETECT_MONSTERS:
 			case ConsumableType.KNOWLEDGE:
 			case ConsumableType.SUNLIGHT:
 			case ConsumableType.DARKNESS:
@@ -551,15 +549,14 @@ namespace Forays{
 			case ConsumableType.VAMPIRISM:
 			case ConsumableType.BRUTISH_STRENGTH:
 			case ConsumableType.ROOTS:
-			case ConsumableType.VIGOR:
+			case ConsumableType.HASTE:
 			case ConsumableType.SILENCE:
 			case ConsumableType.CLOAKING:
-			case ConsumableType.CLARITY:
+			case ConsumableType.MYSTIC_MIND:
 				return 0;
 			case ConsumableType.BLINKING:
 			case ConsumableType.PASSAGE:
 			case ConsumableType.TIME:
-			case ConsumableType.DETECT_MONSTERS:
 			case ConsumableType.KNOWLEDGE:
 			case ConsumableType.SUNLIGHT:
 			case ConsumableType.DARKNESS:
@@ -617,7 +614,6 @@ namespace Forays{
 				return 4;
 			case ConsumableType.REGENERATION:
 			case ConsumableType.SILENCE:
-			case ConsumableType.CLARITY:
 			case ConsumableType.SUNLIGHT:
 			case ConsumableType.DARKNESS:
 			case ConsumableType.CALLING:
@@ -960,9 +956,9 @@ namespace Forays{
 				}
 				break;
 			}
-			case ConsumableType.VIGOR:
+			case ConsumableType.HASTE:
 			{
-				B.Add(user.You("start") + " moving with extraordinary speed. ",user);
+				B.Add(user.You("start") + " moving with extraordinary speed. ",user); //todo update
 				if(user.exhaustion > 0){
 					if(user == player){
 						B.Add("Your fatigue disappears. ");
@@ -996,6 +992,18 @@ namespace Forays{
 				}
 				user.RefreshDuration(AttrType.SHADOW_CLOAK,(R.Roll(2,20)+30)*100,user.YouAre() + " no longer cloaked. ",user);
 				break;
+			case ConsumableType.MYSTIC_MIND:
+			{
+				if(M.AllActors().Count > 1){
+					B.Add("The scroll reveals " + user.Your() + " foes. ",user); //todo update
+				}
+				else{
+					B.Add("The scroll reveals a lack of foes on this level. ");
+				}
+				int duration = R.Roll(2,20)+60;
+				user.RefreshDuration(AttrType.DETECTING_MONSTERS,duration*100,user.Your() + " foes are no longer revealed. ",user);
+				break;
+			}
 			case ConsumableType.BLINKING:
 			{
 				List<Tile> tiles = user.TilesWithinDistance(8).Where(x => x.passable && x.actor() == null && user.ApproximateEuclideanDistanceFromX10(x) >= 45);
@@ -1139,18 +1147,6 @@ namespace Forays{
 				}
 				Q.turn -= 200;
 				break;
-			case ConsumableType.DETECT_MONSTERS:
-			{
-				if(M.AllActors().Count > 1){
-					B.Add("The scroll reveals " + user.Your() + " foes. ",user);
-				}
-				else{
-					B.Add("The scroll reveals a lack of foes on this level. ");
-				}
-				int duration = R.Roll(2,20)+60;
-				user.RefreshDuration(AttrType.DETECTING_MONSTERS,duration*100,user.Your() + " foes are no longer revealed. ",user);
-				break;
-			}
 			case ConsumableType.KNOWLEDGE:
 			{
 				if(user == player){
@@ -2417,7 +2413,7 @@ namespace Forays{
 					return "This potion will cause you to fade to invisibility while in the shadows.";
 				case ConsumableType.DARKNESS:
 					return "This scroll covers the dungeon in a blanket of darkness that suppresses all light.";
-				case ConsumableType.DETECT_MONSTERS:
+				case ConsumableType.MYSTIC_MIND: //todo!
 					return "This scroll reveals the location of foes on the current dungeon level for a while.";
 				case ConsumableType.DETONATION:
 					return "On impact, this orb will explode violently, inflicting great damage on its surroundings.";
@@ -2462,8 +2458,8 @@ namespace Forays{
 					return "This scroll will cause all traps within 12 spaces to be triggered simultaneously.";
 				case ConsumableType.VAMPIRISM:
 					return "Consuming this potion will grant many of the powers of a true vampire. You'll fly and drain life from living enemies, but light will leave you vulnerable.";
-				case ConsumableType.VIGOR:
-					return "This potion will relieve your exhaustion and temporarily double your movement speed.";
+				case ConsumableType.HASTE:
+					return "This potion will relieve your exhaustion and temporarily double your movement speed."; //todo!
 				}
 			}
 			return "Unknown item.";
