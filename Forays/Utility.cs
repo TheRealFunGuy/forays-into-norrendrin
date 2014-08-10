@@ -745,6 +745,49 @@ namespace Utilities{
 			}
 			return result_map;
 		}
+		public static List<pos> GetRandomizedFloodFillPositions<T>(this PosArray<T> array, pos origin,int desired_count,bool exclude_origin_from_count,bool exclude_origin_from_result,bool cardinal_directions_only,BooleanPositionDelegate condition){
+			return array.GetRandomizedFloodFillPositions(new List<pos>{origin},desired_count,exclude_origin_from_count,exclude_origin_from_result,cardinal_directions_only,condition);
+		}
+		public static List<pos> GetRandomizedFloodFillPositions<T>(this PosArray<T> array, List<pos> origins,int desired_count,bool exclude_origins_from_count,bool exclude_origins_from_result,bool cardinal_directions_only,BooleanPositionDelegate condition){
+			List<pos> result = new List<pos>();
+			PosArray<bool> result_map = new PosArray<bool>(array.objs.GetLength(0),array.objs.GetLength(1));
+			List<pos> frontier = new List<pos>();
+			int count = 0;
+			int[] dirs = cardinal_directions_only? U.FourDirections : U.EightDirections;
+			foreach(pos origin in origins){
+				result_map[origin] = true;
+				if(condition(origin)){
+					if(!exclude_origins_from_count){
+						++count;
+					}
+					if(!exclude_origins_from_result){
+						result.Add(origin);
+					}
+				}
+				foreach(int dir in dirs){
+					pos neighbor = origin.PosInDir(dir);
+					if(neighbor.BoundsCheck(array) && !result_map[neighbor]){
+						result_map[neighbor] = true;
+						frontier.Add(neighbor);
+					}
+				}
+			}
+			while(frontier.Count > 0 && count < desired_count){
+				pos p = frontier.RemoveRandom();
+				if(condition(p)){
+					result.Add(p);
+					++count;
+					foreach(int dir in dirs){
+						pos neighbor = p.PosInDir(dir);
+						if(neighbor.BoundsCheck(array) && !result_map[neighbor]){
+							result_map[neighbor] = true;
+							frontier.Add(neighbor);
+						}
+					}
+				}
+			}
+			return result;
+		}
 		public static int DijkstraMax = int.MaxValue;
 		public static int DijkstraMin = int.MinValue;
 		public static bool IsValidDijkstraValue(this int i){

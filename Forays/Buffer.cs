@@ -16,8 +16,8 @@ namespace Forays{
 		private string[] log;
 		private int position;
 
-		public static Map M{get;set;}
-		public static Actor player{get;set;}
+		public static Map M;
+		public static Actor player;
 		public Buffer(Game g){
 			max_length=Global.COLS; //because the message window runs along the top of the map
 			str.Add("");

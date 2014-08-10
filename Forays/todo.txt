@@ -25,10 +25,11 @@ dodge mechanic added to several monsters
 assassin becomes stealth+dodge+lunge+silence.
 bloodwitch's radius decreased
 ogre barbarian added
-
-
-
-
+fixed a bug where throwing a monster into the ceiling with telekinesis could cause a crash
+fixed a bug where whirlwind style could fail to activate when using the staff or while under the effects of a potion of brutish strength
+zombie's bite attack can now grab its target.
+fixed a bug where font scaling or custom DPI settings could cause display and mouse input problems.
+bugfix: using dust storm (fog too?) on a firepit removes its light!  ...but this is basically new anyway so doesn't need to be mentioned.
 
 
 

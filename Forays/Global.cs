@@ -698,7 +698,7 @@ namespace Forays{
 				b.Write(t.light_radius);
 				b.Write((int)t.type);
 				b.Write(t.passable);
-				b.Write(t.SaveInternalOpacity());
+				b.Write(t.GetInternalOpacity());
 				b.Write(t.seen);
 				b.Write(t.revealed_by_light);
 				b.Write(t.solid_rock);
@@ -928,7 +928,7 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static List<Tile> ToFirstObstruction(this List<Tile> line){ //impassable tile OR actor
+		public static List<Tile> ToFirstObstruction(this List<Tile> line){ //impassable tile OR actor - todo: rename this one.
 			List<Tile> result = new List<Tile>();
 			int idx = 0;
 			foreach(Tile t in line){
@@ -943,6 +943,9 @@ namespace Forays{
 			return result;
 		}
 		public static List<Tile> To(this List<Tile> line,PhysicalObject o){
+			if(o == null){
+				return new List<Tile>(line);
+			}
 			List<Tile> result = new List<Tile>();
 			foreach(Tile t in line){
 				result.Add(t);
@@ -998,6 +1001,12 @@ namespace Forays{
 			if(i < path.Count){
 				path.RemoveRange(i,path.Count - i);
 			}
+		}
+		public static List<pos> SharedNeighbors(this pos p,pos other,bool return_origins_if_adjacent){
+			List<pos> result = p.PositionsWithinDistance(1,!return_origins_if_adjacent,true);
+			List<pos> others = other.PositionsWithinDistance(1,!return_origins_if_adjacent,true);
+			result.RemoveWhere(x=>!others.Contains(x));
+			return result;
 		}
 		public static float[] GetFloatValues(this Color color){
 			Color4 c = GLGame.ConvertColor(color);

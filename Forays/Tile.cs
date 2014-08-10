@@ -11,10 +11,17 @@ using System.Collections.Generic;
 using Utilities;
 namespace Forays{
 	public class Tile : PhysicalObject{
-		public TileType type{get;set;}
-		public bool passable{get;set;}
-		public bool opaque{get{ return internal_opaque || features.Contains(FeatureType.FOG); } set{ internal_opaque = value; }}
-		private bool internal_opaque; //no need to ever access this directly
+		public TileType type;
+		public bool passable;
+		public bool opaque{
+			get{
+				return internal_opaque || features.Contains(FeatureType.FOG) || features.Contains(FeatureType.THICK_DUST);
+			}
+			set{
+				internal_opaque = value;
+			}
+		}
+		private bool internal_opaque;
 		public bool seen{
 			get{
 				return internal_seen;
@@ -46,8 +53,8 @@ namespace Forays{
 			}
 		}
 		private bool internal_seen;
-		public bool revealed_by_light{get;set;}
-		public bool solid_rock{get;set;} //used for walls that will never be seen, to speed up LOS checks
+		public bool revealed_by_light;
+		public bool solid_rock; //used for walls that will never be seen, to speed up LOS checks
 		public int light_value{
 			get{
 				return internal_light_value;
@@ -67,11 +74,11 @@ namespace Forays{
 			}
 		}
 		private int internal_light_value; //no need to ever access this directly, either
-		public int direction_exited{get;set;} //used to improve AI's handling of corners
+		public int direction_exited; //used to improve AI's handling of corners
 		public TileType? toggles_into;
-		public Item inv{get;set;}
+		public Item inv;
 		public List<FeatureType> features = new List<FeatureType>();
-		private List<FeatureType> feature_priority = new List<FeatureType>{FeatureType.GRENADE,FeatureType.FIRE,FeatureType.SPORES,FeatureType.POISON_GAS,FeatureType.PIXIE_DUST,FeatureType.TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.FOG,FeatureType.WEB,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.TROLL_CORPSE,FeatureType.BONES,FeatureType.INACTIVE_TELEPORTAL,FeatureType.OIL,FeatureType.SLIME,FeatureType.FORASECT_EGG};
+		private List<FeatureType> feature_priority = new List<FeatureType>{FeatureType.GRENADE,FeatureType.FIRE,FeatureType.SPORES,FeatureType.POISON_GAS,FeatureType.PIXIE_DUST,FeatureType.CONFUSION_GAS,FeatureType.THICK_DUST,FeatureType.TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.FOG,FeatureType.WEB,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.TROLL_CORPSE,FeatureType.BONES,FeatureType.INACTIVE_TELEPORTAL,FeatureType.OIL,FeatureType.SLIME,FeatureType.FORASECT_EGG};
 		
 		private static Dictionary<TileType,Tile> proto= new Dictionary<TileType, Tile>();
 		public static Tile Prototype(TileType type){ return proto[type]; }
@@ -170,7 +177,7 @@ namespace Forays{
 			Define(FeatureType.GRENADE,"grenade",',',Color.Red);
 			Define(FeatureType.TROLL_CORPSE,"troll corpse",'%',Color.DarkGreen);
 			Define(FeatureType.TROLL_BLOODWITCH_CORPSE,"troll bloodwitch corpse",'%',Color.DarkRed);
-			Define(FeatureType.POISON_GAS,"cloud of poison gas",'*',Color.DarkGreen);
+			Define(FeatureType.POISON_GAS,"thick cloud of poison gas",'*',Color.DarkGreen);
 			Define(FeatureType.FOG,"cloud of fog",'*',Color.Gray);
 			Define(FeatureType.SLIME,"slime",',',Color.Green);
 			proto_feature[FeatureType.SLIME].a_name = "slime";
@@ -187,6 +194,8 @@ namespace Forays{
 			Define(FeatureType.PIXIE_DUST,"cloud of pixie dust",'*',Color.RandomGlowingFungus); //might need to change this name
 			Define(FeatureType.FORASECT_EGG,"forasect egg",'%',Color.DarkGray);
 			Define(FeatureType.SPORES,"cloud of spores",'*',Color.DarkYellow);
+			Define(FeatureType.THICK_DUST,"thick cloud of dust",'*',Color.DarkGray);
+			Define(FeatureType.CONFUSION_GAS,"cloud of confusion gas",'*',Color.RandomConfusion);
 		}
 		private static void Define(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
 			proto[type_] = new Tile(type_,name_,symbol_,color_,passable_,opaque_,toggles_into_);
@@ -241,7 +250,7 @@ namespace Forays{
 				break;
 			case FeatureType.WEB:
 				proto_feature[type_].sprite_offset = new pos(1,16);
-				break;
+				break; //todo: no dust, confusion gas, any other new stuff yet.
 			}
 		}
 		public Tile(){}
@@ -529,10 +538,10 @@ namespace Forays{
 				break;
 			}
 		}
-		public bool SaveInternalOpacity(){ //annoying - this is the only value I need to do this for, right now, so I'll hack it in and move on.
+		public bool GetInternalOpacity(){ //annoying - this is the only value I need to do this for, right now, so I'll hack it in and move on.
 			return internal_opaque;
 		}
-		public void LoadInternalOpacity(bool value){
+		public void SetInternalOpacity(bool value){ //these 2 methods are now used for save/load and updating light radius.
 			internal_opaque = value;
 		}
 		public static TileType RandomTrap(){
@@ -791,8 +800,8 @@ namespace Forays{
 				TurnToFloor();
 				List<Tile> area = AddGaseousFeature(FeatureType.POISON_GAS,8);
 				if(area.Count > 0){
-					Q.RemoveTilesFromEventAreas(area,EventType.POISON_GAS);
-					Q.Add(new Event(area,200,EventType.POISON_GAS));
+					Q.RemoveTilesFromEventAreas(area,EventType.REMOVE_GAS);
+					Event.RemoveGas(area,200,FeatureType.POISON_GAS,18);
 				}
 				break;
 			}
@@ -1258,7 +1267,7 @@ namespace Forays{
 				break;
 			case TileType.BLINDING_TRAP:
 				if(actor_here){
-					B.Add("A dart flies out and strikes " + actor().TheName(true) + ". ",this);
+					B.Add("A dart flies out and strikes " + actor().TheName(true) + ". ",this); //todo: what about replacing this with blinding dust?
 					if(!actor().HasAttr(AttrType.NONLIVING,AttrType.BLINDSIGHT)){
 						actor().ApplyStatus(AttrType.BLIND,(R.Roll(2,6)+6)*100);
 						/*B.Add(actor().YouAre() + " blind! ",actor());
@@ -1327,17 +1336,17 @@ namespace Forays{
 				}
 				int num = R.Roll(5) + 7;
 				if(spores){
-					List<Tile> new_area = AddGaseousFeature(FeatureType.SPORES,num);
+					List<Tile> new_area = AddGaseousFeature(FeatureType.SPORES,num); //todo: should this be its own trap type? what about other gases?
 					if(new_area.Count > 0){
 						B.Add("A cloud of spores fills the area! ",this);
-						Q.Add(new Event(new_area,600,EventType.SPORES));
+						Event.RemoveGas(new_area,600,FeatureType.SPORES,12);
 					}
 				}
 				else{
 					List<Tile> new_area = AddGaseousFeature(FeatureType.POISON_GAS,num);
 					if(new_area.Count > 0){
 						B.Add("Poisonous gas fills the area! ",this);
-						Q.Add(new Event(new_area,300,EventType.POISON_GAS));
+						Event.RemoveGas(new_area,300,FeatureType.POISON_GAS,18);
 					}
 				}
 				Toggle(actor());
@@ -1624,10 +1633,10 @@ namespace Forays{
 			return false;
 		}
 		public bool IsCurrentlyFlammable(){ //todo update
-			if(Is(FeatureType.FIRE,FeatureType.POISON_GAS)){
+			if(Is(FeatureType.FIRE,FeatureType.POISON_GAS,FeatureType.THICK_DUST)){
 				return false;
 			}
-			if(Is(FeatureType.WEB,FeatureType.OIL,FeatureType.SPORES)){
+			if(Is(FeatureType.WEB,FeatureType.OIL,FeatureType.SPORES,FeatureType.CONFUSION_GAS)){
 				return true;
 			} //todo: check for oiled actors here, too?
 			switch(type){
@@ -1706,6 +1715,33 @@ namespace Forays{
 			}
 			return result;
 		}
+		public List<Tile> NeighborsBetweenWithCondition(int r,int c,TileDelegate condition){ //list of tiles next to this one that are between you and it
+			del Clamp = x => x<-1? -1 : x>1? 1 : x; //clamps to a value between -1 and 1
+			int dy = r - row;
+			int dx = c - col;
+			List<Tile> result = new List<Tile>();
+			if(dy == 0 && dx == 0){
+				return result; //return the empty set
+			}
+			int newrow = row+Clamp(dy);
+			int newcol = col+Clamp(dx);
+			if(condition(M.tile[newrow,newcol])){
+				result.Add(M.tile[newrow,newcol]);
+			}
+			if(Math.Abs(dy) < Math.Abs(dx) && dy != 0){
+				newrow -= Clamp(dy);
+				if(condition(M.tile[newrow,newcol])){
+					result.Add(M.tile[newrow,newcol]);
+				}
+			}
+			if(Math.Abs(dx) < Math.Abs(dy) && dx != 0){
+				newcol -= Clamp(dx);
+				if(condition(M.tile[newrow,newcol])){
+					result.Add(M.tile[newrow,newcol]);
+				}
+			}
+			return result;
+		}
 		public List<Tile> AddGaseousFeature(FeatureType f,int num){
 			List<Tile> area = new List<Tile>();
 			Tile current = this;
@@ -1754,7 +1790,7 @@ namespace Forays{
 			switch(effect){
 			case DamageType.FIRE:
 			{
-				if(Is(FeatureType.FIRE,FeatureType.POISON_GAS)){
+				if(Is(FeatureType.FIRE,FeatureType.POISON_GAS,FeatureType.THICK_DUST)){
 					return;
 				}
 				if(Is(FeatureType.FOG)){
@@ -1782,8 +1818,20 @@ namespace Forays{
 						actor().ApplyBurning();
 					}
 				}
+				//todo: add static list flammable_gases to Tile class, then foreach it here:
 				if(Is(FeatureType.SPORES)){
 					features.Remove(FeatureType.SPORES);
+					if(!features.Contains(FeatureType.FIRE)){
+						UpdateRadius(light_radius,1);
+						features.Add(FeatureType.FIRE);
+						Fire.AddBurningObject(this);
+					}
+					if(actor() != null){
+						actor().ApplyBurning();
+					}
+				}
+				if(Is(FeatureType.CONFUSION_GAS)){
+					features.Remove(FeatureType.CONFUSION_GAS);
 					if(!features.Contains(FeatureType.FIRE)){
 						UpdateRadius(light_radius,1);
 						features.Add(FeatureType.FIRE);
@@ -1843,8 +1891,8 @@ namespace Forays{
 						TurnToFloor();
 						List<Tile> area = AddGaseousFeature(FeatureType.POISON_GAS,8);
 						if(area.Count > 0){
-							Q.RemoveTilesFromEventAreas(area,EventType.POISON_GAS);
-							Q.Add(new Event(area,200,EventType.POISON_GAS));
+							Q.RemoveTilesFromEventAreas(area,EventType.REMOVE_GAS);
+							Event.RemoveGas(area,200,FeatureType.POISON_GAS,18);
 						}
 						if(Is(FeatureType.POISON_GAS)){
 							break;
@@ -1898,36 +1946,7 @@ namespace Forays{
 			}
 			case DamageType.NORMAL:
 			{
-				if(inv != null){
-					if(inv.NameOfItemType() == "potion"){
-						if(inv.quantity > 1){
-							B.Add(inv.TheName(true) + " break! ",this);
-						}
-						else{
-							B.Add(inv.TheName(true) + " breaks! ",this);
-						}
-						inv = null;
-					}
-					else{
-						if(inv.NameOfItemType() == "orb"){
-							if(inv.quantity > 1){
-								B.Add(inv.TheName(true) + " break! ",this);
-							}
-							else{
-								B.Add(inv.TheName(true) + " breaks! ",this);
-							}
-							Item i = inv;
-							inv = null;
-							i.Use(null,new List<Tile>{this});
-						}
-					}
-				}
-				if(type == TileType.CRACKED_WALL){
-					Toggle(null,TileType.FLOOR); //todo: gravel?
-					foreach(Tile neighbor in TilesAtDistance(1)){
-						neighbor.solid_rock = false;
-					}
-				}
+				BreakFragileFeatures();
 				if(type == TileType.HIDDEN_DOOR){
 					Toggle(null);
 					Toggle(null);
@@ -1945,6 +1964,38 @@ namespace Forays{
 			}
 			}
 		}
+		public void BreakFragileFeatures(){
+			if(inv != null){
+				if(inv.NameOfItemType() == "potion"){
+					if(inv.quantity > 1){
+						B.Add(inv.TheName(true) + " break! ",this);
+					}
+					else{
+						B.Add(inv.TheName(true) + " breaks! ",this);
+					}
+					inv = null;
+				}
+				else{
+					if(inv.NameOfItemType() == "orb"){
+						if(inv.quantity > 1){
+							B.Add(inv.TheName(true) + " break! ",this);
+						}
+						else{
+							B.Add(inv.TheName(true) + " breaks! ",this);
+						}
+						Item i = inv;
+						inv = null;
+						i.Use(null,new List<Tile>{this});
+					}
+				}
+			}
+			if(type == TileType.CRACKED_WALL){
+				Toggle(null,TileType.FLOOR); //todo: gravel?
+				foreach(Tile neighbor in TilesAtDistance(1)){
+					neighbor.solid_rock = false;
+				}
+			}
+		}
 		public void AddFeature(FeatureType f){
 			if(!features.Contains(f)){
 				switch(f){
@@ -1960,6 +2011,13 @@ namespace Forays{
 					}
 					RemoveAllGases();
 					features.Add(FeatureType.SPORES);
+					break;
+				case FeatureType.CONFUSION_GAS:
+					if(IsBurning()){
+						return;
+					}
+					RemoveAllGases();
+					features.Add(FeatureType.CONFUSION_GAS);
 					break;
 				case FeatureType.POISON_GAS:
 					RemoveAllGases();
@@ -1979,6 +2037,25 @@ namespace Forays{
 						actor().RefreshDuration(AttrType.BURNING,0);
 					}
 					features.Add(FeatureType.POISON_GAS);
+					break;
+				case FeatureType.THICK_DUST:
+					RemoveAllGases();
+					if(Is(FeatureType.FIRE)){
+						RemoveFeature(FeatureType.FIRE);
+						Fire.burning_objects.Remove(this);
+						if(name == "floor" && type != TileType.BREACHED_WALL){
+							if(R.OneIn(4)){
+								color = Color.Gray;
+							}
+							else{
+								color = Color.DarkGray;
+							}
+						}
+					}
+					if(actor() != null && actor().IsBurning()){
+						actor().RefreshDuration(AttrType.BURNING,0);
+					}
+					AddOpaqueFeature(FeatureType.THICK_DUST);
 					break;
 				case FeatureType.PIXIE_DUST: //todo
 					RemoveAllGases();
@@ -2009,7 +2086,7 @@ namespace Forays{
 					break;
 				case FeatureType.FIRE:
 					ApplyEffect(DamageType.FIRE);
-					if(!Is(FeatureType.FIRE,FeatureType.POISON_GAS,FeatureType.SLIME) && !Is(TileType.POOL_OF_RESTORATION,TileType.WATER)){
+					if(!Is(FeatureType.FIRE,FeatureType.POISON_GAS,FeatureType.THICK_DUST,FeatureType.SLIME) && !Is(TileType.POOL_OF_RESTORATION,TileType.WATER)){
 						if(light_radius == 0){
 							UpdateRadius(0,1);
 						}
@@ -2058,6 +2135,9 @@ namespace Forays{
 				case FeatureType.FOG:
 					RemoveOpaqueFeature(FeatureType.FOG);
 					break;
+				case FeatureType.THICK_DUST:
+					RemoveOpaqueFeature(FeatureType.THICK_DUST);
+					break;
 				case FeatureType.FIRE:
 					UpdateRadius(1,Prototype(type).light_radius);
 					features.Remove(f);
@@ -2069,7 +2149,7 @@ namespace Forays{
 			}
 		}
 		private void RemoveAllGases(){
-			foreach(FeatureType f in new List<FeatureType>{FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.POISON_GAS,FeatureType.SPORES}){
+			foreach(FeatureType f in new List<FeatureType>{FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.POISON_GAS,FeatureType.SPORES,FeatureType.THICK_DUST,FeatureType.CONFUSION_GAS}){
 				RemoveFeature(f);
 			}
 		}

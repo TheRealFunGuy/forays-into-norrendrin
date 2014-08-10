@@ -743,6 +743,9 @@ namespace Forays{
 						ch.color = Color.Red;
 					}
 					else{
+						if(actor[r,c] == player && player.IsInvisibleHere()){
+							ch.color = Color.DarkGray;
+						}
 						if(actor[r,c] == player && !tile[r,c].IsLit()){
 							bool hidden_in_corner = false;
 							if(player.HasFeat(FeatType.CORNER_CLIMB) && !player.tile().IsLit()){
@@ -760,7 +763,9 @@ namespace Forays{
 								ch.color = Color.DarkBlue;
 							}
 							else{
-								ch.color = darkcolor;
+								if(ch.color != Color.DarkGray){ //if it's dark gray at this point, it means you're invisible. hacky.
+									ch.color = darkcolor;
+								}
 							}
 						}
 					}
