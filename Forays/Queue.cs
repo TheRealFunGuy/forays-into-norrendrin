@@ -12,7 +12,7 @@ using Utilities;
 namespace Forays{
 	public class Queue{
 		public LinkedList<Event> list;
-		public int turn{get;set;}
+		public int turn;
 		public int Count(){return list.Count; }
 		public int Tiebreaker{get{
 				if(list.Count > 0){
@@ -23,7 +23,7 @@ namespace Forays{
 				}
 			}
 		}
-		public static Buffer B{get;set;}
+		public static Buffer B;
 		public Queue(Game g){
 			list = new LinkedList<Event>();
 			turn = 0;
@@ -173,21 +173,22 @@ namespace Forays{
 		}
 	}
 	public class Event{
-		public PhysicalObject target{get;set;}
+		public PhysicalObject target;
 		public List<Tile> area = null;
-		public int delay{get;set;}
-		public EventType type{get;set;}
-		public AttrType attr{get;set;}
-		public int value{get;set;}
-		public string msg{get;set;}
+		public int delay;
+		public EventType type;
+		public AttrType attr;
+		public FeatureType feature;
+		public int value;
+		public string msg;
 		public List<PhysicalObject> msg_objs; //used to determine visibility of msg
-		public int time_created{get;set;}
-		public bool dead{get;set;}
-		public int tiebreaker{get;set;}
-		public static Queue Q{get;set;}
-		public static Buffer B{get;set;}
-		public static Map M{get;set;}
-		public static Actor player{get;set;}
+		public int time_created;
+		public bool dead;
+		public int tiebreaker;
+		public static Queue Q;
+		public static Buffer B;
+		public static Map M;
+		public static Actor player;
 		public Event(){}
 		public Event(PhysicalObject target_,int delay_){
 			target=target_;
@@ -200,7 +201,7 @@ namespace Forays{
 			dead=false;
 			tiebreaker = Q.Tiebreaker;
 		}
-		public Event(PhysicalObject target_,int delay_,AttrType attr_){
+		public Event(PhysicalObject target_,int delay_,AttrType attr_){ //todo: try removing some of these constructors. maybe FINALLY do Event.Create() and/or Event.RemoveAttr(...), Event.Move(...). that might work.
 			target=target_;
 			delay=delay_;
 			type=EventType.REMOVE_ATTR;
@@ -349,7 +350,7 @@ namespace Forays{
 		public Event(List<Tile> area_,int delay_,EventType type_,int value_){
 			target=null;
 			area = new List<Tile>();
-			foreach(Tile t in area_){
+			foreach(Tile t in area_){ //todo: definitely resolve whether this should copy the list or not.
 				area.Add(t);
 			}
 			//area=area_;
@@ -408,9 +409,29 @@ namespace Forays{
 			dead=false;
 			tiebreaker = Q.Tiebreaker;
 		}
+		public Event(PhysicalObject target_,List<Tile> area_,int delay_,EventType type_,AttrType attr_,FeatureType feature_,int value_,string msg_,params PhysicalObject[] objs){
+			target=target_;
+			area=area_;
+			delay=delay_;
+			type=type_;
+			attr=attr_;
+			feature = feature_;
+			value=value_;
+			msg=msg_;
+			msg_objs = new List<PhysicalObject>();
+			foreach(PhysicalObject obj in objs){
+				msg_objs.Add(obj);
+			}
+			time_created=Q.turn;
+			dead=false;
+			tiebreaker = Q.Tiebreaker;
+		}
+		public static void RemoveGas(List<Tile> area,int delay,FeatureType gas,int chance){
+			Q.Add(new Event(null,area,delay,EventType.REMOVE_GAS,AttrType.NO_ATTR,gas,chance,""));
+		}
 		public int TimeToExecute(){ return delay + time_created; }
 		public void Kill(PhysicalObject target_,EventType type_){
-			if(msg_objs != null && (type==type_ || type_==EventType.ANY_EVENT)){
+			if(msg_objs != null && (type == type_ || type_ == EventType.ANY_EVENT)){
 				if(msg_objs.Contains(target_)){
 					msg_objs.Remove(target_);
 				}
@@ -431,7 +452,7 @@ namespace Forays{
 				target = null;
 				return; //don't destroy the event, just remove the reference to the ghost.
 			}
-			if(target==target_ && (type==type_ || type_==EventType.ANY_EVENT)){
+			if(target == target_ && (type == type_ || type_ == EventType.ANY_EVENT)){
 				target = null;
 				if(msg_objs != null){
 					msg_objs.Clear();
@@ -530,6 +551,28 @@ namespace Forays{
 						B.Add(temp.Your() + " rage diminishes. ",temp);
 						B.Add(temp.the_name + " dies. ",temp);
 						temp.Kill();
+					}
+					break;
+				}
+				case EventType.REMOVE_GAS:
+				{
+					List<Tile> removed = new List<Tile>();
+					foreach(Tile t in area){
+						if(t.Is(feature)){
+							if(R.PercentChance(value)){
+								t.RemoveFeature(feature);
+								removed.Add(t);
+							}
+						}
+						else{
+							removed.Add(t);
+						}
+					}
+					foreach(Tile t in removed){
+						area.Remove(t);
+					}
+					if(area.Count > 0){
+						Event.RemoveGas(area,100,feature,value);
 					}
 					break;
 				}
@@ -1008,8 +1051,9 @@ namespace Forays{
 					if(!current.Is(FeatureType.FOG)){
 						current.AddFeature(FeatureType.FOG);
 						List<Tile> new_area = new List<Tile>{current};
-						Q.RemoveTilesFromEventAreas(new_area,EventType.FOG);
-						Q.Add(new Event(new_area,600,EventType.FOG,25));
+						Q.RemoveTilesFromEventAreas(new_area,EventType.REMOVE_GAS);
+						Event.RemoveGas(new_area,600,FeatureType.FOG,25);
+						//Q.Add(new Event(new_area,600,EventType.FOG,25));
 					}
 					else{
 						for(int tries=0;tries<50;++tries){
@@ -1028,8 +1072,8 @@ namespace Forays{
 								if(!possible.Is(FeatureType.FOG)){
 									possible.AddFeature(FeatureType.FOG);
 									List<Tile> new_area = new List<Tile>{possible};
-									Q.RemoveTilesFromEventAreas(new_area,EventType.FOG);
-									Q.Add(new Event(new_area,600,EventType.FOG,25));
+									Q.RemoveTilesFromEventAreas(new_area,EventType.REMOVE_GAS);
+									Event.RemoveGas(new_area,600,FeatureType.FOG,25);
 									break;
 								}
 								else{
@@ -1042,28 +1086,6 @@ namespace Forays{
 						}
 					}
 					Q.Add(new Event(target,100,EventType.FOG_VENT));
-					break;
-				}
-				case EventType.FOG:
-				{
-					List<Tile> removed = new List<Tile>();
-					foreach(Tile t in area){
-						if(t.Is(FeatureType.FOG)){
-							if(R.PercentChance(value)){
-								t.RemoveFeature(FeatureType.FOG);
-								removed.Add(t);
-							}
-						}
-						else{
-							removed.Add(t);
-						}
-					}
-					foreach(Tile t in removed){
-						area.Remove(t);
-					}
-					if(area.Count > 0){
-						Q.Add(new Event(area,100,EventType.FOG,value));
-					}
 					break;
 				}
 				case EventType.POISON_GAS_VENT:
@@ -1104,76 +1126,10 @@ namespace Forays{
 						}
 						if(new_area.Count > 0){
 							B.Add("Toxic vapors pour from " + target.the_name + "! ",target);
-							Q.Add(new Event(new_area,200,EventType.POISON_GAS));
+							Event.RemoveGas(new_area,200,FeatureType.POISON_GAS,18);
 						}
 					}
 					Q.Add(new Event(target,100,EventType.POISON_GAS_VENT));
-					break;
-				}
-				case EventType.POISON_GAS:
-				{
-					List<Tile> removed = new List<Tile>();
-					foreach(Tile t in area){
-						if(t.Is(FeatureType.POISON_GAS)){
-							if(R.OneIn(6)){
-								t.RemoveFeature(FeatureType.POISON_GAS);
-								removed.Add(t);
-							}
-						}
-						else{
-							removed.Add(t);
-						}
-					}
-					foreach(Tile t in removed){
-						area.Remove(t);
-					}
-					if(area.Count > 0){
-						Q.Add(new Event(area,100,EventType.POISON_GAS));
-					}
-					break;
-				}
-				case EventType.PIXIE_DUST: //yeah, these should be combined into a single event type - once I add a 2nd "value" variable to events.
-				{
-					List<Tile> removed = new List<Tile>();
-					foreach(Tile t in area){
-						if(t.Is(FeatureType.PIXIE_DUST)){
-							if(R.OneIn(4)){
-								t.RemoveFeature(FeatureType.PIXIE_DUST);
-								removed.Add(t);
-							}
-						}
-						else{
-							removed.Add(t);
-						}
-					}
-					foreach(Tile t in removed){
-						area.Remove(t);
-					}
-					if(area.Count > 0){
-						Q.Add(new Event(area,100,EventType.PIXIE_DUST));
-					}
-					break;
-				}
-				case EventType.SPORES:
-				{
-					List<Tile> removed = new List<Tile>();
-					foreach(Tile t in area){
-						if(t.Is(FeatureType.SPORES)){
-							if(R.OneIn(8)){
-								t.RemoveFeature(FeatureType.SPORES);
-								removed.Add(t);
-							}
-						}
-						else{
-							removed.Add(t);
-						}
-					}
-					foreach(Tile t in removed){
-						area.Remove(t);
-					}
-					if(area.Count > 0){
-						Q.Add(new Event(area,100,EventType.SPORES));
-					}
 					break;
 				}
 				case EventType.STONE_SLAB:
@@ -1257,7 +1213,15 @@ namespace Forays{
 					int health = value % 1000; //hack. I might eventually add a 2nd "value" field to events to fix this.
 					int permanent_damage = value / 1000;
 					if(target.tile().Is(FeatureType.TROLL_CORPSE)){ //otherwise, assume it was destroyed by fire
-						health++;
+						int maxhp = Actor.Prototype(ActorType.TROLL).maxhp;
+						int recovered = Actor.Prototype(ActorType.TROLL).attrs[AttrType.REGENERATING];
+						if(health + recovered > maxhp - permanent_damage){
+							recovered = (maxhp - permanent_damage) - health;
+						}
+						health += recovered;
+						if(permanent_damage >= maxhp){
+							break;
+						}
 						if(health > 0 && target.actor() == null){
 							Actor a = Actor.Create(ActorType.TROLL,target.row,target.col);
 							foreach(Event e in Q.list){
@@ -1311,6 +1275,9 @@ namespace Forays{
 							recovered = (maxhp - permanent_damage) - health;
 						}
 						health += recovered;
+						if(permanent_damage >= maxhp){
+							break;
+						}
 						if(player.CanSee(target) && player.HasLOS(target)){
 							List<pos> cells = new List<pos>();
 							List<colorchar> cch = new List<colorchar>();
@@ -1939,7 +1906,7 @@ namespace Forays{
 						if(player.CanSee(a)){
 							a.AnimateStorm(1,2,3,'*',Color.Gray);
 						}
-						B.Add(a.the_name + " emerges from the ground. ",a);
+						B.Add(a.TheName(true) + " emerges from the ground. ",a,t);
 					}
 					else{
 						if(a.HasAttr(AttrType.REGENERATING)){
@@ -1958,6 +1925,9 @@ namespace Forays{
 					foreach(Actor a in Actor.tiebreakers){
 						if(a != player && a != null && !a.HasAttr(AttrType.IMMOBILE) && (a.group == null || a.group.Count == 0 || a.group[0] == a)){
 							spawn_chance *= 2;
+							if(spawn_chance >= 65536){
+								break;
+							}
 						}
 					}
 					if(R.OneIn(spawn_chance)){
@@ -2058,14 +2028,15 @@ namespace Forays{
 						}
 					}
 					foreach(Tile t in chance_to_burn){
-						if(R.OneIn(6) || t.Is(FeatureType.OIL,FeatureType.SPORES) || t.Is(TileType.BARREL)){
+						if(R.OneIn(6) || t.Is(FeatureType.OIL,FeatureType.SPORES,FeatureType.CONFUSION_GAS) || t.Is(TileType.BARREL)){
 							t.ApplyEffect(DamageType.FIRE);
 						}
 					}
 					foreach(Tile t in chance_to_die_out){
 						if(!t.Is(TileType.BARREL)){
 							bool more_flammable_terrain = false;
-							bool final_level_demonic_idol_present = false;
+							bool more_fire = false;
+							bool final_level_demonic_idol_present = false; //this will soon become a check for any terrain that prevents fires from dying
 							foreach(Tile neighbor in t.TilesAtDistance(1)){
 								if(neighbor.IsCurrentlyFlammable()){
 									more_flammable_terrain = true;
@@ -2073,11 +2044,17 @@ namespace Forays{
 								if(neighbor.Is(TileType.DEMONIC_IDOL)){
 									final_level_demonic_idol_present = true;
 								}
+								if(neighbor.IsBurning()){
+									more_fire = true;
+								}
 							}
 							if(final_level_demonic_idol_present){
 								continue; //this fire never goes out
 							}
 							int chance = 5;
+							if(more_fire){
+								chance = 10;
+							}
 							if(more_flammable_terrain){
 								chance = 15;
 							}

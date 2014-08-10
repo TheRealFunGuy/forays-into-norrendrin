@@ -28,9 +28,9 @@ namespace Forays{
 				p.col = value;
 			}
 		}
-		public string name{get;set;} //todo: stop using properties here
-		public string a_name{get;set;}
-		public string the_name{get;set;}
+		public string name;
+		public string a_name;
+		public string the_name;
 		public colorchar visual;
 		public char symbol{
 			get{
@@ -49,12 +49,12 @@ namespace Forays{
 			}
 		}
 		public pos sprite_offset;
-		public int light_radius{get;set;}
+		public int light_radius;
 		
-		public static Map M{get;set;}
-		public static Buffer B{get;set;}
-		public static Queue Q{get;set;}
-		public static Actor player{get;set;}
+		public static Map M;
+		public static Buffer B;
+		public static Queue Q;
+		public static Actor player;
 		public const int ROWS = Global.ROWS;
 		public const int COLS = Global.COLS;
 		public PhysicalObject(){
@@ -108,7 +108,7 @@ namespace Forays{
 				for(int i=row-from;i<=row+from;++i){
 					for(int j=col-from;j<=col+from;++j){
 						if(i>0 && i<Global.ROWS-1 && j>0 && j<Global.COLS-1){
-							if(!M.tile[i,j].opaque && HasBresenhamLineOfSight(i,j)){
+							if(!M.tile[i,j].GetInternalOpacity() && HasBresenhamLineOfSight(i,j)){
 								M.tile[i,j].light_value--;
 							}
 						}
@@ -119,7 +119,7 @@ namespace Forays{
 				for(int i=row-to;i<=row+to;++i){
 					for(int j=col-to;j<=col+to;++j){
 						if(i>0 && i<Global.ROWS-1 && j>0 && j<Global.COLS-1){
-							if(!M.tile[i,j].opaque && HasBresenhamLineOfSight(i,j)){
+							if(!M.tile[i,j].GetInternalOpacity() && HasBresenhamLineOfSight(i,j)){
 								M.tile[i,j].light_value++;
 							}
 						}
@@ -234,6 +234,9 @@ namespace Forays{
 				++i;
 			}
 			line.RemoveRange(0,i+1);
+			if(line.Count == 0){
+				return a.CollideWith(a.tile());
+			}
 			bool immobile = a.MovementPrevented(line[0]);
 			if(!a.HasAttr(AttrType.TELEKINETICALLY_THROWN,AttrType.SELF_TK_NO_DAMAGE) && !immobile){
 				B.Add(a.YouAre() + " knocked back. ",a);
@@ -440,7 +443,7 @@ namespace Forays{
 							if(a != null){
 								a.attrs[AttrType.TURN_INTO_CORPSE]++;
 								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
-								if(a.HasAttr(AttrType.SMALL)){
+								if(a.HasAttr(AttrType.SMALL)){ //todo: this might be too complex. try to simplify explosions.
 									if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
 										KnockObjectBack(a,1);
 									}
@@ -1939,6 +1942,384 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 		}
+		public delegate bool TileDelegate(Tile t);
+		public bool HasBresenhamLineWithCondition(PhysicalObject o,bool allow_checking_neighbors,TileDelegate condition){ return HasBresenhamLineWithCondition(o.row,o.col,allow_checking_neighbors,condition); }
+		public bool HasBresenhamLineWithCondition(int r,int c,bool allow_checking_neighbors,TileDelegate condition){
+			if(allow_checking_neighbors){
+				if(HasBresenhamLineWithCondition(r,c,false,condition)){
+					return true;
+				}
+				if(!condition(M.tile[r,c])){
+					foreach(Tile t in M.tile[r,c].NeighborsBetweenWithCondition(row,col,condition)){
+						if(HasBresenhamLineWithCondition(t.row,t.col,false,condition)){
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			int y1 = row;
+			int x1 = col;
+			int y2 = r;
+			int x2 = c;
+			int dx = Math.Abs(x2-x1);
+			int dy = Math.Abs(y2-y1);
+			int er = 0;
+			bool a_blocked = false;
+			bool b_blocked = false;
+			if(dy == 0){
+				if(x1<x2){
+					++x1; //incrementing once before checking opacity lets you see out of solid tiles
+					for(;x1<x2;++x1){ //right
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+					}
+				}
+				else{
+					--x1;
+					for(;x1>x2;--x1){ //left
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+					}
+				}
+				return true;
+			}
+			if(dx == 0){
+				if(y1>y2){
+					--y1;
+					for(;y1>y2;--y1){ //up
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+					}
+				}
+				else{
+					++y1;
+					for(;y1<y2;++y1){ //down
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+					}
+				}
+				return true;
+			}
+			if(y1+x1==y2+x2){ //slope is -1
+				if(x1<x2){
+					++x1;
+					--y1;
+					for(;x1<x2;++x1){ //up-right
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+						--y1;
+					}
+				}
+				else{
+					--x1;
+					++y1;
+					for(;x1>x2;--x1){ //down-left
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+						++y1;
+					}
+				}
+				return true;
+			}
+			if(y1-x1==y2-x2){ //slope is 1
+				if(x1<x2){
+					++x1;
+					++y1;
+					for(;x1<x2;++x1){ //down-right
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+						++y1;
+					}
+				}
+				else{
+					--x1;
+					--y1;
+					for(;x1>x2;--x1){ //up-left
+						if(!condition(M.tile[y1,x1])){
+							return false;
+						}
+						--y1;
+					}
+				}
+				return true;
+			}
+			if(y1<y2){ //down
+				if(x1<x2){ //right
+					if(dx>dy){ //slope less than 1
+						++x1;
+						er += dy;
+						if(er<<1 > dx){
+							++y1;
+							er -= dx;
+						}
+						for(;x1<x2;++x1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dx || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dx){
+								++y1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dx || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dx;
+							}
+							er += dy;
+							if(er<<1 > dx){
+								++y1;
+								er -= dx;
+							}
+						}
+						return true;
+					}
+					else{ //slope greater than 1
+						++y1;
+						er += dx;
+						if(er<<1 > dy){
+							++x1;
+							er -= dy;
+						}
+						for(;y1<y2;++y1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dy || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dy){
+								++x1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dy || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dy;
+							}
+							er += dx;
+							if(er<<1 > dy){
+								++x1;
+								er -= dy;
+							}
+						}
+						return true;
+					}
+				}
+				else{ //left
+					if(dx>dy){ //slope less than 1
+						--x1;
+						er += dy;
+						if(er<<1 > dx){
+							++y1;
+							er -= dx;
+						}
+						for(;x1>x2;--x1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dx || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dx){
+								++y1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dx || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dx;
+							}
+							er += dy;
+							if(er<<1 > dx){
+								++y1;
+								er -= dx;
+							}
+						}
+						return true;
+					}
+					else{ //slope greater than 1
+						++y1;
+						er += dx;
+						if(er<<1 > dy){
+							--x1;
+							er -= dy;
+						}
+						for(;y1<y2;++y1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dy || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dy){
+								--x1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dy || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dy;
+							}
+							er += dx;
+							if(er<<1 > dy){
+								--x1;
+								er -= dy;
+							}
+						}
+						return true;
+					}
+				}
+			}
+			else{ //up
+				if(x1<x2){ //right
+					if(dx>dy){ //slope less than 1
+						++x1;
+						er += dy;
+						if(er<<1 > dx){
+							--y1;
+							er -= dx;
+						}
+						for(;x1<x2;++x1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dx || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dx){
+								--y1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dx || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dx;
+							}
+							er += dy;
+							if(er<<1 > dx){
+								--y1;
+								er -= dx;
+							}
+						}
+						return true;
+					}
+					else{ //slope greater than 1
+						--y1;
+						er += dx;
+						if(er<<1 > dy){
+							++x1;
+							er -= dy;
+						}
+						for(;y1>y2;--y1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dy || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dy){
+								++x1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dy || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dy;
+							}
+							er += dx;
+							if(er<<1 > dy){
+								++x1;
+								er -= dy;
+							}
+						}
+						return true;
+					}
+				}
+				else{ //left
+					if(dx>dy){ //slope less than 1
+						--x1;
+						er += dy;
+						if(er<<1 > dx){
+							--y1;
+							er -= dx;
+						}
+						for(;x1>x2;--x1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dx || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dx){
+								--y1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dx || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dx;
+							}
+							er += dy;
+							if(er<<1 > dx){
+								--y1;
+								er -= dx;
+							}
+						}
+						return true;
+					}
+					else{ //slope greater than 1
+						--y1;
+						er += dx;
+						if(er<<1 > dy){
+							--x1;
+							er -= dy;
+						}
+						for(;y1>y2;--y1){
+							if(!condition(M.tile[y1,x1])){
+								if(er<<1 != dy || b_blocked){
+									return false;
+								}
+								a_blocked = true;
+							}
+							if(er<<1 == dy){
+								--x1;
+								if(!condition(M.tile[y1,x1])){
+									if(er<<1 != dy || a_blocked){
+										return false;
+									}
+									b_blocked = true;
+								}
+								er -= dy;
+							}
+							er += dx;
+							if(er<<1 > dy){
+								--x1;
+								er -= dy;
+							}
+						}
+						return true;
+					}
+				}
+			}
+		}
 		public List<Tile>[] GetBothBresenhamLines(PhysicalObject o){ return GetBothBresenhamLines(o.row,o.col); }
 		public List<Tile>[] GetBothBresenhamLines(int r,int c){ //can return the same list if both would be identical
 			int y2 = r;
@@ -2495,18 +2876,29 @@ compare this number to 1/2:  if less than 1/2, major.
 				return result;
 			}
 		}
-		public List<Tile> GetTargetTile(int max_distance,int radius,bool no_line,bool start_at_interesting_target){ return GetTarget(false,max_distance,radius,no_line,false,false,start_at_interesting_target,""); }
-		public List<Tile> GetTargetLine(int max_distance){ return GetTarget(false,max_distance,0,false,true,false,true,""); }
-		public List<Tile> GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool return_extended_line,bool start_at_interesting_target,string always_displayed){
+		public List<Tile> GetTargetTile(int max_distance,int radius,bool no_line,bool start_at_interesting_target){
+			TargetInfo info = GetTarget(false,max_distance,radius,no_line,false,start_at_interesting_target,"");
+			if(info == null){
+				return null;
+			}
+			return info.line_to_targeted;
+		}
+		public List<Tile> GetTargetLine(int max_distance){
+			TargetInfo info = GetTarget(false,max_distance,0,false,true,true,"");
+			if(info == null){
+				return null;
+			}
+			return info.line;
+		}
+		public TargetInfo GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool start_at_interesting_target,string always_displayed){
+			TargetInfo result = new TargetInfo(max_distance);
 			MouseUI.PushButtonMap(MouseMode.Targeting);
 			if(MouseUI.fire_arrow_hack){
 				MouseUI.CreateStatsButton(ConsoleKey.S,false,21,1);
 				MouseUI.fire_arrow_hack = false;
 			}
-			List<Tile> result = null;
 			ConsoleKeyInfo command;
 			int r,c;
-			int max_line_count = max_distance + 1; //to include the source.
 			int minrow = 0;
 			int maxrow = Global.ROWS-1;
 			int mincol = 0;
@@ -2536,7 +2928,7 @@ compare this number to 1/2:  if less than 1/2, major.
 						        TileType.POOL_OF_RESTORATION,TileType.BLAST_FUNGUS,TileType.BARREL,TileType.STANDING_TORCH,TileType.POISON_BULB,TileType.DEMONIC_IDOL)
 						|| t.Is(FeatureType.GRENADE,FeatureType.FIRE,FeatureType.TROLL_CORPSE,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.BONES,
 						        FeatureType.INACTIVE_TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.TELEPORTAL,FeatureType.POISON_GAS,
-						        FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.SPORES,FeatureType.WEB)
+						        FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.SPORES,FeatureType.WEB,FeatureType.CONFUSION_GAS,FeatureType.THICK_DUST)
 						|| t.IsShrine() || t.inv != null || t.IsKnownTrap()){ //todo: update this with new terrain & features
 							if(player.CanSee(t)){
 								interesting_targets.Add(t);
@@ -2752,7 +3144,7 @@ compare this number to 1/2:  if less than 1/2, major.
 					B.DisplayNow(always_displayed);
 				}
 				if(!lookmode){
-					bool blocked=false;
+					bool blocked = false;
 					Screen.CursorVisible = false;
 					if(!no_line){
 						if(extend_line){
@@ -2762,17 +3154,17 @@ compare this number to 1/2:  if less than 1/2, major.
 							}
 						}
 						else{
-							if(return_extended_line){
-								line = GetBestExtendedLineOfEffect(r,c).ToCount(max_line_count);
-							}
-							else{
+							//if(return_extended_line){
+								//line = GetBestExtendedLineOfEffect(r,c).ToCount(max_line_count);
+							//}
+							//else{
 								line = GetBestLineOfEffect(r,c);
-							}
+							//}
 						}
 					}
 					else{
 						line = new List<Tile>{M.tile[r,c]};
-						if(!player.HasLOS(r,c)){
+						if(!player.HasBresenhamLineWithCondition(r,c,true,x=>!(x.seen && x.opaque))){
 							blocked = true;
 						}
 					}
@@ -2818,7 +3210,7 @@ compare this number to 1/2:  if less than 1/2, major.
 								}
 							}
 							if(t.seen && !t.passable && t != line.Last()){
-								blocked=true;
+								blocked = true;
 							}
 						}
 						oldline.Remove(t);
@@ -3074,7 +3466,7 @@ compare this number to 1/2:  if less than 1/2, major.
 					if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c]) && player.HasLOE(M.actor[r,c])){
 						player.target = M.actor[r,c];
 					}
-					if(return_extended_line){
+					/*if(return_extended_line){
 						result = GetBestExtendedLineOfEffect(r,c);
 					}
 					else{
@@ -3082,7 +3474,9 @@ compare this number to 1/2:  if less than 1/2, major.
 					}
 					if(no_line && !player.HasLOS(line[0])){
 						result = null;
-					}
+					}*/
+					result.extended_line = GetBestExtendedLineOfEffect(r,c);
+					result.targeted = M.tile[r,c];
 					done = true;
 					break;
 				case 'X':
@@ -3138,7 +3532,35 @@ compare this number to 1/2:  if less than 1/2, major.
 				}
 			}
 			MouseUI.PopButtonMap();
+			if(result.extended_line == null){
+				return null;
+			}
 			return result;
+		}
+	}
+	public class TargetInfo{
+		public int max_range = -1;
+		public Tile targeted = null;
+		public List<Tile> extended_line = null;
+		public List<Tile> line{
+			get{
+				if(extended_line == null){
+					return null;
+				}
+				return extended_line.ToCount(max_range+1).ToFirstSolidTile();
+			}
+		}
+		public List<Tile> line_to_targeted{
+			get{
+				if(extended_line == null){
+					return null;
+				}
+				return extended_line.To(targeted).ToFirstSolidTile();
+			}
+		}
+		public TargetInfo(){}
+		public TargetInfo(int max_range_){
+			max_range = max_range_;
 		}
 	}
 }

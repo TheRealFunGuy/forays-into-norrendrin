@@ -16,7 +16,7 @@ using OpenTK.Graphics.OpenGL;
 using Utilities;
 using GLDrawing;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomSmite,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomRGBW,RandomCMY,RandomDCMY,RandomCMYW,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomSmite,RandomConfusion,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomRGBW,RandomCMY,RandomDCMY,RandomCMYW,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
 	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
@@ -1532,6 +1532,44 @@ namespace Forays{
 				default:
 					return Color.Magenta;
 				}
+			case Color.RandomConfusion:
+				if(R.OneIn(16)){
+					switch(R.Roll(14)){
+					case 1:
+						return Color.Red;
+					case 2:
+						return Color.Green;
+					case 3:
+						return Color.Blue;
+					case 4:
+						return Color.DarkRed;
+					case 5:
+						return Color.DarkGreen;
+					case 6:
+						return Color.DarkBlue;
+					case 7:
+						return Color.Cyan;
+					case 8:
+						return Color.Yellow;
+					case 9:
+						return Color.DarkCyan;
+					case 10:
+						return Color.DarkMagenta;
+					case 11:
+						return Color.DarkYellow;
+					case 12:
+						return Color.White;
+					case 13:
+						return Color.Gray;
+					case 14:
+						return Color.DarkGray;
+					default:
+						return Color.Black;
+					}
+				}
+				else{
+					return Color.Magenta;
+				}
 			case Color.RandomDark:
 				switch(R.Roll(7)){
 				case 1:
@@ -1641,7 +1679,7 @@ namespace Forays{
 					return Color.White;
 				}
 			case Color.RandomRainbow:
-				switch(R.Roll(1,12)){
+				switch(R.Roll(12)){
 				case 1:
 					return Color.Red;
 				case 2:
