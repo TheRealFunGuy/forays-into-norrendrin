@@ -40,6 +40,9 @@ namespace Forays{
 				return 5;
 			}
 		}
+		public static int FailRate(SpellType spell,int exhaustion){
+			return Math.Max(0,exhaustion - ((6-Tier(spell)) * 20)); //tier 5 spells have a 1% fail rate at 21% exhaustion...tier 4 at 41%...and so on.
+		}
 		public static string Name(SpellType spell){
 			switch(spell){
 			case SpellType.RADIANCE:

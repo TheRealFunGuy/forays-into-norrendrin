@@ -64,7 +64,7 @@ namespace Forays{
 		private PosArray<int> monster_density = null;
 		private bool[,] danger_sensed{get;set;}
 		private static List<pos> allpositions = new List<pos>();
-		public PosArray<int> safetymap;
+		public PosArray<int> safetymap = null;
 		public PosArray<int> poppy_distance_map = null;
 		//public int[,] row_displacement = null;
 		//public int[,] col_displacement = null;
@@ -96,12 +96,6 @@ namespace Forays{
 			Map.player = g.player;
 			Map.Q = g.Q;
 			Map.B = g.B;
-			safetymap = new PosArray<int>(Global.ROWS,Global.COLS);
-			for(int i=0;i<ROWS;++i){
-				for(int j=0;j<COLS;++j){
-					safetymap[i,j] = U.DijkstraMin;
-				}
-			}
 		}
 		public bool BoundsCheck(int r,int c){
 			if(r>=0 && r<ROWS && c>=0 && c<COLS){
@@ -285,7 +279,7 @@ namespace Forays{
 			danger_sensed = new bool[ROWS,COLS];
 			foreach(Actor a in AllActors()){
 				if(a != player && (a.HasAttr(AttrType.DANGER_SENSED) || player.CanSee(a))){
-					a.attrs[AttrType.DANGER_SENSED] = 1;
+					//a.attrs[AttrType.DANGER_SENSED] = 1;
 					foreach(Tile t in AllTiles()){
 						if(danger_sensed[t.row,t.col] == false && t.passable && !t.opaque){
 							if(a.CanSee(t)){
@@ -444,7 +438,7 @@ namespace Forays{
 				}
 			}
 		}
-		public void LoadLevel(string filename){
+		public void LoadLevel(string filename){ //this is ancient and was only used for testing purposes.
 			TextReader file = new StreamReader(filename);
 			char ch;
 			List<Tile> hidden = new List<Tile>();
@@ -743,28 +737,32 @@ namespace Forays{
 						ch.color = Color.Red;
 					}
 					else{
-						if(actor[r,c] == player && player.IsInvisibleHere()){
-							ch.color = Color.DarkGray;
-						}
-						if(actor[r,c] == player && !tile[r,c].IsLit()){
-							bool hidden_in_corner = false;
-							if(player.HasFeat(FeatType.CORNER_CLIMB) && !player.tile().IsLit()){
-								List<pos> valid_open_doors = new List<pos>();
-								foreach(int dir in U.DiagonalDirections){
-									if(player.TileInDirection(dir).type == TileType.DOOR_O){
-										valid_open_doors.Add(player.TileInDirection(dir).p);
+						if(actor[r,c] == player){
+							if(!player.HasAttr(AttrType.BLIND)){
+								if(player.IsInvisibleHere()){
+									ch.color = Color.DarkGray;
+								}
+								if(!tile[r,c].IsLit()){
+									bool hidden_in_corner = false;
+									if(player.HasFeat(FeatType.CORNER_CLIMB) && !player.tile().IsLit()){
+										List<pos> valid_open_doors = new List<pos>();
+										foreach(int dir in U.DiagonalDirections){
+											if(player.TileInDirection(dir).type == TileType.DOOR_O){
+												valid_open_doors.Add(player.TileInDirection(dir).p);
+											}
+										}
+										if(SchismExtensionMethods.Extensions.ConsecutiveAdjacent(player.p,x=>valid_open_doors.Contains(x) || tile[x].Is(TileType.WALL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.STATUE,TileType.STONE_SLAB,TileType.WAX_WALL)) >= 5){
+											hidden_in_corner = true;
+										}
 									}
-								}
-								if(SchismExtensionMethods.Extensions.ConsecutiveAdjacent(player.p,x=>valid_open_doors.Contains(x) || tile[x].Is(TileType.WALL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.STATUE,TileType.STONE_SLAB,TileType.WAX_WALL)) >= 5){
-									hidden_in_corner = true;
-								}
-							}
-							if(player.HasAttr(AttrType.SHADOW_CLOAK) || hidden_in_corner){
-								ch.color = Color.DarkBlue;
-							}
-							else{
-								if(ch.color != Color.DarkGray){ //if it's dark gray at this point, it means you're invisible. hacky.
-									ch.color = darkcolor;
+									if(player.HasAttr(AttrType.SHADOW_CLOAK) || hidden_in_corner){
+										ch.color = Color.DarkBlue;
+									}
+									else{
+										if(ch.color != Color.DarkGray){ //if it's dark gray at this point, it means you're invisible. hacky.
+											ch.color = darkcolor;
+										}
+									}
 								}
 							}
 						}
@@ -967,6 +965,23 @@ namespace Forays{
 			}
 			return result;
 		}
+		private void UpdateDensity(PhysicalObject obj){ UpdateDensity(obj.p); }
+		private void UpdateDensity(pos position){
+			foreach(pos p in position.PositionsWithinDistance(8)){
+				int dist = p.DistanceFrom(position);
+				if(dist <= 1){
+					monster_density[p] += 3;
+				}
+				else{
+					if(dist <= 4){
+						monster_density[p] += 2;
+					}
+					else{
+						monster_density[p]++;
+					}
+				}
+			}
+		}
 		public Actor SpawnMob(){ return SpawnMob(MobType()); }
 		public Actor SpawnMob(ActorType type){
 			Actor result = null;
@@ -1068,7 +1083,7 @@ namespace Forays{
 						}
 					}
 					Tile dest = burrow.Random();
-					return Actor.Create(type,dest.row,dest.col,true,false);
+					return Actor.Create(type,dest.row,dest.col);
 				}
 			}
 			int number = 1;
@@ -1132,7 +1147,8 @@ namespace Forays{
 					}
 				}
 				if(i == 0){
-					for(int j=0;j<1999;++j){
+					int density_target_number = 2;
+					for(int j=0;j<2000;++j){
 						int rr = R.Roll(ROWS-2);
 						int rc = R.Roll(COLS-2);
 						bool good = true;
@@ -1151,12 +1167,20 @@ namespace Forays{
 							}
 						}
 						else{
-							if(current_level < 21 && monster_density[rr,rc] > 2){
-								good = false;
+							if(current_level < 21 && monster_density[rr,rc] >= density_target_number){
+								if(monster_density[rr,rc] == density_target_number){
+									if(R.CoinFlip()){
+										good = false;
+									}
+								}
+								else{
+									good = false;
+									density_target_number = 2 + j / 100; //repeated failures will allow closer generation
+								}
 							}
 						}
 						if(good && tile[rr,rc].passable && actor[rr,rc] == null){
-							result = Actor.Create(final_type,rr,rc,true,false);
+							result = Actor.Create(final_type,rr,rc);
 							if(number > 1){
 								group_tiles.Add(tile[rr,rc]);
 								group.Add(result);
@@ -1171,27 +1195,13 @@ namespace Forays{
 						if(group_tiles.Count == 0){ //no space left!
 							if(group.Count > 0){
 								if(current_level < 21){
-									foreach(pos p in group[0].PositionsWithinDistance(4)){
-										if(group[0].DistanceFrom(p) <= 2){
-											monster_density[p] += 3;
-										}
-										else{
-											monster_density[p]++;
-										}
-									}
+									UpdateDensity(group[0]);
 								}
 								return group[0];
 							}
 							else{
 								if(result != null && current_level < 21){
-									foreach(pos p in result.PositionsWithinDistance(4)){
-										if(result.DistanceFrom(p) <= 2){
-											monster_density[p] += 3;
-										}
-										else{
-											monster_density[p]++;
-										}
-									}
+									UpdateDensity(result);
 								}
 								return result;
 							}
@@ -1205,7 +1215,7 @@ namespace Forays{
 						}
 						if(empty_neighbors.Count > 0){
 							t = empty_neighbors.Random();
-							result = Actor.Create(final_type,t.row,t.col,true,false);
+							result = Actor.Create(final_type,t.row,t.col);
 							group_tiles.Add(t);
 							group.Add(result);
 							result.group = group;
@@ -1220,27 +1230,13 @@ namespace Forays{
 			//return type;
 			if(number > 1){
 				if(current_level < 21){
-					foreach(pos p in group[0].PositionsWithinDistance(4)){
-						if(group[0].DistanceFrom(p) <= 2){
-							monster_density[p] += 3;
-						}
-						else{
-							monster_density[p]++;
-						}
-					}
+					UpdateDensity(group[0]);
 				}
 				return group[0];
 			}
 			else{
 				if(result != null && current_level < 21){
-					foreach(pos p in result.PositionsWithinDistance(4)){
-						if(result.DistanceFrom(p) <= 2){
-							monster_density[p] += 3;
-						}
-						else{
-							monster_density[p]++;
-						}
-					}
+					UpdateDensity(result);
 				}
 				return result;
 			}
@@ -1306,7 +1302,7 @@ namespace Forays{
 						int rr = R.Roll(ROWS-2);
 						int rc = R.Roll(COLS-2);
 						if(!tile[rr,rc].IsTrap() && tile[rr,rc].passable && actor[rr,rc] == null && dijkstra[rr,rc] >= 6){
-							result = Actor.Create(final_type,rr,rc,true,false);
+							result = Actor.Create(final_type,rr,rc);
 							if(number > 1){
 								group_tiles.Add(tile[rr,rc]);
 								group.Add(result);
@@ -1335,7 +1331,7 @@ namespace Forays{
 						}
 						if(empty_neighbors.Count > 0){
 							t = empty_neighbors.Random();
-							result = Actor.Create(final_type,t.row,t.col,true,false);
+							result = Actor.Create(final_type,t.row,t.col);
 							group_tiles.Add(t);
 							group.Add(result);
 							result.group = group;
@@ -2696,7 +2692,11 @@ namespace Forays{
 			bool poltergeist_spawned = false; //i'm not sure this is the right call, but for now
 			bool mimic_spawned = false; // i'm limiting these guys, to avoid "empty" levels
 			bool marble_horror_spawned = false;
-			for(int i=R.Roll(2,2)+4;i>0;--i){
+			int num_monsters = R.Roll(2,2) + 4;
+			if(num_monsters == 6){
+				num_monsters += R.Roll(3); //this works out to 7/12 seven, 4/12 eight, and 1/12 nine.
+			}
+			for(int i=num_monsters;i>0;--i){
 				ActorType type = MobType();
 				if(type == ActorType.POLTERGEIST){
 					if(!poltergeist_spawned){
@@ -2767,7 +2767,7 @@ namespace Forays{
 											}
 										}
 										Tile t = tiles.Random();
-										Actor thrall = Actor.Create(thralltype,t.row,t.col,true,true);
+										Actor thrall = Actor.Create(thralltype,t.row,t.col,TiebreakerAssignment.InsertAfterCurrent);
 										if(entrancer.group == null){
 											entrancer.group = new List<Actor>{entrancer};
 										}
@@ -2872,7 +2872,7 @@ namespace Forays{
 												}
 											}
 											Tile t = tiles.Random();
-											Actor thrall = Actor.Create(thralltype,t.row,t.col,true,true);
+											Actor thrall = Actor.Create(thralltype,t.row,t.col,TiebreakerAssignment.InsertAfterCurrent);
 											if(entrancer.group == null){
 												entrancer.group = new List<Actor>{entrancer};
 											}
@@ -3436,7 +3436,7 @@ namespace Forays{
 				}
 			}
 			if(level_types[current_level-1] == LevelType.Fortress){
-				foreach(pos p in tile.PositionsWhere(x=>tile[x].type == TileType.WALL)){
+				foreach(pos p in tile.PositionsWhere(x=>tile[x].Is(TileType.WALL,TileType.HIDDEN_DOOR))){
 					tile[p].color = Color.DarkGray;
 				}
 			}
@@ -3535,10 +3535,15 @@ namespace Forays{
 						foreach(Actor a in AllActors()){
 							a.ApplyBurning();
 						}
+						foreach(Tile t in AllTiles()){
+							if(R.OneIn(20) && t.passable && t.actor() == null){
+								t.AddFeature(FeatureType.FIRE);
+							}
+						}
 						break;
 					case 8:
 						foreach(Tile t in AllTiles()){
-							if(t.Is(TileType.WALL,TileType.CRACKED_WALL) && !t.solid_rock && t.p.BoundsCheck(tile,false) && R.OneIn(4)){
+							if(t.Is(TileType.WALL,TileType.CRACKED_WALL) && !t.solid_rock && t.p.BoundsCheck(tile,false) && R.OneIn(2)){
 								t.TurnToFloor();
 								foreach(Tile neighbor in t.TilesAtDistance(1)){
 									t.solid_rock = false;
@@ -3546,14 +3551,14 @@ namespace Forays{
 							}
 						}
 						foreach(Actor a in AllActors()){
-							if(!a.Is(ActorType.DEMON_LORD,ActorType.BEAST_DEMON,ActorType.FROST_DEMON,ActorType.MINOR_DEMON)){
+							if(!a.IsFinalLevelDemon()){
 								a.curhp = 1;
 							}
 						}
 						break;
 					case 9:
 						player.Kill();
-						player.curhp = 0;
+						player.curhp = -R.Roll(66,6);
 						break;
 					}
 				}
@@ -4379,7 +4384,7 @@ namespace Forays{
 				case LevelType.Hive:
 					return "The burial ground vanishes as wax walls appear all around you. ";
 				case LevelType.Mine:
-					return "Shovels, picks, dirt, and rubble appear as you continue. Is this an unfinished part of the crypt? ";
+					return "Shovels, picks, and rubble appear as you continue. Is this an unfinished part of the crypt? ";
 				case LevelType.Fortress:
 					return "The tombstones disappear as you come to a crumbling fortress. ";
 				case LevelType.Garden:

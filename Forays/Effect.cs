@@ -17,6 +17,92 @@ namespace Forays{
 		private static Map M{ get{ return Actor.M; } }
 		private static Queue Q{ get{ return Actor.Q; } }
 		private static Actor player{ get{ return Actor.player; } }
+		private static int ROWS{ get{ return Global.ROWS; } }
+		private static int COLS{ get{ return Global.COLS; } }
+		public static void ShowKnownItems(Dict<ConsumableType,bool> IDed){
+			MouseUI.PushButtonMap();
+			int width = 25;
+			List<ConsumableType> potion_order = new List<ConsumableType>{ConsumableType.STONEFORM,ConsumableType.CLOAKING,ConsumableType.VAMPIRISM,ConsumableType.HEALING,ConsumableType.MYSTIC_MIND,ConsumableType.SILENCE,ConsumableType.REGENERATION,ConsumableType.ROOTS,ConsumableType.BRUTISH_STRENGTH,ConsumableType.HASTE};
+			List<ConsumableType> scroll_order = new List<ConsumableType>{ConsumableType.SUNLIGHT,ConsumableType.DARKNESS,ConsumableType.BLINKING,ConsumableType.RENEWAL,ConsumableType.FIRE_RING,ConsumableType.CALLING,ConsumableType.KNOWLEDGE,ConsumableType.PASSAGE,ConsumableType.THUNDERCLAP,ConsumableType.RAGE,ConsumableType.ENCHANTMENT,ConsumableType.TIME,ConsumableType.TRAP_CLEARING};
+			List<ConsumableType> orb_order = new List<ConsumableType>{ConsumableType.BREACHING,ConsumableType.FREEZING,ConsumableType.SHIELDING,ConsumableType.BLADES,ConsumableType.CONFUSION,ConsumableType.FLAMES,ConsumableType.DETONATION,ConsumableType.PAIN,ConsumableType.TELEPORTAL,ConsumableType.FOG};
+			List<ConsumableType> wand_order = new List<ConsumableType>{ConsumableType.DUST_STORM,ConsumableType.SLUMBER,ConsumableType.TELEKINESIS,ConsumableType.REACH,ConsumableType.INVISIBILITY,ConsumableType.WEBS,ConsumableType.FLESH_TO_FIRE};
+			List<colorstring> potions = new List<colorstring>();
+			List<colorstring> scrolls = new List<colorstring>();
+			List<colorstring> orbs = new List<colorstring>();
+			List<colorstring> wands = new List<colorstring>();
+			List<List<colorstring>> string_lists = new List<List<colorstring>>{potions,scrolls,orbs,wands};
+			int list_idx = 0;
+			foreach(List<ConsumableType> item_list in new List<List<ConsumableType>>{potion_order,scroll_order,orb_order,wand_order}){
+				int item_idx = 0;
+				while(item_idx + 1 < item_list.Count){
+					ConsumableType[] ct = new ConsumableType[2];
+					string[] name = new string[2];
+					Color[] ided_color = new Color[2];
+					for(int i=0;i<2;++i){
+						ct[i] = item_list[item_idx + i];
+						name[i] = ct[i].ToString()[0] + ct[i].ToString().Substring(1).ToLower();
+						name[i] = name[i].Replace('_',' ');
+						if(IDed[ct[i]]){
+							ided_color[i] = Color.Cyan;
+						}
+						else{
+							ided_color[i] = Color.DarkGray;
+						}
+					}
+					int num_spaces = width - (name[0].Length + name[1].Length);
+					string_lists[list_idx].Add(new colorstring(name[0],ided_color[0],"".PadRight(num_spaces),Color.Black,name[1],ided_color[1]));
+					item_idx += 2;
+				}
+				if(item_list.Count % 2 == 1){
+					ConsumableType ct = item_list.Last();
+					string name = (ct.ToString()[0] + ct.ToString().Substring(1).ToLower()).Replace('_',' ');
+					//name = name[i].Replace('_',' ');
+					Color ided_color = Color.DarkGray;
+					if(IDed[ct]){
+						ided_color = Color.Cyan;
+					}
+					int num_spaces = width - name.Length;
+					string_lists[list_idx].Add(new colorstring(name,ided_color,"".PadRight(num_spaces),Color.Black));
+				}
+				++list_idx;
+			}
+			Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+			for(int i=1;i<ROWS-1;++i){
+				Screen.WriteMapString(i,0,"".PadToMapSize());
+			}
+			Screen.WriteMapString(ROWS-1,0,"".PadRight(COLS,'-'));
+			Color label_color = Color.Yellow;
+			int first_column_offset = 2;
+			int second_column_offset = first_column_offset + 35;
+			Screen.WriteMapString(2,8 + first_column_offset,"- Potions -",label_color);
+			Screen.WriteMapString(2,4 + second_column_offset,"- Scrolls -",label_color);
+			int line = 3;
+			foreach(colorstring s in potions){
+				Screen.WriteMapString(line,first_column_offset,s);
+				++line;
+			}
+			line = 3;
+			foreach(colorstring s in scrolls){
+				Screen.WriteMapString(line,second_column_offset,s);
+				++line;
+			}
+			Screen.WriteMapString(12,9 + first_column_offset,"- Orbs -",label_color);
+			Screen.WriteMapString(12,8 + second_column_offset,"- Wands -",label_color);
+			line = 13;
+			foreach(colorstring s in orbs){
+				Screen.WriteMapString(line,first_column_offset,s);
+				++line;
+			}
+			line = 13;
+			foreach(colorstring s in wands){
+				Screen.WriteMapString(line,second_column_offset,s);
+				++line;
+			}
+			B.DisplayNow("Discovered item types: ");
+			Screen.CursorVisible = true;
+			Global.ReadKey();
+			MouseUI.PopButtonMap();
+		}
 		public static bool Telekinesis(bool cast,Actor user,Tile t){
 			bool wand = !cast;
 			if(t == null){
@@ -61,8 +147,8 @@ namespace Forays{
 					troll.symbol = '%';
 					troll.attrs[AttrType.CORPSE] = 1;
 					troll.SetName(troll.name + "'s corpse");
-					troll.curhp = troll_event.value % 1000;
-					troll.attrs[AttrType.PERMANENT_DAMAGE] = troll_event.value / 1000;
+					troll.curhp = troll_event.value;
+					troll.attrs[AttrType.PERMANENT_DAMAGE] = troll_event.secondary_value;
 					troll.attrs[AttrType.NO_ITEM]++;
 					t.features.Remove(troll_corpse);
 					a = troll;
@@ -91,6 +177,14 @@ namespace Forays{
 						}
 						if(cast){
 							B.Add(user.You("cast") + " telekinesis. ",user);
+							if(a.type == ActorType.ALASI_BATTLEMAGE && !a.HasSpell(SpellType.TELEKINESIS)){
+								a.curmp += Spell.Tier(SpellType.TELEKINESIS);
+								if(a.curmp > a.maxmp){
+									a.curmp = a.maxmp;
+								}
+								a.GainSpell(SpellType.TELEKINESIS);
+								B.Add("Runes on " + a.Your() + " armor align themselves with the spell. ",a);
+							}
 						}
 						if(a == user && a == player){
 							B.Add("You throw yourself forward. ");
@@ -445,7 +539,7 @@ namespace Forays{
 								Tile current = M.tile[current_row,current_col];
 								if(grenade){
 									B.Add("The grenade explodes! ",current);
-									current.ApplyExplosion(1,3,"an exploding grenade");
+									current.ApplyExplosion(1,"an exploding grenade");
 								}
 								if(barrel){
 									B.Add("The barrel smashes! ",current);

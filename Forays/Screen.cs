@@ -1404,6 +1404,7 @@ namespace Forays{
 			case Color.RandomGlowingFungus:
 			case Color.RandomTorch:
 			case Color.RandomDoom:
+			case Color.RandomConfusion:
 			case Color.RandomSmite:
 			case Color.RandomDark:
 			case Color.RandomBright:
@@ -1465,38 +1466,14 @@ namespace Forays{
 					return Color.DarkGreen;
 				}
 				return Color.Green;
-				/*switch(R.Roll(1,4)){
-				case 1:
-					return Color.Green;;
-				case 2:
-					return Color.Green;;
-				case 3:
-					return Color.Green;;
-				case 4:
-					return Color.DarkGreen;
-				default:
-					return Color.Black;
-				}*/
 			}
 			case Color.RandomExplosion:
-				/*switch(R.Roll(4)){
-				case 1:
-					return Color.DarkRed;
-				case 2:
-					return Color.DarkRed;
-				case 3:
-					return Color.DarkRed;
-				case 4:
-					return Color.Red;
-				default:
-					return Color.Black;
-				}*/
 				if(R.OneIn(4)){
 					return Color.Red;
 				}
 				return Color.DarkRed;
 			case Color.RandomGlowingFungus:
-				if(R.OneIn(25)){
+				if(R.OneIn(35)){
 					return Color.DarkCyan;
 				}
 				return Color.Cyan;
@@ -1534,7 +1511,7 @@ namespace Forays{
 				}
 			case Color.RandomConfusion:
 				if(R.OneIn(16)){
-					switch(R.Roll(14)){
+					switch(R.Roll(6)){
 					case 1:
 						return Color.Red;
 					case 2:
@@ -1542,34 +1519,14 @@ namespace Forays{
 					case 3:
 						return Color.Blue;
 					case 4:
-						return Color.DarkRed;
-					case 5:
-						return Color.DarkGreen;
-					case 6:
-						return Color.DarkBlue;
-					case 7:
 						return Color.Cyan;
-					case 8:
+					case 5:
 						return Color.Yellow;
-					case 9:
-						return Color.DarkCyan;
-					case 10:
-						return Color.DarkMagenta;
-					case 11:
-						return Color.DarkYellow;
-					case 12:
+					case 6:
 						return Color.White;
-					case 13:
-						return Color.Gray;
-					case 14:
-						return Color.DarkGray;
-					default:
-						return Color.Black;
 					}
 				}
-				else{
-					return Color.Magenta;
-				}
+				return Color.Magenta;
 			case Color.RandomDark:
 				switch(R.Roll(7)){
 				case 1:
@@ -1777,6 +1734,7 @@ namespace Forays{
 		public static bool VisiblePath = true;
 		private static List<Button[,]> button_map = new List<Button[,]>();
 		private static List<MouseMode> mouse_mode = new List<MouseMode>();
+		public static int MaxDescriptionBoxLength = 28;
 		public static Button Highlighted = null;
 		public static PhysicalObject[,] mouselook_objects = new PhysicalObject[Global.ROWS,Global.COLS];
 		public static PhysicalObject mouselook_current_target = null;
@@ -1902,13 +1860,13 @@ namespace Forays{
 		public static void RemoveMouseover(){
 			if(mouselook_current_target != null){
 				bool description_on_right = false;
-				int max_length = 29;
+				int max_length = MaxDescriptionBoxLength;
 				if(mouselook_current_target.col - 6 < max_length){
 					max_length = mouselook_current_target.col - 6;
 				}
 				if(max_length < 20){
 					description_on_right = true;
-					max_length = 29;
+					max_length = MaxDescriptionBoxLength;
 				}
 				List<colorstring> desc_box = null;
 				Actor a = mouselook_current_target as Actor;

@@ -195,7 +195,7 @@ namespace Forays{
 			}
 			foreach(Actor a in actors){
 				if(a != player){ //let the player hear sounds with a message?
-					if(!a.CanSee(player) && a.target_location == null && !a.HasAttr(AttrType.AMNESIA_STUN)){ //if they already have an idea of where the player is/was, they won't bother
+					if(a.target_location == null && !a.CanSee(player) && !a.CanSee(tile()) && !a.HasAttr(AttrType.AMNESIA_STUN)){ //if they already have an idea of where the player is/was, they won't bother
 						if(volume > 2 || !a.HasAttr(AttrType.IGNORES_QUIET_SOUNDS)){ //(and amnesia stun makes them ignore all sounds)
 							a.FindPath(this);
 							if(R.CoinFlip()){
@@ -238,8 +238,10 @@ namespace Forays{
 				return a.CollideWith(a.tile());
 			}
 			bool immobile = a.MovementPrevented(line[0]);
-			if(!a.HasAttr(AttrType.TELEKINETICALLY_THROWN,AttrType.SELF_TK_NO_DAMAGE) && !immobile){
-				B.Add(a.YouAre() + " knocked back. ",a);
+			string knocked_back_message = "";
+			if(!a.HasAttr(AttrType.TELEKINETICALLY_THROWN,AttrType.SELF_TK_NO_DAMAGE) && !immobile && player.CanSee(a)){ //if the player can see it now, don't check CanSee later.
+				knocked_back_message = a.YouAre() + " knocked back. ";
+				//B.Add(a.YouAre() + " knocked back. ",a);
 			}
 			int dice = 1;
 			int damage_dice_to_other = 1;
@@ -274,15 +276,35 @@ namespace Forays{
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked through " + tilename + ". ",a,t);
 						}
+						else{
+							B.Add(knocked_back_message);
+						}
+						knocked_back_message = "";
 						//knockback_strength -= 2; //removing the distance modification for now
 						t.Toggle(null);
 						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+							if(a.type == ActorType.HOMUNCULUS){
+								if(R.CoinFlip()){
+									t.AddFeature(FeatureType.OIL);
+								}
+							}
+							else{
+								if(t.symbol == '.' && t.color == Color.White && R.CoinFlip()){
+									t.color = a.BloodColor();
+								}
+							}
+						}
 					}
 					else{
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked into " + t.TheName(true) + ". ",a,t);
 						}
+						else{
+							B.Add(knocked_back_message);
+						}
+						knocked_back_message = "";
 						if(a.type != ActorType.SPORE_POD){
 							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
 						}
@@ -298,6 +320,10 @@ namespace Forays{
 						if(player.CanSee(a.tile()) || player.CanSee(t)){
 							B.Add(a.YouVisibleAre() + " knocked into " + t.actor().TheName(true) + ". ",a,t.actor());
 						}
+						else{
+							B.Add(knocked_back_message);
+						}
+						knocked_back_message = "";
 						string actorname = t.actor().AName(false);
 						string actorname2 = a.AName(false);
 						if(t.actor().type != ActorType.SPORE_POD && !t.actor().HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
@@ -317,6 +343,18 @@ namespace Forays{
 						if(t.Is(FeatureType.WEB) && a.HasAttr(AttrType.SMALL) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
 							knockback_strength = 0;
 						}
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+							if(a.type == ActorType.HOMUNCULUS){
+								if(R.CoinFlip()){
+									t.AddFeature(FeatureType.OIL);
+								}
+							}
+							else{
+								if(t.symbol == '.' && t.color == Color.White && R.CoinFlip()){
+									t.color = a.BloodColor();
+								}
+							}
+						}
 					}
 				}
 				M.Draw();
@@ -326,6 +364,7 @@ namespace Forays{
 				return !a.HasAttr(AttrType.CORPSE);
 			}
 			bool slip = false;
+			int extra_slip_tiles = -1;
 			bool slip_message_printed = false;
 			do{
 				Tile t = line[0];
@@ -351,15 +390,35 @@ namespace Forays{
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked through " + tilename + ". ",a,t);
 						}
+						else{
+							B.Add(knocked_back_message);
+						}
+						knocked_back_message = "";
 						t.Toggle(null);
 						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+							if(a.type == ActorType.HOMUNCULUS){
+								if(R.CoinFlip()){
+									t.AddFeature(FeatureType.OIL);
+								}
+							}
+							else{
+								if(t.symbol == '.' && t.color == Color.White && R.CoinFlip()){
+									t.color = a.BloodColor();
+								}
+							}
+						}
 						return !a.HasAttr(AttrType.CORPSE);
 					}
 					else{
 						if(player.CanSee(a.tile())){
 							B.Add(a.YouVisibleAre() + " knocked into " + t.TheName(true) + ". ",a,t);
 						}
+						else{
+							B.Add(knocked_back_message);
+						}
+						knocked_back_message = "";
 						if(a.type != ActorType.SPORE_POD){
 							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
 						}
@@ -375,6 +434,10 @@ namespace Forays{
 						if(player.CanSee(a.tile()) || player.CanSee(t)){
 							B.Add(a.YouVisibleAre() + " knocked into " + t.actor().TheName(true) + ". ",a,t.actor());
 						}
+						else{
+							B.Add(knocked_back_message);
+						}
+						knocked_back_message = "";
 						string actorname = t.actor().AName(false);
 						string actorname2 = a.AName(false);
 						if(t.actor().type != ActorType.SPORE_POD && !t.actor().HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
@@ -388,30 +451,65 @@ namespace Forays{
 					}
 					else{
 						slip = false;
-						if(t.Is(TileType.ICE) || t.Is(FeatureType.OIL,FeatureType.SLIME)){
+						if(extra_slip_tiles > 0){
+							extra_slip_tiles--;
+						}
+						if(t.IsSlippery()){
+							B.Add(knocked_back_message);
+							knocked_back_message = "";
 							slip = true;
 							if(!slip_message_printed){
 								slip_message_printed = true;
 								B.Add(a.You("slide") + "! ");
 							}
 						}
+						else{
+							if(extra_slip_tiles == -1 && a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED)){
+								B.Add(knocked_back_message);
+								knocked_back_message = "";
+								extra_slip_tiles = 2; //todo test this
+								if(!slip_message_printed){
+									slip_message_printed = true;
+									B.Add(a.You("slide") + "! ");
+								}
+							}
+						}
 						bool interrupted = false;
 						if(t.inv != null && t.inv.type == ConsumableType.DETONATION){ //this will cause a new knockback effect and end the current one
+							B.Add(knocked_back_message);
+							knocked_back_message = "";
 							interrupted = true;
 						}
 						if(t.type == TileType.FLING_TRAP){ //otherwise you'd teleport around, continuing to slide from your previous position.
+							B.Add(knocked_back_message);
+							knocked_back_message = "";
 							interrupted = true;
 						}
 						if(t.Is(FeatureType.WEB) && !a.HasAttr(AttrType.SMALL)){
 							t.RemoveFeature(FeatureType.WEB);
 						}
 						a.Move(t.row,t.col);
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+							if(a.type == ActorType.HOMUNCULUS){
+								if(R.CoinFlip()){
+									t.AddFeature(FeatureType.OIL);
+								}
+							}
+							else{
+								if(t.symbol == '.' && t.color == Color.White && R.CoinFlip()){
+									t.color = a.BloodColor();
+								}
+							}
+						}
 						if(t.Is(FeatureType.WEB) && a.HasAttr(AttrType.SMALL) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
+							B.Add(knocked_back_message);
 							interrupted = true;
 						}
 						else{
+							B.Add(knocked_back_message);
 							a.CollideWith(a.tile());
 						}
+						knocked_back_message = "";
 						if(interrupted){
 							return !a.HasAttr(AttrType.CORPSE);
 						}
@@ -419,11 +517,15 @@ namespace Forays{
 				}
 				M.Draw();
 			}
-			while(slip);
+			while(slip || extra_slip_tiles > 0);
+			if(knocked_back_message != ""){
+				B.Add(knocked_back_message); //this probably never happens
+			}
 			return !a.HasAttr(AttrType.CORPSE);
 		}
-		public void ApplyExplosion(int radius,int damage_dice,string cause_of_death){ ApplyExplosion(radius,damage_dice,null,cause_of_death); }
-		public void ApplyExplosion(int radius,int damage_dice,Actor damage_source,string cause_of_death){
+		public void ApplyExplosion(int radius,string cause_of_death){ ApplyExplosion(radius,null,cause_of_death); }
+		public void ApplyExplosion(int radius,Actor damage_source,string cause_of_death){
+			int damage_dice = ((radius+1) * (radius+2)) / 2; //1d6, 3d6, 6d6, 10d6, 15d6...
 			List<pos> cells = new List<pos>();
 			foreach(Tile nearby in TilesWithinDistance(radius)){
 				if(nearby.seen && player.HasLOS(nearby) && HasLOE(nearby)){
@@ -433,130 +535,82 @@ namespace Forays{
 			if(cells.Count > 0){
 				Screen.AnimateMapCells(cells,new colorchar('*',Color.RandomExplosion));
 			}
-			int inner_radius = (radius - 1) / 2;
 			List<Tile> affected_walls = new List<Tile>();
 			for(int dist=radius;dist>=0;--dist){
-				if(dist > inner_radius){ //weak explosive force
-					foreach(Tile t in TilesAtDistance(dist)){
-						if(HasLOE(t)){
-							Actor a = t.actor();
-							if(a != null){
-								a.attrs[AttrType.TURN_INTO_CORPSE]++;
-								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
-								if(a.HasAttr(AttrType.SMALL)){ //todo: this might be too complex. try to simplify explosions.
-									if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
-										KnockObjectBack(a,1);
-									}
-								}
-								a.CorpseCleanup();
+				foreach(Tile t in TilesAtDistance(dist)){
+					if(HasLOE(t)){
+						t.RemoveAllGases();
+						if(t.Is(FeatureType.BONES)){
+							t.RemoveFeature(FeatureType.BONES);
+						}
+						if(t.Is(FeatureType.WEB)){
+							t.RemoveFeature(FeatureType.WEB);
+						}
+						Actor a = t.actor();
+						if(a != null){
+							a.attrs[AttrType.TURN_INTO_CORPSE]++;
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
+							if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
+								KnockObjectBack(a,1);
 							}
-							if(t.inv != null /*&& t.inv.IsBreakable()*/){
-								if(t.inv.quantity > 1){
-									if(t.inv.IsBreakable()){
-										B.Add(t.inv.TheName(true) + " break! ",t);
-									}
-									else{
-										B.Add(t.inv.TheName(true) + " are destroyed! ",t);
-									}
+							a.CorpseCleanup();
+						}
+						if(t.inv != null && t.inv.IsBreakable()){
+							if(t.inv.quantity > 1){
+								if(t.inv.IsBreakable()){
+									B.Add(t.inv.TheName(true) + " break! ",t);
 								}
 								else{
-									if(t.inv.IsBreakable()){
-										B.Add(t.inv.TheName(true) + " breaks! ",t);
-									}
-									else{
-										B.Add(t.inv.TheName(true) + " is destroyed! ",t);
-									}
+									B.Add(t.inv.TheName(true) + " are destroyed! ",t);
 								}
-								if(t.inv.NameOfItemType() != "orb"){
-									t.inv = null;
+							}
+							else{
+								if(t.inv.IsBreakable()){
+									B.Add(t.inv.TheName(true) + " breaks! ",t);
 								}
 								else{
-									Item i = t.inv;
-									t.inv = null;
-									i.Use(null,new List<Tile>{t});
+									B.Add(t.inv.TheName(true) + " is destroyed! ",t);
 								}
 							}
-							if(t.Is(FeatureType.WEB)){
-								t.RemoveFeature(FeatureType.WEB);
+							if(t.inv.NameOfItemType() != "orb"){
+								t.inv = null;
 							}
-							if(t.Is(TileType.CRACKED_WALL)){
-								affected_walls.AddUnique(t);
-							}
-							if(t.Is(TileType.POISON_BULB)){
-								t.Bump(0);
+							else{
+								Item i = t.inv;
+								t.inv = null;
+								i.Use(null,new List<Tile>{t});
 							}
 						}
-					}
-				}
-				else{ //strong explosive force
-					foreach(Tile t in TilesAtDistance(dist)){
-						if(HasLOE(t)){
-							Actor a = t.actor();
-							if(a != null){
-								a.attrs[AttrType.TURN_INTO_CORPSE]++;
-								a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
-								if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
-									KnockObjectBack(a,1);
-								}
-								a.CorpseCleanup();
-							}
-							if(t.inv != null && t.inv.IsBreakable()){
-								if(t.inv.quantity > 1){
-									if(t.inv.IsBreakable()){
-										B.Add(t.inv.TheName(true) + " break! ",t);
-									}
-									else{
-										B.Add(t.inv.TheName(true) + " are destroyed! ",t);
-									}
-								}
-								else{
-									if(t.inv.IsBreakable()){
-										B.Add(t.inv.TheName(true) + " breaks! ",t);
-									}
-									else{
-										B.Add(t.inv.TheName(true) + " is destroyed! ",t);
-									}
-								}
-								if(t.inv.NameOfItemType() != "orb"){
-									t.inv = null;
-								}
-								else{
-									Item i = t.inv;
-									t.inv = null;
-									i.Use(null,new List<Tile>{t});
-								}
-							}
-							if(t.Is(FeatureType.BONES)){
-								t.RemoveFeature(FeatureType.BONES);
-							}
-							if(t.Is(FeatureType.WEB)){
-								t.RemoveFeature(FeatureType.WEB);
-							}
-							if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.RUBBLE)){
-								affected_walls.Add(t);
-							}
-							if(t.Is(TileType.POISON_BULB,TileType.BARREL,TileType.STANDING_TORCH)){
-								t.Bump(DirectionOf(t));
-							}
-							if(t.Is(TileType.WALL) && R.PercentChance(70)){
-								affected_walls.Add(t);
-							}
-							if(t.Is(TileType.WAX_WALL) && R.PercentChance(40)){
-								affected_walls.Add(t);
-							}
+						if(t.Is(TileType.CRACKED_WALL,TileType.RUBBLE,TileType.STALAGMITE)){
+							affected_walls.Add(t);
+						}
+						if(t.Is(TileType.POISON_BULB,TileType.BARREL,TileType.STANDING_TORCH)){
+							t.Bump(DirectionOf(t));
+						}
+						if(t.Is(TileType.DOOR_C,TileType.DOOR_O) && R.PercentChance(70)){
+							affected_walls.Add(t);
+						}
+						if(t.Is(TileType.WALL) && R.PercentChance(60)){
+							affected_walls.Add(t);
+						}
+						if(t.Is(TileType.WAX_WALL) && R.PercentChance(40)){
+							affected_walls.Add(t);
+						}
+						if(t.Is(TileType.STATUE,TileType.VINE) && R.PercentChance(20)){
+							affected_walls.Add(t);
 						}
 					}
 				}
 			}
 			foreach(Tile t in affected_walls){
 				if(t.p.BoundsCheck(M.tile,false)){
-					if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.RUBBLE,TileType.WAX_WALL)){
+					if(t.Is(TileType.CRACKED_WALL,TileType.DOOR_C,TileType.DOOR_O,TileType.RUBBLE,TileType.WAX_WALL,TileType.STATUE,TileType.STALAGMITE,TileType.VINE)){
 						t.Toggle(null,TileType.FLOOR);
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
 							neighbor.solid_rock = false;
 						}
 					}
-					if(t.Is(TileType.WALL) && R.PercentChance(70)){
+					if(t.Is(TileType.WALL)){
 						t.Toggle(null,TileType.CRACKED_WALL);
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
 							neighbor.solid_rock = false;
@@ -3089,6 +3143,7 @@ compare this number to 1/2:  if less than 1/2, major.
 											Help.TutorialTip(TutorialTopic.PoolOfRestoration,true);
 											break;
 										case TileType.STONE_SLAB:
+										case TileType.STONE_SLAB_OPEN:
 											Help.TutorialTip(TutorialTopic.StoneSlab,true);
 											break;
 										case TileType.COMBAT_SHRINE:
@@ -3164,7 +3219,7 @@ compare this number to 1/2:  if less than 1/2, major.
 					}
 					else{
 						line = new List<Tile>{M.tile[r,c]};
-						if(!player.HasBresenhamLineWithCondition(r,c,true,x=>!(x.seen && x.opaque))){
+						if(!player.HasBresenhamLineWithCondition(r,c,true,x=>!(x.seen && x.opaque))){ //"player" here might be better as "this"
 							blocked = true;
 						}
 					}
@@ -3174,7 +3229,7 @@ compare this number to 1/2:  if less than 1/2, major.
 							if(t.row == r && t.col == c){
 								if(!blocked){
 									cch.bgcolor = Color.Green;
-									if(Global.LINUX){ //no bright bg in terminals
+									if(Global.LINUX && !Screen.GLMode){ //no bright bg in terminals
 										cch.bgcolor = Color.DarkGreen;
 									}
 									if(cch.color == cch.bgcolor){
@@ -3184,7 +3239,7 @@ compare this number to 1/2:  if less than 1/2, major.
 								}
 								else{
 									cch.bgcolor = Color.Red;
-									if(Global.LINUX){
+									if(Global.LINUX && !Screen.GLMode){
 										cch.bgcolor = Color.DarkRed;
 									}
 									if(cch.color == cch.bgcolor){
@@ -3210,6 +3265,9 @@ compare this number to 1/2:  if less than 1/2, major.
 								}
 							}
 							if(t.seen && !t.passable && t != line.Last()){
+								blocked = true;
+							}
+							if(t.actor() != null && player.CanSee(t.actor()) && !no_line && t != line.Last() && t != line[0]){
 								blocked = true;
 							}
 						}
@@ -3240,7 +3298,7 @@ compare this number to 1/2:  if less than 1/2, major.
 				else{
 					colorchar cch = mem[r,c];
 					cch.bgcolor = Color.Green;
-					if(Global.LINUX){ //no bright bg in terminals
+					if(Global.LINUX && !Screen.GLMode){ //no bright bg in terminals
 						cch.bgcolor = Color.DarkGreen;
 					}
 					if(cch.color == cch.bgcolor){
