@@ -15,7 +15,7 @@ using OpenTK.Graphics;
 using Utilities;
 namespace Forays{
 	public static class Global{
-		public const string VERSION = "version 0.8.2 ";
+		public const string VERSION = "version 0.8.X ";
 		public static bool LINUX = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;

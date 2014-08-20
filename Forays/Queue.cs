@@ -13,14 +13,18 @@ namespace Forays{
 	public class Queue{
 		public LinkedList<Event> list;
 		public int turn;
-		public int Count(){return list.Count; }
+		public Event current_event = null;
 		public int Tiebreaker{get{
-				if(list.Count > 0){
+				if(current_event == null){
+					return -1;
+				}
+				return current_event.tiebreaker;
+				/*if(list.Count > 0){
 					return list.First.Value.tiebreaker;
 				}
 				else{
 					return -1;
-				}
+				}*/
 			}
 		}
 		public static Buffer B;
@@ -31,7 +35,7 @@ namespace Forays{
 		}
 		public void Add(Event e){
 			if(e.TimeToExecute() == turn){ //0-time action
-				list.AddFirst(e);
+				list.AddFirst(e); //this means that creating 0-delay events can put them in the wrong order. this hasn't been a problem yet.
 			}
 			else{
 				if(list.First==null){
@@ -56,55 +60,20 @@ namespace Forays{
 									current = current.Previous;
 								}
 							}
-								/*if(e.TimeToExecute() == current.Value.TimeToExecute()){
-									if(e.type != EventType.MOVE){
-										list.AddAfter(current,e);
-										return;
-									}
-									else{
-										while(current.Value.type != EventType.MOVE){
-											if(current == list.First){
-												list.AddFirst(e);
-												return;
-											}
-											else{
-												if(e.TimeToExecute() != current.Previous.Value.TimeToExecute()){
-													list.AddBefore(current,e);
-													return;
-												}
-												else{
-													current = current.Previous;
-												}
-											}
-										}
-										list.AddAfter(current,e);
-										return;
-									}
-								}
-								else{
-									if(e < current.Value){
-										if(e > current.Previous.Value){
-											list.AddBefore(current,e);
-											return;
-										}
-										else{
-											current = current.Previous;
-										}
-									}
-								}
-							}*/
 						}
 					}
 				}
 			}
 		}
 		public void Pop(){
-			turn = list.First.Value.TimeToExecute();
+			current_event = list.First.Value;
+			turn = current_event.TimeToExecute();
+			current_event.Execute();
+			list.Remove(current_event);
+			/*turn = list.First.Value.TimeToExecute();
 			Event e = list.First.Value;
-			//list.First.Value.Execute();
-			//list.RemoveFirst();
 			e.Execute();
-			list.Remove(e);
+			list.Remove(e);*/
 		}
 		public void ResetForNewLevel(){
 			LinkedList<Event> newlist = new LinkedList<Event>();
@@ -180,6 +149,7 @@ namespace Forays{
 		public AttrType attr;
 		public FeatureType feature;
 		public int value;
+		public int secondary_value = 0;
 		public string msg;
 		public List<PhysicalObject> msg_objs; //used to determine visibility of msg
 		public int time_created;
@@ -686,17 +656,10 @@ namespace Forays{
 									for(int i=4;i>0;--i){
 										Screen.AnimateStorm(tile.p,i,2,1,'G',Color.DarkGreen);
 									}
-									Actor a = Actor.Create(ActorType.POLTERGEIST,tile.row,tile.col);
+									Actor a = Actor.Create(ActorType.POLTERGEIST,tile.row,tile.col,TiebreakerAssignment.UseCurrent);
 									Q.KillEvents(a,EventType.MOVE);
 									a.Q0();
 									a.player_visibility_duration = -1;
-									foreach(Event e in Q.list){
-										if(e.target == a && e.type == EventType.MOVE){
-											e.tiebreaker = this.tiebreaker;
-											break;
-										}
-									}
-									Actor.tiebreakers[tiebreaker] = a;
 									B.Add("A poltergeist manifests in front of you! ");
 									Q.Add(new Event(a,area,(R.Roll(8)+6)*100,EventType.POLTERGEIST,AttrType.NO_ATTR,0,""));
 									manifested = true;
@@ -812,19 +775,12 @@ namespace Forays{
 								B.Add(item.TheName(true) + " suddenly grows tentacles! ");
 								attacked = true;
 								area[0].inv = null;
-								Actor a = Actor.Create(ActorType.MIMIC,area[0].row,area[0].col);
+								Actor a = Actor.Create(ActorType.MIMIC,area[0].row,area[0].col,TiebreakerAssignment.UseCurrent);
 								Q.KillEvents(a,EventType.MOVE);
 								a.Q0();
 								a.player_visibility_duration = -1;
 								a.symbol = item.symbol;
 								a.color = item.color;
-								foreach(Event e in Q.list){
-									if(e.target == a && e.type == EventType.MOVE){
-										e.tiebreaker = this.tiebreaker;
-										break;
-									}
-								}
-								Actor.tiebreakers[tiebreaker] = a;
 							}
 						}
 						if(!attacked){
@@ -841,19 +797,12 @@ namespace Forays{
 						if(open.Count > 0){
 							Tile t = open.Random();
 							B.Add(item.TheName() + " suddenly grows tentacles! ");
-							Actor a = Actor.Create(ActorType.MIMIC,t.row,t.col);
+							Actor a = Actor.Create(ActorType.MIMIC,t.row,t.col,TiebreakerAssignment.UseCurrent);
 							Q.KillEvents(a,EventType.MOVE);
 							a.Q0();
 							a.player_visibility_duration = -1;
 							a.symbol = item.symbol;
 							a.color = item.color;
-							foreach(Event e in Q.list){
-								if(e.target == a && e.type == EventType.MOVE){
-									e.tiebreaker = this.tiebreaker;
-									break;
-								}
-							}
-							Actor.tiebreakers[tiebreaker] = a;
 							player.inv.Remove(item);
 						}
 						else{
@@ -873,7 +822,7 @@ namespace Forays{
 							Screen.WriteMapChar(t.row,t.col,M.VisibleColorChar(t.row,t.col));
 						}
 						B.DisplayNow();
-						t.ApplyExplosion(1,3,"an exploding grenade");
+						t.ApplyExplosion(1,"an exploding grenade");
 						/*List<pos> cells = new List<pos>();
 						foreach(Tile tile in t.TilesWithinDistance(1)){
 							if(tile.passable && tile.seen){ //animation LOS check here
@@ -924,7 +873,7 @@ namespace Forays{
 								Screen.WriteMapChar(t.row,t.col,M.VisibleColorChar(t.row,t.col));
 							}
 							B.DisplayNow();
-							t.ApplyExplosion(3,5,"an exploding blast fungus");
+							t.ApplyExplosion(3,"an exploding blast fungus");
 						}
 					}
 					else{
@@ -1137,9 +1086,10 @@ namespace Forays{
 					Tile t = target as Tile;
 					if(t.type == TileType.STONE_SLAB && (t.IsLitFromAnywhere(true) || area.Any(x=>x.actor()!=null))){
 						bool vis = player.CanSee(t);
-						t.Toggle(null,TileType.FLOOR);
-						t.symbol = '-';
-						t.revealed_by_light = true;
+						t.Toggle(null);
+						//t.Toggle(null,TileType.FLOOR);
+						//t.symbol = '-';
+						//t.revealed_by_light = true;
 						if(!vis && player.CanSee(t)){
 							vis = true;
 						}
@@ -1153,9 +1103,10 @@ namespace Forays{
 						}
 					}
 					else{
-						if(t.type == TileType.FLOOR && !t.IsLitFromAnywhere(true) && t.actor() == null && !area.Any(x=>x.actor()!=null)){
+						if(t.type == TileType.STONE_SLAB_OPEN && !t.IsLitFromAnywhere(true) && t.actor() == null && !area.Any(x=>x.actor()!=null)){
 							bool vis = player.CanSee(t);
-							t.Toggle(null,TileType.STONE_SLAB);
+							//t.Toggle(null,TileType.STONE_SLAB);
+							t.Toggle(null);
 							if(!vis && player.CanSee(t)){
 								vis = true;
 							}
@@ -1178,7 +1129,7 @@ namespace Forays{
 					if(t.type == TileType.STATUE){
 						if(value == 1 && player.CanSee(t) && !t.IsLit() && t.actor() == null){ //if target was visible last turn & this turn, and it's currently in darkness...
 							t.TransformTo(TileType.FLOOR);
-							Actor a = Actor.Create(ActorType.MARBLE_HORROR,t.row,t.col,true,true);
+							Actor a = Actor.Create(ActorType.MARBLE_HORROR,t.row,t.col,TiebreakerAssignment.AtEnd); //todo: not sure - should this get a placeholder like poltergeist and mimic?
 							foreach(Event e in Q.list){
 								if(e.target == a && e.type == EventType.MOVE){
 									e.dead = true;
@@ -1210,8 +1161,8 @@ namespace Forays{
 				}
 				case EventType.REGENERATING_FROM_DEATH:
 				{
-					int health = value % 1000; //hack. I might eventually add a 2nd "value" field to events to fix this.
-					int permanent_damage = value / 1000;
+					int health = value;
+					int permanent_damage = secondary_value;
 					if(target.tile().Is(FeatureType.TROLL_CORPSE)){ //otherwise, assume it was destroyed by fire
 						int maxhp = Actor.Prototype(ActorType.TROLL).maxhp;
 						int recovered = Actor.Prototype(ActorType.TROLL).attrs[AttrType.REGENERATING];
@@ -1223,24 +1174,18 @@ namespace Forays{
 							break;
 						}
 						if(health > 0 && target.actor() == null){
-							Actor a = Actor.Create(ActorType.TROLL,target.row,target.col);
-							foreach(Event e in Q.list){
-								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
-									e.tiebreaker = this.tiebreaker;
-									break;
-								}
-							}
-							Actor.tiebreakers[tiebreaker] = a;
-							target.actor().curhp = health;
-							target.actor().attrs[AttrType.PERMANENT_DAMAGE] = permanent_damage;
-							target.actor().attrs[AttrType.NO_ITEM]++;
+							Actor a = Actor.Create(ActorType.TROLL,target.row,target.col,TiebreakerAssignment.UseCurrent);
+							a.curhp = health;
+							a.attrs[AttrType.PERMANENT_DAMAGE] = permanent_damage;
+							a.attrs[AttrType.NO_ITEM]++;
+							a.attrs[AttrType.DANGER_SENSED]++;
 							B.Add("The troll stands up! ",target);
-							target.actor().player_visibility_duration = -1;
+							a.player_visibility_duration = -1;
 							if(target.tile().type == TileType.DOOR_C){
-								target.tile().Toggle(target.actor());
+								target.tile().Toggle(a);
 							}
 							target.tile().features.Remove(FeatureType.TROLL_CORPSE);
-							target.actor().attrs[AttrType.WANDERING]++;
+							a.attrs[AttrType.WANDERING]++;
 						}
 						else{
 							int roll = R.Roll(20);
@@ -1265,7 +1210,10 @@ namespace Forays{
 							default:
 								break;
 							}
-							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,health + permanent_damage*1000));
+							Event e = new Event(target,100,EventType.REGENERATING_FROM_DEATH);
+							e.value = health;
+							e.secondary_value = permanent_damage;
+							Q.Add(e);
 						}
 					}
 					if(target.tile().Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){ //otherwise, assume it was destroyed by fire
@@ -1278,49 +1226,46 @@ namespace Forays{
 						if(permanent_damage >= maxhp){
 							break;
 						}
-						if(player.CanSee(target) && player.HasLOS(target)){
+						if(recovered > 0){
 							List<pos> cells = new List<pos>();
 							List<colorchar> cch = new List<colorchar>();
 							foreach(pos p2 in target.PositionsWithinDistance(4)){
-								if(M.actor[p2] != null && target.HasLOE(M.actor[p2]) && player.CanSee(M.actor[p2])){
+								if(target.HasLOE(M.tile[p2]) && player.CanSee(M.tile[p2])){
 									cells.Add(p2);
-									colorchar ch = new colorchar(M.actor[p2].symbol,Color.DarkRed);
-									if(M.actor[p2].color == Color.DarkRed){
-										ch.color = Color.Red;
-									}
+									colorchar ch = M.VisibleColorChar(p2.row,p2.col);
+									ch.color = Color.Red;
 									cch.Add(ch);
 								}
 							}
-							M.Draw();
-							Screen.AnimateMapCells(cells,cch,150);
-						}
-						foreach(Actor a in target.ActorsWithinDistance(4)){
-							if(target.HasLOE(a)){
-								a.TakeDamage(DamageType.NORMAL,DamageClass.MAGICAL,recovered,null,"trollish blood magic");
+							if(cells.Count > 0){
+								M.Draw();
+								Screen.AnimateMapCells(cells,cch,40);
+							}
+							foreach(Actor a in target.ActorsWithinDistance(4)){
+								if(target.HasLOE(a)){
+									if(a == player){
+										B.Add("Ow! ");
+									}
+									a.TakeDamage(DamageType.NORMAL,DamageClass.MAGICAL,recovered,null,"trollish blood magic");
+								}
 							}
 						}
 						if(health > 0 && target.actor() == null){
-							Actor a = Actor.Create(ActorType.TROLL_BLOODWITCH,target.row,target.col);
-							foreach(Event e in Q.list){
-								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
-									e.tiebreaker = this.tiebreaker;
-									break;
-								}
-							}
-							Actor.tiebreakers[tiebreaker] = a;
-							target.actor().curhp = health;
-							target.actor().attrs[AttrType.PERMANENT_DAMAGE] = permanent_damage;
-							target.actor().attrs[AttrType.NO_ITEM]++;
+							Actor a = Actor.Create(ActorType.TROLL_BLOODWITCH,target.row,target.col,TiebreakerAssignment.UseCurrent);
+							a.curhp = health;
+							a.attrs[AttrType.PERMANENT_DAMAGE] = permanent_damage;
+							a.attrs[AttrType.NO_ITEM]++;
+							a.attrs[AttrType.DANGER_SENSED]++;
 							B.Add("The troll bloodwitch rises! ",target);
-							target.actor().player_visibility_duration = -1;
+							a.player_visibility_duration = -1;
 							if(attr == AttrType.COOLDOWN_1){
-								target.actor().attrs[AttrType.COOLDOWN_1]++;
+								a.attrs[AttrType.COOLDOWN_1]++;
 							}
 							if(target.tile().type == TileType.DOOR_C){
-								target.tile().Toggle(target.actor());
+								target.tile().Toggle(a);
 							}
 							target.tile().features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
-							target.actor().attrs[AttrType.WANDERING]++;
+							a.attrs[AttrType.WANDERING]++;
 						}
 						else{
 							int roll = R.Roll(20);
@@ -1345,7 +1290,10 @@ namespace Forays{
 							default:
 								break;
 							}
-							Q.Add(new Event(target,100,EventType.REGENERATING_FROM_DEATH,health + permanent_damage*1000));
+							Event e = new Event(target,100,EventType.REGENERATING_FROM_DEATH);
+							e.value = health;
+							e.secondary_value = permanent_damage;
+							Q.Add(e);
 						}
 					}
 					break;
@@ -1355,22 +1303,15 @@ namespace Forays{
 					Tile t = target as Tile;
 					if(t.Is(FeatureType.BONES)){
 						if(t.actor() == null){
-							Actor a = Actor.Create(ActorType.SKELETON,target.row,target.col);
-							foreach(Event e in Q.list){
-								if(e.target == M.actor[target.row,target.col] && e.type == EventType.MOVE){
-									e.tiebreaker = this.tiebreaker;
-									break;
-								}
-							}
-							Actor.tiebreakers[tiebreaker] = a;
+							Actor a = Actor.Create(ActorType.SKELETON,target.row,target.col,TiebreakerAssignment.UseCurrent);
 							B.Add("The skeleton reassembles itself. ",target);
-							target.actor().player_visibility_duration = -1;
+							a.player_visibility_duration = -1;
 							if(target.tile().type == TileType.DOOR_C){
-								target.tile().Toggle(target.actor());
+								target.tile().Toggle(a);
 							}
 							target.tile().features.Remove(FeatureType.BONES);
 							if(R.OneIn(3)){
-								target.actor().attrs[AttrType.WANDERING]++;
+								a.attrs[AttrType.WANDERING]++;
 							}
 						}
 						else{
@@ -1389,6 +1330,7 @@ namespace Forays{
 						if(tile.actor() != null){
 							if(!tile.actor().HasAttr(AttrType.SHIELDED)){
 								tile.actor().attrs[AttrType.SHIELDED] = 1;
+								B.Add(tile.actor().YouAre() + " shielded. ",tile.actor());
 							}
 							if(player.CanSee(tile.actor())){
 								animation_delay = 150;
@@ -1396,7 +1338,10 @@ namespace Forays{
 							}
 						}
 						cch.bgcolor = Color.Blue;
-						if(cch.color == Color.Blue){
+						if(Global.LINUX && !Screen.GLMode){
+							cch.bgcolor = Color.DarkBlue;
+						}
+						if(cch.color == cch.bgcolor){
 							cch.color = Color.Black;
 						}
 						if(cch.c == '.'){
@@ -1648,14 +1593,19 @@ namespace Forays{
 				}*/
 				case EventType.NORMAL_LIGHTING:
 				{
+					bool check_for_torch_dimming = false;
 					if(M.wiz_lite){
 						B.Add("The supernatural brightness fades from the air. ");
 					}
 					if(M.wiz_dark){
 						B.Add("The supernatural darkness fades from the air. ");
+						check_for_torch_dimming = true;
 					}
 					M.wiz_lite = false;
 					M.wiz_dark = false;
+					if(check_for_torch_dimming && player.HasAttr(AttrType.DIM_LIGHT)){
+						player.CalculateDimming();
+					}
 					break;
 				}
 				case EventType.TELEPORTAL:
@@ -1742,7 +1692,7 @@ namespace Forays{
 				}
 				case EventType.BREACH:
 				{
-					if(R.Roll(3) >= 2){
+					if(!R.OneIn(3)){
 						Tile t = area.WhereGreatest(x=>x.DistanceFrom(target)).Random();
 						if(t != null){
 							t.Toggle(null);
@@ -1810,17 +1760,21 @@ namespace Forays{
 					foreach(Tile t in area){
 						Actor a = t.actor();
 						if(a != null && a.type != ActorType.CORPSETOWER_BEHEMOTH && !a.HasAttr(AttrType.IMMOBILE,AttrType.JUST_GRABBED,AttrType.FROZEN,AttrType.FLYING) && R.OneIn(12)){
-							B.Add("A dead hand reaches up and grabs " + a.the_name + "! ",a);
+							if(player.CanSee(a)){
+								B.Add("A dead hand reaches up and grabs " + a.the_name + "! ",t);
+							}
 							if(a == player){
 								B.Print(true);
 							}
 							if(a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BRUTISH_STRENGTH)){
-								B.Add(a.You("slip") + " out of its grasp. ",a);
+								if(player.CanSee(a)){
+									B.Add(a.You("slip") + " out of its grasp. ",t);
+								}
 							}
 							else{
 								int duration = R.Roll(4) * 100;
 								a.attrs[AttrType.IMMOBILE]++;
-								Q.Add(new Event(a,duration,AttrType.IMMOBILE,"The dead hand releases " + a.the_name + ". ",a)); //it'd be nice to check LOS here
+								Q.Add(new Event(a,duration,AttrType.IMMOBILE,"The dead hand releases " + a.TheName(true) + ". ",t)); //it'd be nice to check LOS here
 								a.RefreshDuration(AttrType.JUST_GRABBED,duration + 100);
 							}
 						}
@@ -2006,7 +1960,7 @@ namespace Forays{
 							foreach(Tile neighbor in o.TilesWithinDistance(1)){
 								if(neighbor.actor() != null && neighbor.actor() != o){
 									if(neighbor.actor() == player){
-										if(!player.HasAttr(AttrType.JUST_SEARED,AttrType.FROZEN)){
+										if(!player.HasAttr(AttrType.JUST_SEARED,AttrType.FROZEN,AttrType.DAMAGE_RESISTANCE)){
 											B.Add("The heat sears you! ");
 										}
 										player.RefreshDuration(AttrType.JUST_SEARED,50);

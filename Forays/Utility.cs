@@ -214,6 +214,14 @@ namespace Utilities{
 			}
 			return dir;
 		}
+		public static List<int> GetArc(this int i,int distance){ return i.GetArc(distance,true); } //returns a list of directions: the original direction plus some number of other adjacent directions. 'distance' is how far you want to go out on each side.
+		public static List<int> GetArc(this int i,int distance,bool clockwise){
+			List<int> result = new List<int>();
+			for(int num = -distance;num <= distance;++num){
+				result.Add(i.RotateDir(clockwise,num));
+			}
+			return result;
+		}
 		public static int DirectionOf(this pos p,pos obj){ //determines which of the 8 directions is closest to the actual direction
 			int row = p.row;
 			int col = p.col;

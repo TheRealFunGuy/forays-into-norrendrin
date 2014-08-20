@@ -1639,18 +1639,22 @@ namespace Forays{
 				ItemUseResult orb_result = UseOrb(3,false,user,line,(t,LOE_tile,results)=>{
 					List<Tile> area = new List<Tile>();
 					List<pos> cells = new List<pos>();
+					colorchar cch = new colorchar('*',Color.Gray);
 					for(int i=0;i<=3;++i){
 						foreach(Tile tile in t.TilesAtDistance(i)){
 							if(tile.passable && LOE_tile.HasLOE(tile)){
 								tile.AddFeature(FeatureType.FOG);
 								area.Add(tile);
 								cells.Add(tile.p);
+								if(tile.seen){
+									M.last_seen[tile.row,tile.col] = cch;
+								}
 							}
 						}
-						Screen.AnimateMapCells(cells,new colorchar('*',Color.Gray),40);
+						Screen.AnimateMapCells(cells,cch,40);
 					}
 					Q.RemoveTilesFromEventAreas(area,EventType.REMOVE_GAS);
-					Event.RemoveGas(area,600,FeatureType.FOG,25);
+					Event.RemoveGas(area,800,FeatureType.FOG,25);
 					//Q.Add(new Event(area,600,EventType.FOG,25));
 				});
 				used = orb_result.used;
@@ -1660,7 +1664,7 @@ namespace Forays{
 			case ConsumableType.DETONATION:
 			{
 				ItemUseResult orb_result = UseOrb(3,false,user,line,(t,LOE_tile,results)=>{
-					LOE_tile.ApplyExplosion(3,10,"an orb of detonation");
+					LOE_tile.ApplyExplosion(3,"an orb of detonation");
 				});
 				used = orb_result.used;
 				IDed = orb_result.IDed;
@@ -1670,16 +1674,16 @@ namespace Forays{
 			{
 				ItemUseResult orb_result = UseOrb(5,false,user,line,(t,LOE_tile,results)=>{
 					int max_dist = -1;
-					foreach(Tile t2 in M.ReachableTilesByDistance(t.row,t.col,false,TileType.WALL,TileType.WAX_WALL,TileType.STONE_SLAB,TileType.DOOR_C,TileType.STALAGMITE,TileType.RUBBLE,TileType.HIDDEN_DOOR)){
+					foreach(Tile t2 in M.TilesByDistance(t.row,t.col,false,true)){
 						if(t.DistanceFrom(t2) > 5){
 							break;
 						}
-						if(t2.Is(TileType.WALL,TileType.WAX_WALL,TileType.STALAGMITE)){
+						if(t2.Is(TileType.WALL,TileType.WAX_WALL,TileType.STALAGMITE,TileType.CRACKED_WALL,TileType.DOOR_C)){
 							Screen.WriteMapChar(t2.row,t2.col,t2.symbol,Color.RandomBreached);
 							if(t.DistanceFrom(t2) > max_dist){
 								max_dist = t.DistanceFrom(t2);
 								if(Screen.GLMode){
-									Game.gl.Update();
+									Game.gl.Update(); //todo: stalagmites - if I add them to caves, they should no longer always vanish. check for an event, maybe?
 								}
 								Thread.Sleep(50);
 							}
@@ -1687,27 +1691,22 @@ namespace Forays{
 					}
 					List<Tile> area = new List<Tile>();
 					foreach(Tile tile in t.TilesWithinDistance(5)){
-						if(tile.Is(TileType.WALL,TileType.WAX_WALL,TileType.STALAGMITE) && tile.row > 0 && tile.col > 0 && tile.row < Global.ROWS-1 && tile.col < Global.COLS-1){
-							bool wax = tile.Is(TileType.WAX_WALL);
+						if(tile.Is(TileType.WALL,TileType.WAX_WALL,TileType.STALAGMITE,TileType.CRACKED_WALL,TileType.DOOR_C) && tile.p.BoundsCheck(M.tile,false)){
+							TileType prev_type = tile.type;
 							if(tile.Is(TileType.STALAGMITE)){
 								tile.Toggle(null,TileType.FLOOR);
 							}
 							else{
 								tile.Toggle(null,TileType.BREACHED_WALL);
+								tile.toggles_into = prev_type;
 								area.Add(tile);
 							}
-							tile.solid_rock = false;
-							if(wax){
-								tile.toggles_into = TileType.WAX_WALL;
+							foreach(Tile neighbor in tile.TilesWithinDistance(1)){
+								neighbor.solid_rock = false;
 							}
 						}
 					}
 					if(area.Count > 0){
-						foreach(Tile tile in area){
-							foreach(Tile neighbor in tile.TilesAtDistance(1)){
-								neighbor.solid_rock = false;
-							}
-						}
 						Q.Add(new Event(t,area,500,EventType.BREACH));
 					}
 				});
@@ -1727,13 +1726,17 @@ namespace Forays{
 							if(tile.actor() != null){
 								if(!tile.actor().HasAttr(AttrType.SHIELDED)){
 									tile.actor().attrs[AttrType.SHIELDED] = 1;
+									B.Add(tile.actor().YouAre() + " shielded. ",tile.actor());
 								}
 								if(player.CanSee(tile.actor())){
 									cch = tile.actor().visual;
 								}
 							}
 							cch.bgcolor = Color.Blue;
-							if(cch.color == Color.Blue){
+							if(Global.LINUX && !Screen.GLMode){
+								cch.bgcolor = Color.DarkBlue;
+							}
+							if(cch.color == cch.bgcolor){
 								cch.color = Color.Black;
 							}
 							if(cch.c == '.'){
@@ -1805,15 +1808,19 @@ namespace Forays{
 				ItemUseResult orb_result = UseOrb(2,false,user,line,(t,LOE_tile,results)=>{
 					List<Tile> area = new List<Tile>();
 					List<pos> cells = new List<pos>();
+					colorchar cch = new colorchar('*',Color.RandomConfusion);
 					for(int i=0;i<=2;++i){
 						foreach(Tile tile in t.TilesAtDistance(i)){
 							if(tile.passable && LOE_tile.HasLOE(tile)){
 								tile.AddFeature(FeatureType.CONFUSION_GAS);
 								area.Add(tile);
 								cells.Add(tile.p);
+								if(tile.seen){
+									M.last_seen[tile.row,tile.col] = cch;
+								}
 							}
 						}
-						Screen.AnimateMapCells(cells,new colorchar('*',Color.RandomConfusion),40);
+						Screen.AnimateMapCells(cells,cch,40);
 					}
 					Q.RemoveTilesFromEventAreas(area,EventType.REMOVE_GAS);
 					Event.RemoveGas(area,R.Between(7,9)*100,FeatureType.CONFUSION_GAS,20);
@@ -1831,8 +1838,9 @@ namespace Forays{
 							targets.Add(t2);
 						}
 					}
+					targets.Randomize();
 					foreach(Tile t2 in targets){
-						Actor a = Actor.Create(ActorType.BLADE,t2.row,t2.col,true,false);
+						Actor a = Actor.Create(ActorType.BLADE,t2.row,t2.col);
 						if(a != null){
 							a.speed = 50;
 							a.attrs[AttrType.LIFESPAN] = 20;
@@ -1864,9 +1872,13 @@ namespace Forays{
 					foreach(Tile n1 in added){
 						area.AddUnique(n1);
 					}
+					colorchar cch = new colorchar('*',Color.DarkGray);
 					foreach(Tile t2 in area){
 						t2.AddFeature(FeatureType.THICK_DUST);
 						cells.Add(t2.p);
+						if(t2.seen){
+							M.last_seen[t2.row,t2.col] = cch;
+						}
 						Actor a = t2.actor();
 						if(a != null && t2.Is(FeatureType.THICK_DUST)){
 							if(!a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE,AttrType.BLINDSIGHT)){
@@ -1877,7 +1889,7 @@ namespace Forays{
 							}
 						}
 					}
-					Screen.AnimateMapCells(cells,new colorchar('*',Color.DarkGray),80);
+					Screen.AnimateMapCells(cells,cch,80);
 					Q.RemoveTilesFromEventAreas(area,EventType.REMOVE_GAS);
 					Event.RemoveGas(area,R.Between(20,25)*100,FeatureType.THICK_DUST,8);
 				});
@@ -1915,7 +1927,7 @@ namespace Forays{
 						if(a.light_radius > 0 && !M.wiz_dark && !M.wiz_lite){
 							B.Add(a.Your() + " light still reveals " + a.Your() + " location. ",a);
 						}
-						a.RefreshDuration(AttrType.INVISIBLE,(R.Between(2,20)+20)*100,a.YouAre() + " no longer invisible. ",a);
+						a.RefreshDuration(AttrType.INVISIBLE,(R.Between(2,20)+30)*100,a.YouAre() + " no longer invisible. ",a);
 					}
 					else{
 						B.Add("Nothing happens. ",user);
@@ -2202,6 +2214,7 @@ namespace Forays{
 				Tile prev = line.LastBeforeSolidTile();
 				Actor first = null;
 				bool trigger_trap = true;
+				Screen.CursorVisible = false;
 				if(user != null){
 					first = user.FirstActorInLine(line);
 					B.Add(user.You("fling") + " the " + SingularName() + ". ",user);
@@ -2226,6 +2239,7 @@ namespace Forays{
 						}
 					}
 					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
+					Screen.CursorVisible = false;
 				}
 				else{
 					trigger_trap = false;
@@ -2238,6 +2252,9 @@ namespace Forays{
 				t.MakeNoise(2);
 				if(trigger_trap && t.IsTrap()){
 					t.TriggerTrap();
+				}
+				if(!revealed_by_light){
+					result.IDed = false;
 				}
 			}
 			else{
@@ -2549,6 +2566,14 @@ namespace Forays{
 		}
 		public static Color StatusColor(EquipmentStatus status){
 			switch(status){
+			case EquipmentStatus.LOW_ON_ARROWS:
+				return Color.DarkBlue;
+			case EquipmentStatus.ALMOST_OUT_OF_ARROWS:
+				return Color.Blue;
+			case EquipmentStatus.ONE_ARROW_LEFT: //if I add more statuses, I might make these all the same color. don't want to hog ALL the blue.
+				return Color.DarkCyan;
+			case EquipmentStatus.OUT_OF_ARROWS:
+				return Color.Cyan;
 			case EquipmentStatus.POISONED: //weapon-only statuses
 				return Color.Green;
 			case EquipmentStatus.MERCIFUL:
@@ -2603,6 +2628,14 @@ namespace Forays{
 				return "Worn out";
 			case EquipmentStatus.POISONED:
 				return "Poisoned";
+			case EquipmentStatus.LOW_ON_ARROWS:
+				return "Low on arrows";
+			case EquipmentStatus.ALMOST_OUT_OF_ARROWS:
+				return "Almost out of arrows";
+			case EquipmentStatus.ONE_ARROW_LEFT:
+				return "One arrow left";
+			case EquipmentStatus.OUT_OF_ARROWS:
+				return "Out of arrows";
 			default:
 				return "No status";
 			}
@@ -2626,7 +2659,6 @@ namespace Forays{
 				return new string[]{"Sword -- A basic weapon, the sword delivers powerful",
 									"     critical hits that remove half of a foe's maximum health."};
 			case WeaponType.MACE:
-			  //return new string[]{"Mace -- Capable of punching through armor. Critical hits",
 				return new string[]{"Mace -- The mace won't be stopped by armor. Critical hits",
 									"              will knock the foe back two spaces."};
 			case WeaponType.DAGGER:
@@ -2635,8 +2667,6 @@ namespace Forays{
 			case WeaponType.STAFF:
 				return new string[]{"Staff -- Always hits against a foe that just moved, in",
 									"  addition to swapping places. Critical hits will trip the foe."};
-				//return new string[]{"Staff -- Attacking an enemy that just moved will swap",
-				//					"           places. Critical hits will trip the foe."};
 			case WeaponType.BOW:
 				return new string[]{"Bow -- A ranged weapon, less accurate than melee.",
 									"        Critical hits will immobilize the target briefly."};
@@ -2662,13 +2692,21 @@ namespace Forays{
 		public static string StatusDescription(EquipmentStatus status){
 			switch(status){
 			case EquipmentStatus.POISONED: //weapon-only statuses
-				return "   Poisoned -- Attacks with this weapon will poison the target.";
+				return "   Poisoned -- Poisons the target, and might poison you, too.";
 			case EquipmentStatus.MERCIFUL:
 				return " Merciful -- Unable to take the last bit of health from an enemy.";
 			case EquipmentStatus.POSSESSED:
 				return " Possessed -- This weapon will sometimes attack the wrong target.";
 			case EquipmentStatus.DULLED:
 				return "     Dulled -- This weapon deals minimum damage on each hit.";
+			case EquipmentStatus.LOW_ON_ARROWS:
+				return "        Low on arrows -- Your quiver feels a bit light.";
+			case EquipmentStatus.ALMOST_OUT_OF_ARROWS:
+				return "     Almost out of arrows -- Your quiver is almost empty.";
+			case EquipmentStatus.ONE_ARROW_LEFT:
+				return " One arrow left -- This final arrow will have perfect accuracy.";
+			case EquipmentStatus.OUT_OF_ARROWS:
+				return " Out of arrows -- Repair your equipment to restock your arrows.";
 			case EquipmentStatus.HEAVY: //statuses that might apply to both
 				return "   Heavy -- Attacking with this weapon often causes exhaustion.";
 			case EquipmentStatus.STUCK:
@@ -2684,7 +2722,7 @@ namespace Forays{
 			case EquipmentStatus.INFESTED:
 				return "          Infested -- Insects constantly bite the wearer.";
 			case EquipmentStatus.RUSTED:
-				return "                          Rusted";
+				return "                          Rusted"; //not implemented
 			default:
 				return "No status";
 			}

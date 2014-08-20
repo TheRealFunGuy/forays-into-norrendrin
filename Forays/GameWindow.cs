@@ -232,7 +232,7 @@ namespace Forays{
 								description_on_right = true;
 								max_length = 29;
 							}*/
-							int max_length = 28;
+							int max_length = MouseUI.MaxDescriptionBoxLength;
 							if(map_col <= 32){
 								description_on_right = true;
 							}
@@ -322,6 +322,10 @@ namespace Forays{
 			}
 		}
 		void MouseClickHandler(object sender,MouseButtonEventArgs args){
+			if(args.Button == MouseButton.Middle){
+				HandleMiddleClick();
+				return;
+			}
 			if(args.Button == MouseButton.Right){
 				HandleRightClick();
 				return;
@@ -475,9 +479,27 @@ namespace Forays{
 				case MouseMode.YesNoPrompt:
 					Global.LastKey = new ConsoleKeyInfo('n',ConsoleKey.N,false,false,false);
 					break;
+				case MouseMode.Map:
+					Global.LastKey = new ConsoleKeyInfo('i',ConsoleKey.I,false,false,false);
+					break;
 				default:
 					Global.LastKey = new ConsoleKeyInfo((char)27,ConsoleKey.Escape,false,false,false);
 					break;
+				}
+			}
+			MouseUI.RemoveHighlight();
+			MouseUI.RemoveMouseover();
+		}
+		void HandleMiddleClick(){
+			if(!Global.KeyPressed){
+				Global.KeyPressed = true;
+				switch(MouseUI.Mode){
+				case MouseMode.Map:
+				Global.LastKey = new ConsoleKeyInfo('v',ConsoleKey.V,false,false,false);
+				break;
+				default:
+				Global.LastKey = new ConsoleKeyInfo((char)27,ConsoleKey.Escape,false,false,false);
+				break;
 				}
 			}
 			MouseUI.RemoveHighlight();

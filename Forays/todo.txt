@@ -30,6 +30,34 @@ fixed a bug where whirlwind style could fail to activate when using the staff or
 zombie's bite attack can now grab its target.
 fixed a bug where font scaling or custom DPI settings could cause display and mouse input problems.
 bugfix: using dust storm (fog too?) on a firepit removes its light!  ...but this is basically new anyway so doesn't need to be mentioned.
+shadowveil duelist replaced with sneak thief
+luminous avenger reworked
+darkness dweller's light sensitivity changed a little.
+blood moth is now attracted to any lit tile if it can't see an actual light source
+-and monsters should flash onscreen when they attack the player, if the player is blind?
+casters don't seem to care about SILENCED, only SILENCE_AURA.
+intelligent creatures douse themselves?
+burning deals less damage per turn but lasts longer. About the same total damage, but you've got longer to run over to that pool of water...
+drive back buffed: now also doubles crit chance if the target can't get away.
+improved targeting for orbs that should make tricky placement easier.
+fixed a bug where even mindless creatures would often avoid hazardous terrain
+spell fail system changed - 15% is no longer a lot of exhaustion to a caster. This brings spells more in line with armor & weapon interactions.
+make the game not crash if highscores are missing
+instead of calculating the flee map each turn, make the player CLEAR it each turn. then the first fleeing monster each turn will check for it and create it.
+right and middle click now work on the map screen: inventory and [v]iew more commands.
+knockback messages streamlined
+fog/dust storm should add the fog/dust to the last-known map, since you see the animation.
+hidden doors in fortresses are really easy to spot...
+make scrolls check (when placed/thrown into a tile) for burning actors as well as fire in the tile - this'll let you toss scrolls to keep a burning enemy lit.
+fixed a bug where mouseover descriptions sometimes didn't clear properly
+
+
+
+
+
+
+
+
 
 
 
