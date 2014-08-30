@@ -178,6 +178,8 @@ namespace Forays{
 			Prototype(TileType.WAX_WALL).revealed_by_light = true;
 			Define(TileType.DEMONIC_IDOL,"demonic idol",'2',Color.Red,false,false,null);
 			Prototype(TileType.DEMONIC_IDOL).revealed_by_light = true;
+			Define(TileType.FIRE_RIFT,"fire rift",'~',Color.Red,true,false,null);
+			Prototype(TileType.FIRE_RIFT).revealed_by_light = true;
 
 			Define(FeatureType.GRENADE,"grenade",',',Color.Red);
 			Define(FeatureType.TROLL_CORPSE,"troll corpse",'%',Color.DarkGreen);
@@ -709,14 +711,27 @@ namespace Forays{
 				return " and ";
 			}
 		}
+		public bool CanGetItem(){ return CanGetItem(null); }
+		public bool CanGetItem(Item i){
+			if(Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
+				return false;
+			}
+			if(inv == null){
+				return true;
+			}
+			if(i != null && inv.type == i.type && !inv.do_not_stack && !i.do_not_stack){
+				return true;
+			}
+			return false;
+		}
 		public bool GetItem(Item item){
 			if(item.type == ConsumableType.BLAST_FUNGUS && (IsWater() || Is(FeatureType.SLIME))){
 				B.Add("The blast fungus is doused. ",this);
 				return true;
 			}
-			if(inv == null && !Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
+			if(inv == null && !Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){ //todo: update to use CanGetItem?
 				if((IsBurning() || Is(TileType.FIREPIT) || (actor() != null && actor().IsBurning())) && (item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES)){
-					B.Add(item.TheName(true) + " burns up! ",this);
+					B.Add(item.TheName(true) + " burns up! ",this); //should there be a check for water or slime here?
 					if(Is(TileType.FIREPIT) || (actor() != null && actor().IsBurning())){
 						AddFeature(FeatureType.FIRE);
 					}
@@ -740,7 +755,7 @@ namespace Forays{
 					return true;
 				}
 				else{
-					foreach(Tile t in M.ReachableTilesByDistance(row,col,false,TileType.DOOR_C,TileType.RUBBLE,TileType.STONE_SLAB)){
+					foreach(Tile t in M.ReachableTilesByDistance(row,col,false,TileType.DOOR_C,TileType.RUBBLE,TileType.STONE_SLAB)){ //todo: use connectivity method here?
 						if(item.type == ConsumableType.BLAST_FUNGUS && (t.IsWater() || t.Is(FeatureType.SLIME))){
 							B.Add("The blast fungus is doused. ",t);
 							return true;
@@ -1119,12 +1134,12 @@ namespace Forays{
 		public void TriggerTrap(){ TriggerTrap(true); }
 		public void TriggerTrap(bool click){
 			bool actor_here = (actor() != null);
-			if(actor_here && actor().type == ActorType.FIRE_DRAKE){
+			if(actor_here && actor().type == ActorType.CYCLOPEAN_TITAN){
 				if(name == "floor"){
-					B.Add(actor().the_name + " smashes " + Tile.Prototype(type).a_name + ". ",this);
+					B.Add(actor().TheName(true) + " smashes " + Tile.Prototype(type).a_name + ". ",this);
 				}
 				else{
-					B.Add(actor().the_name + " smashes " + the_name + ". ",this);
+					B.Add(actor().TheName(true) + " smashes " + the_name + ". ",this);
 				}
 				TransformTo(TileType.FLOOR);
 				return;
@@ -1286,6 +1301,7 @@ namespace Forays{
 				break;
 			}
 			case TileType.TELEPORT_TRAP:
+			{
 				if(actor_here){
 					B.Add("An unstable energy covers " + actor().TheName(true) + ". ",actor());
 					actor().attrs[AttrType.TELEPORTING] = R.Roll(4);
@@ -1293,10 +1309,33 @@ namespace Forays{
 					Q.Add(new Event(actor(),(R.Roll(10)+25)*100,AttrType.TELEPORTING,actor().YouFeel() + " more stable. ",actor()));
 				}
 				else{
-					B.Add("An unstable energy crackles for a moment, then dissipates. ",this);
+					if(inv != null){
+						B.Add("An unstable energy covers " + inv.TheName(true) + ". ",this);
+						Tile dest = M.AllTiles().Where(x=>x.passable && x.CanGetItem()).Random();
+						if(dest != null){
+							B.Add("It vanishes! ",this);
+							bool seen = player.CanSee(this);
+							Item i = inv;
+							inv = null;
+							dest.GetItem(i);
+							if(seen){
+								B.Add("It reappears! ",dest);
+							}
+							else{
+								B.Add(i.AName(true) + " appears! ",dest);
+							}
+						}
+						else{
+							B.Add("Nothing happens. ",this);
+						}
+					}
+					else{
+						B.Add("An unstable energy crackles for a moment, then dissipates. ",this);
+					}
 				}
 				Toggle(actor());
 				break;
+			}
 			case TileType.SHOCK_TRAP:
 			{
 				//int old_radius = light_radius; //This was a cool effect, but caused bugs when the tile's radius changed mid-trigger.
@@ -1527,37 +1566,99 @@ namespace Forays{
 			case TileType.FLING_TRAP:
 			{
 				List<int> valid_dirs = new List<int>();
-				foreach(int dir in U.EightDirections){
+				foreach(int d in U.EightDirections){
 					bool good = true;
 					Tile current = this;
 					for(int i=0;i<2;++i){
-						current = current.TileInDirection(dir);
-						if(current == null || (!current.passable && !current.Is(TileType.BARREL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.POISON_BULB,TileType.STANDING_TORCH))){
-							good = false;
+						current = current.TileInDirection(d);
+						if(current == null || (!current.passable && !current.Is(TileType.BARREL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.POISON_BULB,TileType.STANDING_TORCH))){ //todo check list
+							good = false; //try to pick directions that are either open, or that have interesting things to be knocked into
 							break;
 						}
 					}
 					if(good){
-						valid_dirs.Add(dir);
+						valid_dirs.Add(d);
 					}
 				}
 				Toggle(actor());
+				int dir = -1;
+				if(valid_dirs.Count > 0){
+					dir = valid_dirs.Random();
+				}
+				else{
+					dir = Global.RandomDirection();
+				}
 				if(actor_here){
-					int dir = -1;
-					if(valid_dirs.Count > 0){
-						dir = valid_dirs.Random();
-					}
-					else{
-						dir = Global.RandomDirection();
-					}
 					Actor a = actor();
 					B.Add("The floor suddenly tilts up under " + a.TheName(true) + "! ",this);
 					a.attrs[AttrType.TURN_INTO_CORPSE]++;
-					KnockObjectBack(actor(),GetBestExtendedLineOfEffect(TileInDirection(dir)),5);
+					KnockObjectBack(actor(),GetBestExtendedLineOfEffect(TileInDirection(dir)),5,null);
 					a.CorpseCleanup();
 				}
 				else{
-					B.Add("Nothing happens. ",this);
+					if(inv != null){
+						B.Add("The floor suddenly tilts up under " + inv.TheName(true) + "! ",this);
+						string item_name = "it";
+						string punctuation = ". ";
+						if(!player.CanSee(this)){
+							item_name = inv.AName(true);
+							punctuation = "! ";
+						}
+						Item i = inv;
+						inv = null;
+						List<Tile> line = GetBestExtendedLineOfEffect(TileInDirection(dir));
+						Tile t = line.LastBeforeSolidTile();
+						Actor first = FirstActorInLine(line);
+						if(first != null){
+							t = first.tile();
+							B.Add(item_name + " hits " + first.the_name + punctuation,first);
+						}
+						line = line.ToFirstObstruction();
+						if(line.Count > 0){
+							line.RemoveAt(line.Count - 1);
+						}
+						if(line.Count > 0){
+							line.RemoveAt(line.Count - 1); //i forget why I needed to do this twice, but it seems to work
+						}
+						{
+							Tile first_unseen = null;
+							foreach(Tile tile2 in line){
+								if(!tile2.seen){
+									first_unseen = tile2;
+									break;
+								}
+							}
+							if(first_unseen != null){
+								line = line.To(first_unseen);
+								if(line.Count > 0){
+									line.RemoveAt(line.Count - 1);
+								}
+							}
+						}
+						M.Draw();
+						if(line.Count > 0){
+							Screen.AnimateProjectile(line,new colorchar(i.symbol,i.color));
+						}
+						if(i.IsBreakable()){
+							B.Add("It breaks! ",t);
+						}
+						else{
+							t.GetItem(i);
+						}
+						t.MakeNoise(2);
+						if(first != null){
+							//first.player_visibility_duration = -1; //not sure how angry monsters should get in this case
+							//first.attrs[AttrType.PLAYER_NOTICED]++;
+						}
+						else{
+							if(t.IsTrap()){
+								t.TriggerTrap();
+							}
+						}
+					}
+					else{
+						B.Add("Nothing happens. ",this);
+					}
 				}
 				break;
 			}
@@ -1888,6 +1989,33 @@ namespace Forays{
 			}
 			return result;
 		}
+		public List<Tile> PassableNeighborsBetween(int r,int c){ //list of passable tiles next to this one that are between you and it
+			del Clamp = x => x<-1? -1 : x>1? 1 : x; //clamps to a value between -1 and 1
+			int dy = r - row;
+			int dx = c - col;
+			List<Tile> result = new List<Tile>();
+			if(dy==0 && dx==0){
+				return result; //return the empty set
+			}
+			int newrow = row+Clamp(dy);
+			int newcol = col+Clamp(dx);
+			if(M.tile[newrow,newcol].passable){
+				result.Add(M.tile[newrow,newcol]);
+			}
+			if(Math.Abs(dy) < Math.Abs(dx) && dy!=0){
+				newrow -= Clamp(dy);
+				if(M.tile[newrow,newcol].passable){
+					result.Add(M.tile[newrow,newcol]);
+				}
+			}
+			if(Math.Abs(dx) < Math.Abs(dy) && dx!=0){
+				newcol -= Clamp(dx);
+				if(M.tile[newrow,newcol].passable){
+					result.Add(M.tile[newrow,newcol]);
+				}
+			}
+			return result;
+		}
 		public List<Tile> NeighborsBetweenWithCondition(int r,int c,TileDelegate condition){ //list of tiles next to this one that are between you and it
 			del Clamp = x => x<-1? -1 : x>1? 1 : x; //clamps to a value between -1 and 1
 			int dy = r - row;
@@ -1971,22 +2099,14 @@ namespace Forays{
 				}
 				if(Is(FeatureType.OIL) || Is(TileType.BARREL)){
 					features.Remove(FeatureType.OIL);
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
 				}
 				if(Is(FeatureType.WEB)){
 					features.Remove(FeatureType.WEB);
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
@@ -1994,22 +2114,14 @@ namespace Forays{
 				//todo: add static list flammable_gases to Tile class, then foreach it here:
 				if(Is(FeatureType.SPORES)){
 					features.Remove(FeatureType.SPORES);
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
 				}
 				if(Is(FeatureType.CONFUSION_GAS)){
 					features.Remove(FeatureType.CONFUSION_GAS);
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
@@ -2025,11 +2137,7 @@ namespace Forays{
 				if(Is(FeatureType.TROLL_CORPSE)){
 					features.Remove(FeatureType.TROLL_CORPSE);
 					B.Add("The troll corpse burns to ashes! ",this);
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
@@ -2037,11 +2145,7 @@ namespace Forays{
 				if(Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){
 					features.Remove(FeatureType.TROLL_BLOODWITCH_CORPSE);
 					B.Add("The troll bloodwitch corpse burns to ashes! ",this);
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
@@ -2049,11 +2153,7 @@ namespace Forays{
 				if(inv != null && (inv.NameOfItemType() == "scroll" || inv.type == ConsumableType.BANDAGES)){
 					B.Add(inv.TheName(true) + " burns up! ",this);
 					inv = null;
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
@@ -2074,11 +2174,7 @@ namespace Forays{
 					else{
 						TurnToFloor();
 					}
-					if(!features.Contains(FeatureType.FIRE)){
-						UpdateRadius(light_radius,1);
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
-					}
+					add_fire_to_features();
 					if(actor() != null){
 						actor().ApplyBurning();
 					}
@@ -2103,6 +2199,10 @@ namespace Forays{
 				}
 				if(Is(TileType.WATER)){
 					Toggle(null,TileType.ICE);
+					if(actor() != null && !actor().HasAttr(AttrType.FLYING) && actor().type != ActorType.FROSTLING){
+						B.Add(actor().YouAre() + " stuck in the ice! ",actor());
+						actor().RefreshDuration(AttrType.IMMOBILE,100,actor().YouAre() + " no longer stuck in the ice. ",actor());
+					}
 				}
 				if(inv != null){
 					if(inv.NameOfItemType() == "potion"){
@@ -2254,11 +2354,7 @@ namespace Forays{
 						return;
 					}
 					if(type == TileType.FIREPIT){
-						if(!features.Contains(FeatureType.FIRE)){
-							UpdateRadius(light_radius,1);
-							features.Add(FeatureType.FIRE);
-							Fire.AddBurningObject(this);
-						}
+						add_fire_to_features();
 						if(actor() != null){
 							actor().ApplyBurning();
 						}
@@ -2270,18 +2366,11 @@ namespace Forays{
 				case FeatureType.FIRE:
 				{
 					ApplyEffect(DamageType.FIRE);
-					if(!Is(FeatureType.FIRE,FeatureType.POISON_GAS,FeatureType.THICK_DUST,FeatureType.SLIME) && !IsWater()){
-						if(light_radius == 0){
-							UpdateRadius(0,1);
-						}
-						features.Add(FeatureType.FIRE);
-						Fire.AddBurningObject(this);
+					if(!Is(FeatureType.POISON_GAS,FeatureType.THICK_DUST,FeatureType.SLIME) && !IsWater()){
+						add_fire_to_features();
 						if(actor() != null){
 							actor().ApplyBurning();
 						}
-					}
-					if(IsBurning() && Is(TileType.UNLIT_FIREPIT)){
-						Toggle(null,TileType.FIREPIT);
 					}
 					break;
 				}
@@ -2306,6 +2395,7 @@ namespace Forays{
 				case FeatureType.TROLL_BLOODWITCH_CORPSE:
 					if(Is(FeatureType.FIRE) || (Is(TileType.FIREPIT) && !Is(FeatureType.SLIME))){
 						B.Add(proto_feature[f].the_name + " burns to ashes! ",this);
+						AddFeature(FeatureType.FIRE);
 					}
 					else{
 						features.Add(f);
@@ -2344,6 +2434,18 @@ namespace Forays{
 		public void RemoveAllGases(){
 			foreach(FeatureType f in new List<FeatureType>{FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.POISON_GAS,FeatureType.SPORES,FeatureType.THICK_DUST,FeatureType.CONFUSION_GAS}){
 				RemoveFeature(f);
+			}
+		}
+		private void add_fire_to_features(){ //Let's try lowercase_with_underscores for private 'helper' methods.
+			if(!features.Contains(FeatureType.FIRE)){
+				if(light_radius == 0){
+					UpdateRadius(0,1);
+				}
+				features.Add(FeatureType.FIRE);
+				Fire.AddBurningObject(this);
+				if(Is(TileType.UNLIT_FIREPIT)){
+					Toggle(null,TileType.FIREPIT);
+				}
 			}
 		}
 		private void AddOpaqueFeature(FeatureType f){

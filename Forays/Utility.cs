@@ -1013,6 +1013,9 @@ namespace Utilities{
 		public List<Number> Sequence = null;
 		public int sequence_index = 0;
 		public Number Delta = null; //todo: some of these should be properties, with validation on changes.
+		public static implicit operator int(Number n){
+			return n.GetValue();
+		}
 		public int GetValue(){ //also, need to enforce the requirement that every number eventually evaluates to an int.
 			switch(Type){
 			case NumberType.Range:
@@ -1097,6 +1100,9 @@ namespace Utilities{
 		public List<FloatNumber> Sequence = null;
 		public int sequence_index = 0;
 		public FloatNumber Delta = null; //todo: some of these should be properties, with validation on changes.
+		public static implicit operator float(FloatNumber n){
+			return n.GetValue();
+		}
 		public float GetValue(){ //also, need to enforce the requirement that every number eventually evaluates to a float.
 			switch(Type){
 			case NumberType.Range:

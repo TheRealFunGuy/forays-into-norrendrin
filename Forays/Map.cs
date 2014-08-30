@@ -65,7 +65,7 @@ namespace Forays{
 		private bool[,] danger_sensed{get;set;}
 		private static List<pos> allpositions = new List<pos>();
 		public PosArray<int> safetymap = null;
-		public PosArray<int> poppy_distance_map = null;
+		public PosArray<int> poppy_distance_map = null; //todo: this could be updated when poppies are removed
 		//public int[,] row_displacement = null;
 		//public int[,] col_displacement = null;
 		public colorchar[,] last_seen = new colorchar[ROWS,COLS];
@@ -121,7 +121,7 @@ namespace Forays{
 			}
 			return result;
 		}
-		public List<Actor> AllActors(){
+		public List<Actor> AllActors(){ //todo: make this return just the ones from tiebreakers?
 			List<Actor> result = new List<Actor>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -309,6 +309,7 @@ namespace Forays{
 			IntLocationDelegate get_cost = (r,c) => {
 				if(actor[r,c] != null){
 					return 20 + (10 * actor[r,c].attrs[AttrType.TURNS_HERE]);
+					//return 20;
 				}
 				else{
 					if(tile[r,c].Is(TileType.DOOR_C,TileType.RUBBLE)){
@@ -320,13 +321,16 @@ namespace Forays{
 				}
 			};
 			PosArray<int> a = GetDijkstraMap(Global.ROWS,Global.COLS,
-			                                 (s,t)=>!tile[s,t].passable && !tile[s,t].IsDoorType(false),
-			                                 //(s,t)=>tile[s,t].Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.STATUE), 
-			                                 get_cost,sourcelist);
+			                                (s,t)=>!tile[s,t].passable && !tile[s,t].IsDoorType(false),
+			                                //(s,t)=>tile[s,t].Is(TileType.WALL,TileType.HIDDEN_DOOR,TileType.STONE_SLAB,TileType.STATUE), 
+											(u,v) => 10,sourcelist);
 			for(int i=0;i<Global.ROWS;++i){
 				for(int j=0;j<Global.COLS;++j){
 					if(a[i,j] != U.DijkstraMin){
-						a[i,j] = (-(a[i,j]) * 12) / 10;
+						if(a[i,j] != U.DijkstraMax && a[i,j] > 200){
+							a[i,j] = 200; //todo: testing this modification. the idea here is to make more "best" spots to flee to, reducing the draw of the few farthest ones.
+						}
+						a[i,j] = -(a[i,j] * 14) / 10; //changed from 1.2 to 1.4 to test
 					}
 				}
 			}
@@ -334,17 +338,17 @@ namespace Forays{
 				a[o.row,o.col] = U.DijkstraMin; //now the player (or other sources) become blocking
 			}
 			UpdateDijkstraMap(a,get_cost);
-			foreach(PhysicalObject o in sources){ //add a penalty for tiles adjacent to the player
+			/*foreach(PhysicalObject o in sources){ //add a penalty for tiles adjacent to the player
 				foreach(pos p in o.PositionsAtDistance(1)){
 					if(a[p] != U.DijkstraMax && a[p] != U.DijkstraMin){
 						a[p] += 30;
 					}
 				}
-			}
+			}*/
 			safetymap = a;
 		}
 		public delegate bool BooleanLocationDelegate(int row,int col);
-		public delegate int IntLocationDelegate(int row,int col);
+		public delegate int IntLocationDelegate(int row,int col); //todo: remove dijkstra from this file, use the one in Utility?  (do I have UpdateDijkstra in Utility?)
 		public static PosArray<int> GetDijkstraMap(int height,int width,BooleanLocationDelegate is_blocked,IntLocationDelegate get_cost,List<cell> sources){
 			PriorityQueue<cell> frontier = new PriorityQueue<cell>(c => -c.value);
 			PosArray<int> map = new PosArray<int>(height,width);
@@ -719,7 +723,12 @@ namespace Forays{
 						if(player.HasFeat(FeatType.DANGER_SENSE) && danger_sensed != null
 						   && danger_sensed[r,c] && player.LightRadius() == 0
 						   && !wiz_lite && !tile[r,c].IsKnownTrap() && !tile[r,c].IsShrine()){
-							ch.color = Color.Red;
+							if(tile[r,c].IsLit()){
+								ch.color = Color.Red;
+							}
+							else{
+								ch.color = Color.DarkRed;
+							}
 						}
 					}
 				}
@@ -734,7 +743,12 @@ namespace Forays{
 					if(actor[r,c] == player && player.HasFeat(FeatType.DANGER_SENSE)
 					&& danger_sensed != null && danger_sensed[r,c] && player.LightRadius() == 0
 					&& !wiz_lite){
-						ch.color = Color.Red;
+						if(tile[r,c].IsLit() && !player.HasAttr(AttrType.BLIND)){
+							ch.color = Color.Red;
+						}
+						else{
+							ch.color = Color.DarkRed;
+						}
 					}
 					else{
 						if(actor[r,c] == player){
@@ -1152,7 +1166,7 @@ namespace Forays{
 						int rr = R.Roll(ROWS-2);
 						int rc = R.Roll(COLS-2);
 						bool good = true;
-						foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){
+						foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){ //todo: remove this? 
 							if(t.IsTrap()){
 								good = false;
 								break;
@@ -1179,7 +1193,7 @@ namespace Forays{
 								}
 							}
 						}
-						if(good && tile[rr,rc].passable && actor[rr,rc] == null){
+						if(good && tile[rr,rc].passable && !tile[rr,rc].Is(TileType.CHASM,TileType.FIRE_RIFT) && actor[rr,rc] == null){
 							result = Actor.Create(final_type,rr,rc);
 							if(number > 1){
 								group_tiles.Add(tile[rr,rc]);
@@ -1209,7 +1223,7 @@ namespace Forays{
 						Tile t = group_tiles.Random();
 						List<Tile> empty_neighbors = new List<Tile>();
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
-							if(neighbor.passable && !neighbor.IsTrap() && neighbor.actor() == null){
+							if(neighbor.passable && !neighbor.Is(TileType.CHASM,TileType.FIRE_RIFT) && !neighbor.IsTrap() && neighbor.actor() == null){ //todo: remove trap restriction?
 								empty_neighbors.Add(neighbor);
 							}
 						}
@@ -3678,8 +3692,7 @@ namespace Forays{
 						tile[i,j].color = Color.RandomDoom;
 						break;
 					case CellType.RoomFeature4:
-						Tile.Create(TileType.FIRE_GEYSER,i,j);
-						tile[i,j].SetName("fire rift");
+						Tile.Create(TileType.FIRE_RIFT,i,j);
 						break;
 					default:
 						Tile.Create(TileType.FLOOR,i,j);

@@ -392,7 +392,7 @@ gl_FragColor = vec4(v.r * color_fs.r,v.g * color_fs.g,v.b * color_fs.b,v.a);
 			GL.BindBuffer(BufferTarget.ElementArrayBuffer,elem_id);
 			GL.BufferData(BufferTarget.ArrayBuffer,new IntPtr(sizeof(float)*all_values.Length),all_values,BufferUsageHint.StreamDraw);
 			GL.BufferData(BufferTarget.ElementArrayBuffer,new IntPtr(sizeof(int)*indices.Length),indices,BufferUsageHint.StaticDraw);
-			int stride = sizeof(float)*s.TotalVertexAttribSize;
+			//int stride = sizeof(float)*s.TotalVertexAttribSize;
 			//GL.EnableVertexAttribArray(0);
 			//GL.EnableVertexAttribArray(1);
 			//GL.VertexAttribPointer(0,2,VertexAttribPointerType.Float,false,stride,0);
