@@ -649,7 +649,7 @@ namespace Forays{
 			case Color.Black:
 				return Color4.Black;
 			case Color.Blue:
-				return new Color4(10,10,255,255);
+				return new Color4(20,20,255,255);
 				//return Color4.Blue;
 			case Color.Cyan:
 				return Color4.Cyan;
@@ -679,7 +679,8 @@ namespace Forays{
 			case Color.White:
 				return Color4.White;
 			case Color.Yellow:
-				return Color4.Yellow;
+				return new Color4(255,248,0,255);
+				//return Color4.Yellow;
 			case Color.Transparent:
 				return Color4.Transparent;
 			default:

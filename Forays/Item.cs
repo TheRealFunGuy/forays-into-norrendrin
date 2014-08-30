@@ -1664,7 +1664,7 @@ namespace Forays{
 			case ConsumableType.DETONATION:
 			{
 				ItemUseResult orb_result = UseOrb(3,false,user,line,(t,LOE_tile,results)=>{
-					LOE_tile.ApplyExplosion(3,"an orb of detonation");
+					LOE_tile.ApplyExplosion(3,user,"an orb of detonation");
 				});
 				used = orb_result.used;
 				IDed = orb_result.IDed;
@@ -1960,17 +1960,32 @@ namespace Forays{
 					Actor a = targeting.targeted.actor();
 					if(a != null){
 						if(a.HasAttr(AttrType.MENTAL_IMMUNITY)){
-							B.Add(a.You("resist") + " falling asleep. ",a);
+							if(a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE)){
+								B.Add(a.You("resist") + " becoming dormant. ",a);
+							}
+							else{
+								B.Add(a.You("resist") + " falling asleep. ",a);
+							}
 						}
 						else{
 							if(a.ResistedBySpirit()){
 								if(player.HasLOS(a)){
-									B.Add(a.You("almost fall") + " asleep. ",a);
+									if(a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE)){
+										B.Add(a.You("resist") + " becoming dormant. ",a);
+									}
+									else{
+										B.Add(a.You("almost fall") + " asleep. ",a);
+									}
 								}
 							}
 							else{
 								if(player.HasLOS(a)){
-									B.Add(a.You("fall") + " asleep. ",a);
+									if(a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE)){
+										B.Add(a.You("become") + " dormant. ",a);
+									}
+									else{
+										B.Add(a.You("fall") + " asleep. ",a);
+									}
 								}
 								a.attrs[AttrType.ASLEEP] = 6 + R.Roll(4,6);
 							}
@@ -2460,6 +2475,30 @@ namespace Forays{
 			type = type_;
 			enchantment = enchantment_;
 		}
+		public bool IsEdged(){
+			if(type == WeaponType.SWORD || type == WeaponType.DAGGER){
+				return true;
+			}
+			return false;
+		} //note that the bow is neither
+		public bool IsBlunt(){
+			if(type == WeaponType.MACE || type == WeaponType.STAFF){
+				return true;
+			}
+			return false;
+		}
+		public static bool IsEdged(WeaponType type){
+			if(type == WeaponType.SWORD || type == WeaponType.DAGGER){
+				return true;
+			}
+			return false;
+		}
+		public static bool IsBlunt(WeaponType type){
+			if(type == WeaponType.MACE || type == WeaponType.STAFF){
+				return true;
+			}
+			return false;
+		}
 		public AttackInfo Attack(){
 			switch(type){
 			case WeaponType.SWORD:
@@ -2692,7 +2731,7 @@ namespace Forays{
 		public static string StatusDescription(EquipmentStatus status){
 			switch(status){
 			case EquipmentStatus.POISONED: //weapon-only statuses
-				return "   Poisoned -- Poisons the target, and might poison you, too.";
+				return "    Poisoned -- Poisons the target, and might poison you too.";
 			case EquipmentStatus.MERCIFUL:
 				return " Merciful -- Unable to take the last bit of health from an enemy.";
 			case EquipmentStatus.POSSESSED:

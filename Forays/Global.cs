@@ -284,12 +284,18 @@ namespace Forays{
 						Screen.UpdateCursor(true);
 						GLGame.Timer.Reset();
 						GLGame.Timer.Start();
+						//string s = ((float)frames / (1.0f / (float)time.Milliseconds)).ToString().PadLeft(8);
+						//Screen.WriteMapString(-3,-12,s);
+						//frames = 0;
 					}
 					else{
 						if(time.Milliseconds >= 500){
 							Screen.UpdateCursor(false);
 						}
 					}
+				}
+				if(true){ //todo: option? measurement?
+					Thread.Sleep(10); //todo: change back to 10?
 				}
 				if(KeyPressed){
 					KeyPressed = false;
@@ -513,12 +519,18 @@ namespace Forays{
 					}
 				}
 			}
+			if(Option(OptionType.DARK_GRAY_UNSEEN)){
+				Map.unseencolor = Color.DarkGray;
+			}
+			else{
+				Map.unseencolor = Color.DarkBlue;
+			}
 		}
 		public static void SaveOptions(){
 			StreamWriter file = new StreamWriter("options.txt",false);
 			file.WriteLine("Options:");
 			file.WriteLine("Any line that starts with [TtFf] and a space MUST be one of the valid options(or, in the 2nd part, one of the valid tutorial tips):");
-			file.WriteLine("no_wall_sliding autopickup top_row_movement never_display_tips always_reset_tips");
+			file.WriteLine("no_wall_sliding autopickup top_row_movement never_display_tips always_reset_tips dark_gray_unseen");
 			foreach(OptionType op in Enum.GetValues(typeof(OptionType))){
 				if(Option(op)){
 					file.Write("t ");
@@ -974,6 +986,17 @@ namespace Forays{
 			}
 			List<T> result = new List<T>();
 			for(int i=0;i<count;++i){
+				result.Add(line[i]);
+			}
+			return result;
+		}
+		public static List<T> FromCount<T>(this List<T> line,int count){ //note that ToCount(x) and FromCount(x) will both include the element at x.
+			if(count <= 1){
+				return new List<T>(line);
+			}
+			List<T> result = new List<T>();
+			int total = line.Count;
+			for(int i=count-1;i<total;++i){
 				result.Add(line[i]);
 			}
 			return result;

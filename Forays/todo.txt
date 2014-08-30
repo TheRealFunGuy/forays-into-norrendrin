@@ -50,6 +50,193 @@ fog/dust storm should add the fog/dust to the last-known map, since you see the 
 hidden doors in fortresses are really easy to spot...
 make scrolls check (when placed/thrown into a tile) for burning actors as well as fire in the tile - this'll let you toss scrolls to keep a burning enemy lit.
 fixed a bug where mouseover descriptions sometimes didn't clear properly
+steal the sleeping -> dormant thing from crawl, and let all sleep effects work on everything.
+fixed a bug where monsters could sometimes find the player too easily when invisible
+anything without humanoid int shouldn't avoid gases - better handling of hazards in general
+take the invis mechanic from delusions - when you leave a tile while invisible, any adjacent monstahs know where you went, IF they're alerted.
+amnesia duration increased to make it better for non-stealthy characters compared to stealthy ones
+let staff destroy skeletons too? Should I have *no* weapon-specific stuff, and just go with blunt/edged?
+also make more traps affect items. throw something on that teleport trap? awesome, now go find it.
+and make flint degrade when thrown, too.
+make your last score always visible in high scores
+explosions and other knockback effects will now properly consider the source of the damage
+being in water when it freezes could (should!) immobilize you briefly.
+wait, setting a monster on fire doesn't burn existing webs?
+you can trap a monster with pathing weirdness: if you make noise on a wall, it'll keep trying to step there. if it never sees or hears you after that, it'll stay.
+monsters can still try to path to rubble forever. (because they step around it rather than scattering it) - related to above bug?
+collapse should make noise
+tripping should exhaust a bit.
+fixed a bug where you were unable to tumble through fog
+minor: smashing a monster into a wall could leave a blood splatter. only if they die?
+make the cloud elemental's attack reveal its position?
+the skeleton falls with your arrow between its eyes? fixed.
+decide between fairy and faerie
+make blast fungus ignite when you pull them up, instead of being impossible.
+unstable teleportals will now transport items away, too - make that exploding blast fungus someone else's problem!
+can [x] be ignored if autoexploring?
+firing an arrow through fire should catch it - this can be used as a key.
+whoa, hold on, do they actually avoid the fire? FIX THIS.
+improved monsters' ability to avoid traffic jams while pathing
+"bandages have no effect on you in stone form"
+make poltergeist appear after fewer events
+does adding a troll corpse to a firepit create fire? it should! - also fixed a bug with troll corpses
+danger sense obscures lit/unlit, which is annoying.
+ghosts might not spawn again IMMEDIATELY if you're still standing there
+drive back is cool but auto hits are way too easy to get ANYWAY - simply add an awesome bonus. -now doubles crit, right?
+
+
+
+vvvvv
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+expand message buffer
+	-mostly straightforward, but we should only print the last few, not ALL of them, when the game loads.
+	-allow scrolling, but only if there are non-blank messages.
+
+list?  things that need to be done with the previous messages:
+
+-find the last message
+-change last message if repeated
+-add new messages to end
+-(no longer needs to loop until we have tons of messages)
+
+
+...so, i'm thinking I keep the same system, with array, but also track how many actual messages have been created. this'll let me NOT save thousands of blanks, and also let me restrict scrolling.
+
+
+
+
+
+
+
+TODO:
+
+
+
+
+
+
+
+
+
+
+
+more grab bug info: Mimic grabs.  Hit mimic with mace.  Mimic is knocked back.  Grenade knocks me back toward mimic, or I just step there (same direction).  Mimic is now holding me again despite not grabbing me.
+
+"Possessed  Poisoned"   <--these lines should probably be centered, not offset to the left.
+
+whatever orb-targeting change you made to fix the cursor appearing, do the same thing to arrow firing.
+
+you should be able to look around in 'm'ap like you do in 'X'.
+	-this would require another (map-only) look mode.
+
+improve [m]ap with shrine info and maybe stairs discovered and maybe turns spent on this level.
+
+add "or yourself" to TK's description  -  what, in the help file?
+
+remember to update entrancer list, wandering spawn list, etc.
+
+do a lot of playtesting and then consider Knowledge at rarity 1 vs. rarity 2.
+
+oil and slime washing:  if you can [o]perate it to coat yourself, then I can't let it appear in the water. It seems to be one or the other.
+
+maybe make arcane interference always reduce enemy mana or something? even when they don't have that spell, right?
+	-look at this again after you can check out the description. make sure it'll all fit.
+
+autoexplore still has bugs: it's willing to become drowsy in poppies even though an EQUAL path avoids them.
+	-not reproduced
+
+"blast everything with magic" might be too viable right now, if you don't run out of mana quick enough.
+	-this makes me consider lower HP enemies, but more of them. But then, I was going to rebalance all the HP values upward. how should I resolve this?
+
+autoexplore is still trying to go through this stone slab?!?  it's not a trap room. I guess it needs a much higher cost or something?
+	-cost of slab increased. test this.
+
+
+#                                                      #
+# remember to use some colored walls in here somewhere #
+#                                                      #
+
+add two more pages to monster descriptions: Abilities (spells out exactly what they do) and Tips (gives tactical hints)
+
+tutorial tips for a bunch of the less obvious commands? map, known, travel, walk, operate, explore...
+
+make terrain descriptions appear in lookmode
+
+make the "use ranged attacks against this enemy!" tip WAY more blunt.
+
+do i have a tip for exhaustion yet? (when does it appear?)
+
+add tutorial tip for "ancient power calling you back" - this needs to be obvious
+
+option for 'safe mode' that prevents 'y,y' for prompts and ignores key repeat? (is that part even possible?)
+
+conditional printing of corpse knockback message - maybe save the message in reserve,
+	and print it only if something else happens that could cause a message.
+
+"you can no longer see this %item%" might be a problem - if I print its name, it reveals that it's still there. If I ignore it, you can't travel to it. If I don't want to reveal that it's still there, I have to remember it somehow.
+
+
+
+not reproduced reliably:
+BUG: this has happened several times now. After entering Help, keyboard commands are sometimes ignored.
+
+mapgen:
+firepits should generate sometimes in fortresses after all - sometimes near barrels.
+add giant glowing fungus
+	-spawns in fungus patches, of course.  blocks movement and LOS? They don't NEED to do anything else. (could also trample like foliage, or release spores)
+do I add doors before altering rooms in standard levels? that can lead to doors in the middle of corridors when cross rooms are involved. (if this becomes a problem, i think the easiest solution is a separate scan for stray doors)
+	-not reproduced - did i disable some code in level gen?
+crypt levels seem to be disconnected more often than most 
+  -if anything is disconnected right now, the bug is in RemoveUnconnected() itself.
+for the unconnected level thing, it might not be alterrooms after all. I got one that called RemoveUnconnected, then RemoveDeadEnds, then MarkInteresting, and it still happened, so the problem is in one of those two, or in removeunconnected itself.
+
+
+
+REMEMBER TO CHECK FUTURE_TODO AGAIN! THERE'S PLENTY LEFT IN THERE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -118,7 +305,6 @@ maybe make graphics_disabled a global bool (too?) to avoid dictionary access.
 
 note: i added parabola and schism to the project. didn't add the build script or opentk.dll.
 
-change Tile's bools so they're not properties.
 
 
 
@@ -260,14 +446,6 @@ done^
 -write cave corridor & twisty cave article for RB. also possibly dijkstra maps part 2 with screenshots.
 -in fact, make a dijkstra visualizer. see distances by number and/or by color. Add or multiply different maps, and change them in realtime.
 
-bugs: 
 
-here's that really weird one where I got killed the turn I used a rune of time:
-"Time stops for a moment. (grayed out)
-You bring out your torch. The troll seer regenerates. The troll
-seer casts glacial blast. The glacial blast hits you. You [more]
-die. [more]"
-
-visual bug for lightning bolt: when targeting past the target to hit it at an angle (when it's in a doorway, say), the bolt seems to go through walls.
 
 

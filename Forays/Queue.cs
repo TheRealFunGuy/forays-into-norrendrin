@@ -650,7 +650,7 @@ namespace Forays{
 								}
 							}
 							else{
-								if(value >= 3 && area.Any(t => t.DistanceFrom(player) == 1 && t.passable && t.actor() == null)){
+								if(value >= 2 && area.Any(t => t.DistanceFrom(player) == 1 && t.passable && t.actor() == null)){
 									Tile tile = area.Where(t => t.DistanceFrom(player) == 1 && t.passable && t.actor() == null).Random();
 									B.DisplayNow();
 									for(int i=4;i>0;--i){
@@ -1649,7 +1649,7 @@ namespace Forays{
 										B.Add(a.the_name + " reappears. ",a);
 									}
 									else{
-										B.Add(a.a_name + " suddenly appears. ",a);
+										B.Add(a.a_name + " suddenly appears! ",a);
 									}
 								}
 							}
@@ -1657,6 +1657,28 @@ namespace Forays{
 						else{
 							if(a != null && a.HasAttr(AttrType.JUST_TELEPORTED)){
 								a.RefreshDuration(AttrType.JUST_TELEPORTED,101);
+							}
+						}
+						if(t.inv != null && t.Is(FeatureType.TELEPORTAL)){
+							List<Tile> tiles = M.AllTiles().Where(x => x.passable && x.inv == null && t.ApproximateEuclideanDistanceFromX10(x) >= 45);
+							dest = tiles.Random();
+							if(dest != null){
+								Item i = t.inv;
+								bool visible = false;
+								if(player.CanSee(t)){
+									visible = true;
+									B.Add(i.TheName(true) + " disappears into the teleportal. ",t);
+								}
+								t.inv = null;
+								dest.GetItem(i);
+								if(player.CanSee(dest)){
+									if(visible){
+										B.Add(i.TheName(true) + " reappears. ",dest);
+									}
+									else{
+										B.Add(i.AName(true) + " suddenly appears! ",dest);
+									}
+								}
 							}
 						}
 						if(value > 0){
@@ -1814,7 +1836,7 @@ namespace Forays{
 						if(t.type == TileType.POPPY_FIELD){
 							new_area.Add(t);
 							Actor a = t.actor();
-							if(a != null && !a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE)){ //flying?
+							if(a != null){
 								if(a.attrs[AttrType.POPPY_COUNTER] < 4){
 									a.GainAttrRefreshDuration(AttrType.POPPY_COUNTER,200);
 									if(a == player && a.attrs[AttrType.POPPY_COUNTER] == 1){

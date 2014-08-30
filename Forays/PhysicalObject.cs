@@ -194,24 +194,30 @@ namespace Forays{
 				}
 			}
 			foreach(Actor a in actors){
-				if(a != player){ //let the player hear sounds with a message?
-					if(a.target_location == null && !a.CanSee(player) && !a.CanSee(tile()) && !a.HasAttr(AttrType.AMNESIA_STUN)){ //if they already have an idea of where the player is/was, they won't bother
-						if(volume > 2 || !a.HasAttr(AttrType.IGNORES_QUIET_SOUNDS)){ //(and amnesia stun makes them ignore all sounds)
-							a.FindPath(this);
-							if(R.CoinFlip()){
-								a.attrs[AttrType.IGNORES_QUIET_SOUNDS]++; //repeated quiet sounds are ignored, eventually...
+				if(!a.IsSilencedHere()){
+					if(a != player){ //let the player hear sounds with a message?
+						if(a.target_location == null && !a.CanSee(player) && (!a.CanSee(tile()) || actor() == null) && !a.HasAttr(AttrType.AMNESIA_STUN)){ //if they already have an idea of where the player is/was, they won't bother
+							if(volume > 2 || !a.HasAttr(AttrType.IGNORES_QUIET_SOUNDS)){ //(and amnesia stun makes them ignore all sounds)
+								a.FindPath(this);
+								if(R.CoinFlip()){
+									a.attrs[AttrType.IGNORES_QUIET_SOUNDS]++; //repeated quiet sounds are ignored, eventually...
+								}
+							}
+						}
+					}
+					else{
+						Actor a2 = this as Actor;
+						if(this != player && a2 != null){
+							a2.attrs[AttrType.DANGER_SENSED] = 1;
+							if(player.CanSee(tile())){
+								a2.attrs[AttrType.TURNS_VISIBLE] = -1;
 							}
 						}
 					}
 				}
-				else{
-					if(this != player && this is Actor){
-						(this as Actor).attrs[AttrType.DANGER_SENSED] = 1;
-					}
-				}
 			}
 		}
-		public bool KnockObjectBack(Actor a,int knockback_strength){
+		public bool KnockObjectBack(Actor a,int knockback_strength,Actor damage_source){
 			List<Tile> line = null;
 			if(DistanceFrom(a) == 0){
 				line = GetBestExtendedLineOfEffect(TileInDirection(Global.RandomDirection()));
@@ -219,9 +225,9 @@ namespace Forays{
 			else{
 				line = GetBestExtendedLineOfEffect(a);
 			}
-			return KnockObjectBack(a,line,knockback_strength);
+			return KnockObjectBack(a,line,knockback_strength,damage_source);
 		}
-		public bool KnockObjectBack(Actor a,List<Tile> line,int knockback_strength){
+		public bool KnockObjectBack(Actor a,List<Tile> line,int knockback_strength,Actor damage_source){
 			if(knockback_strength == 0){ //note that TURN_INTO_CORPSE should be set for 'a' - therefore it won't be removed and we can do what we want with it.
 				return a.CollideWith(a.tile());
 			}
@@ -252,6 +258,10 @@ namespace Forays{
 			if(a.HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
 				dice = 0;
 			}
+			if(a.type == ActorType.SPORE_POD){
+				dice = 0;
+				damage_dice_to_other = 0;
+			}
 			while(knockback_strength > 1){ //if the knockback strength is greater than 1, you're passing *over* at least one tile.
 				Tile t = line[0];
 				line.RemoveAt(0);
@@ -263,7 +273,7 @@ namespace Forays{
 					if(a.type == ActorType.SPORE_POD){
 						return true;
 					}
-					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"crashing into the floor");
+					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"crashing into the floor");
 				}
 				if(!t.passable){
 					string deathstringname = t.AName(false);
@@ -282,7 +292,7 @@ namespace Forays{
 						knocked_back_message = "";
 						//knockback_strength -= 2; //removing the distance modification for now
 						t.Toggle(null);
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
 						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
 							if(a.type == ActorType.HOMUNCULUS){
@@ -306,7 +316,11 @@ namespace Forays{
 						}
 						knocked_back_message = "";
 						if(a.type != ActorType.SPORE_POD){
-							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
+							Color blood = a.BloodColor();
+							if(blood != Color.Black && R.CoinFlip() && t.Is(TileType.WALL) && !a.HasAttr(AttrType.INVULNERABLE)){
+								t.color = blood;
+							}
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
 						}
 						if(!a.HasAttr(AttrType.SMALL)){
 							t.Bump(a.DirectionOf(t));
@@ -327,10 +341,10 @@ namespace Forays{
 						string actorname = t.actor().AName(false);
 						string actorname2 = a.AName(false);
 						if(t.actor().type != ActorType.SPORE_POD && !t.actor().HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
-							t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice_to_other,6),null,"colliding with " + actorname2);
+							t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice_to_other,6),damage_source,"colliding with " + actorname2);
 						}
 						if(a.type != ActorType.SPORE_POD){
-							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"colliding with " + actorname);
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"colliding with " + actorname);
 						}
 						a.CollideWith(a.tile());
 						return !a.HasAttr(AttrType.CORPSE);
@@ -377,7 +391,7 @@ namespace Forays{
 					if(a.type == ActorType.SPORE_POD){
 						return true;
 					}
-					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"crashing into the floor");
+					return a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"crashing into the floor");
 				}
 				if(!t.passable){
 					string deathstringname = t.AName(false);
@@ -395,7 +409,7 @@ namespace Forays{
 						}
 						knocked_back_message = "";
 						t.Toggle(null);
-						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
+						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
 						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
 							if(a.type == ActorType.HOMUNCULUS){
@@ -420,7 +434,11 @@ namespace Forays{
 						}
 						knocked_back_message = "";
 						if(a.type != ActorType.SPORE_POD){
-							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"slamming into " + deathstringname);
+							Color blood = a.BloodColor();
+							if(blood != Color.Black && R.CoinFlip() && t.Is(TileType.WALL) && !a.HasAttr(AttrType.INVULNERABLE)){
+								t.color = blood;
+							}
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
 						}
 						if(!a.HasAttr(AttrType.SMALL)){
 							t.Bump(a.DirectionOf(t));
@@ -441,10 +459,10 @@ namespace Forays{
 						string actorname = t.actor().AName(false);
 						string actorname2 = a.AName(false);
 						if(t.actor().type != ActorType.SPORE_POD && !t.actor().HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
-							t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice_to_other,6),null,"colliding with " + actorname2);
+							t.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice_to_other,6),damage_source,"colliding with " + actorname2);
 						}
 						if(a.type != ActorType.SPORE_POD){
-							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),null,"colliding with " + actorname);
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"colliding with " + actorname);
 						}
 						a.CollideWith(a.tile());
 						return !a.HasAttr(AttrType.CORPSE);
@@ -501,7 +519,7 @@ namespace Forays{
 								}
 							}
 						}
-						if(t.Is(FeatureType.WEB) && a.HasAttr(AttrType.SMALL) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
+						if(a.HasAttr(AttrType.SMALL) && t.Is(FeatureType.WEB) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
 							B.Add(knocked_back_message);
 							interrupted = true;
 						}
@@ -551,7 +569,7 @@ namespace Forays{
 							a.attrs[AttrType.TURN_INTO_CORPSE]++;
 							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(damage_dice,6),damage_source,cause_of_death);
 							if(a.curhp > 0 || !a.HasAttr(AttrType.NO_CORPSE_KNOCKBACK)){
-								KnockObjectBack(a,1);
+								KnockObjectBack(a,1,damage_source);
 							}
 							a.CorpseCleanup();
 						}
@@ -1208,7 +1226,7 @@ compare this number to 1/2:  if less than 1/2, major.
 				return true;
 			}
 			if(!M.tile[r,c].passable){ //for walls, check nearby tiles
-				foreach(Tile t in M.tile[r,c].NonOpaqueNeighborsBetween(row,col)){
+				foreach(Tile t in M.tile[r,c].PassableNeighborsBetween(row,col)){
 					if(HasBresenhamLineOfEffect(t.row,t.col)){
 						return true;
 					}

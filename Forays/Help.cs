@@ -288,7 +288,7 @@ namespace Forays{
 					"Any light will ignite the fuse of a blast fungus.",
 					"After a few turns, it'll explode.",
 					"",
-					"Until lit, it is rooted firmly to the ground by",
+					"Until lit, it is rooted firmly to the ground by", //todo fix desc
 					"its fuse. After being lit, it can be picked up",
 					"and thrown - quickly!"};
 			case TutorialTopic.CastingWithoutMana:

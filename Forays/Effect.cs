@@ -202,15 +202,27 @@ namespace Forays{
 						a.attrs[AttrType.TELEKINETICALLY_THROWN] = 1;
 						a.attrs[AttrType.TURN_INTO_CORPSE]++;
 						if(line.Count == 1){
-							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(3,6),null,"colliding with the ceiling");
+							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(3,6),user,"colliding with the ceiling");
 							a.CollideWith(a.tile());
 						}
 						else{
-							a.tile().KnockObjectBack(a,line,12);
+							a.tile().KnockObjectBack(a,line,12,user);
 						}
 						a.attrs[AttrType.TELEKINETICALLY_THROWN] = 0;
 						user.attrs[AttrType.SELF_TK_NO_DAMAGE] = 0;
-						a.CorpseCleanup();
+						if(a.curhp <= 0 && a.HasAttr(AttrType.REGENERATES_FROM_DEATH)){
+							a.attrs[AttrType.TURN_INTO_CORPSE] = 0;
+							a.attrs[AttrType.CORPSE] = 0;
+							a.attrs[AttrType.FROZEN] = 0;
+							a.attrs[AttrType.INVULNERABLE] = 0;
+							a.attrs[AttrType.SHIELDED] = 0;
+							a.attrs[AttrType.BLOCKING] = 0;
+							a.curhp = 1; //this is all pretty hacky - perhaps I should relocate the regenerating corpse through other means.
+							a.TakeDamage(DamageType.NORMAL,DamageClass.NO_TYPE,500,null);
+						}
+						else{
+							a.CorpseCleanup();
+						}
 					}
 					else{
 						if(wand){
@@ -220,11 +232,21 @@ namespace Forays{
 					}
 				}
 				else{
-					if(t.inv != null){
+					bool blast_fungus = false;
+					if(t.type == TileType.BLAST_FUNGUS && !t.Is(FeatureType.GRENADE,FeatureType.WEB,FeatureType.FORASECT_EGG,FeatureType.BONES)){
+						blast_fungus = true;
+					}
+					if(t.inv != null || blast_fungus){
 						Item i = t.inv;
-						string itemname = i.TheName(true);
-						if(i.quantity > 1){
-							itemname = "the " + i.SingularName();
+						string itemname = "";
+						if(blast_fungus){
+							itemname = "the blast fungus";
+						}
+						else{
+							itemname = i.TheName(true);
+							if(i.quantity > 1){
+								itemname = "the " + i.SingularName();
+							}
 						}
 						string msg = "Throw " + itemname + " in which direction? ";
 						List<Tile> line = null;
@@ -240,6 +262,18 @@ namespace Forays{
 						if(line != null){
 							if(cast){
 								B.Add(user.You("cast") + " telekinesis. ",user);
+							}
+							if(blast_fungus){
+								B.Add("The blast fungus is pulled from the floor. ",t);
+								B.Add("Its fuse ignites! ",t);
+								t.Toggle(null);
+								i = Item.Create(ConsumableType.BLAST_FUNGUS,t.row,t.col);
+								if(i != null){
+									i.other_data = 3;
+									i.revealed_by_light = true;
+									Q.Add(new Event(i,100,EventType.BLAST_FUNGUS));
+									Screen.AnimateMapCell(t.row,t.col,new colorchar('3',Color.Red),100);
+								}
 							}
 							if(line.Count == 1){
 								B.Add(user.YouVisible("throw") + " " + itemname + " into the ceiling. ",user,t);
@@ -510,7 +544,7 @@ namespace Forays{
 										if(t2.actor() != null){
 											B.Add("The " + feature_name + " flies into " + t2.actor().TheName(true) + ". ",t2);
 											if(t2.actor().type != ActorType.SPORE_POD && !t2.actor().HasAttr(AttrType.SELF_TK_NO_DAMAGE)){
-												t2.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(impact_damage_dice,6),null,"colliding with a " + feature_name);
+												t2.actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(impact_damage_dice,6),user,"colliding with a " + feature_name);
 											}
 											knockback_strength = 0;
 											Screen.WriteMapChar(t2.row,t2.col,vis);
@@ -539,7 +573,7 @@ namespace Forays{
 								Tile current = M.tile[current_row,current_col];
 								if(grenade){
 									B.Add("The grenade explodes! ",current);
-									current.ApplyExplosion(1,"an exploding grenade");
+									current.ApplyExplosion(1,user,"an exploding grenade");
 								}
 								if(barrel){
 									B.Add("The barrel smashes! ",current);
