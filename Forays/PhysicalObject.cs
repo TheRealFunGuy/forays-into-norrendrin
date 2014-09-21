@@ -294,7 +294,7 @@ namespace Forays{
 						t.Toggle(null);
 						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
-						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED,AttrType.INVULNERABLE,AttrType.SELF_TK_NO_DAMAGE)){
 							if(a.type == ActorType.HOMUNCULUS){
 								if(R.CoinFlip()){
 									t.AddFeature(FeatureType.OIL);
@@ -317,7 +317,7 @@ namespace Forays{
 						knocked_back_message = "";
 						if(a.type != ActorType.SPORE_POD){
 							Color blood = a.BloodColor();
-							if(blood != Color.Black && R.CoinFlip() && t.Is(TileType.WALL) && !a.HasAttr(AttrType.INVULNERABLE)){
+							if(blood != Color.Black && R.CoinFlip() && t.Is(TileType.WALL) && !a.HasAttr(AttrType.SHIELDED,AttrType.INVULNERABLE,AttrType.SELF_TK_NO_DAMAGE)){
 								t.color = blood;
 							}
 							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
@@ -357,7 +357,7 @@ namespace Forays{
 						if(t.Is(FeatureType.WEB) && a.HasAttr(AttrType.SMALL) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
 							knockback_strength = 0;
 						}
-						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED,AttrType.INVULNERABLE,AttrType.SELF_TK_NO_DAMAGE)){
 							if(a.type == ActorType.HOMUNCULUS){
 								if(R.CoinFlip()){
 									t.AddFeature(FeatureType.OIL);
@@ -411,7 +411,7 @@ namespace Forays{
 						t.Toggle(null);
 						a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
 						a.Move(t.row,t.col);
-						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED,AttrType.INVULNERABLE,AttrType.SELF_TK_NO_DAMAGE)){
 							if(a.type == ActorType.HOMUNCULUS){
 								if(R.CoinFlip()){
 									t.AddFeature(FeatureType.OIL);
@@ -435,7 +435,7 @@ namespace Forays{
 						knocked_back_message = "";
 						if(a.type != ActorType.SPORE_POD){
 							Color blood = a.BloodColor();
-							if(blood != Color.Black && R.CoinFlip() && t.Is(TileType.WALL) && !a.HasAttr(AttrType.INVULNERABLE)){
+							if(blood != Color.Black && R.CoinFlip() && t.Is(TileType.WALL) && !a.HasAttr(AttrType.SHIELDED,AttrType.INVULNERABLE,AttrType.SELF_TK_NO_DAMAGE)){
 								t.color = blood;
 							}
 							a.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(dice,6),damage_source,"slamming into " + deathstringname);
@@ -498,16 +498,18 @@ namespace Forays{
 							knocked_back_message = "";
 							interrupted = true;
 						}
-						if(t.type == TileType.FLING_TRAP){ //otherwise you'd teleport around, continuing to slide from your previous position.
+						if(t.IsTrap()){
+							if(t.type == TileType.FLING_TRAP){ //otherwise you'd teleport around, continuing to slide from your previous position.
+								interrupted = true;
+							}
 							B.Add(knocked_back_message);
 							knocked_back_message = "";
-							interrupted = true;
 						}
 						if(t.Is(FeatureType.WEB) && !a.HasAttr(AttrType.SMALL)){
 							t.RemoveFeature(FeatureType.WEB);
 						}
 						a.Move(t.row,t.col);
-						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED)){
+						if(a.HasAttr(AttrType.BLEEDING) && !a.HasAttr(AttrType.SHIELDED,AttrType.INVULNERABLE,AttrType.SELF_TK_NO_DAMAGE)){
 							if(a.type == ActorType.HOMUNCULUS){
 								if(R.CoinFlip()){
 									t.AddFeature(FeatureType.OIL);
@@ -573,7 +575,7 @@ namespace Forays{
 							}
 							a.CorpseCleanup();
 						}
-						if(t.inv != null && t.inv.IsBreakable()){
+						if(t.inv != null){
 							if(t.inv.quantity > 1){
 								if(t.inv.IsBreakable()){
 									B.Add(t.inv.TheName(true) + " break! ",t);
@@ -591,6 +593,7 @@ namespace Forays{
 								}
 							}
 							if(t.inv.NameOfItemType() != "orb"){
+								t.inv.CheckForMimic();
 								t.inv = null;
 							}
 							else{
@@ -3022,6 +3025,298 @@ compare this number to 1/2:  if less than 1/2, major.
 					mem[i,j] = Screen.MapChar(i,j);
 				}
 			}
+			string unseen_area_message = "";
+			if(!lookmode){
+				unseen_area_message = "Move cursor to choose target, then press Enter. ";
+			}
+			if(always_displayed == ""){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					if(lookmode){
+						B.DisplayNow("Move the cursor to look around. ");
+					}
+					else{
+						B.DisplayNow(unseen_area_message);
+					}
+				}
+			}
+			else{
+				B.DisplayNow(always_displayed);
+			}
+			if(lookmode){
+				if(!start_at_interesting_target || interesting_targets.Count == 0){
+					r = row;
+					c = col;
+				}
+				else{
+					r = interesting_targets[0].row;
+					c = interesting_targets[0].col;
+				}
+			}
+			else{
+				if(player.target == null || !player.CanSee(player.target) || !player.HasLOE(player.target)
+				|| (max_distance > 0 && player.DistanceFrom(player.target) > max_distance)){
+					if(!start_at_interesting_target || interesting_targets.Count == 0){
+						r = row;
+						c = col;
+					}
+					else{
+						r = interesting_targets[0].row;
+						c = interesting_targets[0].col;
+					}
+				}
+				else{
+					r = player.target.row;
+					c = player.target.col;
+				}
+			}
+			bool first_iteration = true;
+			bool done = false; //when done==true, we're ready to return 'result'
+			Tile tc = M.tile[r,c];
+			while(!done){
+				Screen.ResetColors();
+				tc = M.tile[r,c];
+				Targeting_DisplayContents(tc,always_displayed,unseen_area_message,true,first_iteration);
+				if(!lookmode){
+					bool blocked = false;
+					Screen.CursorVisible = false;
+					if(!no_line){
+						if(extend_line){
+							line = GetBestExtendedLineOfEffect(r,c);
+							if(max_distance > 0 && line.Count > max_distance+1){
+								line.RemoveRange(max_distance+1,line.Count - max_distance - 1);
+							}
+						}
+						else{
+							line = GetBestLineOfEffect(r,c);
+						}
+					}
+					else{
+						line = new List<Tile>{M.tile[r,c]};
+						if(!player.HasBresenhamLineWithCondition(r,c,true,x=>!(x.seen && x.opaque))){ //"player" here might be better as "this"
+							blocked = true;
+						}
+					}
+					Targeting_ShowLine(tc,radius,mem,line,oldline,ref blocked,x=>{
+						if(x.seen && !x.passable && x != line.Last()){
+							return true;
+						}
+						if(x.actor() != null && player.CanSee(x.actor()) && !no_line && x != line.Last() && x != line[0]){
+							return true;
+						}
+						return false;
+					});
+					foreach(Tile t in oldline){
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+				}
+				else{
+					colorchar cch = mem[r,c];
+					cch.bgcolor = Color.Green;
+					if(Global.LINUX && !Screen.GLMode){ //no bright bg in terminals
+						cch.bgcolor = Color.DarkGreen;
+					}
+					if(cch.color == cch.bgcolor){
+						cch.color = Color.Black;
+					}
+					Screen.WriteMapChar(r,c,cch);
+					line = new List<Tile>{M.tile[r,c]};
+					oldline.Remove(M.tile[r,c]);
+					foreach(Tile t in oldline){ //to prevent the previous target appearing on top of the description box
+						Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+					}
+					if(!hide_descriptions){
+						if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c])){
+							bool description_on_right = false;
+							int max_length = 29;
+							if(c - 6 < max_length){
+								max_length = c - 6;
+							}
+							if(max_length < 20){
+								description_on_right = true;
+								max_length = 29;
+							}
+							List<colorstring> desc = Actor.MonsterDescriptionBox(M.actor[r,c],false,max_length);
+							if(description_on_right){
+								int start_c = COLS - desc[0].Length();
+								description_shown_last_time = true;
+								desc_row = 0;
+								desc_col = start_c;
+								desc_height = desc.Count;
+								desc_width = desc[0].Length();
+								for(int i=0;i<desc.Count;++i){
+									Screen.WriteMapString(i,start_c,desc[i]);
+								}
+							}
+							else{
+								description_shown_last_time = true;
+								desc_row = 0;
+								desc_col = 0;
+								desc_height = desc.Count;
+								desc_width = desc[0].Length();
+								for(int i=0;i<desc.Count;++i){
+									Screen.WriteMapString(i,0,desc[i]);
+								}
+							}
+						}
+						else{
+							if(M.tile[r,c].inv != null && player.CanSee(r,c)){
+								bool description_on_right = false;
+								int max_length = 29;
+								if(c - 6 < max_length){
+									max_length = c - 6;
+								}
+								if(max_length < 20){
+									description_on_right = true;
+									max_length = 29;
+								}
+								List<colorstring> desc = Actor.ItemDescriptionBox(M.tile[r,c].inv,true,false,max_length);
+								if(description_on_right){
+									int start_c = COLS - desc[0].Length();
+									description_shown_last_time = true;
+									desc_row = 0;
+									desc_col = start_c;
+									desc_height = desc.Count;
+									desc_width = desc[0].Length();
+									for(int i=0;i<desc.Count;++i){
+										Screen.WriteMapString(i,start_c,desc[i]);
+									}
+								}
+								else{
+									description_shown_last_time = true;
+									desc_row = 0;
+									desc_col = 0;
+									desc_height = desc.Count;
+									desc_width = desc[0].Length();
+									for(int i=0;i<desc.Count;++i){
+										Screen.WriteMapString(i,0,desc[i]);
+									}
+								}
+							}
+						}
+					}
+					else{
+						//description_shown_last_time = false;
+					}
+				}
+				oldline = new List<Tile>(line);
+				if(radius > 0){
+					foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
+						oldline.AddUnique(t);
+					}
+				}
+				first_iteration = false;
+				M.tile[r,c].Cursor();
+				Screen.CursorVisible = true;
+				command = Global.ReadKey();
+				char ch = Actor.ConvertInput(command);
+				ch = Actor.ConvertVIKeys(ch);
+				if(!Targeting_HandleCommonCommands(command,ch,ref r,ref c,interesting_targets,ref done,minrow,maxrow,mincol,maxcol,!lookmode)){
+					switch(ch){
+					case '=':
+						if(lookmode){
+							hide_descriptions = !hide_descriptions;
+						}
+						break;
+					case (char)13:
+					case 's':
+						if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c]) && player.HasLOE(M.actor[r,c])){
+							player.target = M.actor[r,c];
+						}
+						result.extended_line = GetBestExtendedLineOfEffect(r,c);
+						result.targeted = M.tile[r,c];
+						done = true;
+						break;
+					case 'X':
+					if(lookmode && this == player && B.YesOrNoPrompt("Travel to this location?")){
+						//player.path = player.GetPath(r,c);
+						Tile nearest = M.tile[r,c];
+						PosArray<bool> known_reachable = M.tile.GetFloodFillArray(this.p,false,x=>(M.tile[x].passable || M.tile[x].IsDoorType(false)) && M.tile[x].seen);
+						PosArray<int> distance_to_nearest_known_passable = M.tile.GetDijkstraMap(x=>false,y=>M.tile[y].seen && (M.tile[y].passable || M.tile[y].IsDoorType(false)) && !M.tile[y].IsKnownTrap() && known_reachable[y]);
+						if(!nearest.seen || nearest.IsKnownTrap() || !nearest.TilesWithinDistance(1).Any(x=>x.passable && known_reachable[x.p])){
+							nearest = nearest.TilesAtDistance(distance_to_nearest_known_passable[r,c]).Where(x=>x.seen && (x.passable || x.IsDoorType(false)) && !x.IsKnownTrap() && known_reachable[x.p]).WhereLeast(x=>x.ApproximateEuclideanDistanceFromX10(r,c)).Last();
+						}
+						player.path = player.GetPath(nearest.row,nearest.col,-1,true,true,Actor.UnknownTilePathingPreference.UnknownTilesAreClosed);
+						if(player.path.Count > 0 && !M.tile[player.path.Last()].passable){
+							player.path.RemoveLast();
+						}
+						Actor.interrupted_path = new pos(-1,-1);
+						done = true;
+					}
+					break;
+					}
+				}
+				if(description_shown_last_time){
+					Screen.MapDrawWithStrings(mem,desc_row,desc_col,desc_height,desc_width);
+					description_shown_last_time = false;
+				}
+			}
+			Targeting_RemoveLine(tc,done,line,mem,radius);
+			MouseUI.PopButtonMap();
+			if(result.extended_line == null){
+				return null;
+			}
+			return result;
+		}
+		/*public TargetInfo GetTarget(bool lookmode,int max_distance,int radius,bool no_line,bool extend_line,bool start_at_interesting_target,string always_displayed){
+			TargetInfo result = new TargetInfo(max_distance);
+			MouseUI.PushButtonMap(MouseMode.Targeting);
+			if(MouseUI.fire_arrow_hack){
+				MouseUI.CreateStatsButton(ConsoleKey.S,false,21,1);
+				MouseUI.fire_arrow_hack = false;
+			}
+			ConsoleKeyInfo command;
+			int r,c;
+			int minrow = 0;
+			int maxrow = Global.ROWS-1;
+			int mincol = 0;
+			int maxcol = Global.COLS-1;
+			if(max_distance > 0){
+				minrow = Math.Max(minrow,row - max_distance);
+				maxrow = Math.Min(maxrow,row + max_distance);
+				mincol = Math.Max(mincol,col - max_distance);
+				maxcol = Math.Min(maxcol,col + max_distance);
+			}
+			bool hide_descriptions = false;
+			List<PhysicalObject> interesting_targets = new List<PhysicalObject>();
+			for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
+				foreach(Actor a in ActorsAtDistance(i)){
+					if(player.CanSee(a)){
+						//if(lookmode || ((player.IsWithinSightRangeOf(a) || a.tile().IsLit(player.row,player.col,false)) && player.HasLOE(a))){
+						if(lookmode || player.GetBestLineOfEffect(a).All(x=>x.passable || !x.seen)){
+							interesting_targets.Add(a);
+						}
+					}
+				}
+			}
+			if(lookmode){
+				for(int i=1;(i<=max_distance || max_distance==-1) && i<=Math.Max(ROWS,COLS);++i){
+					foreach(Tile t in TilesAtDistance(i)){
+						if(t.Is(TileType.STAIRS,TileType.CHEST,TileType.FIREPIT,TileType.FIRE_GEYSER,TileType.FOG_VENT,TileType.POISON_GAS_VENT,
+							TileType.POOL_OF_RESTORATION,TileType.BLAST_FUNGUS,TileType.BARREL,TileType.STANDING_TORCH,TileType.POISON_BULB,TileType.DEMONIC_IDOL)
+							|| t.Is(FeatureType.GRENADE,FeatureType.FIRE,FeatureType.TROLL_CORPSE,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.BONES,
+								FeatureType.INACTIVE_TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.TELEPORTAL,FeatureType.POISON_GAS,
+								FeatureType.FOG,FeatureType.PIXIE_DUST,FeatureType.SPORES,FeatureType.WEB,FeatureType.CONFUSION_GAS,FeatureType.THICK_DUST)
+							|| t.IsShrine() || t.inv != null || t.IsKnownTrap()){ //todo: update this with new terrain & features
+							if(player.CanSee(t)){
+								interesting_targets.Add(t);
+							}
+						}
+					}
+				}
+			}
+			colorchar[,] mem = new colorchar[ROWS,COLS];
+			List<Tile> line = new List<Tile>();
+			List<Tile> oldline = new List<Tile>();
+			bool description_shown_last_time = false;
+			int desc_row = -1;
+			int desc_col = -1;
+			int desc_height = -1;
+			int desc_width = -1;
+			for(int i=0;i<ROWS;++i){
+				for(int j=0;j<COLS;++j){
+					mem[i,j] = Screen.MapChar(i,j);
+				}
+			}
 			if(always_displayed == ""){
 				if(!start_at_interesting_target || interesting_targets.Count == 0){
 					if(lookmode){
@@ -3047,7 +3342,7 @@ compare this number to 1/2:  if less than 1/2, major.
 			}
 			else{
 				if(player.target == null || !player.CanSee(player.target) || !player.HasLOE(player.target)
-				|| (max_distance > 0 && player.DistanceFrom(player.target) > max_distance)){
+					|| (max_distance > 0 && player.DistanceFrom(player.target) > max_distance)){
 					if(!start_at_interesting_target || interesting_targets.Count == 0){
 						r = row;
 						c = col;
@@ -3149,28 +3444,28 @@ compare this number to 1/2:  if less than 1/2, major.
 									else{
 										switch(M.tile[r,c].type){
 										case TileType.BLAST_FUNGUS:
-											Help.TutorialTip(TutorialTopic.BlastFungus,true);
-											break;
+										Help.TutorialTip(TutorialTopic.BlastFungus,true);
+										break;
 										case TileType.CRACKED_WALL:
-											Help.TutorialTip(TutorialTopic.CrackedWall,true);
-											break;
+										Help.TutorialTip(TutorialTopic.CrackedWall,true);
+										break;
 										case TileType.FIREPIT:
-											Help.TutorialTip(TutorialTopic.FirePit,true);
-											break;
+										Help.TutorialTip(TutorialTopic.FirePit,true);
+										break;
 										case TileType.POOL_OF_RESTORATION:
-											Help.TutorialTip(TutorialTopic.PoolOfRestoration,true);
-											break;
+										Help.TutorialTip(TutorialTopic.PoolOfRestoration,true);
+										break;
 										case TileType.STONE_SLAB:
 										case TileType.STONE_SLAB_OPEN:
-											Help.TutorialTip(TutorialTopic.StoneSlab,true);
-											break;
+										Help.TutorialTip(TutorialTopic.StoneSlab,true);
+										break;
 										case TileType.COMBAT_SHRINE:
 										case TileType.DEFENSE_SHRINE:
 										case TileType.MAGIC_SHRINE:
 										case TileType.SPIRIT_SHRINE:
 										case TileType.STEALTH_SHRINE:
-											Help.TutorialTip(TutorialTopic.Shrines,true);
-											break;
+										Help.TutorialTip(TutorialTopic.Shrines,true);
+										break;
 										}
 									}
 								}
@@ -3228,10 +3523,10 @@ compare this number to 1/2:  if less than 1/2, major.
 						}
 						else{
 							//if(return_extended_line){
-								//line = GetBestExtendedLineOfEffect(r,c).ToCount(max_line_count);
+							//line = GetBestExtendedLineOfEffect(r,c).ToCount(max_line_count);
 							//}
 							//else{
-								line = GetBestLineOfEffect(r,c);
+							line = GetBestLineOfEffect(r,c);
 							//}
 						}
 					}
@@ -3402,9 +3697,6 @@ compare this number to 1/2:  if less than 1/2, major.
 						//description_shown_last_time = false;
 					}
 				}
-				/*foreach(Tile t in oldline){ //moved. see above.
-					Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
-				}*/
 				oldline = new List<Tile>(line);
 				if(radius > 0){
 					foreach(Tile t in M.tile[r,c].TilesWithinDistance(radius,true)){
@@ -3419,162 +3711,153 @@ compare this number to 1/2:  if less than 1/2, major.
 				ch = Actor.ConvertVIKeys(ch);
 				int move_value = 1;
 				if((command.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt
-				|| (command.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control
-				|| (command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+					|| (command.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control
+					|| (command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
 					move_value = 6;
 				}
 				switch(ch){
 				case '7':
-					r -= move_value;
-					c -= move_value;
-					break;
+				r -= move_value;
+				c -= move_value;
+				break;
 				case '8':
-					r -= move_value;
-					break;
+				r -= move_value;
+				break;
 				case '9':
-					r -= move_value;
-					c += move_value;
-					break;
+				r -= move_value;
+				c += move_value;
+				break;
 				case '4':
-					c -= move_value;
-					break;
+				c -= move_value;
+				break;
 				case '6':
-					c += move_value;
-					break;
+				c += move_value;
+				break;
 				case '1':
-					r += move_value;
-					c -= move_value;
-					break;
+				r += move_value;
+				c -= move_value;
+				break;
 				case '2':
-					r += move_value;
-					break;
+				r += move_value;
+				break;
 				case '3':
-					r += move_value;
-					c += move_value;
-					break;
+				r += move_value;
+				c += move_value;
+				break;
 				case (char)9:
-					if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
-						if(interesting_targets.Count > 0){
-							List<PhysicalObject> reversed_targets = new List<PhysicalObject>(interesting_targets);
-							reversed_targets.Reverse();
-							int idx = 0;
-							int dist = DistanceFrom(r,c);
-							int idx_of_next_closest = -1;
-							bool found = false;
-							foreach(PhysicalObject o in reversed_targets){
-								if(o.row == r && o.col == c){
-									int prev_idx = idx + 1; //this goes backwards because the list goes backwards
-									if(prev_idx == reversed_targets.Count){
-										prev_idx = 0;
-									}
-									r = reversed_targets[prev_idx].row;
-									c = reversed_targets[prev_idx].col;
-									found = true;
-									break;
+				if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+					if(interesting_targets.Count > 0){
+						List<PhysicalObject> reversed_targets = new List<PhysicalObject>(interesting_targets);
+						reversed_targets.Reverse();
+						int idx = 0;
+						int dist = DistanceFrom(r,c);
+						int idx_of_next_closest = -1;
+						bool found = false;
+						foreach(PhysicalObject o in reversed_targets){
+							if(o.row == r && o.col == c){
+								int prev_idx = idx + 1; //this goes backwards because the list goes backwards
+								if(prev_idx == reversed_targets.Count){
+									prev_idx = 0;
 								}
-								else{
-									if(idx_of_next_closest == -1 && DistanceFrom(o) < dist){
-										idx_of_next_closest = idx;
-									}
-								}
-								++idx;
+								r = reversed_targets[prev_idx].row;
+								c = reversed_targets[prev_idx].col;
+								found = true;
+								break;
 							}
-							if(!found){
-								if(idx_of_next_closest == -1){
-									r = reversed_targets[0].row;
-									c = reversed_targets[0].col;
+							else{
+								if(idx_of_next_closest == -1 && DistanceFrom(o) < dist){
+									idx_of_next_closest = idx;
 								}
-								else{
-									r = reversed_targets[idx_of_next_closest].row;
-									c = reversed_targets[idx_of_next_closest].col;
-								}
+							}
+							++idx;
+						}
+						if(!found){
+							if(idx_of_next_closest == -1){
+								r = reversed_targets[0].row;
+								c = reversed_targets[0].col;
+							}
+							else{
+								r = reversed_targets[idx_of_next_closest].row;
+								c = reversed_targets[idx_of_next_closest].col;
 							}
 						}
 					}
-					else{
-						if(interesting_targets.Count > 0){
-							int idx = 0;
-							int dist = DistanceFrom(r,c);
-							int idx_of_next_farthest = -1;
-							bool found = false;
-							foreach(PhysicalObject o in interesting_targets){
-								if(o.row == r && o.col == c){
-									int next_idx = idx + 1;
-									if(next_idx == interesting_targets.Count){
-										next_idx = 0;
-									}
-									r = interesting_targets[next_idx].row;
-									c = interesting_targets[next_idx].col;
-									found = true;
-									break;
+				}
+				else{
+					if(interesting_targets.Count > 0){
+						int idx = 0;
+						int dist = DistanceFrom(r,c);
+						int idx_of_next_farthest = -1;
+						bool found = false;
+						foreach(PhysicalObject o in interesting_targets){
+							if(o.row == r && o.col == c){
+								int next_idx = idx + 1;
+								if(next_idx == interesting_targets.Count){
+									next_idx = 0;
 								}
-								else{
-									if(idx_of_next_farthest == -1 && DistanceFrom(o) > dist){
-										idx_of_next_farthest = idx;
-									}
-								}
-								++idx;
+								r = interesting_targets[next_idx].row;
+								c = interesting_targets[next_idx].col;
+								found = true;
+								break;
 							}
-							if(!found){
-								if(idx_of_next_farthest == -1){
-									r = interesting_targets[0].row;
-									c = interesting_targets[0].col;
+							else{
+								if(idx_of_next_farthest == -1 && DistanceFrom(o) > dist){
+									idx_of_next_farthest = idx;
 								}
-								else{
-									r = interesting_targets[idx_of_next_farthest].row;
-									c = interesting_targets[idx_of_next_farthest].col;
-								}
+							}
+							++idx;
+						}
+						if(!found){
+							if(idx_of_next_farthest == -1){
+								r = interesting_targets[0].row;
+								c = interesting_targets[0].col;
+							}
+							else{
+								r = interesting_targets[idx_of_next_farthest].row;
+								c = interesting_targets[idx_of_next_farthest].col;
 							}
 						}
 					}
-					break;
+				}
+				break;
 				case '=':
-					if(lookmode){
-						hide_descriptions = !hide_descriptions;
-					}
-					break;
+				if(lookmode){
+					hide_descriptions = !hide_descriptions;
+				}
+				break;
 				case (char)27:
 				case ' ':
-					done = true;
-					break;
+				done = true;
+				break;
 				case (char)13:
 				case 's':
-					if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c]) && player.HasLOE(M.actor[r,c])){
-						player.target = M.actor[r,c];
-					}
-					/*if(return_extended_line){
-						result = GetBestExtendedLineOfEffect(r,c);
-					}
-					else{
-						result = line.ToFirstSolidTile();
-					}
-					if(no_line && !player.HasLOS(line[0])){
-						result = null;
-					}*/
-					result.extended_line = GetBestExtendedLineOfEffect(r,c);
-					result.targeted = M.tile[r,c];
-					done = true;
-					break;
+				if(M.actor[r,c] != null && M.actor[r,c] != this && player.CanSee(M.actor[r,c]) && player.HasLOE(M.actor[r,c])){
+					player.target = M.actor[r,c];
+				}
+				result.extended_line = GetBestExtendedLineOfEffect(r,c);
+				result.targeted = M.tile[r,c];
+				done = true;
+				break;
 				case 'X':
-					if(lookmode && this == player && B.YesOrNoPrompt("Travel to this location?")){
-						player.path = player.GetPath(r,c);
-						if(player.path.Count > 0){
-							done = true;
-						}
+				if(lookmode && this == player && B.YesOrNoPrompt("Travel to this location?")){
+					player.path = player.GetPath(r,c);
+					if(player.path.Count > 0){
+						done = true;
 					}
-					break;
+				}
+				break;
 				default:
-					if(command.Key == ConsoleKey.F1){
-						r = MouseUI.LastRow - Global.MAP_OFFSET_ROWS;
-						c = MouseUI.LastCol - Global.MAP_OFFSET_COLS;
+				if(command.Key == ConsoleKey.F1){
+					r = MouseUI.LastRow - Global.MAP_OFFSET_ROWS;
+					c = MouseUI.LastCol - Global.MAP_OFFSET_COLS;
+				}
+				else{
+					if(!lookmode && command.Key == ConsoleKey.F2){ //todo: not sure if I want this on or off. For lookmode, leaving the cursor on the side of the screen is just fine.
+						r = row;
+						c = col;
 					}
-					else{
-						if(!lookmode && command.Key == ConsoleKey.F2){ //todo: not sure if I want this on or off. For lookmode, leaving the cursor on the side of the screen is just fine.
-							r = row;
-							c = col;
-						}
-					}
-					break;
+				}
+				break;
 				}
 				if(r < minrow){
 					r = minrow;
@@ -3612,6 +3895,330 @@ compare this number to 1/2:  if less than 1/2, major.
 				return null;
 			}
 			return result;
+		}*/
+		public static void Targeting_DisplayContents(Tile tc,string always_displayed,string unseen_area_message,bool include_monsters,bool first_iteration){
+			if(always_displayed == ""){
+				if(include_monsters && tc.actor() == player){
+					if(!first_iteration){
+						string s = "You're standing here. ";
+						//if(tc.ContentsCount() == 0 && tc.type == TileType.FLOOR){
+						if(tc.ContentsCount() == 0 && tc.name == "floor"){
+							B.DisplayNow(s);
+						}
+						else{
+							B.DisplayNow(s + tc.ContentsString() + " here. ");
+						}
+					}
+				}
+				else{
+					if(player.CanSee(tc)){
+						B.DisplayNow(tc.ContentsString(include_monsters) + ". ");
+						if(!Help.displayed[TutorialTopic.Traps] && tc.IsKnownTrap()){
+							Help.TutorialTip(TutorialTopic.Traps);
+						}
+						else{
+							if(!Help.displayed[TutorialTopic.NotRevealedByLight] && ((tc.IsShrine() || tc.IsKnownTrap()) && !tc.revealed_by_light) || (tc.inv != null && !tc.inv.revealed_by_light)){
+								Help.TutorialTip(TutorialTopic.NotRevealedByLight);
+							}
+							else{
+								if(!Help.displayed[TutorialTopic.Fire] && tc.Is(FeatureType.FIRE)){
+									Help.TutorialTip(TutorialTopic.Fire);
+								}
+								else{
+									switch(tc.type){
+									case TileType.BLAST_FUNGUS:
+									Help.TutorialTip(TutorialTopic.BlastFungus,true);
+									break;
+									case TileType.CRACKED_WALL:
+									Help.TutorialTip(TutorialTopic.CrackedWall,true);
+									break;
+									case TileType.FIREPIT:
+									Help.TutorialTip(TutorialTopic.FirePit,true);
+									break;
+									case TileType.POOL_OF_RESTORATION:
+									Help.TutorialTip(TutorialTopic.PoolOfRestoration,true);
+									break;
+									case TileType.STONE_SLAB:
+									case TileType.STONE_SLAB_OPEN:
+									Help.TutorialTip(TutorialTopic.StoneSlab,true);
+									break;
+									case TileType.COMBAT_SHRINE:
+									case TileType.DEFENSE_SHRINE:
+									case TileType.MAGIC_SHRINE:
+									case TileType.SPIRIT_SHRINE:
+									case TileType.STEALTH_SHRINE:
+									Help.TutorialTip(TutorialTopic.Shrines,true);
+									break;
+									}
+								}
+							}
+						}
+					}
+					else{
+						if(include_monsters && tc.actor() != null && player.CanSee(tc.actor())){
+							B.DisplayNow("You sense " + tc.actor().a_name + " " + tc.actor().WoundStatus() + ". ");
+						}
+						else{
+							if(tc.seen){
+								if(tc.inv != null){
+									char itemch = tc.inv.symbol;
+									char screench = Screen.MapChar(tc.row,tc.col).c;
+									if(itemch == screench){ //hacky, but it seems to work (when a monster drops an item you haven't seen yet)
+										if(tc.inv.quantity > 1){
+											B.DisplayNow("You can no longer see these " + tc.inv.Name(true) + ". ");
+										}
+										else{
+											B.DisplayNow("You can no longer see this " + tc.inv.Name(true) + ". ");
+										}
+									}
+									else{
+										B.DisplayNow("You can no longer see this " + tc.Name(true) + ". ");
+									}
+								}
+								else{
+									B.DisplayNow("You can no longer see this " + tc.Name(true) + ". ");
+								}
+							}
+							else{
+								B.DisplayNow(unseen_area_message);
+							}
+						}
+					}
+				}
+			}
+			else{
+				B.DisplayNow(always_displayed);
+			}
+		}
+		public static void Targeting_ShowLine(Tile tc,int radius,colorchar[,] mem,List<Tile> line,List<Tile> oldline,ref bool blocked,TileDelegate is_blocking){
+			foreach(Tile t in line){
+				if(t.row != player.row || t.col != player.col || tc.actor() != player){
+					colorchar cch = mem[t.row,t.col];
+					if(t.row == tc.row && t.col == tc.col){
+						if(!blocked){
+							cch.bgcolor = Color.Green;
+							if(Global.LINUX && !Screen.GLMode){ //no bright bg in terminals
+								cch.bgcolor = Color.DarkGreen;
+							}
+							if(cch.color == cch.bgcolor){
+								cch.color = Color.Black;
+							}
+							Screen.WriteMapChar(t.row,t.col,cch);
+						}
+						else{
+							cch.bgcolor = Color.Red;
+							if(Global.LINUX && !Screen.GLMode){
+								cch.bgcolor = Color.DarkRed;
+							}
+							if(cch.color == cch.bgcolor){
+								cch.color = Color.Black;
+							}
+							Screen.WriteMapChar(t.row,t.col,cch);
+						}
+					}
+					else{
+						if(!blocked){
+							cch.bgcolor = Color.DarkGreen;
+							if(cch.color == cch.bgcolor){
+								cch.color = Color.Black;
+							}
+							Screen.WriteMapChar(t.row,t.col,cch);
+						}
+						else{
+							cch.bgcolor = Color.DarkRed;
+							if(cch.color == cch.bgcolor){
+								cch.color = Color.Black;
+							}
+							Screen.WriteMapChar(t.row,t.col,cch);
+						}
+					}
+					if(is_blocking(t)){
+						blocked = true;
+					}
+				}
+				oldline.Remove(t);
+			}
+			if(radius > 0){
+				foreach(Tile t in tc.TilesWithinDistance(radius,true)){
+					if(!line.Contains(t)){
+						colorchar cch = mem[t.row,t.col];
+						if(blocked){
+							cch.bgcolor = Color.DarkRed;
+						}
+						else{
+							cch.bgcolor = Color.DarkGreen;
+						}
+						if(cch.color == cch.bgcolor){
+							cch.color = Color.Black;
+						}
+						Screen.WriteMapChar(t.row,t.col,cch);
+						oldline.Remove(t);
+					}
+				}
+			}
+		}
+		public bool Targeting_HandleCommonCommands(ConsoleKeyInfo command,char ch,ref int r,ref int c,List<PhysicalObject> interesting_targets,ref bool done,int minrow,int maxrow,int mincol,int maxcol,bool jump_to_origin_on_mouse_leave_event){
+			int move_value = 1;
+			if((command.Modifiers & ConsoleModifiers.Alt) == ConsoleModifiers.Alt
+				|| (command.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control
+				|| (command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+				move_value = 6;
+			}
+			bool result = true;
+			switch(ch){
+			case '7':
+			r -= move_value;
+			c -= move_value;
+			break;
+			case '8':
+			r -= move_value;
+			break;
+			case '9':
+			r -= move_value;
+			c += move_value;
+			break;
+			case '4':
+			c -= move_value;
+			break;
+			case '6':
+			c += move_value;
+			break;
+			case '1':
+			r += move_value;
+			c -= move_value;
+			break;
+			case '2':
+			r += move_value;
+			break;
+			case '3':
+			r += move_value;
+			c += move_value;
+			break;
+			case (char)9:
+			if((command.Modifiers & ConsoleModifiers.Shift) == ConsoleModifiers.Shift){
+				if(interesting_targets.Count > 0){
+					List<PhysicalObject> reversed_targets = new List<PhysicalObject>(interesting_targets);
+					reversed_targets.Reverse();
+					int idx = 0;
+					int dist = DistanceFrom(r,c);
+					int idx_of_next_closest = -1;
+					bool found = false;
+					foreach(PhysicalObject o in reversed_targets){
+						if(o.row == r && o.col == c){
+							int prev_idx = idx + 1; //this goes backwards because the list goes backwards
+							if(prev_idx == reversed_targets.Count){
+								prev_idx = 0;
+							}
+							r = reversed_targets[prev_idx].row;
+							c = reversed_targets[prev_idx].col;
+							found = true;
+							break;
+						}
+						else{
+							if(idx_of_next_closest == -1 && DistanceFrom(o) < dist){
+								idx_of_next_closest = idx;
+							}
+						}
+						++idx;
+					}
+					if(!found){
+						if(idx_of_next_closest == -1){
+							r = reversed_targets[0].row;
+							c = reversed_targets[0].col;
+						}
+						else{
+							r = reversed_targets[idx_of_next_closest].row;
+							c = reversed_targets[idx_of_next_closest].col;
+						}
+					}
+				}
+			}
+			else{
+				if(interesting_targets.Count > 0){
+					int idx = 0;
+					int dist = DistanceFrom(r,c);
+					int idx_of_next_farthest = -1;
+					bool found = false;
+					foreach(PhysicalObject o in interesting_targets){
+						if(o.row == r && o.col == c){
+							int next_idx = idx + 1;
+							if(next_idx == interesting_targets.Count){
+								next_idx = 0;
+							}
+							r = interesting_targets[next_idx].row;
+							c = interesting_targets[next_idx].col;
+							found = true;
+							break;
+						}
+						else{
+							if(idx_of_next_farthest == -1 && DistanceFrom(o) > dist){
+								idx_of_next_farthest = idx;
+							}
+						}
+						++idx;
+					}
+					if(!found){
+						if(idx_of_next_farthest == -1){
+							r = interesting_targets[0].row;
+							c = interesting_targets[0].col;
+						}
+						else{
+							r = interesting_targets[idx_of_next_farthest].row;
+							c = interesting_targets[idx_of_next_farthest].col;
+						}
+					}
+				}
+			}
+			break;
+			case (char)27:
+			case ' ':
+			done = true;
+			break;
+			default:
+			if(command.Key == ConsoleKey.F1){
+				r = MouseUI.LastRow - Global.MAP_OFFSET_ROWS;
+				c = MouseUI.LastCol - Global.MAP_OFFSET_COLS;
+			}
+			else{
+				if(jump_to_origin_on_mouse_leave_event && command.Key == ConsoleKey.F2){
+					r = row;
+					c = col;
+				}
+				else{
+					result = false;
+				}
+			}
+			break;
+			}
+			if(r < minrow){
+				r = minrow;
+			}
+			if(r > maxrow){
+				r = maxrow;
+			}
+			if(c < mincol){
+				c = mincol;
+			}
+			if(c > maxcol){
+				c = maxcol;
+			}
+			return result;
+		}
+		public static void Targeting_RemoveLine(Tile tc,bool done,List<Tile> line,colorchar[,] mem,int radius){
+			if(done){
+				Screen.CursorVisible = false;
+				foreach(Tile t in line){
+					Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+				}
+				if(radius > 0){
+					foreach(Tile t in tc.TilesWithinDistance(radius,true)){
+						if(!line.Contains(t)){
+							Screen.WriteMapChar(t.row,t.col,mem[t.row,t.col]);
+						}
+					}
+				}
+				Screen.CursorVisible = true;
+			}
 		}
 	}
 	public class TargetInfo{
@@ -3623,7 +4230,12 @@ compare this number to 1/2:  if less than 1/2, major.
 				if(extended_line == null){
 					return null;
 				}
-				return extended_line.ToCount(max_range+1).ToFirstSolidTile();
+				if(max_range == -1){
+					return extended_line.ToFirstSolidTile();
+				}
+				else{
+					return extended_line.ToCount(max_range+1).ToFirstSolidTile();
+				}
 			}
 		}
 		public List<Tile> line_to_targeted{

@@ -96,7 +96,7 @@ namespace Forays{
 			Define(TileType.FIREPIT,"fire pit",'0',Color.Red,true,false,null);
 			proto[TileType.FIREPIT].light_radius = 1;
 			proto[TileType.FIREPIT].revealed_by_light = true;
-			Define(TileType.UNLIT_FIREPIT,"unlit fire pit",'0',Color.DarkGray,true,false,null);
+			Define(TileType.UNLIT_FIREPIT,"unlit fire pit",'0',Color.TerrainDarkGray,true,false,null);
 			proto[TileType.UNLIT_FIREPIT].revealed_by_light = true;
 			Define(TileType.STALAGMITE,"stalagmite",'1',Color.White,false,true,TileType.FLOOR);
 			proto[TileType.STALAGMITE].revealed_by_light = true;
@@ -104,7 +104,7 @@ namespace Forays{
 			Define(TileType.LIGHT_TRAP,"sunlight trap",'^',Color.Yellow,true,false,TileType.FLOOR);
 			Define(TileType.TELEPORT_TRAP,"teleport trap",'^',Color.Magenta,true,false,TileType.FLOOR);
 			Define(TileType.SLIDING_WALL_TRAP,"sliding wall trap",'^',Color.DarkCyan,true,false,TileType.FLOOR);
-			Define(TileType.GRENADE_TRAP,"grenade trap",'^',Color.DarkGray,true,false,TileType.FLOOR);
+			Define(TileType.GRENADE_TRAP,"grenade trap",'^',Color.TerrainDarkGray,true,false,TileType.FLOOR);
 			Define(TileType.SHOCK_TRAP,"shock trap",'^',Color.RandomLightning,true,false,TileType.FLOOR);
 			Define(TileType.ALARM_TRAP,"alarm trap",'^',Color.Red,true,false,TileType.FLOOR);
 			Define(TileType.DARKNESS_TRAP,"darkness trap",'^',Color.Blue,true,false,TileType.FLOOR);
@@ -122,7 +122,7 @@ namespace Forays{
 			Define(TileType.MAGIC_SHRINE,"shrine of magic",'_',Color.Magenta,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.SPIRIT_SHRINE,"shrine of spirit",'_',Color.Yellow,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.STEALTH_SHRINE,"shrine of stealth",'_',Color.Blue,true,false,TileType.RUINED_SHRINE);
-			Define(TileType.RUINED_SHRINE,"ruined shrine",'_',Color.DarkGray,true,false,null);
+			Define(TileType.RUINED_SHRINE,"ruined shrine",'_',Color.TerrainDarkGray,true,false,null);
 			Define(TileType.SPELL_EXCHANGE_SHRINE,"spell exchange shrine",'_',Color.DarkMagenta,true,false,TileType.RUINED_SHRINE);
 			Define(TileType.FIRE_GEYSER,"fire geyser",'~',Color.Red,true,false,null);
 			Prototype(TileType.FIRE_GEYSER).revealed_by_light = true;
@@ -152,7 +152,7 @@ namespace Forays{
 			proto[TileType.ICE].revealed_by_light = true;
 			Define(TileType.POPPY_FIELD,"poppy field",'"',Color.Red,true,false,TileType.FLOOR);
 			proto[TileType.POPPY_FIELD].revealed_by_light = true;
-			Define(TileType.GRAVEL,"gravel",',',Color.DarkGray,true,false,null);
+			Define(TileType.GRAVEL,"gravel",',',Color.TerrainDarkGray,true,false,null);
 			proto[TileType.GRAVEL].a_name = "gravel";
 			proto[TileType.GRAVEL].revealed_by_light = true;
 			Define(TileType.JUNGLE,"thick jungle",'&',Color.DarkGreen,true,true,null); //unused
@@ -199,9 +199,9 @@ namespace Forays{
 			Define(FeatureType.BONES,"pile of bones",'%',Color.White);
 			Define(FeatureType.WEB,"web",';',Color.White);
 			Define(FeatureType.PIXIE_DUST,"cloud of pixie dust",'*',Color.RandomGlowingFungus); //might need to change this name
-			Define(FeatureType.FORASECT_EGG,"forasect egg",'%',Color.DarkGray);
+			Define(FeatureType.FORASECT_EGG,"forasect egg",'%',Color.TerrainDarkGray);
 			Define(FeatureType.SPORES,"cloud of spores",'*',Color.DarkYellow);
-			Define(FeatureType.THICK_DUST,"thick cloud of dust",'*',Color.DarkGray);
+			Define(FeatureType.THICK_DUST,"thick cloud of dust",'*',Color.TerrainDarkGray);
 			Define(FeatureType.CONFUSION_GAS,"cloud of confusion gas",'*',Color.RandomConfusion);
 		}
 		private static void Define(TileType type_,string name_,char symbol_,Color color_,bool passable_,bool opaque_,TileType? toggles_into_){
@@ -711,6 +711,77 @@ namespace Forays{
 				return " and ";
 			}
 		}
+		public int ContentsCount(){
+			int count = 0;
+			if(actor() != null && actor() != player && player.CanSee(actor())){
+				++count;
+			}
+			if(inv != null){
+				++count;
+			}
+			foreach(FeatureType f in features){
+				++count;
+			}
+			return count;
+		}
+		public string ContentsString(){ return ContentsString(true); }
+		public string ContentsString(bool include_monsters){
+			string contents = "You see ";
+			List<string> items = new List<string>();
+			if(include_monsters && actor() != null && actor() != player && player.CanSee(actor())){
+				items.Add(actor().a_name + " " + actor().WoundStatus());
+			}
+			if(inv != null){
+				items.Add(inv.AName(true));
+			}
+			foreach(FeatureType f in features){
+				items.Add(Tile.Feature(f).a_name);
+			}
+			if(items.Count == 0){
+				contents += AName(true);
+			}
+			else{
+				if(items.Count == 1){
+					contents += items[0] + Preposition() + AName(true);
+				}
+				else{
+					if(items.Count == 2){
+						if(type != TileType.FLOOR){
+							if(Preposition() == " and "){
+								contents += items[0] + ", " + items[1] + ",";
+								contents += Preposition() + AName(true);
+							}
+							else{
+								contents += items[0] + " and " + items[1];
+								contents += Preposition() + AName(true);
+							}
+						}
+						else{
+							contents += items[0] + " and " + items[1];
+						}
+					}
+					else{
+						foreach(string s in items){
+							if(s != items.Last()){
+								contents += s + ", ";
+							}
+							else{
+								if(type != TileType.FLOOR){
+									contents += s + ","; //because preposition contains a space already
+								}
+								else{
+									contents += "and " + s;
+								}
+							}
+						}
+						if(type != TileType.FLOOR){
+							contents += Preposition() + AName(true);
+						}
+					}
+				}
+			}
+			return contents;
+		}
 		public bool CanGetItem(){ return CanGetItem(null); }
 		public bool CanGetItem(Item i){
 			if(Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
@@ -732,6 +803,7 @@ namespace Forays{
 			if(inv == null && !Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){ //todo: update to use CanGetItem?
 				if((IsBurning() || Is(TileType.FIREPIT) || (actor() != null && actor().IsBurning())) && (item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES)){
 					B.Add(item.TheName(true) + " burns up! ",this); //should there be a check for water or slime here?
+					item.CheckForMimic();
 					if(Is(TileType.FIREPIT) || (actor() != null && actor().IsBurning())){
 						AddFeature(FeatureType.FIRE);
 					}
@@ -763,6 +835,7 @@ namespace Forays{
 						if(t.passable && t.inv == null && !t.Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
 							if((t.IsBurning() || t.Is(TileType.FIREPIT) || (t.actor() != null && t.actor().IsBurning())) && item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES){
 								B.Add(item.TheName(true) + " burns up! ",t);
+								item.CheckForMimic();
 								if(t.Is(TileType.FIREPIT) || (t.actor() != null && t.actor().IsBurning())){
 									t.AddFeature(FeatureType.FIRE);
 								}
@@ -1022,7 +1095,7 @@ namespace Forays{
 					}
 				}
 			}
-			if(Prototype(type).revealed_by_light == true){
+			if(Prototype(type).revealed_by_light){
 				revealed_by_light = true;
 			}
 			if(toggler != null && toggler != player){
@@ -1082,7 +1155,9 @@ namespace Forays{
 				UpdateRadius(light_radius,Prototype(type_).light_radius);
 			}
 			light_radius = Prototype(type_).light_radius;
-			revealed_by_light = false;
+			if(Prototype(type_).revealed_by_light){
+				revealed_by_light = true;
+			}
 			sprite_offset = Prototype(type_).sprite_offset;
 		}
 		public void TurnToFloor(){
@@ -1641,6 +1716,7 @@ namespace Forays{
 						}
 						if(i.IsBreakable()){
 							B.Add("It breaks! ",t);
+							i.CheckForMimic();
 						}
 						else{
 							t.GetItem(i);
@@ -1877,6 +1953,9 @@ namespace Forays{
 				break;
 			}
 			return false;
+		}
+		public bool IsPassableOrDoor(){ //but only real doors. maybe I should rename one of these.
+			return (passable || type == TileType.DOOR_C);
 		}
 		public bool BlocksConnectivityOfMap(){
 			if(passable || IsDoorType(true)){
@@ -2152,6 +2231,7 @@ namespace Forays{
 				}
 				if(inv != null && (inv.NameOfItemType() == "scroll" || inv.type == ConsumableType.BANDAGES)){
 					B.Add(inv.TheName(true) + " burns up! ",this);
+					inv.CheckForMimic();
 					inv = null;
 					add_fire_to_features();
 					if(actor() != null){
@@ -2303,7 +2383,7 @@ namespace Forays{
 								color = Color.Gray;
 							}
 							else{
-								color = Color.DarkGray;
+								color = Color.TerrainDarkGray;
 							}
 						}
 					}
@@ -2327,7 +2407,7 @@ namespace Forays{
 								color = Color.Gray;
 							}
 							else{
-								color = Color.DarkGray;
+								color = Color.TerrainDarkGray;
 							}
 						}
 					}

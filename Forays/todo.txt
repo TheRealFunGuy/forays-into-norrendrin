@@ -83,6 +83,25 @@ does adding a troll corpse to a firepit create fire? it should! - also fixed a b
 danger sense obscures lit/unlit, which is annoying.
 ghosts might not spawn again IMMEDIATELY if you're still standing there
 drive back is cool but auto hits are way too easy to get ANYWAY - simply add an awesome bonus. -now doubles crit, right?
+message log expanded. home/end now work for message log and for help.
+fixed a bug where grabs could sometimes persist even after the grabber was no longer adjacent.
+fixed a bug where telekinesis had no range limit when throwing an item
+prompt for gases and bulbs
+changed dark gray option
+fixed a bug that could cause console mode to be slower than it should be when redrawing the screen
+mouse UI improved again: right click opens inventory while on map screen, left click uses items once selected.
+fixed a bug where the travel command would sometimes prefer cardinal directions over shorter diagonal paths.
+improve [m]ap with shrine info and maybe stairs discovered and maybe turns spent on this level.
+arcane interference improved!
+troll bug: sometimes they seem to take 50 turns when damage wasn't nearly that high.
+can wall sliding check for doors too, not just passable?
+fix bug where sleeping (and paralyzed?) monsters can't be neck snapped
+minor: pathing to a dangerous adjacent tile usually finds a path that goes around and approaches the tile from the other side.
+poppy fields now put you to sleep directly instead of causing magical drowsiness. (magical drowsiness removed.) You're now guaranteed 1 turn before you sleep again.
+it's possible for transcendents to cast sphere from across the map
+drive back was improved - not sure if I had a note for this already.
+deflect attack improved.
+conviction's bonus to combat will now be rounded up, not down.
 
 
 
@@ -116,19 +135,17 @@ vvvvv
 
 
 
-expand message buffer
-	-mostly straightforward, but we should only print the last few, not ALL of them, when the game loads.
-	-allow scrolling, but only if there are non-blank messages.
-
-list?  things that need to be done with the previous messages:
-
--find the last message
--change last message if repeated
--add new messages to end
--(no longer needs to loop until we have tons of messages)
 
 
-...so, i'm thinking I keep the same system, with array, but also track how many actual messages have been created. this'll let me NOT save thousands of blanks, and also let me restrict scrolling.
+
+
+
+
+
+
+
+
+
 
 
 
@@ -141,54 +158,84 @@ TODO:
 
 
 
+mapgen:
+add giant glowing fungus
+	-spawns in fungus patches, of course.  blocks movement and LOS? They don't NEED to do anything else. (could also trample like foliage, or release spores)
+
+
+mines:  maybe cut off some of those corridors near the edge of the map? 
+	-better idea: mark single-tile interesting locations that can be used for items, chests, and single shrines (and maybe pools etc.) and make these dead ends.
 
 
 
 
 
+-change spawning timer to 300 turns
+	-done. playtest to see if it should be higher.
+-do a lot of playtesting and then consider Knowledge at rarity 1 vs. rarity 2.
 
 
-more grab bug info: Mimic grabs.  Hit mimic with mace.  Mimic is knocked back.  Grenade knocks me back toward mimic, or I just step there (same direction).  Mimic is now holding me again despite not grabbing me.
 
-"Possessed  Poisoned"   <--these lines should probably be centered, not offset to the left.
-
-whatever orb-targeting change you made to fix the cursor appearing, do the same thing to arrow firing.
-
-you should be able to look around in 'm'ap like you do in 'X'.
-	-this would require another (map-only) look mode.
-
-improve [m]ap with shrine info and maybe stairs discovered and maybe turns spent on this level.
-
-add "or yourself" to TK's description  -  what, in the help file?
-
-remember to update entrancer list, wandering spawn list, etc.
-
-do a lot of playtesting and then consider Knowledge at rarity 1 vs. rarity 2.
-
-oil and slime washing:  if you can [o]perate it to coat yourself, then I can't let it appear in the water. It seems to be one or the other.
-
-maybe make arcane interference always reduce enemy mana or something? even when they don't have that spell, right?
-	-look at this again after you can check out the description. make sure it'll all fit.
-
-autoexplore still has bugs: it's willing to become drowsy in poppies even though an EQUAL path avoids them.
-	-not reproduced
 
 "blast everything with magic" might be too viable right now, if you don't run out of mana quick enough.
 	-this makes me consider lower HP enemies, but more of them. But then, I was going to rebalance all the HP values upward. how should I resolve this?
+		-also i'm becoming more certain that percentage-based damages 
+
+lower some HP values. more glass cannons. etc. 
+
+so, glass cannons. I already have the bramble.
+-vulgar demon could work here, but it would mean taking away its slight toughness.
+-ogre barbarian could be easier to take down?
+-avenger?
+-lone wolf (and warg?) could fit here
+-i think pixies could do this pretty well, especially in a large group.
+
+now, walls that shouldn't deal so much damage:
+-dweller?
+-dart frog (probably not)
+-slug could do this, since you're already worried about equipment damage.
+-boar, definitely. it'll go to 1d6 damage. 
+-golem deals tons of damage right now...i don't know.
+-mud elemental only deals 2d6 - does this guy count?
+-lasher could probably deal less melee - maybe it always deals 1d6, always drags, and sometimes trips?
+
+
+
+
+
+
 
 autoexplore is still trying to go through this stone slab?!?  it's not a trap room. I guess it needs a much higher cost or something?
 	-cost of slab increased. test this.
+		-X travel currently won't go through slabs at all.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #                                                      #
 # remember to use some colored walls in here somewhere #
 #                                                      #
 
+
 add two more pages to monster descriptions: Abilities (spells out exactly what they do) and Tips (gives tactical hints)
 
 tutorial tips for a bunch of the less obvious commands? map, known, travel, walk, operate, explore...
 
 make terrain descriptions appear in lookmode
+	-those don't exist. did I mean terrain tutorial tips? those happen now.
 
 make the "use ranged attacks against this enemy!" tip WAY more blunt.
 
@@ -201,28 +248,19 @@ option for 'safe mode' that prevents 'y,y' for prompts and ignores key repeat? (
 conditional printing of corpse knockback message - maybe save the message in reserve,
 	and print it only if something else happens that could cause a message.
 
-"you can no longer see this %item%" might be a problem - if I print its name, it reveals that it's still there. If I ignore it, you can't travel to it. If I don't want to reveal that it's still there, I have to remember it somehow.
 
 
 
 not reproduced reliably:
 BUG: this has happened several times now. After entering Help, keyboard commands are sometimes ignored.
 
-mapgen:
-firepits should generate sometimes in fortresses after all - sometimes near barrels.
-add giant glowing fungus
-	-spawns in fungus patches, of course.  blocks movement and LOS? They don't NEED to do anything else. (could also trample like foliage, or release spores)
-do I add doors before altering rooms in standard levels? that can lead to doors in the middle of corridors when cross rooms are involved. (if this becomes a problem, i think the easiest solution is a separate scan for stray doors)
-	-not reproduced - did i disable some code in level gen?
-crypt levels seem to be disconnected more often than most 
-  -if anything is disconnected right now, the bug is in RemoveUnconnected() itself.
-for the unconnected level thing, it might not be alterrooms after all. I got one that called RemoveUnconnected, then RemoveDeadEnds, then MarkInteresting, and it still happened, so the problem is in one of those two, or in removeunconnected itself.
 
 
 
 REMEMBER TO CHECK FUTURE_TODO AGAIN! THERE'S PLENTY LEFT IN THERE.
 
 
+...license?
 
 
 
@@ -325,7 +363,7 @@ todo: while fixing map scrolling in graphics mode, make sure to add a gradual sc
 
 
 
-
+for schism:  change to cell type and zone type. So, room corners would become floors in a room-corner zone.
 
 
 

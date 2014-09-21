@@ -72,16 +72,27 @@ namespace Forays{
 				}
 				command = Global.ReadKey();
 				ConsoleKey ck = command.Key;
-				if(ck == ConsoleKey.Backspace || ck == ConsoleKey.PageUp || ck == ConsoleKey.NumPad9){
+				switch(ck){
+				case ConsoleKey.Backspace:
+				case ConsoleKey.PageUp:
+				case ConsoleKey.NumPad9:
 					ch = (char)8;
-				}
-				else{
-					if(ck == ConsoleKey.PageDown || ck == ConsoleKey.NumPad3){
-						ch = ' ';
-					}
-					else{
-						ch = Actor.ConvertInput(command);
-					}
+					break;
+				case ConsoleKey.PageDown:
+				case ConsoleKey.NumPad3:
+					ch = ' ';
+					break;
+				case ConsoleKey.Home:
+				case ConsoleKey.NumPad7:
+					ch = '[';
+					break;
+				case ConsoleKey.End:
+				case ConsoleKey.NumPad1:
+					ch = ']';
+					break;
+				default:
+					ch = Actor.ConvertInput(command);
+					break;
 				}
 				switch(ch){
 				case 'a':
@@ -175,6 +186,12 @@ namespace Forays{
 							startline = text.Count - 22;
 						}
 					}
+					break;
+				case '[':
+					startline = 0;
+					break;
+				case ']':
+					startline = Math.Max(0,text.Count - 22);
 					break;
 				default:
 					break;
@@ -878,9 +895,7 @@ namespace Forays{
 				int y_offset = i + 1;
 				int x_offset = (boxwidth - frames[i][0].Length()) / 2;
 				Screen.WriteList(y+y_offset,x+x_offset,frames[i]);
-				if(Screen.GLMode){
-					Game.gl.Update();
-				}
+				Game.GLUpdate();
 				Thread.Sleep(20);
 			}
 			foreach(colorstring s in box){
@@ -888,9 +903,7 @@ namespace Forays{
 				++y;
 			}
 			Screen.CursorVisible = false;
-			if(Screen.GLMode){
-				Game.gl.Update();
-			}
+			Game.GLUpdate();
 			Thread.Sleep(500);
 			Global.FlushInput();
 			/*	switch(Global.ReadKey().KeyChar){

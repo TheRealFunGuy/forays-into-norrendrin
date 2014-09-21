@@ -1836,7 +1836,7 @@ namespace Forays{
 						if(t.type == TileType.POPPY_FIELD){
 							new_area.Add(t);
 							Actor a = t.actor();
-							if(a != null){
+							if(a != null && !a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE)){
 								if(a.attrs[AttrType.POPPY_COUNTER] < 4){
 									a.GainAttrRefreshDuration(AttrType.POPPY_COUNTER,200);
 									if(a == player && a.attrs[AttrType.POPPY_COUNTER] == 1){
@@ -1847,12 +1847,26 @@ namespace Forays{
 									a.RefreshDuration(AttrType.POPPY_COUNTER,200);
 								}
 								if(a.attrs[AttrType.POPPY_COUNTER] >= 4){
-									a.ApplyStatus(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100);
+									if(!a.HasAttr(AttrType.ASLEEP,AttrType.JUST_AWOKE)){
+										if(a.ResistedBySpirit()){
+											if(player.HasLOS(a)){
+												B.Add(a.You("resist") + " falling asleep. ",a);
+											}
+										}
+										else{
+											if(player.HasLOS(a)){
+												B.Add(a.You("fall") + " asleep in the poppies. ",a);
+												//B.Add("The poppies lull " + a.the_name + " to sleep. ",a);
+											}
+											a.attrs[AttrType.ASLEEP] = R.Between(4,6);
+										}
+									}
+									/*a.ApplyStatus(AttrType.MAGICAL_DROWSINESS,(R.Roll(3)+4)*100);
 									if(a == player && !a.HasAttr(AttrType.MAGICAL_DROWSINESS)){
 										//B.Add("The poppies make you drowsy. ");
 										Help.TutorialTip(TutorialTopic.Drowsiness);
 									}
-									//a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,a.DurationOfMagicalEffect((R.Roll(3)+4)) * 100,a.YouFeel() + " less drowsy. ",a);
+									a.RefreshDuration(AttrType.MAGICAL_DROWSINESS,a.DurationOfMagicalEffect((R.Roll(3)+4)) * 100,a.YouFeel() + " less drowsy. ",a);*/
 								}
 							}
 						}
@@ -2032,7 +2046,7 @@ namespace Forays{
 								chance = 10;
 							}
 							if(more_flammable_terrain){
-								chance = 15;
+								chance = 20;
 							}
 							if(R.OneIn(chance)){
 								t.RemoveFeature(FeatureType.FIRE);
@@ -2042,7 +2056,7 @@ namespace Forays{
 										t.color = Color.Gray;
 									}
 									else{
-										t.color = Color.DarkGray;
+										t.color = Color.TerrainDarkGray;
 									}
 								}
 							}

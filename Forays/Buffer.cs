@@ -8,25 +8,29 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
 using System.Collections.Generic;
+using Utilities;
 namespace Forays{
 	public class Buffer{
 		private int max_length;
 		private List<string> str = new List<string>();
 		private string overflow;
+		private int log_length = 1000;
 		private string[] log;
+		private int num_messages;
 		private int position;
 
 		public static Map M;
 		public static Actor player;
 		public Buffer(Game g){
-			max_length=Global.COLS; //because the message window runs along the top of the map
+			max_length = Global.COLS; //because the message window runs along the top of the map
 			str.Add("");
 			overflow = "";
-			log=new string[20];
-			for(int i=0;i<20;++i){
+			log = new string[log_length];
+			for(int i=0;i<log_length;++i){
 				log[i] = "";
 			}
-			position=0;
+			position = 18;
+			num_messages = position;
 			M = g.M;
 			player = g.player;
 		}
@@ -130,8 +134,8 @@ namespace Forays{
 			}
 			else{
 				string s = str.Last();
-				int last = position-1;
-				if(last == -1){ last = 19; }
+				int last = (position-1).Modulo(log_length);
+				//if(last == -1){ last = 19; }
 				string prev = log[last];
 				string count = "1";
 				int pos = prev.LastIndexOf(" (x");
@@ -199,7 +203,7 @@ namespace Forays{
 				}
 			}
 			foreach(string s in str){
-				if(s != "You regenerate. " && s != "You rest... " && s != ""){
+				if(s != "You regenerate. " && s != "You rest... " && s != "You breathe in the overwhelming scent of the poppies. " && s != ""){ //eventually this will become a list of ignored strings
 					if(!player.HasAttr(AttrType.RESTING)){
 						player.Interrupt();
 					}
@@ -208,8 +212,8 @@ namespace Forays{
 			bool repeated_message = false;
 			foreach(string s in str){
 				if(s != ""){
-					int last = position-1;
-					if(last == -1){ last = 19; }
+					int last = (position-1).Modulo(log_length);
+					//if(last == -1){ last = 19; }
 					string prev = log[last];
 					string count = "1";
 					int pos = prev.LastIndexOf(" (x");
@@ -230,8 +234,12 @@ namespace Forays{
 					}
 					else{
 						log[position] = s;
-						++position;
-						if(position == 20){ position = 0; }
+						position = (position+1).Modulo(log_length);
+						if(num_messages < 1000){
+							++num_messages;
+						}
+						//++position;
+						//if(position == 20){ position = 0; }
 						repeated_message = false;
 					}
 				}
@@ -308,22 +316,26 @@ namespace Forays{
 				}
 			}
 		}
-		public string Printed(int num){ return log[(position+num)%20]; } //like PreviousMessage, but starting at the oldest
-		public string PreviousMessage(int num){
-			int idx = position - num;
-			if(idx < 0){
-				idx += 20;
+		public string Printed(int num){ //Printed(0) is the oldest message, Printed(1) the 2nd oldest...
+			if(num_messages < log_length){
+				return log[num];
 			}
-			return log[idx];
+			else{
+				return log[(position+num).Modulo(log_length)];
+			}
 		}
-		public void SetPreviousMessages(string[] s){
-			for(int i=0;i<20;++i){
+		public string PreviousMessage(int num){ //PreviousMessage(1) is the latest, PreviousMessage(2) is the next latest...
+			return log[(position-num).Modulo(log_length)];
+		}
+		public void SetPreviousMessages(string[] s){ //todo: improve this
+			for(int i=0;i<log_length;++i){
 				log[i] = s[i];
 			}
 		}
 		public List<string> GetMessages(){
 			List<string> result = new List<string>();
-			for(int i=0;i<20;++i){
+			int count = Math.Min(log_length,num_messages);
+			for(int i=0;i<count;++i){
 				result.Add(Printed(i));
 			}
 			return result;

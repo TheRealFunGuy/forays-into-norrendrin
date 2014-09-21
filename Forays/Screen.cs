@@ -16,7 +16,7 @@ using OpenTK.Graphics.OpenGL;
 using Utilities;
 using GLDrawing;
 namespace Forays{
-	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomConfusion,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomRGBW,RandomCMY,RandomDCMY,RandomCMYW,RandomRainbow,RandomAny,Transparent}; //transparent is a special exception. it only works in GL mode.
+	public enum Color{Black,White,Gray,Red,Green,Blue,Yellow,Magenta,Cyan,DarkGray,DarkRed,DarkGreen,DarkBlue,DarkYellow,DarkMagenta,DarkCyan,RandomFire,RandomIce,RandomLightning,RandomBreached,RandomExplosion,RandomGlowingFungus,RandomTorch,RandomDoom,RandomConfusion,RandomDark,RandomBright,RandomRGB,RandomDRGB,RandomRGBW,RandomCMY,RandomDCMY,RandomCMYW,RandomRainbow,RandomAny,OutOfSight,TerrainDarkGray,DarkerGray,Transparent}; //transparent is a special exception. it only works in GL mode.
 	public struct colorchar{
 		public Color color;
 		public Color bgcolor;
@@ -452,23 +452,26 @@ namespace Forays{
 			if(!memory[r,c].Equals(ch)){
 				ch.color = ResolveColor(ch.color);
 				ch.bgcolor = ResolveColor(ch.bgcolor);
-				memory[r,c] = ch;
 				if(GLMode){
+					memory[r,c] = ch;
 					if(!NoGLUpdate){
 						UpdateGLBuffer(r,c);
 					}
 				}
 				else{
-					ConsoleColor co = GetColor(ch.color);
-					if(co != ForegroundColor){
-						ForegroundColor = co;
+					if(!memory[r,c].Equals(ch)){ //check for equality again now that the color has been resolved - still cheaper than actually writing to console
+						memory[r,c] = ch;
+						ConsoleColor co = GetColor(ch.color);
+						if(co != ForegroundColor){
+							ForegroundColor = co;
+						}
+						co = GetColor(ch.bgcolor);
+						if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
+							BackgroundColor = co;
+						}
+						Console.SetCursorPosition(c,r);
+						Console.Write(ch.c);
 					}
-					co = GetColor(ch.bgcolor);
-					if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
-						BackgroundColor = co;
-					}
-					Console.SetCursorPosition(c,r);
-					Console.Write(ch.c);
 				}
 			}
 		}
@@ -482,19 +485,25 @@ namespace Forays{
 					if(!memory[r+i,c+j].Equals(ch)){
 						ch.color = ResolveColor(ch.color);
 						ch.bgcolor = ResolveColor(ch.bgcolor);
-						memory[r+i,c+j] = ch;
+						//memory[r+i,c+j] = ch;
 						array[i,j] = ch;
 						if(!GLMode){
-							ConsoleColor co = GetColor(ch.color);
-							if(co != ForegroundColor){
-								ForegroundColor = co;
+							if(!memory[r+i,c+j].Equals(ch)){ //check again to avoid writing to console when possible
+								memory[r+i,c+j] = ch;
+								ConsoleColor co = GetColor(ch.color);
+								if(co != ForegroundColor){
+									ForegroundColor = co;
+								}
+								co = GetColor(ch.bgcolor);
+								if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
+									BackgroundColor = co;
+								}
+								Console.SetCursorPosition(c+j,r+i);
+								Console.Write(ch.c);
 							}
-							co = GetColor(ch.bgcolor);
-							if(co != Console.BackgroundColor || Global.LINUX){//voodoo here. not sure why this is needed. (possible Mono bug)
-								BackgroundColor = co;
-							}
-							Console.SetCursorPosition(c+j,r+i);
-							Console.Write(ch.c);
+						}
+						else{
+							memory[r+i,c+j] = ch;
 						}
 					}
 				}
@@ -1131,9 +1140,7 @@ namespace Forays{
 		public static void AnimateCell(int r,int c,colorchar ch,int duration){
 			colorchar prev = memory[r,c];
 			WriteChar(r,c,ch);
-			if(GLMode){
-				Game.gl.Update();
-			}
+			Game.GLUpdate();
 			Thread.Sleep(duration);
 			WriteChar(r,c,prev);
 		}
@@ -1162,9 +1169,7 @@ namespace Forays{
 				WriteMapChar(p.row,p.col,chars[idx]);
 				++idx;
 			}
-			if(GLMode){
-				Game.gl.Update();
-			}
+			Game.GLUpdate();
 			Thread.Sleep(duration);
 			idx = 0;
 			foreach(pos p in cells){
@@ -1181,9 +1186,7 @@ namespace Forays{
 				WriteMapChar(p.row,p.col,ch);
 				++idx;
 			}
-			if(GLMode){
-				Game.gl.Update();
-			}
+			Game.GLUpdate();
 			Thread.Sleep(duration);
 			idx = 0;
 			foreach(pos p in cells){
@@ -1255,9 +1258,7 @@ namespace Forays{
 					foreach(Tile t in obj.TilesAtDistance(i)){
 						WriteMapChar(t.row,t.col,ch);
 					}
-					if(GLMode){
-						Game.gl.Update();
-					}
+					Game.GLUpdate();
 					Thread.Sleep(duration);
 				}
 			}
@@ -1265,9 +1266,7 @@ namespace Forays{
 				foreach(Tile t in obj.TilesWithinDistance(radius)){
 					WriteMapChar(t.row,t.col,ch);
 				}
-				if(GLMode){
-					Game.gl.Update();
-				}
+				Game.GLUpdate();
 				Thread.Sleep(duration);
 			}
 			for(int i=0;i<=radius*2;++i){
@@ -1309,9 +1308,7 @@ namespace Forays{
 			foreach(Tile t in list){
 				memlist.Add(MapChar(t.row,t.col));
 				WriteMapChar(t.row,t.col,ch);
-				if(GLMode){
-					Game.gl.Update();
-				}
+				Game.GLUpdate();
 				Thread.Sleep(duration);
 			}
 			int i = 0;
@@ -1328,9 +1325,7 @@ namespace Forays{
 			foreach(Tile t in list){
 				memlist.Add(MapChar(t.row,t.col));
 				WriteMapChar(t.row,t.col,ch);
-				if(GLMode){
-					Game.gl.Update();
-				}
+				Game.GLUpdate();
 				Thread.Sleep(duration);
 			}
 			int i = 0;
@@ -1418,6 +1413,8 @@ namespace Forays{
 			case Color.RandomCMYW:
 			case Color.RandomRainbow:
 			case Color.RandomAny:
+			case Color.OutOfSight:
+			case Color.TerrainDarkGray:
 				return GetColor(ResolveColor(c));
 			default:
 				return ConsoleColor.Black;
@@ -1690,6 +1687,25 @@ namespace Forays{
 				default:
 					return Color.Black;
 				}
+			case Color.OutOfSight:
+			if(Global.Option(OptionType.DARK_GRAY_UNSEEN)){
+				if(Screen.GLMode){
+					return Color.DarkerGray;
+				}
+				else{
+					return Color.DarkGray;
+				}
+			}
+			else{
+				return Color.DarkBlue;
+			}
+			case Color.TerrainDarkGray:
+			if(Screen.GLMode || !Global.Option(OptionType.DARK_GRAY_UNSEEN)){
+				return Color.DarkGray;
+			}
+			else{
+				return Color.Gray;
+			}
 			default:
 				return c;
 			}
@@ -1718,10 +1734,11 @@ namespace Forays{
 			rect = new Rectangle(col,row,width,height);
 		}
 	}
-	public enum MouseMode{Map,Menu,ScrollableMenu,NameEntry,Targeting,Directional,YesNoPrompt};
+	public enum MouseMode{Map,Inventory,Menu,ScrollableMenu,NameEntry,Targeting,Directional,YesNoPrompt};
 	public static class MouseUI{
 		public static bool AutomaticButtonsFromStrings = false;
 		public static bool IgnoreMouseMovement = false;
+		public static bool IgnoreMouseClicks = false;
 		public static bool VisiblePath = true;
 		private static List<Button[,]> button_map = new List<Button[,]>();
 		private static List<MouseMode> mouse_mode = new List<MouseMode>();

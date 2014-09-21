@@ -603,6 +603,14 @@ namespace Utilities{
 			}
 			return result;
 		}
+		public static pos RandomPosition<T>(this PosArray<T> array,bool allow_borders){
+			if(allow_borders){
+				return new pos(R.Between(0,array.objs.GetLength(0)),R.Between(0,array.objs.GetLength(1)));
+			}
+			else{
+				return new pos(R.Between(1,array.objs.GetLength(0)-1),R.Between(1,array.objs.GetLength(1)-1));
+			}
+		}
 		public static List<pos> PositionsWhere<T>(this PosArray<T> array,BooleanPositionDelegate condition){
 			return array.objs.PositionsWhere(condition);
 			/*List<pos> result = new List<pos>();
@@ -889,6 +897,143 @@ namespace Utilities{
 				}
 			}
 			return map;
+		}
+		public static PosArray<int> GetManhattanDijkstraMap<T>(this PosArray<T> array,BooleanPositionDelegate is_blocked,BooleanPositionDelegate is_source){
+			int height = array.objs.GetLength(0);
+			int width = array.objs.GetLength(1);
+			PosArray<int> map = new PosArray<int>(height,width);
+			PriorityQueue<pos> frontier = new PriorityQueue<pos>(x => -map[x]);
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					pos p = new pos(i,j);
+					if(is_source(p)){
+						map[p] = 0;
+						frontier.Add(p);
+					}
+					else{
+						if(is_blocked(p)){
+							map[p] = DijkstraMin;
+						}
+						else{
+							map[p] = DijkstraMax;
+						}
+					}
+				}
+			}
+			while(frontier.list.Count > 0){
+				pos p = frontier.Pop();
+				foreach(int dir in U.FourDirections){
+					pos neighbor = p.PosInDir(dir);
+					if(neighbor.BoundsCheck(map)){
+						int cost = 1;
+						if(map[neighbor] > map[p]+cost){
+							map[neighbor] = map[p]+cost;
+							frontier.Add(neighbor);
+						}
+					}
+				}
+			}
+			return map;
+		}
+		public static List<pos> GetAStarPath<T>(this PosArray<T> array,pos start,pos goal,BooleanPositionDelegate is_blocked){
+			return array.GetAStarPath(start,goal,is_blocked,x=>1,1);
+		}
+		public static List<pos> GetAStarPath<T>(this PosArray<T> array,pos start,pos goal,BooleanPositionDelegate is_blocked,IntegerPositionDelegate get_cost,int default_cost){
+			int height = array.objs.GetLength(0);
+			int width = array.objs.GetLength(1);
+			PosArray<int> map = new PosArray<int>(height,width);
+			PriorityQueue<pos> frontier = new PriorityQueue<pos>(x => -(map[x] + x.DistanceFrom(goal)*default_cost));
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					if(is_blocked(new pos(i,j))){
+						map[i,j] = DijkstraMin;
+					}
+					else{
+						map[i,j] = DijkstraMax;
+					}
+				}
+			}
+			frontier.Add(start);
+			map[start] = 0;
+			while(frontier.list.Count > 0){
+				pos p = frontier.Pop();
+				if(p.Equals(goal)){
+					List<pos> result = new List<pos>();
+					pos current_position = goal;
+					while(true){
+						List<pos> valid = current_position.PositionsAtDistance(1).Where(x=>map[x].IsValidDijkstraValue() && map[x] < map[current_position]).WhereLeast(x=>map[x]).WhereLeast(x=>x.ApproximateEuclideanDistanceFromX10(current_position));
+						if(valid.Count > 0){
+							/*if(deterministic_results){
+								current_position = valid.Last();
+							}
+							else{*/
+								current_position = valid.Random();
+							//}
+							result.Add(current_position);
+							if(current_position.Equals(start)){
+								result.Reverse();
+								return result;
+							}
+						}
+						else{
+							return null;
+						}
+					}
+				}
+				for(int s=-1;s<=1;++s){
+					for(int t=-1;t<=1;++t){
+						if(p.row+s >= 0 && p.row+s < height && p.col+t >= 0 && p.col+t < width){
+							pos neighbor = new pos(p.row+s,p.col+t);
+							int cost = get_cost(neighbor);
+							if(map[neighbor] > map[p]+cost){
+								map[neighbor] = map[p]+cost;
+								frontier.Add(neighbor);
+							}
+						}
+					}
+				}
+			}
+			return null; //no path found
+		}
+		public static int PathingDistanceFrom<T>(this PosArray<T> array,pos start,pos goal,BooleanPositionDelegate is_blocked){
+			return array.PathingDistanceFrom(start,goal,is_blocked,x=>1,1);
+		}
+		public static int PathingDistanceFrom<T>(this PosArray<T> array,pos start,pos goal,BooleanPositionDelegate is_blocked,IntegerPositionDelegate get_cost,int default_cost){
+			int height = array.objs.GetLength(0);
+			int width = array.objs.GetLength(1);
+			PosArray<int> map = new PosArray<int>(height,width);
+			PriorityQueue<pos> frontier = new PriorityQueue<pos>(x => -(map[x] + x.DistanceFrom(goal)*default_cost));
+			for(int i=0;i<height;++i){
+				for(int j=0;j<width;++j){
+					if(is_blocked(new pos(i,j))){
+						map[i,j] = DijkstraMin;
+					}
+					else{
+						map[i,j] = DijkstraMax;
+					}
+				}
+			}
+			frontier.Add(start);
+			map[start] = 0;
+			while(frontier.list.Count > 0){
+				pos p = frontier.Pop();
+				if(p.Equals(goal)){
+					return map[p];
+				}
+				for(int s=-1;s<=1;++s){
+					for(int t=-1;t<=1;++t){
+						if(p.row+s >= 0 && p.row+s < height && p.col+t >= 0 && p.col+t < width){
+							pos neighbor = new pos(p.row+s,p.col+t);
+							int cost = get_cost(neighbor);
+							if(map[neighbor] > map[p]+cost){
+								map[neighbor] = map[p]+cost;
+								frontier.Add(neighbor);
+							}
+						}
+					}
+				}
+			}
+			return -1; //no path found
 		}
 		public static T GetWrapped<T>(this PosArray<T> array,pos p){
 			return array.GetWrapped(p.row,p.col);

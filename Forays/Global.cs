@@ -275,7 +275,7 @@ namespace Forays{
 			}
 			while(true){
 				Animations.Update();
-				if(!Game.gl.Update()){
+				if(!Game.GLUpdate()){
 					Global.Quit();
 				}
 				if(Screen.CursorVisible){
@@ -518,12 +518,6 @@ namespace Forays{
 						}
 					}
 				}
-			}
-			if(Option(OptionType.DARK_GRAY_UNSEEN)){
-				Map.unseencolor = Color.DarkGray;
-			}
-			else{
-				Map.unseencolor = Color.DarkBlue;
 			}
 		}
 		public static void SaveOptions(){
@@ -813,7 +807,7 @@ namespace Forays{
 				b.Write(GetID(o));
 			}
 			for(int i=0;i<20;++i){
-				b.Write(B.Printed(i));
+				b.Write(B.Printed(i)); //todo: don't save blank lines here, just store the number of lines.
 			}
 			b.Close();
 			file.Close();

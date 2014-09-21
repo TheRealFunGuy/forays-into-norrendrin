@@ -202,6 +202,9 @@ namespace SchismDungeonGenerator{
 				for(int j=0;j<W;++j){
 					if(num[i,j] == 0){
 						count++;
+						if(count > 1){
+							return false;
+						}
 						num[i,j] = count;
 						bool changed = true;
 						while(changed){
@@ -223,9 +226,6 @@ namespace SchismDungeonGenerator{
 						}
 					}
 				}
-			}
-			if(count > 1){
-				return false;
 			}
 			return true;
 		}
@@ -492,6 +492,72 @@ namespace SchismDungeonGenerator{
 			}
 			return true;
 		}
+		public bool IsCornerFloor(int r,int c){ return IsCornerFloor(new pos(r,c)); }
+		public bool IsCornerFloor(pos p){
+			if(p.BoundsCheck(map,false)){
+				if(map[p].IsPassable() && p.ConsecutiveAdjacent(x=>map[x].IsWall()) == 5){
+					int num_diagonal_walls = 0;
+					foreach(int dir in U.DiagonalDirections){
+						if(map[p.PosInDir(dir)].IsWall()){
+							++num_diagonal_walls;
+						}
+					}
+					if(num_diagonal_walls == 3){
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+		public bool SeparatesMultipleAreas(pos p){ return SeparatesMultipleAreas(p.row,p.col); }
+		public bool SeparatesMultipleAreas(int r,int c){
+			if(r == 0 || c == 0 || r == H-1 || c == W-1){
+				return false;
+			}
+			int[,] num = new int[3,3];
+			for(int i=0;i<3;++i){
+				for(int j=0;j<3;++j){
+					if(map[r+i-1,c+j-1].IsPassable()){
+						num[i,j] = 0;
+					}
+					else{
+						num[i,j] = -1;
+					}
+				}
+			}
+			num[1,1] = -1;
+			int count = 0;
+			for(int i=0;i<3;++i){
+				for(int j=0;j<3;++j){
+					if(num[i,j] == 0){
+						count++;
+						if(count > 1){
+							return true;
+						}
+						num[i,j] = count;
+						bool changed = true;
+						while(changed){
+							changed = false;
+							for(int s=0;s<3;++s){
+								for(int t=0;t<3;++t){
+									if(num[s,t] == count){
+										for(int ds=-1;ds<=1;++ds){
+											for(int dt=-1;dt<=1;++dt){
+												if(s+ds >= 0 && s+ds < 3 && t+dt >= 0 && t+dt < 3 && num[s+ds,t+dt] == 0){
+													num[s+ds,t+dt] = count;
+													changed = true;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
 		//actions:
 		public void Clear(){
 			for(int i=0;i<H;++i){
@@ -555,8 +621,8 @@ namespace SchismDungeonGenerator{
 				   && points.Contains(new pos((H*pointrows)/(pointrows+1),W/(pointcols+1))) == false){
 					corners = true;
 				}
-			}*/
-			/*foreach(pos p in points){
+			}
+			foreach(pos p in points){
 				if(map[p] == CellType.InterestingLocation){
 					map[p] = CellType.Wall;
 				}
@@ -1665,8 +1731,8 @@ namespace SchismDungeonGenerator{
 						}
 						Screen.Write(i+2,j+3,'#',(ConsoleColor)k);
 						int new_row = i - row_displacement[i,j];
-						int new_col = j - col_displacement[i,j];*/
-						/*if(ArrayBoundsCheck(rd2,new_row,j)){
+						int new_col = j - col_displacement[i,j];
+						if(ArrayBoundsCheck(rd2,new_row,j)){
 							rd2[i,j] = row_displacement[new_row,j];
 						}
 						else{
@@ -1677,8 +1743,8 @@ namespace SchismDungeonGenerator{
 						}
 						else{
 							cd2[i,j] = 0;
-						}*/
-						/*if(ArrayBoundsCheck(rd2,i,new_col)){
+						}
+						if(ArrayBoundsCheck(rd2,i,new_col)){
 							rd2[i,j] = row_displacement[i,new_col];
 						}
 						else{
@@ -1689,8 +1755,8 @@ namespace SchismDungeonGenerator{
 						}
 						else{
 							cd2[i,j] = 0;
-						}*/
-						/*if(ArrayBoundsCheck(rd2,new_row,new_col)){
+						}
+						if(ArrayBoundsCheck(rd2,new_row,new_col)){
 							rd2[i,j] = row_displacement[new_row,new_col];
 							cd2[i,j] = col_displacement[new_row,new_col];
 						}
@@ -1941,6 +2007,23 @@ namespace SchismDungeonGenerator{
 				}
 				return true;
 			});
+		}
+		public void SmoothCorners(int percent_chance){
+			List<pos> corners = new List<pos>();
+			for(int i=1;i<H-1;++i){
+				for(int j=1;j<W-1;++j){
+					if(IsCornerFloor(i,j)){
+						corners.Add(new pos(i,j));
+					}
+				}
+			}
+			while(corners.Count > 0){
+				pos p = corners.RemoveRandom();
+				corners.RemoveWhere(x=>x.DistanceFrom(p) <= 1);
+				if(R.PercentChance(percent_chance)){
+					map[p] = CellType.Wall;
+				}
+			}
 		}
 		public void SharpenCorners(){
 			for(int i=1;i<H-1;++i){
@@ -2460,10 +2543,58 @@ namespace SchismDungeonGenerator{
 				}
 			}
 		}
-		public bool CreateTwistyCave(int percent_coverage){
+		public List<pos> GetRoomFromPosition(pos position_in_room,bool allow_any_passable){ //get the room described by a single position inside it
+			if(allow_any_passable){
+				return map.GetFloodFillPositions(position_in_room,false,x=>map[x].IsPassable());
+			}
+			else{
+				return map.GetFloodFillPositions(position_in_room,false,x=>map[x].IsRoomType());
+			}
+		}
+		public pos MoveRoom(pos room,int direction){ return MoveRoom(GetRoomFromPosition(room,true),direction); }
+		public pos MoveRoom(List<pos> room,int direction){
+			List<CellType> prev_types = new List<CellType>();
+			foreach(pos p in room){
+				prev_types.Add(map[p]);
+				map[p] = CellType.Wall;
+			}
+			List<pos> edge_positions = room.Where(x=>!room.Contains(x.PosInDir(direction)));
+			pos offset = new pos(0,0);
+			while(true){
+				pos new_offset = offset.PosInDir(direction);
+				bool good = true;
+				foreach(pos p in edge_positions){
+					pos n = new pos(p.row + new_offset.row,p.col + new_offset.col);
+					foreach(pos neighbor in n.PositionsWithinDistance(1,false,true)){
+						if(!neighbor.BoundsCheck(map,true) || !map[neighbor].IsWall()){
+							good = false;
+							break;
+						}
+					}
+					if(!good){
+						break;
+					}
+				}
+				if(good){
+					offset = new_offset;
+				}
+				else{
+					break;
+				}
+			}
+			int idx = 0;
+			foreach(pos p in room){
+				map[p.row + offset.row,p.col + offset.col] = prev_types[idx++];
+			}
+			return offset;
+		}
+		public delegate void DensityUpdateDelegate(pos p,PosArray<int> density,PosArray<CellType> cells);
+		public bool CreateTwistyCave(bool two_walls_between_corridors,int percent_coverage){ return CreateTwistyCave(two_walls_between_corridors,percent_coverage,-1,(x,density,cells)=>{ return; }); }
+		public bool CreateTwistyCave(bool two_walls_between_corridors,int percent_coverage,int density_threshold,DensityUpdateDelegate update_density){
 			int target_number_of_floors = (H * W * percent_coverage) / 100;
 			List<pos> frontier = new List<pos>();
-			pos origin = new pos(R.Roll(H-2),R.Roll(W-2));
+			PosArray<int> density = new PosArray<int>(H,W);
+			pos origin = new pos(R.Between(2,H-3),R.Between(2,W-3));
 			frontier.Add(origin);
 			map[origin] = CellType.RoomInterior;
 			int count = 1;
@@ -2477,15 +2608,48 @@ namespace SchismDungeonGenerator{
 				else{
 					p = frontier.RemoveLast();
 				}
+				if(density_threshold > 0 && density[p] >= density_threshold){
+					continue;
+				}
 				List<int> valid_dirs = new List<int>();
-				for(int dir=2;dir<=8;dir+=2){
+				foreach(int dir in U.FourDirections){
 					pos neighbor = p.PosInDir(dir);
 					if(BoundsCheck(neighbor,false) && map[neighbor].IsWall()){
 						bool valid = true;
-						for(int i=-1;i<=1;++i){
-							if(!map[neighbor.PosInDir(dir.RotateDir(true,i))].IsWall()){
-								valid = false;
-								break;
+						if(two_walls_between_corridors){
+							int idx = 0;
+							foreach(int dir2 in dir.GetArc(1)){
+								if(!map[neighbor.PosInDir(dir2)].IsWall()){
+									valid = false;
+									break;
+								}
+								else{
+									if(idx == 1){
+										pos n = neighbor.PosInDir(dir2).PosInDir(dir2);
+										if(n.BoundsCheck(map) && !map[n].IsWall()){
+											valid = false;
+											break;
+										}
+									}
+									else{
+										foreach(int dir3 in dir2.GetArc(1)){
+											pos n = neighbor.PosInDir(dir2).PosInDir(dir3);
+											if(n.BoundsCheck(map) && !map[n].IsWall()){
+												valid = false;
+												break;
+											}
+										}
+									}
+								}
+								++idx;
+							}
+						}
+						else{
+							foreach(int dir2 in dir.GetArc(1)){
+								if(!map[neighbor.PosInDir(dir2)].IsWall()){
+									valid = false;
+									break;
+								}
 							}
 						}
 						if(valid){
@@ -2506,6 +2670,7 @@ namespace SchismDungeonGenerator{
 							pos neighbor = p.PosInDir(i);
 							map[neighbor] = CellType.RoomInterior;
 							++count;
+							update_density(neighbor,density,map);
 							if(!pick_random){ //todo: should this check be removed? it can lead to abandoned paths that don't ever get filled
 								frontier.Add(neighbor);
 							}
@@ -2521,75 +2686,14 @@ namespace SchismDungeonGenerator{
 			return true;
 		}
 		public bool CreateCaveCorridor(int percent_coverage){
-			int target_number_of_floors = (H * W * percent_coverage) / 100;
-			List<pos> frontier = new List<pos>();
-			pos origin = new pos(R.Roll(H-2),R.Roll(W-2));
-			frontier.Add(origin);
-			map[origin] = CellType.RoomInterior;
-			int count = 1;
-			bool pick_random = false;
-			PosArray<int> density = new PosArray<int>(H,W);
-			while(frontier.Count > 0 && count < target_number_of_floors){
-				pos p;
-				if(pick_random || R.PercentChance(5)){
-					p = frontier.RemoveRandom();
-					pick_random = false;
+			return CreateTwistyCave(false,percent_coverage,80,(x,density,cells)=>{
+				foreach(pos n2 in x.PositionsWithinDistance(8)){
+					density[n2]++;
 				}
-				else{
-					p = frontier.RemoveLast();
+				foreach(pos n2 in x.PositionsWithinDistance(4)){
+					density[n2]++;
 				}
-				if(density[p] >= 80){
-					continue;
-				}
-				List<int> valid_dirs = new List<int>();
-				for(int dir=2;dir<=8;dir+=2){
-					pos neighbor = p.PosInDir(dir);
-					if(BoundsCheck(neighbor,false) && map[neighbor].IsWall()){
-						bool valid = true;
-						for(int i=-1;i<=1;++i){
-							if(!map[neighbor.PosInDir(dir.RotateDir(true,i))].IsWall()){
-								valid = false;
-								break;
-							}
-						}
-						if(valid){
-							valid_dirs.Add(dir);
-						}
-
-					}
-				}
-				if(valid_dirs.Count == 0){
-					pick_random = true;
-				}
-				else{
-					if(valid_dirs.Count == 1 && R.CoinFlip()){
-						pick_random = true;
-					}
-					else{
-						valid_dirs.Randomize();
-						foreach(int i in valid_dirs){
-							pos neighbor = p.PosInDir(i);
-							map[neighbor] = CellType.RoomInterior;
-							++count;
-							foreach(pos n2 in neighbor.PositionsWithinDistance(8)){
-								density[n2]++;
-							}
-							foreach(pos n2 in neighbor.PositionsWithinDistance(4)){
-								density[n2]++;
-							}
-							if(!pick_random){
-								frontier.Add(neighbor);
-							}
-						}
-					}
-				}
-			}
-			foreach(pos p in frontier){
-				if(BoundsCheck(p,false)){
-					map[p] = CellType.RoomInterior;
-				}
-			}
-			return true;
+			});
 		}
 		public bool MakeRoomsCavelike(){ return MakeRoomsCavelike(100,true); }
 		public bool MakeRoomsCavelike(int percent_chance_per_room,bool ignore_rooms_with_single_exit){ //this isn't guaranteed to succeed, so you might need to check the return value
@@ -3015,6 +3119,52 @@ namespace SchismDungeonGenerator{
 				}
 			}
 		}
+		public void ImproveMapEdges(int consecutive_floors_required){
+			List<pos> corners = new List<pos>{new pos(H-2,1),new pos(H-2,W-2),new pos(1,W-2),new pos(1,1)};
+			List<int> dirs = new List<int>{6,8,4,2};
+			for(int i=0;i<4;++i){
+				pos corner = corners[i];
+				int dir = dirs[i];
+				int check_dir = dir.RotateDir(false,2);
+				pos current = corner;
+				List<pos> edge_floors = new List<pos>();
+				while(current.BoundsCheck(map,false)){
+					bool add = true;
+					if(map[current].IsFloor()){
+						foreach(int rotated_dir in check_dir.GetArc(1)){
+							if(!map[current.PosInDir(rotated_dir)].IsFloor()){
+								add = false;
+								break;
+							}
+						}
+					}
+					else{
+						add = false;
+					}
+					if(add){
+						edge_floors.Add(current);
+					}
+					else{
+						if(edge_floors.Count >= consecutive_floors_required){
+							foreach(pos p in edge_floors){
+								if(R.CoinFlip()){
+									map[p] = CellType.Wall;
+								}
+							}
+						}
+						edge_floors.Clear();
+					}
+					current = current.PosInDir(dir);
+				}
+				if(edge_floors.Count >= consecutive_floors_required){
+					foreach(pos p in edge_floors){
+						if(R.CoinFlip()){
+							map[p] = CellType.Wall;
+						}
+					}
+				}
+			}
+		}
 		public void AddDoors(int percent_chance_of_door){
 			for(int i=0;i<H;++i){
 				for(int j=0;j<W;++j){
@@ -3050,6 +3200,36 @@ namespace SchismDungeonGenerator{
 									map[i,j] = CellType.Door;
 								}
 							}
+						}
+					}
+				}
+			}
+		}
+		public void MarkInterestingLocationsNonRectangular(){
+			var dijkstra = map.GetDijkstraMap(x=>!map[x].IsPassable(),x=>!map[x].IsPassable());
+			PosArray<int> values = new PosArray<int>(H,W);
+			for(int i=0;i<H;++i){
+				for(int j=0;j<W;++j){
+					if(dijkstra[i,j].IsValidDijkstraValue() && dijkstra[i,j] > 1){
+						values[i,j] = dijkstra[i,j] * 4;
+						foreach(pos p in new pos(i,j).PositionsAtDistance(1)){
+							if(dijkstra[p].IsValidDijkstraValue()){
+								values[i,j] += dijkstra[p] * 2;
+							}
+						}
+						foreach(pos p in new pos(i,j).PositionsAtDistance(2)){
+							if(dijkstra[p].IsValidDijkstraValue()){
+								values[i,j] += dijkstra[p];
+							}
+						}
+					}
+				}
+			}
+			for(int i=0;i<H;++i){
+				for(int j=0;j<W;++j){
+					if(values[i,j] > 0){
+						if(!new pos(i,j).PositionsAtDistance(1).Any(x=>values[x] > values[i,j])){
+							map[i,j] = CellType.InterestingLocation;
 						}
 					}
 				}
@@ -3341,7 +3521,7 @@ namespace SchismDungeonGenerator{
 			return false;
 		}
 	}
-	public struct SchismAction{
+	public struct SchismAction{ //move this back to the interactive generator
 		public int type;
 		public int n;
 		public int times;
