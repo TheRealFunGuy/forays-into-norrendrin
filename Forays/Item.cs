@@ -310,7 +310,7 @@ namespace Forays{
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
 					}
-					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){
 						result = result + " (" + other_data.ToString() + ")";
 					}
 					if(NameOfItemType() == "wand"){
@@ -362,7 +362,7 @@ namespace Forays{
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
 					}
-					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){
 						result = result + " (" + other_data.ToString() + ")";
 					}
 					if(NameOfItemType() == "wand"){
@@ -390,7 +390,7 @@ namespace Forays{
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
 					}
-					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){
 						result = result + " (" + other_data.ToString() + ")";
 					}
 					if(NameOfItemType() == "wand"){
@@ -425,7 +425,7 @@ namespace Forays{
 					if(position != -1){
 						result = result.Substring(0,position) + result.Substring(position+1);
 					}
-					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){
 						result = result + " (" + other_data.ToString() + ")";
 					}
 					if(NameOfItemType() == "wand"){
@@ -448,7 +448,7 @@ namespace Forays{
 					if(position != -1){
 						result = qty + ' ' + result.Substring(0,position) + 's' + result.Substring(position+1);
 					}
-					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){ //and eventually wands, if identified
+					if(type == ConsumableType.BANDAGES || type == ConsumableType.FLINT_AND_STEEL){
 						result = result + " (" + other_data.ToString() + ")";
 					}
 					if(NameOfItemType() == "wand"){
@@ -989,7 +989,7 @@ namespace Forays{
 				B.Add(user.Your() + " mind expands. ",user);
 				int duration = R.Roll(2,20)+60;
 				user.attrs[AttrType.ASLEEP] = 0;
-				user.RefreshDuration(AttrType.MAGICAL_DROWSINESS,0);
+				//user.RefreshDuration(AttrType.MAGICAL_DROWSINESS,0);
 				user.RefreshDuration(AttrType.CONFUSED,0);
 				user.RefreshDuration(AttrType.STUNNED,0);
 				user.RefreshDuration(AttrType.ENRAGED,0);
@@ -1058,9 +1058,7 @@ namespace Forays{
 						tiles.Add(t);
 						memlist.Add(Screen.MapChar(t.row,t.col));
 						Screen.WriteMapChar(t.row,t.col,ch);
-						if(Screen.GLMode){
-							Game.gl.Update();
-						}
+						Game.GLUpdate();
 						Thread.Sleep(35);
 						last_wall = t;
 						t = t.TileInDirection(dir);
@@ -1075,9 +1073,7 @@ namespace Forays{
 						int idx = 0;
 						foreach(Tile tile in tiles){
 							Screen.WriteMapChar(tile.row,tile.col,memlist[idx++]);
-							if(Screen.GLMode){
-								Game.gl.Update();
-							}
+							Game.GLUpdate();
 							Thread.Sleep(35);
 						}
 						Global.FlushInput();
@@ -1106,9 +1102,7 @@ namespace Forays{
 							int idx = 0;
 							foreach(Tile tile in tiles){
 								Screen.WriteMapChar(tile.row,tile.col,memlist[idx++]);
-								if(Screen.GLMode){
-									Game.gl.Update();
-								}
+								Game.GLUpdate();
 								Thread.Sleep(35);
 							}
 							Global.FlushInput();
@@ -1199,9 +1193,7 @@ namespace Forays{
 							//Screen.WriteMapChar(t.row,t.col,M.VisibleColorChar(t.row,t.col));
 							if(user.DistanceFrom(t) > max_dist){
 								max_dist = user.DistanceFrom(t);
-								if(Screen.GLMode){
-									Game.gl.Update();
-								}
+								Game.GLUpdate();
 								Thread.Sleep(10);
 								while(last_tiles.Count > 0){
 									Tile t2 = last_tiles.RemoveRandom();
@@ -1473,9 +1465,7 @@ namespace Forays{
 							}
 						}
 					}
-					if(Screen.GLMode){
-						Game.gl.Update();
-					}
+					Game.GLUpdate();
 					Thread.Sleep(10);
 				}
 				List<Actor> actors = new List<Actor>();
@@ -1560,9 +1550,7 @@ namespace Forays{
 							Screen.WriteMapChar(t.row,t.col,cch);
 						}
 					}
-					if(Screen.GLMode){
-						Game.gl.Update();
-					}
+					Game.GLUpdate();
 					Thread.Sleep(5);
 				}
 				int actors_affected = 0;
@@ -1682,9 +1670,7 @@ namespace Forays{
 							Screen.WriteMapChar(t2.row,t2.col,t2.symbol,Color.RandomBreached);
 							if(t.DistanceFrom(t2) > max_dist){
 								max_dist = t.DistanceFrom(t2);
-								if(Screen.GLMode){
-									Game.gl.Update(); //todo: stalagmites - if I add them to caves, they should no longer always vanish. check for an event, maybe?
-								}
+								Game.GLUpdate(); //todo: stalagmites - if I add them to caves, they should no longer always vanish. check for an event, maybe?
 								Thread.Sleep(50);
 							}
 						}
@@ -1872,7 +1858,7 @@ namespace Forays{
 					foreach(Tile n1 in added){
 						area.AddUnique(n1);
 					}
-					colorchar cch = new colorchar('*',Color.DarkGray);
+					colorchar cch = new colorchar('*',Color.TerrainDarkGray);
 					foreach(Tile t2 in area){
 						t2.AddFeature(FeatureType.THICK_DUST);
 						cells.Add(t2.p);
@@ -1910,8 +1896,28 @@ namespace Forays{
 						}
 					}
 					else{
-						B.Add("Nothing happens. ",user);
-						results.IDed = false;
+						if(targeting.targeted.Is(FeatureType.TROLL_CORPSE)){
+							B.Add("Jets of flame erupt from the troll corpse. ",a,targeting.targeted);
+							targeting.targeted.ApplyEffect(DamageType.FIRE);
+							if(targeting.targeted.Is(FeatureType.TROLL_CORPSE)){ //if it's still there because of thick gas, it still gets destroyed.
+								targeting.targeted.RemoveFeature(FeatureType.TROLL_CORPSE);
+								B.Add("The troll corpse burns to ashes! ",targeting.targeted);
+							}
+						}
+						else{
+							if(targeting.targeted.Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){
+								B.Add("Jets of flame erupt from the troll bloodwitch corpse. ",a,targeting.targeted);
+								targeting.targeted.ApplyEffect(DamageType.FIRE);
+								if(targeting.targeted.Is(FeatureType.TROLL_BLOODWITCH_CORPSE)){ //if it's still there because of thick gas, it still gets destroyed.
+									targeting.targeted.RemoveFeature(FeatureType.TROLL_BLOODWITCH_CORPSE);
+									B.Add("The troll bloodwitch corpse burns to ashes! ",targeting.targeted);
+								}
+							}
+							else{
+								B.Add("Nothing happens. ",user);
+								results.IDed = false;
+							}
+						}
 					}
 				});
 				used = wand_result.used;
@@ -2024,9 +2030,7 @@ namespace Forays{
 								t.AddFeature(FeatureType.WEB);
 								if(t.seen){
 									Screen.WriteMapChar(t.row,t.col,';',Color.White);
-									if(Screen.GLMode){
-										Game.gl.Update();
-									}
+									Game.GLUpdate();
 									Thread.Sleep(15);
 								}
 							}
@@ -2204,6 +2208,7 @@ namespace Forays{
 						}
 					}
 				}
+				CheckForMimic();
 			}
 			return used;
 		}
@@ -2339,6 +2344,13 @@ namespace Forays{
 				result.used = false;
 			}
 			return result;
+		}
+		public void CheckForMimic(){
+			Event e = Q.FindTargetedEvent(this,EventType.MIMIC);
+			if(e != null){
+				e.dead = true;
+				B.Add("You hear a pained screech. ");
+			}
 		}
 		public string Description(){
 			if(!revealed_by_light){

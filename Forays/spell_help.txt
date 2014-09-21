@@ -73,7 +73,7 @@ Collapse -- Part of the dungeon crashes down on the chosen
 Doom -- Deals 4d6 magic damage and leaves the target vulnerable
         for several turns.
 
-Telekinesis -- Target and throw enemies, items, and terrain
-               features. Most objects (besides items) will deal
-               3d6 damage on impact.
+Telekinesis -- Target and throw enemies, items, many terrain
+               features, or yourself. Most objects (except for
+               items) will deal 3d6 damage on impact.
 

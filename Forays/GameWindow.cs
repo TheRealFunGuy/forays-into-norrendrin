@@ -63,7 +63,7 @@ namespace Forays{
 			CellCols = cell_cols;
 			SnapHeight = snap_h;
 			SnapWidth = snap_w;
-			ResizingPreference = ResizeOption.ExactFitOnly;
+			ResizingPreference = ResizeOption.ExactFitOnly; //todo: stretchtofit doesn't work correctly with mouse input yet
 			ResizingFullScreenPreference = ResizeOption.AddBorder;
 			AllowScaling = true;
 			Mouse.Move += MouseMoveHandler;
@@ -282,7 +282,7 @@ namespace Forays{
 								MouseUI.mouse_path = Actor.player.GetPath(o.row,o.col,-1,true,true,Actor.UnknownTilePathingPreference.UnknownTilesAreOpen);
 								if(MouseUI.mouse_path.Count == 0){
 									foreach(Tile t in Actor.M.TilesByDistance(o.row,o.col,true,true)){
-										if(t.passable){
+										if(t.passable){ //todo: this could be improved - it currently doesn't suggest any path at all for unreachable areas. A dijkstra scan from the player would fix this.
 											MouseUI.mouse_path = Actor.player.GetPath(t.row,t.col,-1,true,true,Actor.UnknownTilePathingPreference.UnknownTilesAreOpen);
 											break;
 										}
@@ -322,6 +322,9 @@ namespace Forays{
 			}
 		}
 		void MouseClickHandler(object sender,MouseButtonEventArgs args){
+			if(MouseUI.IgnoreMouseClicks){
+				return;
+			}
 			if(args.Button == MouseButton.Middle){
 				HandleMiddleClick();
 				return;
@@ -463,6 +466,9 @@ namespace Forays{
 					case MouseMode.YesNoPrompt:
 						Global.LastKey = new ConsoleKeyInfo('y',ConsoleKey.Y,false,false,false);
 						break;
+					case MouseMode.Inventory:
+						Global.LastKey = new ConsoleKeyInfo('a',ConsoleKey.A,false,false,false);
+						break;
 					default:
 						Global.LastKey = new ConsoleKeyInfo((char)13,ConsoleKey.Enter,false,false,false);
 						break;
@@ -495,11 +501,11 @@ namespace Forays{
 				Global.KeyPressed = true;
 				switch(MouseUI.Mode){
 				case MouseMode.Map:
-				Global.LastKey = new ConsoleKeyInfo('v',ConsoleKey.V,false,false,false);
-				break;
+					Global.LastKey = new ConsoleKeyInfo('v',ConsoleKey.V,false,false,false);
+					break;
 				default:
-				Global.LastKey = new ConsoleKeyInfo((char)27,ConsoleKey.Escape,false,false,false);
-				break;
+					Global.LastKey = new ConsoleKeyInfo((char)27,ConsoleKey.Escape,false,false,false);
+					break;
 				}
 			}
 			MouseUI.RemoveHighlight();
@@ -540,6 +546,8 @@ namespace Forays{
 					}
 				}
 			}
+			MouseUI.RemoveHighlight();
+			MouseUI.RemoveMouseover();
 		}
 		void MouseLeaveHandler(object sender,EventArgs args){
 			MouseUI.RemoveHighlight();
@@ -681,6 +689,8 @@ namespace Forays{
 			case Color.Yellow:
 				return new Color4(255,248,0,255);
 				//return Color4.Yellow;
+			case Color.DarkerGray:
+				return new Color4(50,50,50,255);
 			case Color.Transparent:
 				return Color4.Transparent;
 			default:

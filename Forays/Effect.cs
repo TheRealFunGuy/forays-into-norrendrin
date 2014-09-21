@@ -103,6 +103,123 @@ namespace Forays{
 			Global.ReadKey();
 			MouseUI.PopButtonMap();
 		}
+		public static void ShowPreviousMessages(bool show_footsteps){
+			List<string> messages = B.GetMessages();
+			MouseUI.PushButtonMap(MouseMode.ScrollableMenu);
+			MouseUI.CreateMapButton(ConsoleKey.OemMinus,false,3,1);
+			MouseUI.CreateMapButton(ConsoleKey.OemPlus,false,24,1);
+			Screen.CursorVisible = false;
+			//Screen.Blank();
+			Screen.WriteMapString(0,0,"".PadRight(COLS,'-'));
+			Screen.WriteMapString(21,0,"".PadRight(COLS,'-'));
+			ConsoleKeyInfo command2;
+			char ch2;
+			int startline = Math.Max(0,messages.Count - 20);
+			for(bool done = false;!done;){
+				if(startline > 0){
+					Screen.WriteMapString(0,COLS-3,new colorstring("[",Color.Yellow,"-",Color.Cyan,"]",Color.Yellow));
+				}
+				else{
+					Screen.WriteMapString(0,COLS-3,"---");
+				}
+				bool more = false;
+				if(startline + 20 < messages.Count){
+					more = true;
+				}
+				if(more){
+					Screen.WriteMapString(ROWS-1,COLS-3,new colorstring("[",Color.Yellow,"+",Color.Cyan,"]",Color.Yellow));
+				}
+				else{
+					Screen.WriteMapString(ROWS-1,COLS-3,"---");
+				}
+				for(int i=1;i<=20;++i){
+					if(messages.Count - startline < i){
+						Screen.WriteMapString(i,0,"".PadToMapSize());
+					}
+					else{
+						Screen.WriteMapString(i,0,messages[i+startline-1].PadToMapSize());
+					}
+				}
+				B.DisplayNow("Previous messages: ");
+				Screen.CursorVisible = true;
+				command2 = Global.ReadKey();
+				ConsoleKey ck = command2.Key;
+				switch(ck){
+				case ConsoleKey.Backspace:
+				case ConsoleKey.PageUp:
+				case ConsoleKey.NumPad9:
+				ch2 = (char)8;
+				break;
+				case ConsoleKey.Enter:
+				ch2 = ' '; //hackery ahoy - enter becomes space and pagedown becomes enter.
+				break;
+				case ConsoleKey.PageDown:
+				case ConsoleKey.NumPad3:
+				ch2 = (char)13;
+				break;
+				case ConsoleKey.Home:
+				case ConsoleKey.NumPad7:
+				ch2 = '[';
+				break;
+				case ConsoleKey.End:
+				case ConsoleKey.NumPad1:
+				ch2 = ']';
+				break;
+				default:
+				ch2 = Actor.ConvertInput(command2);
+				break;
+				}
+				switch(ch2){
+				case ' ':
+				case (char)27:
+				done = true;
+				break;
+				case '8':
+				case '-':
+				case '_':
+				if(startline > 0){
+					--startline;
+				}
+				break;
+				case '2':
+				case '+':
+				case '=':
+				if(more){
+					++startline;
+				}
+				break;
+				case (char)8:
+				if(startline > 0){
+					startline -= 20;
+					if(startline < 0){
+						startline = 0;
+					}
+				}
+				break;
+				case (char)13:
+				if(messages.Count > 20){
+					startline += 20;
+					if(startline + 20 > messages.Count){
+						startline = messages.Count - 20;
+					}
+				}
+				break;
+				case '[':
+				startline = 0;
+				break;
+				case ']':
+				startline = Math.Max(0,messages.Count - 20);
+				break;
+				default:
+				break;
+				}
+			}
+			if(show_footsteps && player.HasAttr(AttrType.DETECTING_MOVEMENT) && Actor.previous_footsteps.Count > 0){
+				M.Draw();
+				Screen.AnimateMapCells(Actor.previous_footsteps,new colorchar('!',Color.Red),150);
+			}
+			MouseUI.PopButtonMap();
+		}
 		public static bool Telekinesis(bool cast,Actor user,Tile t){
 			bool wand = !cast;
 			if(t == null){
@@ -260,6 +377,9 @@ namespace Forays{
 							line = ai_line;
 						}
 						if(line != null){
+							if(line.Count > 13){
+								line = line.ToCount(13); //for range 12
+							}
 							if(cast){
 								B.Add(user.You("cast") + " telekinesis. ",user);
 							}
@@ -307,7 +427,7 @@ namespace Forays{
 							}
 							if(line.Count > 0){
 								line.RemoveAt(line.Count - 1); //i forget why I needed to do this twice, but it seems to work
-							}
+							} //todo: actually, it doesn't! This line is why the animation jumps right before the end! fix this.
 							{
 								Tile first_unseen = null;
 								foreach(Tile tile2 in line){
@@ -348,6 +468,9 @@ namespace Forays{
 									}
 									if(i.NameOfItemType() == "orb"){
 										i.Use(null,new List<Tile>{t2});
+									}
+									else{
+										i.CheckForMimic();
 									}
 								}
 								else{
@@ -561,9 +684,7 @@ namespace Forays{
 											Screen.WriteMapChar(current_row,current_col,mem[current_row,current_col]);
 											current_row = t2.row;
 											current_col = t2.col;
-											if(Screen.GLMode){
-												Game.gl.Update();
-											}
+											Game.GLUpdate();
 											Thread.Sleep(20);
 										}
 									}
@@ -633,6 +754,38 @@ namespace Forays{
 			}
 			Global.ReadKey();
 			Screen.WriteArray(0,0,temp);
+		}
+		public static void DebugDisplayDijkstra(PosArray<int> d){ DebugDisplayDijkstra(d,1); }
+		public static void DebugDisplayDijkstra(PosArray<int> d,int default_cost){
+			int h = d.objs.GetLength(0);
+			int w = d.objs.GetLength(1);
+			for(int i=0;i<h;++i){
+				for(int j=0;j<w;++j){
+					if(d[i,j] == U.DijkstraMax){
+						Screen.WriteMapChar(i,j,'!',Color.DarkGray);
+					}
+					else{
+						if(d[i,j] == U.DijkstraMin){
+							Screen.WriteMapChar(i,j,'#',Color.Gray);
+						}
+						else{
+							if(d[i,j] == 0){
+								Screen.WriteMapChar(i,j,'0',Color.White);
+							}
+							else{
+								int cost = d[i,j] / default_cost;
+								if(cost < 10){
+									Screen.WriteMapChar(i,j,cost.ToString()[0],Color.Cyan);
+								}
+								else{
+									Screen.WriteMapChar(i,j,'+',Color.Blue);
+								}
+							}
+						}
+					}
+				}
+			}
+			Global.ReadKey();
 		}
 	}
 }

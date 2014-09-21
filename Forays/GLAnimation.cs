@@ -149,7 +149,7 @@ namespace Forays{
 					p.row += dy;
 				}
 				Game.gl.UpdateParticles(GLGame.particle_surface,l);
-				Game.gl.Render();
+				Game.gl.Render(); //todo: update or render?
 				Thread.Sleep(20);
 			}
 			GLGame.particle_surface.Disabled = true;
