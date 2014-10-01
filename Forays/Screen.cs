@@ -386,7 +386,7 @@ namespace Forays{
 			Game.gl.UpdateVertexArray(row,col,GLGame.text_surface,0,(int)memory[row,col].c,color_info);*/
 		}
 		public static void UpdateCursor(bool make_visible){
-			if(make_visible && (Global.Option(OptionType.DISABLE_GRAPHICS) || MouseUI.Mode != MouseMode.Map)){
+			if(make_visible && (!Global.GRAPHICAL || MouseUI.Mode != MouseMode.Map)){
 				float[] color_values = GLGame.ConvertColor(Color.Gray).GetFloatValues();
 				SpriteSurface s = GLGame.cursor_surface;
 				s.Disabled = false;

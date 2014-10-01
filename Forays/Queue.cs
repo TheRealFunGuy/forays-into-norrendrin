@@ -302,11 +302,11 @@ namespace Forays{
 		}
 		public Event(List<Tile> area_,int delay_,EventType type_){
 			target=null;
-			area = new List<Tile>();
+			/*area = new List<Tile>(); //todo: reverted this. hope it works.
 			foreach(Tile t in area_){
 				area.Add(t);
-			}
-			//area=area_;
+			}*/
+			area=area_;
 			delay=delay_;
 			type=type_;
 			attr=AttrType.NO_ATTR;
@@ -319,11 +319,7 @@ namespace Forays{
 		}
 		public Event(List<Tile> area_,int delay_,EventType type_,int value_){
 			target=null;
-			area = new List<Tile>();
-			foreach(Tile t in area_){ //todo: definitely resolve whether this should copy the list or not.
-				area.Add(t);
-			}
-			//area=area_;
+			area=area_;
 			delay=delay_;
 			type=type_;
 			attr=AttrType.NO_ATTR;
@@ -510,7 +506,7 @@ namespace Forays{
 						}
 						else{
 							temp.attrs[AttrType.BONUS_SPIRIT] -= value;      //otherwise, set things to normal
-							temp.attrs[AttrType.BONUS_COMBAT] -= value / 2;
+							temp.attrs[AttrType.BONUS_COMBAT] -= (value+1) / 2;
 							if(temp.attrs[AttrType.KILLSTREAK] >= 2){
 								B.Add("You wipe off your weapon. ");
 							}
@@ -637,7 +633,7 @@ namespace Forays{
 									else{
 										B.Add("Something throws " + item.AName() + ". ",temporary);
 										B.DisplayNow();
-										Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
+										Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstSolidTileOrActor(),new colorchar(item.color,item.symbol));
 										player.tile().GetItem(item);
 										B.Add(item.TheName() + " hits you. ");
 										player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),temporary,"a flying " + item.Name());
@@ -695,7 +691,7 @@ namespace Forays{
 											else{
 												B.Add("Something throws " + item.TheName() + ". ",temporary);
 												B.DisplayNow();
-												Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstObstruction(),new colorchar(item.color,item.symbol));
+												Screen.AnimateProjectile(tile.GetBestExtendedLineOfEffect(player).ToFirstSolidTileOrActor(),new colorchar(item.color,item.symbol));
 												player.tile().GetItem(item);
 												B.Add(item.TheName() + " hits you. ");
 												player.TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(6),temporary,"a flying " + item.Name());
@@ -951,7 +947,7 @@ namespace Forays{
 				}
 				case EventType.FIRE_GEYSER:
 				{
-					int frequency = value / 10; //9-29
+					int frequency = value / 10; //9-39
 					int variance = value % 10; //0-9
 					int variance_amount = (frequency * variance) / 10;
 					int number_of_values = variance_amount*2 + 1;
@@ -1836,6 +1832,9 @@ namespace Forays{
 						if(t.type == TileType.POPPY_FIELD){
 							new_area.Add(t);
 							Actor a = t.actor();
+							if(a == player){
+								Help.TutorialTip(TutorialTopic.Poppies);
+							}
 							if(a != null && !a.HasAttr(AttrType.NONLIVING,AttrType.PLANTLIKE)){
 								if(a.attrs[AttrType.POPPY_COUNTER] < 4){
 									a.GainAttrRefreshDuration(AttrType.POPPY_COUNTER,200);

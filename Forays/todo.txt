@@ -102,6 +102,21 @@ it's possible for transcendents to cast sphere from across the map
 drive back was improved - not sure if I had a note for this already.
 deflect attack improved.
 conviction's bonus to combat will now be rounded up, not down.
+improved several levelgen algorithms, especially caves
+fixed a bug where dodging a free attack could result in permanent doubling of speed.
+does stone spikes not do LOE_tile? maybe it should. what else needs it? grease also fixed.
+lasher fungus changed: now deals much less damage but always pulls closer when possible, and is no longer blocked by armor.
+banshee deals more damage and has less health. slug and boar deal less damage and have more health. pixies appear in larger groups and have fewer hp.
+give grenadier chainmail-level armor
+phantom wasp replaces phantom ogre
+walls (and other features like torches and barrels) that get turned into floors will then appear in white instead of in dark cyan. - fixed now
+fixed a bug where mud tentacles could appear on map borders, which could lead to crashes.
+confirmation for stepping next to burning things while oiled?
+mace now knocks back 3 tiles instead of 2. (this also applies to certain enemy attacks)
+crash on 'save info to file'
+whoa, blizzard doesn't apply cold?
+silence should make you immune to screams, yo
+
 
 
 
@@ -158,46 +173,17 @@ TODO:
 
 
 
-mapgen:
-add giant glowing fungus
-	-spawns in fungus patches, of course.  blocks movement and LOS? They don't NEED to do anything else. (could also trample like foliage, or release spores)
-
-
-mines:  maybe cut off some of those corridors near the edge of the map? 
-	-better idea: mark single-tile interesting locations that can be used for items, chests, and single shrines (and maybe pools etc.) and make these dead ends.
-
-
-
-
-
--change spawning timer to 300 turns
-	-done. playtest to see if it should be higher.
--do a lot of playtesting and then consider Knowledge at rarity 1 vs. rarity 2.
-
-
-
-
 "blast everything with magic" might be too viable right now, if you don't run out of mana quick enough.
 	-this makes me consider lower HP enemies, but more of them. But then, I was going to rebalance all the HP values upward. how should I resolve this?
-		-also i'm becoming more certain that percentage-based damages 
+		-also i'm becoming more certain that percentage-based damages should ignore DR and stuff.
+			-anyway, this can wait for the hp + damage (+dodge) rework.
+-just some playtesting will be enough here.
 
-lower some HP values. more glass cannons. etc. 
 
-so, glass cannons. I already have the bramble.
--vulgar demon could work here, but it would mean taking away its slight toughness.
--ogre barbarian could be easier to take down?
--avenger?
--lone wolf (and warg?) could fit here
--i think pixies could do this pretty well, especially in a large group.
 
-now, walls that shouldn't deal so much damage:
--dweller?
--dart frog (probably not)
--slug could do this, since you're already worried about equipment damage.
--boar, definitely. it'll go to 1d6 damage. 
--golem deals tons of damage right now...i don't know.
--mud elemental only deals 2d6 - does this guy count?
--lasher could probably deal less melee - maybe it always deals 1d6, always drags, and sometimes trips?
+
+
+if there's time, potion of shadows!
 
 
 
@@ -205,9 +191,7 @@ now, walls that shouldn't deal so much damage:
 
 
 
-autoexplore is still trying to go through this stone slab?!?  it's not a trap room. I guess it needs a much higher cost or something?
-	-cost of slab increased. test this.
-		-X travel currently won't go through slabs at all.
+try to abuse whirlwind style. if anything needs to be nerfed, i suspect it'll be flying leap.
 
 
 
@@ -221,32 +205,29 @@ autoexplore is still trying to go through this stone slab?!?  it's not a trap ro
 
 
 
+new monster descriptions. fun, right?
+-now the description (for this and others)
+The shadowveil duelist hides under a cloak of shadows to strike unseen. A spinning, feinting fighting style keeps the duelist in motion.
+missing:
+sneak thief
+
+
+
+nightmare
 
 
 
 
-#                                                      #
-# remember to use some colored walls in here somewhere #
-#                                                      #
 
 
-add two more pages to monster descriptions: Abilities (spells out exactly what they do) and Tips (gives tactical hints)
 
-tutorial tips for a bunch of the less obvious commands? map, known, travel, walk, operate, explore...
 
-make terrain descriptions appear in lookmode
-	-those don't exist. did I mean terrain tutorial tips? those happen now.
 
-make the "use ranged attacks against this enemy!" tip WAY more blunt.
 
-do i have a tip for exhaustion yet? (when does it appear?)
 
-add tutorial tip for "ancient power calling you back" - this needs to be obvious
 
-option for 'safe mode' that prevents 'y,y' for prompts and ignores key repeat? (is that part even possible?)
 
-conditional printing of corpse knockback message - maybe save the message in reserve,
-	and print it only if something else happens that could cause a message.
+
 
 
 
@@ -256,8 +237,22 @@ BUG: this has happened several times now. After entering Help, keyboard commands
 
 
 
+test fullscreen stuff
 
-REMEMBER TO CHECK FUTURE_TODO AGAIN! THERE'S PLENTY LEFT IN THERE.
+
+remove sprites png etc. from folder before zipping
+
+
+
+change version number
+disable debug
+check files
+
+
+
+
+and switch to release mode, for once? (does this affect stack traces?)
+
 
 
 ...license?

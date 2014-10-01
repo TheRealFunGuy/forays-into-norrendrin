@@ -17,6 +17,7 @@ namespace Forays{
 	public static class Global{
 		public const string VERSION = "version 0.8.X ";
 		public static bool LINUX = false;
+		public static bool GRAPHICAL = false;
 		public const int SCREEN_H = 25;
 		public const int SCREEN_W = 80;
 		public const int ROWS = 22;
@@ -274,7 +275,7 @@ namespace Forays{
 				return Console.ReadKey(true);
 			}
 			while(true){
-				Animations.Update();
+				//Animations.Update();
 				if(!Game.GLUpdate()){
 					Global.Quit();
 				}
@@ -294,9 +295,9 @@ namespace Forays{
 						}
 					}
 				}
-				if(true){ //todo: option? measurement?
-					Thread.Sleep(10); //todo: change back to 10?
-				}
+				//if(true){
+					Thread.Sleep(10);
+				//}
 				if(KeyPressed){
 					KeyPressed = false;
 					return LastKey;
@@ -509,12 +510,21 @@ namespace Forays{
 				if(tokens[0].Length == 1){
 					char c = Char.ToUpper(tokens[0][0]);
 					if(c == 'F' || c == 'T'){
-						TutorialTopic topic = (TutorialTopic)Enum.Parse(typeof(TutorialTopic),tokens[1],true);
-						if(c == 'F' || Global.Option(OptionType.ALWAYS_RESET_TIPS)){
-							Help.displayed[topic] = false;
+						TutorialTopic topic = TutorialTopic.Movement;
+						bool valid = true;
+						try{
+							topic = (TutorialTopic)Enum.Parse(typeof(TutorialTopic),tokens[1],true);
 						}
-						else{
-							Help.displayed[topic] = true;
+						catch(ArgumentException e){
+							valid = false;
+						}
+						if(valid){
+							if(c == 'F' || Global.Option(OptionType.ALWAYS_RESET_TIPS)){
+								Help.displayed[topic] = false;
+							}
+							else{
+								Help.displayed[topic] = true;
+							}
 						}
 					}
 				}
@@ -593,95 +603,13 @@ namespace Forays{
 				b.Write((int)sp);
 			}
 			List<List<Actor>> groups = new List<List<Actor>>();
-			b.Write(M.AllActors().Count);
-			foreach(Actor a in M.AllActors()){
-				b.Write(GetID(a));
-				b.Write(a.row);
-				b.Write(a.col);
-				b.Write(a.name);
-				b.Write(a.the_name);
-				b.Write(a.a_name);
-				b.Write(a.symbol);
-				b.Write((int)a.color);
-				b.Write((int)a.type);
-				b.Write(a.maxhp);
-				b.Write(a.curhp);
-				b.Write(a.maxmp);
-				b.Write(a.curmp);
-				b.Write(a.speed);
-				b.Write(a.light_radius);
-				b.Write(GetID(a.target));
-				b.Write(a.inv.Count);
-				foreach(Item i in a.inv){
-					b.Write(i.name);
-					b.Write(i.the_name);
-					b.Write(i.a_name);
-					b.Write(i.symbol);
-					b.Write((int)i.color);
-					b.Write(i.light_radius);
-					b.Write((int)i.type);
-					b.Write(i.quantity);
-					b.Write(i.other_data);
-					b.Write(i.ignored);
-					b.Write(i.do_not_stack);
-					b.Write(i.revealed_by_light);
+			b.Write(Actor.tiebreakers.Count);
+			foreach(Actor a in Actor.tiebreakers){
+				if(a == null){
+					b.Write(GetID(a));
 				}
-				b.Write(a.attrs.d.Count);
-				foreach(AttrType at in a.attrs.d.Keys){
-					b.Write((int)at);
-					b.Write(a.attrs[at]);
-				}
-				b.Write(a.skills.d.Count);
-				foreach(SkillType st in a.skills.d.Keys){
-					b.Write((int)st);
-					b.Write(a.skills[st]);
-				}
-				b.Write(a.feats.d.Count);
-				foreach(FeatType ft in a.feats.d.Keys){
-					b.Write((int)ft);
-					b.Write(a.feats[ft]);
-				}
-				b.Write(a.spells.d.Count);
-				foreach(SpellType sp in a.spells.d.Keys){
-					b.Write((int)sp);
-					b.Write(a.spells[sp]);
-				}
-				b.Write(a.exhaustion);
-				b.Write(a.time_of_last_action);
-				b.Write(a.recover_time);
-				b.Write(a.path.Count);
-				foreach(pos p in a.path){
-					b.Write(p.row);
-					b.Write(p.col);
-				}
-				b.Write(GetID(a.target_location));
-				b.Write(a.player_visibility_duration);
-				if(a.group != null){
-					groups.AddUnique(a.group);
-				}
-				b.Write(a.weapons.Count);
-				foreach(Weapon w in a.weapons){
-					b.Write((int)w.type);
-					b.Write((int)w.enchantment);
-					b.Write(w.status.d.Count);
-					foreach(EquipmentStatus st in w.status.d.Keys){
-						b.Write((int)st);
-						b.Write(w.status[st]);
-					}
-				}
-				b.Write(a.armors.Count);
-				foreach(Armor ar in a.armors){
-					b.Write((int)ar.type);
-					b.Write((int)ar.enchantment);
-					b.Write(ar.status.d.Count);
-					foreach(EquipmentStatus st in ar.status.d.Keys){
-						b.Write((int)st);
-						b.Write(ar.status[st]);
-					}
-				}
-				b.Write(a.magic_trinkets.Count);
-				foreach(MagicTrinketType m in a.magic_trinkets){
-					b.Write((int)m);
+				else{
+					SaveActor(a,b,groups,GetID);
 				}
 			}
 			b.Write(groups.Count);
@@ -718,8 +646,8 @@ namespace Forays{
 					b.Write(false);
 				}
 				if(t.inv != null){
-					b.Write(true);
-					b.Write(t.inv.name);
+					SaveItem(t.inv,b,GetID);
+					/*b.Write(t.inv.name);
 					b.Write(t.inv.the_name);
 					b.Write(t.inv.a_name);
 					b.Write(t.inv.symbol);
@@ -727,13 +655,14 @@ namespace Forays{
 					b.Write(t.inv.light_radius);
 					b.Write((int)t.inv.type);
 					b.Write(t.inv.quantity);
+					b.Write(t.inv.charges);
 					b.Write(t.inv.other_data);
 					b.Write(t.inv.ignored);
 					b.Write(t.inv.do_not_stack);
-					b.Write(t.inv.revealed_by_light);
+					b.Write(t.inv.revealed_by_light);*/
 				}
 				else{
-					b.Write(false);
+					b.Write(GetID(null));
 				}
 				b.Write(t.features.Count);
 				foreach(FeatureType f in t.features){
@@ -741,13 +670,26 @@ namespace Forays{
 				}
 			}
 			b.Write(Q.turn);
-			b.Write(Actor.tiebreakers.Count);
-			foreach(Actor a in Actor.tiebreakers){
-				b.Write(GetID(a));
-			}
-			b.Write(Q.list.Count);
+			int num_events = 0;
 			foreach(Event e in Q.list){
-				b.Write(GetID(e.target));
+				if(!e.dead){
+					++num_events;
+				}
+			}
+			b.Write(num_events);
+			//b.Write(Q.list.Count);
+			foreach(Event e in Q.list){
+				if(e.dead){
+					continue;
+				}
+				if(e.target is Item && !id.ContainsKey(e.target)){ //in this case, we have an item that isn't on the map or in an inventory, so we need to write all its info.
+					b.Write(true);
+					SaveItem(e.target as Item,b,GetID);
+				}
+				else{
+					b.Write(false);
+					b.Write(GetID(e.target)); //in every other case, the target should already be accounted for.
+				}
 				if(e.area == null){
 					b.Write(0);
 				}
@@ -760,7 +702,9 @@ namespace Forays{
 				b.Write(e.delay);
 				b.Write((int)e.type);
 				b.Write((int)e.attr);
+				b.Write((int)e.feature);
 				b.Write(e.value);
+				b.Write(e.secondary_value);
 				b.Write(e.msg);
 				if(e.msg_objs == null){
 					b.Write(0);
@@ -787,6 +731,13 @@ namespace Forays{
 			}
 			b.Write(Actor.interrupted_path.row);
 			b.Write(Actor.interrupted_path.col);
+			b.Write(Actor.viewing_more_commands);
+			b.Write(M.feat_gained_this_level);
+			b.Write(M.extra_danger);
+			for(int i=0;i<5;++i){
+				b.Write(Map.shrine_locations[i].row);
+				b.Write(Map.shrine_locations[i].col);
+			}
 			b.Write(Item.unIDed_name.Count);
 			foreach(ConsumableType ct in Item.unIDed_name.Keys){
 				b.Write((int)ct);
@@ -806,11 +757,123 @@ namespace Forays{
 			foreach(PhysicalObject o in Fire.burning_objects){
 				b.Write(GetID(o));
 			}
-			for(int i=0;i<20;++i){
-				b.Write(B.Printed(i)); //todo: don't save blank lines here, just store the number of lines.
+			int num_messages = B.SaveNumMessages();
+			b.Write(num_messages);
+			string[] messages = B.SaveMessages();
+			for(int i=0;i<num_messages;++i){
+				b.Write(messages[i]);
 			}
+			b.Write(B.SavePosition());
 			b.Close();
 			file.Close();
+		}
+		private static void SaveActor(Actor a,BinaryWriter b,List<List<Actor>> groups,IDMethod get_id){
+			b.Write(get_id(a));
+			b.Write(a.row);
+			b.Write(a.col);
+			b.Write(a.name);
+			b.Write(a.the_name);
+			b.Write(a.a_name);
+			b.Write(a.symbol);
+			b.Write((int)a.color);
+			b.Write((int)a.type);
+			b.Write(a.maxhp);
+			b.Write(a.curhp);
+			b.Write(a.maxmp);
+			b.Write(a.curmp);
+			b.Write(a.speed);
+			b.Write(a.light_radius);
+			b.Write(get_id(a.target));
+			b.Write(a.inv.Count);
+			foreach(Item i in a.inv){
+				SaveItem(i,b,get_id);
+				/*b.Write(i.name);
+				b.Write(i.the_name);
+				b.Write(i.a_name);
+				b.Write(i.symbol);
+				b.Write((int)i.color);
+				b.Write(i.light_radius);
+				b.Write((int)i.type);
+				b.Write(i.quantity);
+				b.Write(i.charges);
+				b.Write(i.other_data);
+				b.Write(i.ignored);
+				b.Write(i.do_not_stack);
+				b.Write(i.revealed_by_light);*/
+			}
+			b.Write(a.attrs.d.Count);
+			foreach(AttrType at in a.attrs.d.Keys){
+				b.Write((int)at);
+				b.Write(a.attrs[at]);
+			}
+			b.Write(a.skills.d.Count);
+			foreach(SkillType st in a.skills.d.Keys){
+				b.Write((int)st);
+				b.Write(a.skills[st]);
+			}
+			b.Write(a.feats.d.Count);
+			foreach(FeatType ft in a.feats.d.Keys){
+				b.Write((int)ft);
+				b.Write(a.feats[ft]);
+			}
+			b.Write(a.spells.d.Count);
+			foreach(SpellType sp in a.spells.d.Keys){
+				b.Write((int)sp);
+				b.Write(a.spells[sp]);
+			}
+			b.Write(a.exhaustion);
+			b.Write(a.time_of_last_action);
+			b.Write(a.recover_time);
+			b.Write(a.path.Count);
+			foreach(pos p in a.path){
+				b.Write(p.row);
+				b.Write(p.col);
+			}
+			b.Write(get_id(a.target_location));
+			b.Write(a.player_visibility_duration);
+			if(a.group != null && groups != null){
+				groups.AddUnique(a.group);
+			}
+			b.Write(a.weapons.Count);
+			foreach(Weapon w in a.weapons){
+				b.Write((int)w.type);
+				b.Write((int)w.enchantment);
+				b.Write(w.status.d.Count);
+				foreach(EquipmentStatus st in w.status.d.Keys){
+					b.Write((int)st);
+					b.Write(w.status[st]);
+				}
+			}
+			b.Write(a.armors.Count);
+			foreach(Armor ar in a.armors){
+				b.Write((int)ar.type);
+				b.Write((int)ar.enchantment);
+				b.Write(ar.status.d.Count);
+				foreach(EquipmentStatus st in ar.status.d.Keys){
+					b.Write((int)st);
+					b.Write(ar.status[st]);
+				}
+			}
+			b.Write(a.magic_trinkets.Count);
+			foreach(MagicTrinketType m in a.magic_trinkets){
+				b.Write((int)m);
+			}
+		}
+		private static void SaveItem(Item i,BinaryWriter b,IDMethod get_id){
+			b.Write(get_id(i));
+			b.Write(i.name);
+			b.Write(i.the_name);
+			b.Write(i.a_name);
+			b.Write(i.symbol);
+			b.Write((int)i.color);
+			b.Write(i.light_radius);
+			b.Write((int)i.type);
+			b.Write(i.quantity);
+			b.Write(i.charges);
+			b.Write(i.other_data);
+			b.Write(i.ignored);
+			b.Write(i.do_not_stack);
+			b.Write(i.revealed_by_light);
 		}
 		public static void Quit(){
 			if(LINUX && !Screen.GLMode){
@@ -934,7 +997,7 @@ namespace Forays{
 			}
 			return result;
 		}
-		public static List<Tile> ToFirstObstruction(this List<Tile> line){ //impassable tile OR actor - todo: rename this one.
+		public static List<Tile> ToFirstSolidTileOrActor(this List<Tile> line){
 			List<Tile> result = new List<Tile>();
 			int idx = 0;
 			foreach(Tile t in line){

@@ -282,7 +282,7 @@ namespace Forays{
 								MouseUI.mouse_path = Actor.player.GetPath(o.row,o.col,-1,true,true,Actor.UnknownTilePathingPreference.UnknownTilesAreOpen);
 								if(MouseUI.mouse_path.Count == 0){
 									foreach(Tile t in Actor.M.TilesByDistance(o.row,o.col,true,true)){
-										if(t.passable){ //todo: this could be improved - it currently doesn't suggest any path at all for unreachable areas. A dijkstra scan from the player would fix this.
+										if(t.passable){
 											MouseUI.mouse_path = Actor.player.GetPath(t.row,t.col,-1,true,true,Actor.UnknownTilePathingPreference.UnknownTilesAreOpen);
 											break;
 										}

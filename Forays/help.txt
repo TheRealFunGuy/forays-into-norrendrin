@@ -65,7 +65,7 @@ p : view previous messages
 
 q : quit                             = : change options
 ? : view the help screen             - : view this command list
-
+alt+enter : fullscreen
 
 (You can also switch weapons with 1-5 on the top row of the
  keyboard, and armor with 8-0. You can press tab to cycle

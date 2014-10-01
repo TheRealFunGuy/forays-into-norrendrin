@@ -7,8 +7,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,8 +20,8 @@ using GLDrawing;
 namespace Forays{
 	public enum TileType{WALL,FLOOR,DOOR_O,DOOR_C,STAIRS,CHEST,FIREPIT,UNLIT_FIREPIT,STALAGMITE,FIRE_TRAP,TELEPORT_TRAP,LIGHT_TRAP,SLIDING_WALL_TRAP,GRENADE_TRAP,SHOCK_TRAP,ALARM_TRAP,DARKNESS_TRAP,POISON_GAS_TRAP,BLINDING_TRAP,ICE_TRAP,PHANTOM_TRAP,SCALDING_OIL_TRAP,FLING_TRAP,STONE_RAIN_TRAP,HIDDEN_DOOR,COMBAT_SHRINE,DEFENSE_SHRINE,MAGIC_SHRINE,SPIRIT_SHRINE,STEALTH_SHRINE,RUINED_SHRINE,SPELL_EXCHANGE_SHRINE,RUBBLE,FIRE_GEYSER,STATUE,POOL_OF_RESTORATION,FOG_VENT,POISON_GAS_VENT,STONE_SLAB,STONE_SLAB_OPEN,CHASM,BREACHED_WALL,WATER,ICE,CRACKED_WALL,BRUSH,POPPY_FIELD,JUNGLE,GRAVEL,BLAST_FUNGUS,GLOWING_FUNGUS,TOMBSTONE,GRAVE_DIRT,BARREL,STANDING_TORCH,VINE,POISON_BULB,WAX_WALL,DEMONIC_IDOL,FIRE_RIFT};
 	public enum FeatureType{GRENADE,TROLL_CORPSE,TROLL_BLOODWITCH_CORPSE,FOG,POISON_GAS,SLIME,TELEPORTAL,INACTIVE_TELEPORTAL,STABLE_TELEPORTAL,OIL,FIRE,BONES,WEB,PIXIE_DUST,FORASECT_EGG,SPORES,THICK_DUST,CONFUSION_GAS};
-	public enum ActorType{PLAYER,SPECIAL,FIRE_DRAKE,GOBLIN,GIANT_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,SPORE_POD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,GOLDEN_DART_FROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,BERSERKER,GIANT_SLUG,VULGAR_DEMON,BANSHEE,CAVERN_HAG,ROBED_ZEALOT,DIRE_RAT,SKULKING_KILLER,WILD_BOAR,TROLL,DREAM_SPRITE,CLOUD_ELEMENTAL,DERANGED_ASCETIC,ORC_GRENADIER,WARG,ALASI_SCOUT,CARRION_CRAWLER,MECHANICAL_KNIGHT,RUNIC_TRANSCENDENT,ALASI_BATTLEMAGE,ALASI_SOLDIER,SKITTERMOSS,STONE_GOLEM,MUD_ELEMENTAL,FLAMETONGUE_TOAD,ENTRANCER,OGRE_BARBARIAN,SNEAK_THIEF,LASHER_FUNGUS,CRUSADING_KNIGHT,TROLL_BLOODWITCH,LUMINOUS_AVENGER,MARBLE_HORROR,CORROSIVE_OOZE,PYREN_ARCHER,SPELLMUDDLE_PIXIE,ALASI_SENTINEL,NOXIOUS_WORM,CYCLOPEAN_TITAN,VAMPIRE,ORC_WARMAGE,NECROMANCER,STALKING_WEBSTRIDER,ORC_ASSASSIN,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,IMPOSSIBLE_NIGHTMARE,DREAM_WARRIOR_CLONE,DREAM_SPRITE_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,GHOST,HOMUNCULUS,BLADE,FINAL_LEVEL_CULTIST,MINOR_DEMON,FROST_DEMON,BEAST_DEMON,DEMON_LORD,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_OGRE,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
-	public enum AttrType{STEALTHY,NONLIVING,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,MINDLESS,AGGRESSIVE,TERRITORIAL,AVOIDS_LIGHT,KEEPS_DISTANCE,NONEUCLIDEAN_MOVEMENT,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,DESCENDING,WANDERING,IMMOBILE,CAN_DODGE,SHADOW_CLOAK,INVISIBLE,BRUTISH_STRENGTH,VIGOR,FLYING_LEAP,SILENCED,NOTICED,PLAYER_NOTICED,DANGER_SENSED,SHINING,LOW_LIGHT_VISION,REGENERATING,REGENERATES_FROM_DEATH,REASSEMBLES,NO_ITEM,STUNNED,PARALYZED,BLIND,POISONED,FROZEN,CHILLED,SLIMED,OIL_COVERED,BURNING,SLOWED,BLEEDING,POPPY_COUNTER,ASLEEP,AGGRAVATING,DETECTING_MONSTERS,DETECTING_MOVEMENT,TELEPORTING,VULNERABLE,SUSCEPTIBLE_TO_CRITS,LIGHT_SENSITIVE,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,CONFUSED,ENRAGED,POISON_HIT,PARALYSIS_HIT,STALAGMITE_HIT,WORN_OUT_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,ACID_HIT,BLEED_HIT,ONE_HP_HIT,SILENCE_HIT,FIERY_ARROWS,DULLS_BLADES,IMMUNE_BURNING,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ELECTRICITY,MENTAL_IMMUNITY,RESIST_WEAPONS,IMMUNE_ARROWS,RESIST_NECK_SNAP,COMBO_ATTACK,COOLDOWN_1,COOLDOWN_2,COOLDOWN_3,LIFESPAN,RADIANT_HALO,SPORE_BURST,CAN_POISON_WEAPONS,ACIDIFIED,SILENCE_AURA,TERRIFYING,DAMAGE_RESISTANCE,BLOCKING,SHIELDED,MINOR_IMMUNITY,MECHANICAL_SHIELD,TURNS_HERE,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,EMPOWERED_SPELLS,BANDAGED,PERMANENT_DAMAGE,SWITCHING_ARMOR,JUST_GRABBED,JUST_TELEPORTED,JUST_FLUNG,JUST_BITTEN,JUST_SEARED,JUST_AWOKE,AGGRESSION_MESSAGE_PRINTED,NO_PLATE_ARMOR_NOISE,GRAVEL_MESSAGE_COOLDOWN,SILENCE_AURA_MESSAGE_COOLDOWN,TITAN_MESSAGE_COOLDOWN,LUNGING_AUTO_HIT,TELEKINETICALLY_THROWN,SELF_TK_NO_DAMAGE,BURROWING,ROOTS,DODGED,CHAIN_CAST,IGNORES_QUIET_SOUNDS,ALERTED,SEES_ADJACENT_PLAYER,DIRECTION_OF_PREVIOUS_TILE,FOLLOW_DIRECTION_EXITED,AMNESIA_STUN,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,TURN_INTO_CORPSE,CORPSE,NO_CORPSE_KNOCKBACK,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
+	public enum ActorType{PLAYER,SPECIAL,FIRE_DRAKE,GOBLIN,GIANT_BAT,LONE_WOLF,BLOOD_MOTH,DARKNESS_DWELLER,CARNIVOROUS_BRAMBLE,FROSTLING,SWORDSMAN,DREAM_WARRIOR,SPITTING_COBRA,KOBOLD,SPORE_POD,FORASECT,POLTERGEIST,CULTIST,GOBLIN_ARCHER,GOBLIN_SHAMAN,GOLDEN_DART_FROG,SKELETON,SHADOW,MIMIC,PHASE_SPIDER,ZOMBIE,BERSERKER,GIANT_SLUG,VULGAR_DEMON,BANSHEE,CAVERN_HAG,ROBED_ZEALOT,DIRE_RAT,SKULKING_KILLER,WILD_BOAR,TROLL,DREAM_SPRITE,CLOUD_ELEMENTAL,DERANGED_ASCETIC,ORC_GRENADIER,WARG,ALASI_SCOUT,CARRION_CRAWLER,MECHANICAL_KNIGHT,RUNIC_TRANSCENDENT,ALASI_BATTLEMAGE,ALASI_SOLDIER,SKITTERMOSS,STONE_GOLEM,MUD_ELEMENTAL,FLAMETONGUE_TOAD,ENTRANCER,OGRE_BARBARIAN,SNEAK_THIEF,LASHER_FUNGUS,CRUSADING_KNIGHT,TROLL_BLOODWITCH,LUMINOUS_AVENGER,MARBLE_HORROR,CORROSIVE_OOZE,PYREN_ARCHER,SPELLMUDDLE_PIXIE,ALASI_SENTINEL,NOXIOUS_WORM,CYCLOPEAN_TITAN,VAMPIRE,ORC_WARMAGE,NECROMANCER,STALKING_WEBSTRIDER,ORC_ASSASSIN,CORPSETOWER_BEHEMOTH,MACHINE_OF_WAR,IMPOSSIBLE_NIGHTMARE,DREAM_WARRIOR_CLONE,DREAM_SPRITE_CLONE,MUD_TENTACLE,MARBLE_HORROR_STATUE,GHOST,HOMUNCULUS,BLADE,FINAL_LEVEL_CULTIST,MINOR_DEMON,FROST_DEMON,BEAST_DEMON,DEMON_LORD,PHANTOM,PHANTOM_ZOMBIE,PHANTOM_CRUSADER,PHANTOM_TIGER,PHANTOM_WASP,PHANTOM_BEHEMOTH,PHANTOM_BLIGHTWING,PHANTOM_SWORDMASTER,PHANTOM_ARCHER,PHANTOM_CONSTRICTOR};
+	public enum AttrType{STEALTHY,NONLIVING,PLANTLIKE,MEDIUM_HUMANOID,HUMANOID_INTELLIGENCE,MINDLESS,AGGRESSIVE,TERRITORIAL,AVOIDS_LIGHT,KEEPS_DISTANCE,NONEUCLIDEAN_MOVEMENT,KEEN_SENSES,BLINDSIGHT,SMALL,FLYING,DESCENDING,WANDERING,IMMOBILE,CAN_DODGE,SHADOW_CLOAK,INVISIBLE,BRUTISH_STRENGTH,VIGOR,FLYING_LEAP,SILENCED,NOTICED,PLAYER_NOTICED,DANGER_SENSED,SHINING,LOW_LIGHT_VISION,REGENERATING,REGENERATES_FROM_DEATH,REASSEMBLES,NO_ITEM,STUNNED,PARALYZED,BLIND,POISONED,FROZEN,CHILLED,SLIMED,OIL_COVERED,BURNING,SLOWED,BLEEDING,POPPY_COUNTER,ASLEEP,AGGRAVATING,DETECTING_MONSTERS,DETECTING_MOVEMENT,TELEPORTING,VULNERABLE,SUSCEPTIBLE_TO_CRITS,LIGHT_SENSITIVE,DESTROYED_BY_SUNLIGHT,DIM_VISION,DIM_LIGHT,CONFUSED,ENRAGED,POISON_HIT,PARALYSIS_HIT,STALAGMITE_HIT,WORN_OUT_HIT,STUN_HIT,LIFE_DRAIN_HIT,GRAB_HIT,ACID_HIT,BLEED_HIT,ONE_HP_HIT,SILENCE_HIT,EXHAUST_HIT,FIERY_ARROWS,DULLS_BLADES,IMMUNE_BURNING,IMMUNE_FIRE,IMMUNE_COLD,IMMUNE_ELECTRICITY,MENTAL_IMMUNITY,RESIST_WEAPONS,IMMUNE_ARROWS,RESIST_NECK_SNAP,COMBO_ATTACK,COOLDOWN_1,COOLDOWN_2,COOLDOWN_3,LIFESPAN,RADIANT_HALO,SPORE_BURST,CAN_POISON_WEAPONS,ACIDIFIED,SILENCE_AURA,TERRIFYING,DAMAGE_RESISTANCE,BLOCKING,SHIELDED,MINOR_IMMUNITY,MECHANICAL_SHIELD,TURNS_HERE,TURNS_VISIBLE,RESTING,RUNNING,WAITING,AUTOEXPLORE,TUMBLING,BLOOD_BOILED,SHADOWSIGHT,IN_COMBAT,CONVICTION,KILLSTREAK,EMPOWERED_SPELLS,BANDAGED,PERMANENT_DAMAGE,SWITCHING_ARMOR,JUST_GRABBED,JUST_TELEPORTED,JUST_FLUNG,JUST_BITTEN,JUST_SEARED,JUST_AWOKE,AGGRESSION_MESSAGE_PRINTED,NO_PLATE_ARMOR_NOISE,GRAVEL_MESSAGE_COOLDOWN,SILENCE_AURA_MESSAGE_COOLDOWN,TITAN_MESSAGE_COOLDOWN,LUNGING_AUTO_HIT,TELEKINETICALLY_THROWN,SELF_TK_NO_DAMAGE,BURROWING,ROOTS,DODGED,CHAIN_CAST,IGNORES_QUIET_SOUNDS,ALERTED,SEES_ADJACENT_PLAYER,DIRECTION_OF_PREVIOUS_TILE,FOLLOW_DIRECTION_EXITED,AMNESIA_STUN,GRABBED,GRABBING,BONUS_COMBAT,BONUS_DEFENSE,BONUS_MAGIC,BONUS_SPIRIT,BONUS_STEALTH,INVULNERABLE,SMALL_GROUP,MEDIUM_GROUP,LARGE_GROUP,TURN_INTO_CORPSE,CORPSE,NO_CORPSE_KNOCKBACK,BOSS_MONSTER,NUM_ATTRS,NO_ATTR};
 	public enum SpellType{RADIANCE,FORCE_PALM,DETECT_MOVEMENT,FLYING_LEAP,MERCURIAL_SPHERE,GREASE,BLINK,FREEZE,SCORCH,LIGHTNING_BOLT,MAGIC_HAMMER,PORTAL,PASSAGE,AMNESIA,STONE_SPIKES,SHADOWSIGHT,BLIZZARD,COLLAPSE,DOOM,TELEKINESIS,NUM_SPELLS,NO_SPELL};
 	public enum SkillType{COMBAT,DEFENSE,MAGIC,SPIRIT,STEALTH,NUM_SKILLS,NO_SKILL};
 	public enum FeatType{QUICK_DRAW,WHIRLWIND_STYLE,LUNGE,DRIVE_BACK,ARMOR_MASTERY,CUNNING_DODGE,DEFLECT_ATTACK,TUMBLE,MASTERS_EDGE,ARCANE_INTERFERENCE,CHAIN_CASTING,FORCE_OF_WILL,CONVICTION,ENDURING_SOUL,FEEL_NO_PAIN,BOILING_BLOOD,NECK_SNAP,DISARM_TRAP,CORNER_CLIMB,DANGER_SENSE,NUM_FEATS,NO_FEAT};
@@ -35,7 +33,7 @@ namespace Forays{
 	public enum MagicTrinketType{PENDANT_OF_LIFE,CLOAK_OF_SAFETY,BRACERS_OF_ARROW_DEFLECTION,CIRCLET_OF_THE_THIRD_EYE,RING_OF_KEEN_SIGHT,RING_OF_THE_LETHARGIC_FLAME,LENS_OF_SCRYING,BELT_OF_WARDING,BOOTS_OF_GRIPPING,NUM_MAGIC_TRINKETS,NO_MAGIC_TRINKET};
 	public enum DamageType{NORMAL,FIRE,COLD,ELECTRIC,POISON,MAGIC,NONE};
 	public enum DamageClass{PHYSICAL,MAGICAL,NO_TYPE};
-	public enum CriticalEffect{STUN,ONE_TURN_STUN,MAX_DAMAGE,PERCENT_DAMAGE,WEAK_POINT,WORN_OUT,REDUCE_ACCURACY,DRAIN_LIFE,GRAB,CHILL,FREEZE,INFLICT_VULNERABILITY,TRIP,KNOCKBACK,STRONG_KNOCKBACK,IGNITE,DIM_VISION,SWAP_POSITIONS,SLIME,MAKE_NOISE,BLIND,PERMANENT_BLIND,SLOW,POISON,PARALYZE,ONE_TURN_PARALYZE,STALAGMITES,FLING,PULL,SILENCE,INFEST,DISRUPTION,VICTORY,ACID,CONFUSE,BLEED,ONE_HP,STEAL,NO_CRIT};
+	public enum CriticalEffect{STUN,ONE_TURN_STUN,MAX_DAMAGE,PERCENT_DAMAGE,WEAK_POINT,WORN_OUT,REDUCE_ACCURACY,DRAIN_LIFE,GRAB,CHILL,FREEZE,INFLICT_VULNERABILITY,TRIP,KNOCKBACK,STRONG_KNOCKBACK,IGNITE,DIM_VISION,SWAP_POSITIONS,SLIME,MAKE_NOISE,BLIND,PERMANENT_BLIND,SLOW,POISON,PARALYZE,ONE_TURN_PARALYZE,STALAGMITES,FLING,PULL,SILENCE,INFEST,DISRUPTION,VICTORY,ACID,CONFUSE,BLEED,ONE_HP,STEAL,EXHAUST,NO_CRIT};
 	public enum EventType{ANY_EVENT,MOVE,REMOVE_ATTR,REMOVE_GAS,CHECK_FOR_HIDDEN,RELATIVELY_SAFE,POLTERGEIST,MIMIC,REGENERATING_FROM_DEATH,REASSEMBLING,GRENADE,BLAST_FUNGUS,STALAGMITE,FIRE_GEYSER,FIRE_GEYSER_ERUPTION,FOG_VENT,POISON_GAS_VENT,STONE_SLAB,MARBLE_HORROR,FIRE,NORMAL_LIGHTING,TELEPORTAL,BREACH,GRAVE_DIRT,POPPIES,TOMBSTONE_GHOST,SHIELDING,BURROWING,FINAL_LEVEL_SPAWN_CULTISTS,SPAWN_WANDERING_MONSTER};
 	public enum OptionType{NO_WALL_SLIDING,AUTOPICKUP,TOP_ROW_MOVEMENT,CONFIRM_BEFORE_RESTING,NEVER_DISPLAY_TIPS,ALWAYS_RESET_TIPS,DARK_GRAY_UNSEEN,DISABLE_GRAPHICS};
 	public class Game{
@@ -86,7 +84,7 @@ namespace Forays{
 				GLGame.text_surface = new SpriteSurface(gl,25,80,16,8,0,0,"font8x16.bmp",1,128,0,0,1.0f,8.0f / 9.0f,
 					GLWindow.GetBasicVertexShader(),GLWindow.GetBasicFontFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),
 					GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
-				GLGame.graphics_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"sprites.png",64,64,17,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
+				/*GLGame.graphics_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"sprites.png",64,64,17,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
 					GLWindow.GetBasicGraphicalFragmentShader(),GLWindow.GetBasicGraphicalVertexAttributeSizes(),GLWindow.GetBasicGraphicalDefaultVertexAttributes(),GLWindow.GetBasicGraphicalVertexAttributes());
 				gl.SpriteSurfaces.Add(GLGame.graphics_surface);
 				GLGame.actors_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"sprites.png",64,64,17,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
@@ -94,13 +92,13 @@ namespace Forays{
 				gl.SpriteSurfaces.Add(GLGame.actors_surface);
 				GLGame.visibility_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"visibility.png",1,3,0,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
 					GLWindow.GetBasicGraphicalFragmentShader(),GLWindow.GetBasicGraphicalVertexAttributeSizes(),GLWindow.GetBasicGraphicalDefaultVertexAttributes(),GLWindow.GetBasicGraphicalVertexAttributes());
-				gl.SpriteSurfaces.Add(GLGame.visibility_surface);
+				gl.SpriteSurfaces.Add(GLGame.visibility_surface);*/
 				gl.SpriteSurfaces.Add(GLGame.text_surface);
 				GLGame.cursor_surface = new SpriteSurface(gl,1,1,2,8,-99,-99,"font6x12.bmp",1,128,0,0,1.0f,8.0f / 9.0f,
 					GLWindow.GetBasicVertexShader(),GLWindow.GetBasicFontFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),
 					GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
 				gl.SpriteSurfaces.Add(GLGame.cursor_surface);
-				GLGame.particle_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"animations.png",128,128,0,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
+				/*GLGame.particle_surface = new SpriteSurface(gl,22,33,16,16,16*3,8*13,"animations.png",128,128,0,0,1.0f,1.0f,GLWindow.GetBasicVertexShader(),
 					GLGame.GetParticleFragmentShader(),GLWindow.GetBasicFontVertexAttributeSizes(),GLWindow.GetBasicFontDefaultVertexAttributes(),GLWindow.GetBasicFontVertexAttributes());
 				gl.SpriteSurfaces.Add(GLGame.particle_surface);
 				GLGame.particle_surface.NumElements = 0;
@@ -116,7 +114,7 @@ namespace Forays{
 				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Magenta,Color4.White,r1,c1,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s1),FloatNumber.CreateDelta(0.1f,0.003f * s1)),FloatNumber.CreateValue(0.0f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s1));
 				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Yellow,Color4.Firebrick,r2,c2,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s2),FloatNumber.CreateDelta(0.01f,0.003f * s2)),FloatNumber.CreateValue(0.0f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s2));
 				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Cyan,Color4.Yellow,r3,c3,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s3),FloatNumber.CreateDelta(0.01f,0.003f * s3)),FloatNumber.CreateDelta(0.0f,0.01f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s3));
-				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Chocolate,Color4.Cyan,r1,c1,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s1),FloatNumber.CreateDelta(0.1f,0.003f * s1)),FloatNumber.CreateValue(0.0f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s1));
+				Animations.Generators.Add(new ParticleGenerator(0,0,5,3,Color4.Chocolate,Color4.Cyan,r1,c1,FloatNumber.CreateRange(FloatNumber.CreateDelta(0.0f,0.001f * s1),FloatNumber.CreateDelta(0.1f,0.003f * s1)),FloatNumber.CreateValue(0.0f),FloatNumber.CreateValue(0.0f),Number.CreateValue(3),Number.CreateValue(5),500/s1));*/
 				//GLGame.particle_surface.Disabled = true;
 				GL.Enable(EnableCap.Blend);
 				GL.BlendFunc(BlendingFactorSrc.SrcAlpha,BlendingFactorDest.OneMinusSrcAlpha);
@@ -440,129 +438,143 @@ namespace Forays{
 						for(int i=0;i<num_spelllist;++i){
 							Actor.spells_in_order.Add((SpellType)b.ReadInt32());
 						}
-						int num_actors = b.ReadInt32();
-						for(int i=0;i<num_actors;++i){
-							Actor a = new Actor();
+						int num_actor_tiebreakers = b.ReadInt32();
+						Actor.tiebreakers = new List<Actor>(num_actor_tiebreakers);
+						for(int i=0;i<num_actor_tiebreakers;++i){
 							int ID = b.ReadInt32();
-							id.Add(ID,a);
-							a.row = b.ReadInt32();
-							a.col = b.ReadInt32();
-							game.M.actor[a.row,a.col] = a;
-							a.name = b.ReadString();
-							a.the_name = b.ReadString();
-							a.a_name = b.ReadString();
-							a.symbol = b.ReadChar();
-							a.color = (Color)b.ReadInt32();
-							a.type = (ActorType)b.ReadInt32();
-							if(a.type == ActorType.PLAYER){
-								game.player = a;
-								Actor.player = a;
-								Buffer.player = a;
-								Item.player = a;
-								Map.player = a;
-								Event.player = a;
-								Tile.player = a;
-							}
-							a.maxhp = b.ReadInt32();
-							a.curhp = b.ReadInt32();
-							a.maxmp = b.ReadInt32();
-							a.curmp = b.ReadInt32();
-							a.speed = b.ReadInt32();
-							a.light_radius = b.ReadInt32();
-							int target_ID = b.ReadInt32();
-							if(id.ContainsKey(target_ID)){
-								a.target = (Actor)id[target_ID];
+							if(ID != 0){
+								Actor a = new Actor();
+								id.Add(ID,a);
+								a.row = b.ReadInt32();
+								a.col = b.ReadInt32();
+								if(a.row >= 0 && a.row < Global.ROWS && a.col >= 0 && a.col < Global.COLS){
+									game.M.actor[a.row,a.col] = a;
+								}
+								Actor.tiebreakers.Add(a);
+								a.name = b.ReadString();
+								a.the_name = b.ReadString();
+								a.a_name = b.ReadString();
+								a.symbol = b.ReadChar();
+								a.color = (Color)b.ReadInt32();
+								a.type = (ActorType)b.ReadInt32();
+								if(a.type == ActorType.PLAYER){
+									game.player = a;
+									Actor.player = a;
+									Buffer.player = a;
+									Item.player = a;
+									Map.player = a;
+									Event.player = a;
+									Tile.player = a;
+								}
+								a.maxhp = b.ReadInt32();
+								a.curhp = b.ReadInt32();
+								a.maxmp = b.ReadInt32();
+								a.curmp = b.ReadInt32();
+								a.speed = b.ReadInt32();
+								a.light_radius = b.ReadInt32();
+								int target_ID = b.ReadInt32();
+								if(id.ContainsKey(target_ID)){
+									a.target = (Actor)id[target_ID];
+								}
+								else{
+									a.target = null;
+									need_targets.Add(a);
+									missing_target_id[a] = target_ID;
+								}
+								int num_items = b.ReadInt32();
+								for(int j=0;j<num_items;++j){
+									int item_id = b.ReadInt32();
+									if(item_id != 0){
+										Item item = new Item();
+										id.Add(item_id,item);
+										item.name = b.ReadString();
+										item.the_name = b.ReadString();
+										item.a_name = b.ReadString();
+										item.symbol = b.ReadChar();
+										item.color = (Color)b.ReadInt32();
+										item.light_radius = b.ReadInt32();
+										item.type = (ConsumableType)b.ReadInt32();
+										item.quantity = b.ReadInt32();
+										item.charges = b.ReadInt32();
+										item.other_data = b.ReadInt32();
+										item.ignored = b.ReadBoolean();
+										item.do_not_stack = b.ReadBoolean();
+										item.revealed_by_light = b.ReadBoolean();
+										a.inv.Add(item);
+									}
+								}
+								int num_attrs = b.ReadInt32();
+								for(int j=0;j<num_attrs;++j){
+									AttrType t = (AttrType)b.ReadInt32();
+									a.attrs[t] = b.ReadInt32();
+								}
+								int num_skills = b.ReadInt32();
+								for(int j=0;j<num_skills;++j){
+									SkillType t = (SkillType)b.ReadInt32();
+									a.skills[t] = b.ReadInt32();
+								}
+								int num_feats = b.ReadInt32();
+								for(int j=0;j<num_feats;++j){
+									FeatType t = (FeatType)b.ReadInt32();
+									a.feats[t] = b.ReadBoolean();
+								}
+								int num_spells = b.ReadInt32();
+								for(int j=0;j<num_spells;++j){
+									SpellType t = (SpellType)b.ReadInt32();
+									a.spells[t] = b.ReadBoolean();
+								}
+								a.exhaustion = b.ReadInt32();
+								a.time_of_last_action = b.ReadInt32();
+								a.recover_time = b.ReadInt32();
+								int path_count = b.ReadInt32();
+								for(int j=0;j<path_count;++j){
+									int path_row = b.ReadInt32();
+									int path_col = b.ReadInt32();
+									a.path.Add(new pos(path_row,path_col));
+								}
+								int location_ID = b.ReadInt32();
+								if(id.ContainsKey(location_ID)){
+									a.target_location = (Tile)id[location_ID];
+								}
+								else{
+									a.target_location = null;
+									need_location.Add(a);
+									missing_location_id[a] = location_ID;
+								}
+								a.player_visibility_duration = b.ReadInt32();
+								int num_weapons = b.ReadInt32();
+								for(int j=0;j<num_weapons;++j){
+									Weapon w = new Weapon(WeaponType.NO_WEAPON);
+									w.type = (WeaponType)b.ReadInt32();
+									w.enchantment = (EnchantmentType)b.ReadInt32();
+									int num_statuses = b.ReadInt32();
+									for(int k=0;k<num_statuses;++k){
+										EquipmentStatus st = (EquipmentStatus)b.ReadInt32();
+										bool has_st = b.ReadBoolean();
+										w.status[st] = has_st;
+									}
+									a.weapons.AddLast(w);
+								}
+								int num_armors = b.ReadInt32();
+								for(int j=0;j<num_armors;++j){
+									Armor ar = new Armor(ArmorType.NO_ARMOR);
+									ar.type = (ArmorType)b.ReadInt32();
+									ar.enchantment = (EnchantmentType)b.ReadInt32();
+									int num_statuses = b.ReadInt32();
+									for(int k=0;k<num_statuses;++k){
+										EquipmentStatus st = (EquipmentStatus)b.ReadInt32();
+										bool has_st = b.ReadBoolean();
+										ar.status[st] = has_st;
+									}
+									a.armors.AddLast(ar);
+								}
+								int num_magic_trinkets = b.ReadInt32();
+								for(int j=0;j<num_magic_trinkets;++j){
+									a.magic_trinkets.Add((MagicTrinketType)b.ReadInt32());
+								}
 							}
 							else{
-								a.target = null;
-								need_targets.Add(a);
-								missing_target_id[a] = target_ID;
-							}
-							int num_items = b.ReadInt32();
-							for(int j=0;j<num_items;++j){
-								Item item = new Item();
-								item.name = b.ReadString();
-								item.the_name = b.ReadString();
-								item.a_name = b.ReadString();
-								item.symbol = b.ReadChar();
-								item.color = (Color)b.ReadInt32();
-								item.light_radius = b.ReadInt32();
-								item.type = (ConsumableType)b.ReadInt32();
-								item.quantity = b.ReadInt32();
-								item.other_data = b.ReadInt32();
-								item.ignored = b.ReadBoolean();
-								item.do_not_stack = b.ReadBoolean();
-								item.revealed_by_light = b.ReadBoolean();
-								a.inv.Add(item);
-							}
-							int num_attrs = b.ReadInt32();
-							for(int j=0;j<num_attrs;++j){
-								AttrType t = (AttrType)b.ReadInt32();
-								a.attrs[t] = b.ReadInt32();
-							}
-							int num_skills = b.ReadInt32();
-							for(int j=0;j<num_skills;++j){
-								SkillType t = (SkillType)b.ReadInt32();
-								a.skills[t] = b.ReadInt32();
-							}
-							int num_feats = b.ReadInt32();
-							for(int j=0;j<num_feats;++j){
-								FeatType t = (FeatType)b.ReadInt32();
-								a.feats[t] = b.ReadBoolean();
-							}
-							int num_spells = b.ReadInt32();
-							for(int j=0;j<num_spells;++j){
-								SpellType t = (SpellType)b.ReadInt32();
-								a.spells[t] = b.ReadBoolean();
-							}
-							a.exhaustion = b.ReadInt32();
-							a.time_of_last_action = b.ReadInt32();
-							a.recover_time = b.ReadInt32();
-							int path_count = b.ReadInt32();
-							for(int j=0;j<path_count;++j){
-								int path_row = b.ReadInt32();
-								int path_col = b.ReadInt32();
-								a.path.Add(new pos(path_row,path_col));
-							}
-							int location_ID = b.ReadInt32();
-							if(id.ContainsKey(location_ID)){
-								a.target_location = (Tile)id[location_ID];
-							}
-							else{
-								a.target_location = null;
-								need_location.Add(a);
-								missing_location_id[a] = location_ID;
-							}
-							a.player_visibility_duration = b.ReadInt32();
-							int num_weapons = b.ReadInt32();
-							for(int j=0;j<num_weapons;++j){
-								Weapon w = new Weapon(WeaponType.NO_WEAPON);
-								w.type = (WeaponType)b.ReadInt32();
-								w.enchantment = (EnchantmentType)b.ReadInt32();
-								int num_statuses = b.ReadInt32();
-								for(int k=0;k<num_statuses;++k){
-									EquipmentStatus st = (EquipmentStatus)b.ReadInt32();
-									bool has_st = b.ReadBoolean();
-									w.status[st] = has_st;
-								}
-								a.weapons.AddLast(w);
-							}
-							int num_armors = b.ReadInt32();
-							for(int j=0;j<num_armors;++j){
-								Armor ar = new Armor(ArmorType.NO_ARMOR);
-								ar.type = (ArmorType)b.ReadInt32();
-								ar.enchantment = (EnchantmentType)b.ReadInt32();
-								int num_statuses = b.ReadInt32();
-								for(int k=0;k<num_statuses;++k){
-									EquipmentStatus st = (EquipmentStatus)b.ReadInt32();
-									bool has_st = b.ReadBoolean();
-									ar.status[st] = has_st;
-								}
-								a.armors.AddLast(ar);
-							}
-							int num_magic_trinkets = b.ReadInt32();
-							for(int j=0;j<num_magic_trinkets;++j){
-								a.magic_trinkets.Add((MagicTrinketType)b.ReadInt32());
+								Actor.tiebreakers.Add(null);
 							}
 						}
 						int num_groups = b.ReadInt32();
@@ -593,7 +605,8 @@ namespace Forays{
 							t.type = (TileType)b.ReadInt32();
 							t.passable = b.ReadBoolean();
 							t.SetInternalOpacity(b.ReadBoolean());
-							t.seen = b.ReadBoolean();
+							t.SetInternalSeen(b.ReadBoolean());
+							//t.seen = b.ReadBoolean();
 							t.revealed_by_light = b.ReadBoolean();
 							t.solid_rock = b.ReadBoolean();
 							t.light_value = b.ReadInt32();
@@ -604,8 +617,10 @@ namespace Forays{
 							else{
 								t.toggles_into = null;
 							}
-							if(b.ReadBoolean()){ //indicates an item
+							int item_id = b.ReadInt32();
+							if(item_id != 0){
 								t.inv = new Item();
+								id.Add(item_id,t.inv);
 								t.inv.name = b.ReadString();
 								t.inv.the_name = b.ReadString();
 								t.inv.a_name = b.ReadString();
@@ -614,6 +629,7 @@ namespace Forays{
 								t.inv.light_radius = b.ReadInt32();
 								t.inv.type = (ConsumableType)b.ReadInt32();
 								t.inv.quantity = b.ReadInt32();
+								t.inv.charges = b.ReadInt32();
 								t.inv.other_data = b.ReadInt32();
 								t.inv.ignored = b.ReadBoolean();
 								t.inv.do_not_stack = b.ReadBoolean();
@@ -645,26 +661,38 @@ namespace Forays{
 						}
 						int game_turn = b.ReadInt32();
 						game.Q.turn = -1; //this keeps events from being added incorrectly to the front of the queue while loading. turn is set correctly after events are all loaded.
-						int num_tiebreakers = b.ReadInt32();
-						Actor.tiebreakers = new List<Actor>(num_tiebreakers);
-						for(int i=0;i<num_tiebreakers;++i){
-							int tiebreaker_ID = b.ReadInt32();
-							if(id.ContainsKey(tiebreaker_ID)){
-								Actor.tiebreakers.Add((Actor)id[tiebreaker_ID]);
-							}
-							else{
-								throw new Exception("Error: some actors weren't loaded(3). ");
-							}
-						}
 						int num_events = b.ReadInt32();
 						for(int i=0;i<num_events;++i){
 							Event e = new Event();
-							int target_ID = b.ReadInt32();
-							if(id.ContainsKey(target_ID)){
-								e.target = id[target_ID];
+							if(b.ReadBoolean()){ //if true, this is an item that doesn't exist elsewhere, so grab all its info.
+								int item_id = b.ReadInt32();
+								if(item_id != 0){
+									Item item = new Item();
+									id.Add(item_id,item);
+									item.name = b.ReadString();
+									item.the_name = b.ReadString();
+									item.a_name = b.ReadString();
+									item.symbol = b.ReadChar();
+									item.color = (Color)b.ReadInt32();
+									item.light_radius = b.ReadInt32();
+									item.type = (ConsumableType)b.ReadInt32();
+									item.quantity = b.ReadInt32();
+									item.charges = b.ReadInt32();
+									item.other_data = b.ReadInt32();
+									item.ignored = b.ReadBoolean();
+									item.do_not_stack = b.ReadBoolean();
+									item.revealed_by_light = b.ReadBoolean();
+									e.target = item;
+								}
 							}
 							else{
-								throw new Exception("Error: some tiles/actors weren't loaded(4). ");
+								int target_ID = b.ReadInt32();
+								if(id.ContainsKey(target_ID)){
+									e.target = id[target_ID];
+								}
+								else{
+									throw new Exception("Error: some tiles/actors weren't loaded(4). ");
+								}
 							}
 							int area_count = b.ReadInt32();
 							for(int j=0;j<area_count;++j){
@@ -682,7 +710,9 @@ namespace Forays{
 							e.delay = b.ReadInt32();
 							e.type = (EventType)b.ReadInt32();
 							e.attr = (AttrType)b.ReadInt32();
+							e.feature = (FeatureType)b.ReadInt32();
 							e.value = b.ReadInt32();
+							e.secondary_value = b.ReadInt32();
 							e.msg = b.ReadString();
 							int objs_count = b.ReadInt32();
 							for(int j=0;j<objs_count;++j){
@@ -706,6 +736,12 @@ namespace Forays{
 							}
 						}
 						game.Q.turn = game_turn;
+						foreach(Event e in game.Q.list){
+							if(e.type == EventType.MOVE && e.target == game.player){
+								game.Q.current_event = e;
+								break;
+							}
+						}
 						int num_footsteps = b.ReadInt32();
 						for(int i=0;i<num_footsteps;++i){
 							int step_row = b.ReadInt32();
@@ -720,6 +756,15 @@ namespace Forays{
 						}
 						Actor.interrupted_path.row = b.ReadInt32();
 						Actor.interrupted_path.col = b.ReadInt32();
+						Actor.viewing_more_commands = b.ReadBoolean();
+						game.M.feat_gained_this_level = b.ReadBoolean();
+						game.M.extra_danger = b.ReadInt32();
+						Map.shrine_locations = new pos[5];
+						for(int i=0;i<5;++i){
+							int r = b.ReadInt32();
+							int c = b.ReadInt32();
+							Map.shrine_locations[i] = new pos(r,c);
+						}
 						int num_unIDed = b.ReadInt32();
 						for(int i=0;i<num_unIDed;++i){
 							ConsumableType ct = (ConsumableType)b.ReadInt32();
@@ -747,17 +792,22 @@ namespace Forays{
 								throw new Exception("Error: some actors/tiles weren't loaded(7). ");
 							}
 						}
-						string[] messages = new string[20];
-						for(int i=0;i<20;++i){
+						string[] messages = new string[1000]; //hacky - this equals the log length in Buffer.
+						int num_messages = b.ReadInt32();
+						for(int i=0;i<num_messages;++i){
 							messages[i] = b.ReadString();
 						}
-						game.B.SetPreviousMessages(messages);
+						for(int i=num_messages;i<1000;++i){
+							messages[i] = "";
+						}
+						int message_pos = b.ReadInt32();
+						game.B.LoadMessagesAndPosition(messages,message_pos,num_messages);
 						b.Close();
 						file.Close();
 						File.Delete("forays.sav");
 						Tile.Feature(FeatureType.TELEPORTAL).color = Item.Prototype(ConsumableType.TELEPORTAL).color;
-						//game.M.UpdateSafetyMap(game.player); //todo: removed this line. shouldn't break anything.
 						game.M.poppy_distance_map = game.M.tile.GetDijkstraMap(x=>!game.M.tile[x].Is(TileType.POPPY_FIELD),x=>game.M.tile[x].passable && !game.M.tile[x].Is(TileType.POPPY_FIELD));
+						game.M.UpdateDangerValues();
 					}
 					Game.NoClose = true;
 					MouseUI.PushButtonMap(MouseMode.Map);
@@ -1065,7 +1115,7 @@ namespace Forays{
 					Global.SaveOptions();
 				}
 			}
-			Dict<ConsumableType,bool> known_items = new Dict<ConsumableType,bool>();
+			Dict<ConsumableType,bool> known_items = new Dict<ConsumableType,bool>(Item.identified);
 			foreach(Item i in game.player.inv){
 				if(i.NameOfItemType() != "other"){
 					if(!Item.identified[i.type]){
@@ -1245,10 +1295,18 @@ namespace Forays{
 						}
 					}
 					file.WriteLine();
-					Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
+					file.WriteLine("Last messages: ");
+					foreach(string s in game.B.GetMessages()){
+						if(s != ""){
+							file.WriteLine(s);
+						}
+					}
+					/*Screen.WriteMapString(0,0,"".PadRight(Global.COLS,'-'));
 					int line = 1;
 					foreach(string s in game.B.GetMessages()){
-						Screen.WriteMapString(line,0,s.PadRight(Global.COLS));
+						if(line < 21){
+							Screen.WriteMapString(line,0,s.PadRight(Global.COLS));
+						}
 						++line;
 					}
 					Screen.WriteMapString(21,0,"".PadRight(Global.COLS,'-'));
@@ -1261,7 +1319,7 @@ namespace Forays{
 							file.WriteLine();
 							col = 0;
 						}
-					}
+					}*/
 					file.WriteLine();
 					file.Close();
 					break;

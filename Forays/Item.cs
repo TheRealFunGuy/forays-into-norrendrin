@@ -23,7 +23,7 @@ namespace Forays{
 		public static Dictionary<ConsumableType,string> unIDed_name = new Dictionary<ConsumableType,string>();
 		public static Dict<ConsumableType,bool> identified = new Dict<ConsumableType, bool>();
 
-		public static Dictionary<ConsumableType,Item> proto= new Dictionary<ConsumableType,Item>();
+		public static Dictionary<ConsumableType,Item> proto = new Dictionary<ConsumableType,Item>();
 		public static Item Prototype(ConsumableType type){ return proto[type]; }
 		static Item(){
 			Define(ConsumableType.HEALING,"potion~ of healing",'!',Color.White);
@@ -663,8 +663,8 @@ namespace Forays{
 					list.Add(item);
 				}
 			}
-			if(R.OneIn(player.magic_trinkets.Count + 1) && player.magic_trinkets.Count < 10){ //todo: rarity of trinkets?
-				for(int i=0;i<3;++i){
+			if(R.OneIn(player.magic_trinkets.Count + 1) && player.magic_trinkets.Count < 10){
+				for(int i=0;i<5;++i){
 					list.Add(ConsumableType.MAGIC_TRINKET);
 				}
 			}
@@ -888,6 +888,9 @@ namespace Forays{
 				user.attrs[AttrType.DAMAGE_RESISTANCE]++;
 				Q.Add(new Event(user,duration*100,AttrType.DAMAGE_RESISTANCE));
 				user.RefreshDuration(AttrType.NONLIVING,duration*100,user.Your() + " rocky form reverts to flesh. ",user);
+				if(user == player){
+					Help.TutorialTip(TutorialTopic.Stoneform);
+				}
 				break;
 			}
 			case ConsumableType.VAMPIRISM:
@@ -898,6 +901,9 @@ namespace Forays{
 				user.RefreshDuration(AttrType.LIGHT_SENSITIVE,duration*100);
 				user.RefreshDuration(AttrType.FLYING,duration*100);
 				user.RefreshDuration(AttrType.LIFE_DRAIN_HIT,duration*100,user.YouAre() + " no longer vampiric. ",user);
+				if(user == player){
+					Help.TutorialTip(TutorialTopic.Vampirism);
+				}
 				break;
 			}
 			case ConsumableType.BRUTISH_STRENGTH:
@@ -909,6 +915,9 @@ namespace Forays{
 					B.Add(user.Your() + " muscles ripple. ",user);
 				}
 				user.RefreshDuration(AttrType.BRUTISH_STRENGTH,(R.Roll(3,6)+16)*100,user.Your() + " incredible strength wears off. ",user);
+				if(user == player){
+					Help.TutorialTip(TutorialTopic.BrutishStrength);
+				}
 				break;
 			}
 			case ConsumableType.ROOTS:
@@ -959,6 +968,9 @@ namespace Forays{
 				int duration = (R.Roll(2,10) + 10) * 100;
 				user.RefreshDuration(AttrType.CAN_DODGE,duration); //todo: dodging tip goes here
 				user.RefreshDuration(AttrType.VIGOR,duration,user.Your() + " extraordinary speed fades. ",user);
+				if(user == player){
+					Help.TutorialTip(TutorialTopic.IncreasedSpeed);
+				}
 				break;
 			}
 			case ConsumableType.SILENCE:
@@ -995,6 +1007,9 @@ namespace Forays{
 				user.RefreshDuration(AttrType.ENRAGED,0);
 				user.RefreshDuration(AttrType.MENTAL_IMMUNITY,duration*100);
 				user.RefreshDuration(AttrType.DETECTING_MONSTERS,duration*100,user.Your() + " consciousness returns to normal. ",user);
+				if(user == player){
+					Help.TutorialTip(TutorialTopic.MysticMind);
+				}
 				break;
 			}
 			case ConsumableType.BLINKING:
@@ -1427,7 +1442,7 @@ namespace Forays{
 			}
 			case ConsumableType.THUNDERCLAP:
 			{
-				B.Add("Thunder crashes! ",user); //todo message?
+				B.Add("Thunder crashes! ",user);
 				var scr = Screen.GetCurrentMap();
 				List<Tile>[] printed = new List<Tile>[13];
 				Color leading_edge_color = Color.White;
@@ -1774,12 +1789,13 @@ namespace Forays{
 									}
 								}
 							}
-							if(tile.DistanceFrom(t) % 2 == 0){
-								symbols.Add(new colorchar('*',Color.DarkMagenta)); //todo: should this be doom?
+							symbols.Add(new colorchar('*',Color.RandomDoom));
+							/*if(tile.DistanceFrom(t) % 2 == 0){
+								symbols.Add(new colorchar('*',Color.DarkMagenta));
 							}
 							else{
 								symbols.Add(new colorchar('*',Color.DarkRed));
-							}
+							}*/
 							cells.Add(tile.p);
 						}
 					}
@@ -2025,7 +2041,8 @@ namespace Forays{
 						results.IDed = false;
 					}
 					else{
-						foreach(Tile t in targeting.line_to_targeted){ //todo: disable cursor before animation? I think it might look better that way.
+						Screen.CursorVisible = false;
+						foreach(Tile t in targeting.line_to_targeted){
 							if(t.passable && t != user.tile()){
 								t.AddFeature(FeatureType.WEB);
 								if(t.seen){
@@ -2057,12 +2074,9 @@ namespace Forays{
 						t = first.tile();
 						B.Add("It hits " + first.the_name + ". ",first);
 					}
-					line = line.ToFirstObstruction();
+					line = line.ToFirstSolidTileOrActor();
 					if(line.Count > 0){
 						line.RemoveAt(line.Count - 1);
-					}
-					if(line.Count > 0){
-						line.RemoveAt(line.Count - 1); //i forget why I needed to do this twice, but it seems to work
 					}
 					int idx = 0;
 					foreach(Tile tile2 in line){
@@ -2139,10 +2153,10 @@ namespace Forays{
 			}
 			if(used){
 				if(IDed){
-					bool seen = true; //i'll try letting orbs always be IDed. todo: make sure this is the best way
+					bool seen = true; //i'll try letting orbs always be IDed. keep an eye on this.
 					/*bool seen = (user == player);
 					if(user != player){
-						if(player.CanSee(line[0])){ //todo fix this line - or at least check for null/empty
+						if(player.CanSee(line[0])){ //fix this line - or at least check for null/empty
 							seen = true;
 						}
 						if(user != null && player.CanSee(user)){ //heck, I could even check to see whose turn it is, if I really wanted to be hacky.
@@ -2258,7 +2272,7 @@ namespace Forays{
 							B.Add("Something shatters on " + t.the_name + "! ",t);
 						}
 					}
-					user.AnimateProjectile(line.ToFirstObstruction(),'*',color);
+					user.AnimateProjectile(line.ToFirstSolidTileOrActor(),'*',color);
 					Screen.CursorVisible = false;
 				}
 				else{
@@ -2393,11 +2407,11 @@ namespace Forays{
 				case ConsumableType.CALLING:
 					return "This scroll's magic will find the nearest foe and transport it next to you. Immobile creatures are immune to this effect.";
 				case ConsumableType.CLOAKING:
-					return "This potion will cause you to fade to invisibility while in the shadows.";
+					return "This potion will cover you in shadows, causing you to fade to invisibility while in darkness.";
 				case ConsumableType.DARKNESS:
 					return "This scroll covers the dungeon in a blanket of darkness that suppresses all light.";
 				case ConsumableType.MYSTIC_MIND:
-					return "This potion will expand your mind, allowing you to see foes no matter where they are, and granting immunity to stuns, sleep, rage, confusion, and fear.";
+					return "This potion will expand your mind, allowing you to sense foes no matter where they are, and granting immunity to stuns, sleep, rage, confusion, and fear.";
 					//return "This scroll reveals the location of foes on the current dungeon level for a while.";
 				case ConsumableType.DETONATION:
 					return "On impact, this orb will explode violently, inflicting great damage on its surroundings.";
@@ -2461,7 +2475,7 @@ namespace Forays{
 				case ConsumableType.INVISIBILITY:
 					return "This wand will render its target invisible. Carrying a light source (or being on fire) will still reveal an invisible being's location.";
 				case ConsumableType.FLESH_TO_FIRE:
-					return "The target of this wand undergoes a grisly transfiguration as part of its substance turns to fire. It'll lose half of its current health and burst into flames.";
+					return "The target of this wand undergoes a grisly transfiguration as part of its substance turns to fire! It'll lose half of its current health and burst into flames.";
 				case ConsumableType.WEBS:
 					return "This wand will create a line of sticky webs, stretching between you and the targeted space.";
 				case ConsumableType.SLUMBER:
@@ -2710,8 +2724,8 @@ namespace Forays{
 				return new string[]{"Sword -- A basic weapon, the sword delivers powerful",
 									"     critical hits that remove half of a foe's maximum health."};
 			case WeaponType.MACE:
-				return new string[]{"Mace -- The mace won't be stopped by armor. Critical hits",
-									"              will knock the foe back two spaces."};
+				return new string[]{"Mace -- The mace won't be stopped by armor. Critical",
+									"           hits will knock the foe back three spaces."};
 			case WeaponType.DAGGER:
 				return new string[]{"Dagger -- In darkness, the dagger always hits and is",
 									"     twice as likely to score a critical hit, stunning the foe."};
@@ -2900,8 +2914,10 @@ namespace Forays{
 				return new string[]{"Chainmail -- +6 Defense, -1 Stealth. Chainmail provides",
 									"            good protection but hampers stealth slightly."};
 			case ArmorType.FULL_PLATE:
-				return new string[]{"Full plate -- +10 Defense, -3 Stealth. Plate armor is",
-									" noisy and shiny, providing great defense at the cost of stealth."};
+				return new string[]{"Full plate -- +10 Defense, -3 Stealth. Plate is noisy,",
+									" shiny, & tiring, providing great defense at the cost of stealth."};
+				/*return new string[]{"Full plate -- +10 Defense, -3 Stealth. Plate armor is",
+									" noisy and shiny, providing great defense at the cost of stealth."};*/
 			default:
 				return new string[]{"no armor",""};
 			}
@@ -2938,7 +2954,8 @@ namespace Forays{
 		public static string[] Description(MagicTrinketType type){
 			switch(type){
 			case MagicTrinketType.PENDANT_OF_LIFE:
-				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but crumbles after a few uses."};
+				return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but often vanishes afterward."};
+				//return new string[]{"Pendant of life -- Prevents a lethal attack from","finishing you, but crumbles after a few uses."};
 			case MagicTrinketType.CLOAK_OF_SAFETY:
 				return new string[]{"Cloak of safety -- Lets you escape to safety","if your health falls too low. Works only once."};
 			case MagicTrinketType.BELT_OF_WARDING:

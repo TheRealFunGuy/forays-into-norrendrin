@@ -8,7 +8,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
 using System.Collections.Generic;
-//This file contains utility classes and extension methods. Some are meant to be used with 2D grids, while others are more general. (v5)
+//This file contains utility classes and extension methods. Some are meant to be used with 2D grids, while others are more general. (v5+)
 namespace Utilities{
 	public struct pos{ //a generic position object
 		public int row;
