@@ -469,7 +469,30 @@ namespace Forays{
 					}
 					else{
 						slip = false;
-						if(extra_slip_tiles > 0){
+						if(t.IsSlippery()){
+							B.Add(knocked_back_message);
+							knocked_back_message = "";
+							slip = true;
+							if(!slip_message_printed){
+								slip_message_printed = true;
+								B.Add(a.You("slide") + "! ");
+							}
+						}
+						else{
+							if(extra_slip_tiles > 0){
+								extra_slip_tiles--;
+							}
+							if(extra_slip_tiles == -1 && a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED) && !t.IsWater()){
+								B.Add(knocked_back_message);
+								knocked_back_message = "";
+								extra_slip_tiles = 2;
+								if(!slip_message_printed){
+									slip_message_printed = true;
+									B.Add(a.You("slide") + "! ");
+								}
+							}
+						}
+						/*if(extra_slip_tiles > 0){
 							extra_slip_tiles--;
 						}
 						if(t.IsSlippery()){
@@ -485,13 +508,13 @@ namespace Forays{
 							if(extra_slip_tiles == -1 && a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED)){
 								B.Add(knocked_back_message);
 								knocked_back_message = "";
-								extra_slip_tiles = 2; //todo test this
+								extra_slip_tiles = 2;
 								if(!slip_message_printed){
 									slip_message_printed = true;
 									B.Add(a.You("slide") + "! ");
 								}
 							}
-						}
+						}*/
 						bool interrupted = false;
 						if(t.inv != null && t.inv.type == ConsumableType.DETONATION){ //this will cause a new knockback effect and end the current one
 							B.Add(knocked_back_message);
@@ -521,11 +544,17 @@ namespace Forays{
 								}
 							}
 						}
+						if(a.HasAttr(AttrType.FROZEN)){
+							interrupted = true;
+						}
 						if(a.HasAttr(AttrType.SMALL) && t.Is(FeatureType.WEB) && !a.HasAttr(AttrType.SLIMED,AttrType.OIL_COVERED,AttrType.BURNING)){
 							B.Add(knocked_back_message);
 							interrupted = true;
 						}
 						else{
+							if(a.tile().IsWater()){
+								interrupted = true;
+							}
 							B.Add(knocked_back_message);
 							a.CollideWith(a.tile());
 						}

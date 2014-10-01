@@ -78,7 +78,7 @@ namespace Forays{
 		public TileType? toggles_into;
 		public Item inv;
 		public List<FeatureType> features = new List<FeatureType>();
-		private List<FeatureType> feature_priority = new List<FeatureType>{FeatureType.GRENADE,FeatureType.FIRE,FeatureType.SPORES,FeatureType.POISON_GAS,FeatureType.PIXIE_DUST,FeatureType.CONFUSION_GAS,FeatureType.THICK_DUST,FeatureType.TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.FOG,FeatureType.WEB,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.TROLL_CORPSE,FeatureType.BONES,FeatureType.INACTIVE_TELEPORTAL,FeatureType.OIL,FeatureType.SLIME,FeatureType.FORASECT_EGG};
+		private static List<FeatureType> feature_priority = new List<FeatureType>{FeatureType.GRENADE,FeatureType.FIRE,FeatureType.SPORES,FeatureType.POISON_GAS,FeatureType.PIXIE_DUST,FeatureType.CONFUSION_GAS,FeatureType.THICK_DUST,FeatureType.TELEPORTAL,FeatureType.STABLE_TELEPORTAL,FeatureType.FOG,FeatureType.WEB,FeatureType.TROLL_BLOODWITCH_CORPSE,FeatureType.TROLL_CORPSE,FeatureType.BONES,FeatureType.INACTIVE_TELEPORTAL,FeatureType.OIL,FeatureType.SLIME,FeatureType.FORASECT_EGG};
 		private static int spellbooks_generated = 0;
 		
 		private static Dictionary<TileType,Tile> proto= new Dictionary<TileType, Tile>();
@@ -551,6 +551,9 @@ namespace Forays{
 		public void SetInternalOpacity(bool value){ //these 2 methods are now used for save/load and updating light radius.
 			internal_opaque = value;
 		}
+		public void SetInternalSeen(bool value){
+			internal_seen = value;
+		}
 		public static TileType RandomTrap(){
 			return (TileType)(TileType.FIRE_TRAP + R.Between(0,14));
 			//int i = R.Roll(15) + 8;
@@ -800,7 +803,7 @@ namespace Forays{
 				B.Add("The blast fungus is doused. ",this);
 				return true;
 			}
-			if(inv == null && !Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){ //todo: update to use CanGetItem?
+			if(inv == null && !Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
 				if((IsBurning() || Is(TileType.FIREPIT) || (actor() != null && actor().IsBurning())) && (item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES)){
 					B.Add(item.TheName(true) + " burns up! ",this); //should there be a check for water or slime here?
 					item.CheckForMimic();
@@ -827,13 +830,13 @@ namespace Forays{
 					return true;
 				}
 				else{
-					foreach(Tile t in M.ReachableTilesByDistance(row,col,false,TileType.DOOR_C,TileType.RUBBLE,TileType.STONE_SLAB)){ //todo: use connectivity method here?
+					foreach(Tile t in M.ReachableTilesByDistance(row,col,false,TileType.DOOR_C,TileType.RUBBLE,TileType.STONE_SLAB)){
 						if(item.type == ConsumableType.BLAST_FUNGUS && (t.IsWater() || t.Is(FeatureType.SLIME))){
 							B.Add("The blast fungus is doused. ",t);
 							return true;
 						}
 						if(t.passable && t.inv == null && !t.Is(TileType.BLAST_FUNGUS,TileType.CHEST,TileType.STAIRS)){
-							if((t.IsBurning() || t.Is(TileType.FIREPIT) || (t.actor() != null && t.actor().IsBurning())) && item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES){
+							if((t.IsBurning() || t.Is(TileType.FIREPIT) || (t.actor() != null && t.actor().IsBurning())) && (item.NameOfItemType() == "scroll" || item.type == ConsumableType.BANDAGES)){
 								B.Add(item.TheName(true) + " burns up! ",t);
 								item.CheckForMimic();
 								if(t.Is(TileType.FIREPIT) || (t.actor() != null && t.actor().IsBurning())){
@@ -1155,8 +1158,13 @@ namespace Forays{
 				UpdateRadius(light_radius,Prototype(type_).light_radius);
 			}
 			light_radius = Prototype(type_).light_radius;
-			if(Prototype(type_).revealed_by_light){
-				revealed_by_light = true;
+			if(name == "floor"){ //this could be handled better, by tracking which types are never 'revealed'
+				revealed_by_light = false;
+			}
+			else{
+				if(Prototype(type_).revealed_by_light){
+					revealed_by_light = true;
+				}
 			}
 			sprite_offset = Prototype(type_).sprite_offset;
 		}
@@ -1361,7 +1369,8 @@ namespace Forays{
 						t.solid_rock = false;
 					}
 					if(first.ActorInDirection(dir) != null){
-						first.ActorInDirection(dir).FindPath(TileInDirection(dir)); //is this the correct destination? it seems to be working, anyway.
+						first.ActorInDirection(dir).FindPath(first.TileInDirection(dir.RotateDir(true,4)));
+						//first.ActorInDirection(dir).FindPath(TileInDirection(dir));
 					}
 					if(player.CanSee(first)){
 						B.Add("The wall slides away. ");
@@ -1582,7 +1591,7 @@ namespace Forays{
 			{
 				bool spores = false;
 				if(M.current_level >= 5 && R.PercentChance((M.current_level - 4) * 3)){
-					spores = true; //3% at level 5...33% at level 15...48% at level 20.
+					//spores = true; //3% at level 5...33% at level 15...48% at level 20. - disabled for now
 				}
 				int num = R.Roll(5) + 8;
 				if(spores){
@@ -1606,7 +1615,7 @@ namespace Forays{
 			{
 				if(actor_here){
 					B.Add("Scalding oil pours over " + actor().TheName(true) + "! ",this);
-					if(actor().TakeDamage(DamageType.NORMAL,DamageClass.PHYSICAL,R.Roll(3,6),null,"a scalding oil trap")){
+					if(actor().TakeDamage(DamageType.FIRE,DamageClass.PHYSICAL,R.Roll(3,6),null,"a scalding oil trap")){
 						if(!actor().HasAttr(AttrType.BURNING,AttrType.SLIMED) && !IsBurning()){
 							actor().attrs[AttrType.OIL_COVERED] = 1;
 							B.Add(actor().YouAre() + " covered in oil. ",actor());
@@ -1646,7 +1655,7 @@ namespace Forays{
 					Tile current = this;
 					for(int i=0;i<2;++i){
 						current = current.TileInDirection(d);
-						if(current == null || (!current.passable && !current.Is(TileType.BARREL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.POISON_BULB,TileType.STANDING_TORCH))){ //todo check list
+						if(current == null || (!current.passable && !current.Is(TileType.BARREL,TileType.CRACKED_WALL,TileType.DOOR_C,TileType.HIDDEN_DOOR,TileType.POISON_BULB,TileType.STANDING_TORCH))){
 							good = false; //try to pick directions that are either open, or that have interesting things to be knocked into
 							break;
 						}
@@ -1682,18 +1691,18 @@ namespace Forays{
 						Item i = inv;
 						inv = null;
 						List<Tile> line = GetBestExtendedLineOfEffect(TileInDirection(dir));
+						if(line.Count > 13){
+							line = line.ToCount(13); //for range 12
+						}
 						Tile t = line.LastBeforeSolidTile();
 						Actor first = FirstActorInLine(line);
 						if(first != null){
 							t = first.tile();
 							B.Add(item_name + " hits " + first.the_name + punctuation,first);
 						}
-						line = line.ToFirstObstruction();
+						line = line.ToFirstSolidTileOrActor();
 						if(line.Count > 0){
 							line.RemoveAt(line.Count - 1);
-						}
-						if(line.Count > 0){
-							line.RemoveAt(line.Count - 1); //i forget why I needed to do this twice, but it seems to work
 						}
 						{
 							Tile first_unseen = null;
@@ -1766,7 +1775,7 @@ namespace Forays{
 		}
 		public void OpenChest(){
 			if(type == TileType.CHEST){
-				if(spellbooks_generated < 5 && R.OneIn(100)){ //todo: keep or lower this value?
+				if(spellbooks_generated < 5 && R.OneIn(50)){ //keep an eye on this value
 					++spellbooks_generated;
 					SpellType spell = SpellType.NO_SPELL;
 					List<SpellType> random_spell_list = new List<SpellType>();
@@ -1985,7 +1994,7 @@ namespace Forays{
 			}
 			return false;
 		}
-		public bool IsCurrentlyFlammable(){ //todo update
+		public bool IsCurrentlyFlammable(){
 			if(Is(FeatureType.FIRE,FeatureType.POISON_GAS,FeatureType.THICK_DUST)){
 				return false;
 			}

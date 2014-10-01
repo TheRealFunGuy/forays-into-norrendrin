@@ -327,11 +327,6 @@ namespace Forays{
 		public string PreviousMessage(int num){ //PreviousMessage(1) is the latest, PreviousMessage(2) is the next latest...
 			return log[(position-num).Modulo(log_length)];
 		}
-		public void SetPreviousMessages(string[] s){ //todo: improve this
-			for(int i=0;i<log_length;++i){
-				log[i] = s[i];
-			}
-		}
 		public List<string> GetMessages(){
 			List<string> result = new List<string>();
 			int count = Math.Min(log_length,num_messages);
@@ -339,6 +334,14 @@ namespace Forays{
 				result.Add(Printed(i));
 			}
 			return result;
+		}
+		public string[] SaveMessages(){ return log; }
+		public int SavePosition(){ return position; }
+		public int SaveNumMessages(){ return num_messages; }
+		public void LoadMessagesAndPosition(string[] s,int p,int num_msgs){
+			log = s;
+			position = p;
+			num_messages = num_msgs;
 		}
 		public void AddDependingOnLastPartialMessage(string s){ //   =|
 			if(!str.Last().EndsWith(s,true,null)){

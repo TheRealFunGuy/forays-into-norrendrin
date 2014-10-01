@@ -28,6 +28,12 @@ you if you're carrying a light source, or if you're wearing
 plate mail and simply standing in the light.
 
 
+Spell failure formula:
+
+The chance for a spell to fail depends upon your exhaustion
+and the spell's tier. The percentage is equal to:
+Exhaustion - 20 * (6 - Tier)
+
 
 
 

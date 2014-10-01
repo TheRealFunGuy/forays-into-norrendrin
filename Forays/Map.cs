@@ -7,8 +7,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*/
 using System;
-using System.IO;
-using System.Text;
 using System.Collections.Generic;
 using SchismDungeonGenerator;
 using Utilities;
@@ -18,7 +16,7 @@ namespace Forays{
 	public class Map{
 		public PosArray<Tile> tile = new PosArray<Tile>(ROWS,COLS);
 		public PosArray<Actor> actor = new PosArray<Actor>(ROWS,COLS);
-		public int current_level{get;set;}
+		public int current_level;
 		public List<LevelType> level_types;
 		public bool wiz_lite{get{ return internal_wiz_lite; }
 			set{
@@ -62,7 +60,7 @@ namespace Forays{
 		private bool internal_wiz_dark;
 		private Dict<ActorType,int> generated_this_level = null; //used for rejecting monsters if too many already exist on the current level
 		private PosArray<int> monster_density = null;
-		private bool[,] danger_sensed{get;set;}
+		private bool[,] danger_sensed;
 		private static List<pos> allpositions = new List<pos>();
 		public PosArray<int> safetymap = null;
 		public PosArray<int> poppy_distance_map = null;
@@ -80,9 +78,9 @@ namespace Forays{
 		public static Color unseencolor = Color.OutOfSight;
 		private const int ROWS = Global.ROWS;
 		private const int COLS = Global.COLS;
-		public static Actor player{get;set;}
-		public static Queue Q{get;set;}
-		public static Buffer B{get;set;}
+		public static Actor player;
+		public static Queue Q;
+		public static Buffer B;
 		static Map(){
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -122,7 +120,7 @@ namespace Forays{
 			}
 			return result;
 		}
-		public List<Actor> AllActors(){ //todo: make this return just the ones from tiebreakers?
+		public List<Actor> AllActors(){ //todo: make this return just the ones from tiebreakers? if so, check for null AND check for burrowing or otherwise removed from the map!
 			List<Actor> result = new List<Actor>();
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
@@ -137,14 +135,14 @@ namespace Forays{
 		public LevelType ChooseNextLevelType(LevelType current){
 			List<LevelType> types = new List<LevelType>();
 			foreach(LevelType l in Enum.GetValues(typeof(LevelType))){
-				if(l != current && l != LevelType.Slime){ //todo: re-enable these
+				if(l != current && l != LevelType.Slime){
 					types.Add(l);
 				}
 			}
 			return types.Random();
 		}
 		public IEnumerable<Tile> ReachableTilesByDistance(int origin_row,int origin_col,bool return_reachable_walls,params TileType[] tiles_considered_passable){
-			int[,] values = new int[ROWS,COLS]; //todo: note that this method never returns the map borders. it'd need to check bounds if i wanted that.
+			int[,] values = new int[ROWS,COLS]; //note that this method never returns the map borders. it'd need to check bounds if i wanted that.
 			for(int i=0;i<ROWS;++i){
 				for(int j=0;j<COLS;++j){
 					bool passable = tile[i,j].passable;
@@ -234,7 +232,7 @@ namespace Forays{
 			/*int[,] values = new int[ROWS,COLS];
 			values[origin_row,origin_col] = 1;
 			int val = 1;
-			bool done = false; //todo: yeah, really. this isn't so hard to change, and this might actually be *barely* noticeable.
+			bool done = false;
 			while(!done){
 				done = true;
 				while(just_added.Count > 0){
@@ -443,7 +441,7 @@ namespace Forays{
 				}
 			}
 		}
-		public void LoadLevel(string filename){ //this is ancient and was only used for testing purposes.
+		/*public void LoadLevel(string filename){ //this is ancient and was only used for testing purposes.
 			TextReader file = new StreamReader(filename);
 			char ch;
 			List<Tile> hidden = new List<Tile>();
@@ -484,11 +482,11 @@ namespace Forays{
 				e.tiebreaker = 0;
 				Q.Add(e);
 			}
-		}
+		}*/
 		public void Draw(){ //Draw should be faster than Redraw when most of the screen is unchanged.
-			if(Screen.MapChar(0,0).c == '-' && Global.Option(OptionType.DISABLE_GRAPHICS)){ //kinda hacky. there won't be an open door in the corner, so this looks for
+			if(Screen.MapChar(0,0).c == '-' && !Global.GRAPHICAL){ //kinda hacky. there won't be an open door in the corner, so this looks for
 				Redraw(); //evidence of Select being called (& therefore, the map needing to be redrawn entirely) //todo! this breaks in console mode if you have the option on.
-			} //todo: include console mode in the "no graphics" consideration - that is, console mode doesn't care about the disable_graphics option.
+			}
 			else{
 				MouseUI.mouselook_objects = new PhysicalObject[ROWS,COLS];
 				Screen.CursorVisible = false;
@@ -512,14 +510,14 @@ namespace Forays{
 						col_limit--;
 					}
 				}
-				if(Global.Option(OptionType.DISABLE_GRAPHICS)){ //todo make this a boolean, not dictionary access //todo check for console mode here too, derp
+				if(!Global.GRAPHICAL){
 					for(int i=i_start;i<row_limit;++i){ //if(ch.c == '#'){ ch.c = Encoding.GetEncoding(437).GetChars(new byte[] {177})[0]; } <--this shows how to print non-ASCII symbols in the windows console.
 						for(int j=j_start;j<col_limit;++j){
 							Screen.WriteMapChar(i,j,VisibleColorChar(i,j));
 						}
 					}
 				}
-				else{
+				/*else{
 					for(int i=i_start;i<row_limit;++i){
 						for(int j=j_start;j<col_limit;++j){
 							VisibleColorChar(i,j); //mark tiles as seen, etc.
@@ -587,7 +585,7 @@ namespace Forays{
 							}
 						}
 					}
-				}
+				}*/
 				Screen.ResetColors();
 				Screen.NoGLUpdate = false;
 				Game.GLUpdate();
@@ -1166,11 +1164,8 @@ namespace Forays{
 						int rr = R.Roll(ROWS-2);
 						int rc = R.Roll(COLS-2);
 						bool good = true;
-						foreach(Tile t in tile[rr,rc].TilesWithinDistance(1)){ //todo: remove this? 
-							if(t.IsTrap()){
-								good = false;
-								break;
-							}
+						if(tile[rr,rc].IsTrap()){
+							good = false;
 						}
 						if(tile[rr,rc].Is(TileType.POPPY_FIELD) && !Actor.Prototype(final_type).HasAttr(AttrType.NONLIVING,AttrType.MENTAL_IMMUNITY)){
 							good = false;
@@ -1226,7 +1221,7 @@ namespace Forays{
 						Tile t = group_tiles.Random();
 						List<Tile> empty_neighbors = new List<Tile>();
 						foreach(Tile neighbor in t.TilesAtDistance(1)){
-							if(neighbor.passable && !neighbor.Is(TileType.CHASM,TileType.FIRE_RIFT) && !neighbor.IsTrap() && neighbor.actor() == null){ //todo: remove trap restriction?
+							if(neighbor.passable && !neighbor.Is(TileType.CHASM,TileType.FIRE_RIFT) && !neighbor.IsTrap() && neighbor.actor() == null){
 								empty_neighbors.Add(neighbor);
 							}
 						}
@@ -1629,7 +1624,7 @@ namespace Forays{
 					d.MinimumSpaceBetweenCorridors = 5;
 					d.CorridorLengthMin = 4;
 					d.CorridorLengthMax = 12;
-					for(int i=0;i<100;++i){
+					for(int i=0;i<70;++i){
 						d.CreateCorridor();
 					}
 					d.CorridorLengthMin = 3;
@@ -2644,7 +2639,7 @@ namespace Forays{
 					}
 					case CellType.Geyser:
 						Tile.Create(TileType.FIRE_GEYSER,i,j);
-						int frequency = R.Roll(21) + 8; //9-29
+						int frequency = R.Roll(31) + 8; //9-39
 						int variance = R.Roll(10) - 1; //0-9
 						int variance_amount = (frequency * variance) / 10;
 						int number_of_values = variance_amount*2 + 1;
@@ -3543,7 +3538,7 @@ namespace Forays{
 				Q.Add(e);
 			}
 			{
-				Event e = new Event(30000,EventType.SPAWN_WANDERING_MONSTER);
+				Event e = new Event(R.Between(400,450)*100,EventType.SPAWN_WANDERING_MONSTER);
 				e.tiebreaker = 0;
 				Q.Add(e);
 			}
@@ -4021,7 +4016,7 @@ namespace Forays{
 			int[] frequency = new int[]{1,1,2,2,3,3,3,
 				4,4,4,4,2,2,5,5,5,6,5,5,8};*/
 			int[] removal_chance = new int[]{95,20,10,60,
-				30,25,70,50,60,35,15,10,10,20};
+				30,25,70,50,60,35,12,10,10,20};
 			/*List<DungeonFeature> feature_pool = new List<DungeonFeature>();
 			for(int i=0;i<20;++i){
 				for(int j=frequency[i];j>0;--j){

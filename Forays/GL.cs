@@ -160,7 +160,6 @@ namespace GLDrawing{
 			}
 			base.OnRenderFrame(render_args);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-			int todo_count = 0;
 			foreach(SpriteSurface s in SpriteSurfaces){
 				if(!s.Disabled){
 					if(SingleSurfaceMode){
@@ -185,7 +184,6 @@ namespace GLDrawing{
 						}
 					}
 				}
-				++todo_count; //todo remove
 			}
 			SwapBuffers();
 		}

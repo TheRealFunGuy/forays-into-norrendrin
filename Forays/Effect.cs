@@ -421,13 +421,13 @@ namespace Forays{
 							if(first != null){
 								t2 = first.tile();
 							}
-							line = line.ToFirstObstruction();
+							line = line.ToFirstSolidTileOrActor();
+							//if(line.Count > 0){
+							//	line.RemoveAt(line.Count - 1);
+							//}
 							if(line.Count > 0){
 								line.RemoveAt(line.Count - 1);
 							}
-							if(line.Count > 0){
-								line.RemoveAt(line.Count - 1); //i forget why I needed to do this twice, but it seems to work
-							} //todo: actually, it doesn't! This line is why the animation jumps right before the end! fix this.
 							{
 								Tile first_unseen = null;
 								foreach(Tile tile2 in line){
@@ -519,7 +519,7 @@ namespace Forays{
 							}
 							if(t.Is(FeatureType.FORASECT_EGG)){
 								B.Add("The egg is destroyed. ",t);
-								t.RemoveFeature(FeatureType.FORASECT_EGG); //todo
+								t.RemoveFeature(FeatureType.FORASECT_EGG); //todo: forasect pathing?
 							}
 							if(t.Is(FeatureType.BONES)){
 								B.Add("The bones are scattered. ",t);
