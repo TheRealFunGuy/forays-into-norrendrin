@@ -179,79 +179,11 @@ TODO:
 			-anyway, this can wait for the hp + damage (+dodge) rework.
 -just some playtesting will be enough here.
 
-
-
-
-
 if there's time, potion of shadows!
-
-
-
-
-
-
-
-try to abuse whirlwind style. if anything needs to be nerfed, i suspect it'll be flying leap.
-
-
-
-
-
-
-
-
-
-
-
-
-
-new monster descriptions. fun, right?
--now the description (for this and others)
-The shadowveil duelist hides under a cloak of shadows to strike unseen. A spinning, feinting fighting style keeps the duelist in motion.
-missing:
-sneak thief
-
-
-
-nightmare
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 not reproduced reliably:
 BUG: this has happened several times now. After entering Help, keyboard commands are sometimes ignored.
-
-
-
-test fullscreen stuff
-
-
-remove sprites png etc. from folder before zipping
-
-
-
-change version number
-disable debug
-check files
-
-
-
-
-and switch to release mode, for once? (does this affect stack traces?)
 
 
 

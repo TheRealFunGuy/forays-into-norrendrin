@@ -154,7 +154,7 @@ namespace Forays{
 			Prototype(ActorType.SWORDSMAN).skills[SkillType.DEFENSE] = 2;
 			Prototype(ActorType.SWORDSMAN).skills[SkillType.SPIRIT] = 2;
 
-			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,25,100,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
+			Define(ActorType.DREAM_WARRIOR,"dream warrior",'p',Color.Cyan,20,100,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID);
 			DefineAttack(ActorType.DREAM_WARRIOR,100,2,CriticalEffect.CONFUSE,"& hits *");
 
 			Define(ActorType.DREAM_WARRIOR_CLONE,"dream warrior",'p',Color.Cyan,1,100,0,AttrType.HUMANOID_INTELLIGENCE,AttrType.MEDIUM_HUMANOID,AttrType.NONLIVING,AttrType.NO_CORPSE_KNOCKBACK);
@@ -200,7 +200,7 @@ namespace Forays{
 			Define(ActorType.MIMIC,"mimic",'m',Color.White,30,200,0,AttrType.GRAB_HIT);
 			DefineAttack(ActorType.MIMIC,100,2,CriticalEffect.NO_CRIT,"& hits *");
 
-			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,30,100,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION,AttrType.NONEUCLIDEAN_MOVEMENT);
+			Define(ActorType.PHASE_SPIDER,"phase spider",'A',Color.Cyan,25,100,0,AttrType.POISON_HIT,AttrType.LOW_LIGHT_VISION,AttrType.NONEUCLIDEAN_MOVEMENT); //changed to 25hp from 30
 			DefineAttack(ActorType.PHASE_SPIDER,100,1,CriticalEffect.NO_CRIT,"& bites *");
 
 			Define(ActorType.ZOMBIE,"zombie",'z',Color.DarkGray,50,150,0,AttrType.NONLIVING,AttrType.MEDIUM_HUMANOID,AttrType.RESIST_NECK_SNAP,AttrType.IMMUNE_COLD,AttrType.LOW_LIGHT_VISION,AttrType.MINDLESS);
@@ -4776,7 +4776,7 @@ namespace Forays{
 				break;
 			case '~': //debug mode 
 			{
-				if(true){
+				if(false){
 					List<string> l = new List<string>();
 					l.Add("blink");
 					l.Add("create chests");
@@ -5730,11 +5730,8 @@ namespace Forays{
 					}
 					case 18:
 					{
-						Help.displayed = new Dict<TutorialTopic, bool>();
-						foreach(TutorialTopic tt in Enum.GetValues(typeof(TutorialTopic))){
-							//Help.TutorialTip(tt);
-						}
-						Help.TutorialTip(TutorialTopic.ExhaustionAndArmor);
+						Actor a = null;
+						a.AName(true);
 						if(attrs[AttrType.DETECTING_MONSTERS] == 0){
 							attrs[AttrType.DETECTING_MONSTERS] = 1;
 						}
@@ -7333,7 +7330,7 @@ namespace Forays{
 				break;
 			case ActorType.DREAM_WARRIOR:
 				if(DistanceFrom(target) == 1){
-					if(curhp <= 12 && !HasAttr(AttrType.COOLDOWN_1)){
+					if(curhp <= 10 && !HasAttr(AttrType.COOLDOWN_1)){ //todo: changed to 20hp and a 10hp threshold...better?
 						attrs[AttrType.COOLDOWN_1]++;
 						List<Tile> openspaces = new List<Tile>();
 						foreach(Tile t in target.TilesAtDistance(1)){
@@ -17044,8 +17041,8 @@ namespace Forays{
 				return "The smallest of the giant races, ogres sometimes fashion crude armor from scrap and carry huge tree-clubs. This one wears filthy furs and prefers to rip and crush with its bare hands.";
 			case ActorType.ORC_GRENADIER:
 				return "Orcs are a burly and warlike race, quick to make enemies. The grenadier carries a satchel filled with deadly orcish explosives.";
-			case ActorType.SNEAK_THIEF: //todo
-				return "[DATA EXPUNGED]";
+			case ActorType.SNEAK_THIEF:
+				return "This experienced thief prefers to simply snatch items away. He wields a thin blade and uses a spinning style in combat.";
 			case ActorType.CARRION_CRAWLER:
 				return "Though usually an eater of corpses, the carrion crawler will attack the living when hungry. Tentacles on its head apply a paralyzing toxin to its prey.";
 			case ActorType.SPELLMUDDLE_PIXIE:
@@ -17113,7 +17110,7 @@ namespace Forays{
 			case ActorType.MACHINE_OF_WAR:
 				return "Perhaps a siege engine run amok, this clattering contraption sputters forward haltingly. It swivels its turret constantly, occasionally releasing a burst of fire from the vents on its sides.";
 			case ActorType.IMPOSSIBLE_NIGHTMARE:
-				return "..."; //todo
+				return "This horror defies reason and sanity, seeming at once too large for its surroundings, and too distant. Logic and proportion are forgotten as the universe fights back against this nameless thing.";
 			case ActorType.GHOST:
 				return "Ghosts are restless spirits bound to this world by some unfinished task.";
 			case ActorType.MINOR_DEMON:
